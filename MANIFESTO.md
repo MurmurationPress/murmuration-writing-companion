@@ -1,5 +1,7 @@
 # The Murmuration Manifesto
 
+Writing is difficult enough. Your tools shouldn't make it harder.
+
 We believe:
 
 - Authors should own their manuscripts.
