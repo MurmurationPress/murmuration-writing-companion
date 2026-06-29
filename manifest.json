@@ -1,0 +1,9 @@
+{
+  "id": "murmuration-editorial-notes",
+  "name": "Murmuration Writing Companion",
+  "version": "0.2.1",
+  "minAppVersion": "1.5.0",
+  "description": "A Scrivener-style writing companion for Obsidian long-form writing.",
+  "author": "Murmuration Press",
+  "isDesktopOnly": false
+}

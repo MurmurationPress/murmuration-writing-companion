@@ -1,0 +1,83 @@
+.men-container {
+  padding: 0 8px 24px 8px;
+}
+
+.men-file-name {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.men-section {
+  margin-top: 18px;
+}
+
+.men-section h3 {
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 4px;
+}
+
+.men-note-card {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  background: var(--background-secondary);
+}
+
+.men-note-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.men-category {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--interactive-accent);
+}
+
+.men-note-body {
+  width: 100%;
+  min-height: 70px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.men-anchor {
+  margin: 8px 0 0 0;
+  padding-left: 8px;
+  color: var(--text-muted);
+  border-left: 3px solid var(--interactive-accent);
+}
+
+.men-line {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.men-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.men-select {
+  flex: 1;
+}
+
+.men-button {
+  cursor: pointer;
+}
+
+.men-muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
