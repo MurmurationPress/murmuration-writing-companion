@@ -1,0 +1,28 @@
+classDiagram
+    Manuscript "1" --> "*" Book
+    Book "1" --> "*" Part
+    Part "1" --> "*" Chapter
+
+    Chapter "1" --> "*" ChapterNote
+    Chapter "1" --> "*" Annotation
+    Chapter "1" --> "1" ChapterProgress
+
+    Annotation "1" --> "1" AnnotationAnchor
+    ChapterProgress "1" --> "*" EditorialPass
+    EditorialPass "1" --> "*" ChecklistItem
+
+    WritingSession "*" --> "1" Chapter
+    Companion "1" --> "*" Chapter
+
+    class Manuscript
+    class Book
+    class Part
+    class Chapter
+    class ChapterNote
+    class Annotation
+    class AnnotationAnchor
+    class ChapterProgress
+    class EditorialPass
+    class ChecklistItem
+    class WritingSession
+    class Companion

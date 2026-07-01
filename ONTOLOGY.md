@@ -87,3 +87,12 @@ Implementation-specific terms may appear only at system boundaries, such as Obsi
 ## Principle
 
 A chapter is a chapter everywhere.
+ 
+
+## Domain Model
+
+See [[DOMAIN_MODEL]] for details.
+
+This diagram is intentionally high-level. It describes the shared author-facing domain model, not the TypeScript implementation.
+
+The purpose is to establish a common vocabulary for product discussions, GitHub issues, documentation and code.
