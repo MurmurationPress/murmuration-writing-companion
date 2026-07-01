@@ -91,7 +91,7 @@ A chapter is a chapter everywhere.
 
 ## Domain Model
 
-See [[DOMAIN_MODEL]] for details.
+See [DOMAIN_MODEL](DOMAIN_MODEL.mmd) for details.
 
 This diagram is intentionally high-level. It describes the shared author-facing domain model, not the TypeScript implementation.
 
