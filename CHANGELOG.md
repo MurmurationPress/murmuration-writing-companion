@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.4
+
+- Fixed annotation workflow so the Writing Companion remembers the current chapter after the sidebar opens
+- The Companion no longer loses chapter context when it becomes the active view
+
+
+## 0.3.3
+
+- Added right-click Annotate action for selected text
+- Reused the Annotate command palette workflow
+- Creating an annotation opens the Writing Companion automatically
+
+
 ## 0.3.2
 
 - Introduced `AnnotationAnchor`

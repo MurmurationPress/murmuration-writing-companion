@@ -34,7 +34,7 @@ export class WritingCompanionView extends ItemView {
     container.empty();
     container.addClass("mwc-container");
 
-    const file = this.plugin.getActiveFile();
+    const file = this.plugin.getCurrentChapter();
 
     container.createEl("h2", { text: "Writing Companion" });
 

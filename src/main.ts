@@ -1,5 +1,7 @@
 import {
+  Editor,
   MarkdownView,
+  Menu,
   Notice,
   Plugin,
   TFile
@@ -12,6 +14,7 @@ import { EditorialStoreService } from "./editorial/EditorialStore";
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
+  currentChapter: TFile | null = null;
 
   async onload() {
     this.storeService = new EditorialStoreService(this);
@@ -25,24 +28,31 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.addRibbonIcon("notebook-pen", "Murmuration Writing Companion", () => {
+      const activeChapter = this.getActiveChapter();
+      if (activeChapter) this.currentChapter = activeChapter;
       this.activateView();
     });
 
     this.addCommand({
       id: "open-writing-companion",
       name: "Open writing companion",
-      callback: () => this.activateView()
+      callback: () => {
+        const activeChapter = this.getActiveChapter();
+        if (activeChapter) this.currentChapter = activeChapter;
+        this.activateView();
+      }
     });
 
     this.addCommand({
       id: "add-document-note",
       name: "Add document note",
       checkCallback: (checking) => {
-        const file = this.getActiveFile();
-        if (!file) return false;
+        const chapter = this.getActiveChapter();
+        if (!chapter) return false;
 
         if (!checking) {
-          this.storeService.addDocumentNote(file, "New document note", "Editorial");
+          this.currentChapter = chapter;
+          this.storeService.addDocumentNote(chapter, "New document note", "Editorial");
           this.activateView();
         }
 
@@ -54,32 +64,32 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       id: "annotate",
       name: "Annotate",
       editorCallback: async (editor, view) => {
-        const file = view.file;
-        if (!file) return;
-
-        const selected = editor.getSelection().trim();
-
-        if (!selected) {
-          new Notice("Select text first.");
-          return;
-        }
-
-        await this.storeService.addAnnotation(
-          file,
-          {
-            text: selected,
-            line: editor.getCursor("from").line + 1
-          },
-          "New annotation",
-          "Editorial"
-        );
-
-        await this.activateView();
+        await this.createAnnotationFromEditor(editor, view.file);
       }
     });
 
     this.registerEvent(
+      this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => {
+        if (!editor.getSelection().trim()) return;
+
+        menu.addItem((item) => {
+          item
+            .setTitle("Annotate")
+            .setIcon("message-square-plus")
+            .onClick(async () => {
+              await this.createAnnotationFromEditor(editor, view.file);
+            });
+        });
+      })
+    );
+
+    this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
+        const activeChapter = this.getActiveChapter();
+        if (activeChapter) {
+          this.currentChapter = activeChapter;
+        }
+
         this.refreshView();
       })
     );
@@ -88,13 +98,46 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.app.vault.on("rename", async (file, oldPath) => {
         if (!(file instanceof TFile)) return;
         await this.storeService.handleRename(file, oldPath);
+
+        if (this.currentChapter?.path === oldPath) {
+          this.currentChapter = file;
+        }
       })
     );
   }
 
-  getActiveFile(): TFile | null {
+  getActiveChapter(): TFile | null {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     return view?.file ?? null;
+  }
+
+  getCurrentChapter(): TFile | null {
+    return this.currentChapter ?? this.getActiveChapter();
+  }
+
+  async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {
+    if (!chapter) return;
+
+    const selected = editor.getSelection().trim();
+
+    if (!selected) {
+      new Notice("Select text first.");
+      return;
+    }
+
+    this.currentChapter = chapter;
+
+    await this.storeService.addAnnotation(
+      chapter,
+      {
+        text: selected,
+        line: editor.getCursor("from").line + 1
+      },
+      "New annotation",
+      "Editorial"
+    );
+
+    await this.activateView();
   }
 
   async activateView() {
