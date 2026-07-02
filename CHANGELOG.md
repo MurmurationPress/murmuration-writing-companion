@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5
+
+- Focuses the newly created annotation body automatically
+- Selecting text and choosing Annotate now leaves the author ready to type immediately
+
+
 ## 0.3.4
 
 - Fixed annotation workflow so the Writing Companion remembers the current chapter after the sidebar opens

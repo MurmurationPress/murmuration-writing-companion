@@ -15,6 +15,7 @@ import { EditorialStoreService } from "./editorial/EditorialStore";
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
   currentChapter: TFile | null = null;
+  pendingFocusNoteId: string | null = null;
 
   async onload() {
     this.storeService = new EditorialStoreService(this);
@@ -115,6 +116,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     return this.currentChapter ?? this.getActiveChapter();
   }
 
+  consumePendingFocusNoteId(): string | null {
+    const noteId = this.pendingFocusNoteId;
+    this.pendingFocusNoteId = null;
+    return noteId;
+  }
+
   async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {
     if (!chapter) return;
 
@@ -127,7 +134,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.currentChapter = chapter;
 
-    await this.storeService.addAnnotation(
+    const annotationId = await this.storeService.addAnnotation(
       chapter,
       {
         text: selected,
@@ -137,7 +144,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       "Editorial"
     );
 
+    this.pendingFocusNoteId = annotationId;
+
     await this.activateView();
+    this.refreshView();
   }
 
   async activateView() {

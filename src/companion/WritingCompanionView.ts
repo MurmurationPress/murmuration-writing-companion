@@ -35,6 +35,7 @@ export class WritingCompanionView extends ItemView {
     container.addClass("mwc-container");
 
     const file = this.plugin.getCurrentChapter();
+    const focusNoteId = this.plugin.consumePendingFocusNoteId();
 
     container.createEl("h2", { text: "Writing Companion" });
 
@@ -53,11 +54,16 @@ export class WritingCompanionView extends ItemView {
 
     const page = this.plugin.storeService.getPage(file);
 
-    this.renderDocumentNotes(container, file, page);
-    this.renderAnnotations(container, page);
+    this.renderDocumentNotes(container, file, page, focusNoteId);
+    this.renderAnnotations(container, page, focusNoteId);
   }
 
-  renderDocumentNotes(container: Element, file: TFile, page: PageEditorialNotes) {
+  renderDocumentNotes(
+    container: Element,
+    file: TFile,
+    page: PageEditorialNotes,
+    focusNoteId: string | null
+  ) {
     const section = container.createDiv("mwc-section");
     section.createEl("h3", { text: "Document Notes" });
 
@@ -87,12 +93,17 @@ export class WritingCompanionView extends ItemView {
       renderNoteCard(
         section,
         note,
-        this.plugin.storeService.updateNote.bind(this.plugin.storeService)
+        this.plugin.storeService.updateNote.bind(this.plugin.storeService),
+        focusNoteId
       );
     }
   }
 
-  renderAnnotations(container: Element, page: PageEditorialNotes) {
+  renderAnnotations(
+    container: Element,
+    page: PageEditorialNotes,
+    focusNoteId: string | null
+  ) {
     const section = container.createDiv("mwc-section");
     section.createEl("h3", { text: "Annotations" });
 
@@ -109,7 +120,8 @@ export class WritingCompanionView extends ItemView {
       const card = renderNoteCard(
         section,
         annotation,
-        this.plugin.storeService.updateNote.bind(this.plugin.storeService)
+        this.plugin.storeService.updateNote.bind(this.plugin.storeService),
+        focusNoteId
       );
 
       card.createEl("blockquote", {

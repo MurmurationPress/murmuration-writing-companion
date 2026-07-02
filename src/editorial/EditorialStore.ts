@@ -35,11 +35,12 @@ export class EditorialStoreService {
     return this.store.pages[file.path];
   }
 
-  async addDocumentNote(file: TFile, body: string, category: string) {
+  async addDocumentNote(file: TFile, body: string, category: string): Promise<string> {
     const now = new Date().toISOString();
+    const id = crypto.randomUUID();
 
     this.getPage(file).documentNotes.push({
-      id: crypto.randomUUID(),
+      id,
       body,
       category,
       status: "open",
@@ -50,6 +51,8 @@ export class EditorialStoreService {
     await this.save();
     this.onChange();
     new Notice("Document note added.");
+
+    return id;
   }
 
   async addAnnotation(
@@ -57,11 +60,12 @@ export class EditorialStoreService {
     anchor: AnnotationAnchor,
     body: string,
     category: string
-  ) {
+  ): Promise<string> {
     const now = new Date().toISOString();
+    const id = crypto.randomUUID();
 
     this.getPage(file).annotations.push({
-      id: crypto.randomUUID(),
+      id,
       body,
       category,
       status: "open",
@@ -73,6 +77,8 @@ export class EditorialStoreService {
     await this.save();
     this.onChange();
     new Notice("Annotation added.");
+
+    return id;
   }
 
   async updateNote(note: EditorialNote, patch: Partial<EditorialNote>) {
