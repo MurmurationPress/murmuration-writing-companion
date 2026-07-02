@@ -32,7 +32,7 @@ A developer reading the source should see the same concepts the author sees in t
 
 - Chapter
 - Chapter Note
-- Selected Text Note
+- Annotation
 - Editorial Pass
 - Checklist
 - Writing Session
@@ -40,4 +40,10 @@ A developer reading the source should see the same concepts the author sees in t
 
 Implementation details should remain secondary.
 
-When implementation language is unavoidable, it should be contained at the boundary with Obsidian or the filesystem.
+When 'implementation language' is unavoidable, it should be contained at the boundary with Obsidian or the filesystem.
+
+## Design before implementation.
+
+The project should seek to understand the author's problem, establish a shared vocabulary, and define the desired outcome before writing code.
+
+Code is the implementation of the model, not the model itself.
