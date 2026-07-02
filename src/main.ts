@@ -66,8 +66,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
         await this.storeService.addAnnotation(
           file,
-          selected,
-          editor.getCursor("from").line + 1,
+          {
+            text: selected,
+            line: editor.getCursor("from").line + 1
+          },
           "New annotation",
           "Editorial"
         );

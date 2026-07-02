@@ -1,8 +1,14 @@
 # Changelog
 
+## 0.3.2
+
+- Introduced `AnnotationAnchor`
+- Moved annotation anchor text and line into `annotation.anchor`
+- No intended user-facing behaviour changes
+
+
 ## 0.3.1
 
-- Renamed selection notes to annotations
 - Reorganised source into `src/`
 - Split companion view, editorial models, categories and note card rendering into separate modules
 - No feature changes

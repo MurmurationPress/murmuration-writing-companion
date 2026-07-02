@@ -9,14 +9,20 @@ export interface EditorialNote {
   updated: string;
 }
 
-export interface Annotation extends EditorialNote {
-  anchorText: string;
+export interface ChapterNote extends EditorialNote {}
+
+export interface AnnotationAnchor {
+  text: string;
   line?: number;
 }
 
+export interface Annotation extends EditorialNote {
+  anchor: AnnotationAnchor;
+}
+
 export interface PageEditorialNotes {
-    documentNotes: EditorialNote[];
-    annotations: Annotation[];
+  documentNotes: ChapterNote[];
+  annotations: Annotation[];
 }
 
 export interface EditorialStore {

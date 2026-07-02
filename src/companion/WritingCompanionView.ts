@@ -13,9 +13,17 @@ export class WritingCompanionView extends ItemView {
     this.plugin = plugin;
   }
 
-  getViewType() { return VIEW_TYPE; }
-  getDisplayText() { return "Writing Companion"; }
-  getIcon() { return "notebook-pen"; }
+  getViewType() {
+    return VIEW_TYPE;
+  }
+
+  getDisplayText() {
+    return "Writing Companion";
+  }
+
+  getIcon() {
+    return "notebook-pen";
+  }
 
   async onOpen() {
     this.render();
@@ -27,6 +35,7 @@ export class WritingCompanionView extends ItemView {
     container.addClass("mwc-container");
 
     const file = this.plugin.getActiveFile();
+
     container.createEl("h2", { text: "Writing Companion" });
 
     if (!file) {
@@ -37,7 +46,11 @@ export class WritingCompanionView extends ItemView {
       return;
     }
 
-    container.createEl("div", { cls: "mwc-file-name", text: file.basename });
+    container.createEl("div", {
+      cls: "mwc-file-name",
+      text: file.basename
+    });
+
     const page = this.plugin.storeService.getPage(file);
 
     this.renderDocumentNotes(container, file, page);
@@ -54,12 +67,20 @@ export class WritingCompanionView extends ItemView {
     });
 
     addButton.onclick = async () => {
-      await this.plugin.storeService.addDocumentNote(file, "New document note", "Editorial");
+      await this.plugin.storeService.addDocumentNote(
+        file,
+        "New document note",
+        "Editorial"
+      );
     };
 
     const notes = page.documentNotes.filter((note) => note.status === "open");
+
     if (notes.length === 0) {
-      section.createEl("p", { cls: "mwc-muted", text: "No open document notes." });
+      section.createEl("p", {
+        cls: "mwc-muted",
+        text: "No open document notes."
+      });
     }
 
     for (const note of notes) {
@@ -75,22 +96,32 @@ export class WritingCompanionView extends ItemView {
     const section = container.createDiv("mwc-section");
     section.createEl("h3", { text: "Annotations" });
 
-    const notes = page.annotations.filter((note) => note.status === "open");
-    if (notes.length === 0) {
-      section.createEl("p", { cls: "mwc-muted", text: "No open annotations." });
+    const annotations = page.annotations.filter((note) => note.status === "open");
+
+    if (annotations.length === 0) {
+      section.createEl("p", {
+        cls: "mwc-muted",
+        text: "No open annotations."
+      });
     }
 
-    for (const note of notes) {
+    for (const annotation of annotations) {
       const card = renderNoteCard(
         section,
-        note,
+        annotation,
         this.plugin.storeService.updateNote.bind(this.plugin.storeService)
       );
 
-      card.createEl("blockquote", { cls: "mwc-anchor", text: note.anchorText });
+      card.createEl("blockquote", {
+        cls: "mwc-anchor",
+        text: annotation.anchor.text
+      });
 
-      if (note.line) {
-        card.createEl("div", { cls: "mwc-line", text: `Line ${note.line}` });
+      if (annotation.anchor.line) {
+        card.createEl("div", {
+          cls: "mwc-line",
+          text: `Line ${annotation.anchor.line}`
+        });
       }
     }
   }

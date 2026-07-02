@@ -1,5 +1,6 @@
 import { Notice, Plugin, TFile } from "obsidian";
 import {
+  AnnotationAnchor,
   EditorialNote,
   EditorialStore,
   PageEditorialNotes
@@ -25,13 +26,18 @@ export class EditorialStoreService {
 
   getPage(file: TFile): PageEditorialNotes {
     if (!this.store.pages[file.path]) {
-      this.store.pages[file.path] = { documentNotes: [], annotations: [] };
+      this.store.pages[file.path] = {
+        documentNotes: [],
+        annotations: []
+      };
     }
+
     return this.store.pages[file.path];
   }
 
   async addDocumentNote(file: TFile, body: string, category: string) {
     const now = new Date().toISOString();
+
     this.getPage(file).documentNotes.push({
       id: crypto.randomUUID(),
       body,
@@ -40,13 +46,20 @@ export class EditorialStoreService {
       created: now,
       updated: now
     });
+
     await this.save();
     this.onChange();
     new Notice("Document note added.");
   }
 
-  async addAnnotation(file: TFile, anchorText: string, line: number, body: string, category: string) {
+  async addAnnotation(
+    file: TFile,
+    anchor: AnnotationAnchor,
+    body: string,
+    category: string
+  ) {
     const now = new Date().toISOString();
+
     this.getPage(file).annotations.push({
       id: crypto.randomUUID(),
       body,
@@ -54,9 +67,9 @@ export class EditorialStoreService {
       status: "open",
       created: now,
       updated: now,
-      anchorText,
-      line
+      anchor
     });
+
     await this.save();
     this.onChange();
     new Notice("Annotation added.");
@@ -70,8 +83,10 @@ export class EditorialStoreService {
 
   async handleRename(file: TFile, oldPath: string) {
     if (!this.store.pages[oldPath]) return;
+
     this.store.pages[file.path] = this.store.pages[oldPath];
     delete this.store.pages[oldPath];
+
     await this.save();
     this.onChange();
   }
