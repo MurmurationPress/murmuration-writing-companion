@@ -15,4 +15,4 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 
 - Open writing companion
 - Add document note
-- Add selection note
+- Annotate

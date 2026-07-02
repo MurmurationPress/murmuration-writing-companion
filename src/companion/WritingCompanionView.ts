@@ -41,7 +41,7 @@ export class WritingCompanionView extends ItemView {
     const page = this.plugin.storeService.getPage(file);
 
     this.renderDocumentNotes(container, file, page);
-    this.renderAnchoredNotes(container, page);
+    this.renderAnnotations(container, page);
   }
 
   renderDocumentNotes(container: Element, file: TFile, page: PageEditorialNotes) {
@@ -71,13 +71,13 @@ export class WritingCompanionView extends ItemView {
     }
   }
 
-  renderAnchoredNotes(container: Element, page: PageEditorialNotes) {
+  renderAnnotations(container: Element, page: PageEditorialNotes) {
     const section = container.createDiv("mwc-section");
-    section.createEl("h3", { text: "Selection Notes" });
+    section.createEl("h3", { text: "Annotations" });
 
-    const notes = page.anchoredNotes.filter((note) => note.status === "open");
+    const notes = page.annotations.filter((note) => note.status === "open");
     if (notes.length === 0) {
-      section.createEl("p", { cls: "mwc-muted", text: "No open selection notes." });
+      section.createEl("p", { cls: "mwc-muted", text: "No open annotations." });
     }
 
     for (const note of notes) {

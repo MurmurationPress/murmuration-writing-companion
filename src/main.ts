@@ -51,8 +51,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "add-selection-note",
-      name: "Add selection note",
+      id: "annotate",
+      name: "Annotate",
       editorCallback: async (editor, view) => {
         const file = view.file;
         if (!file) return;
@@ -64,11 +64,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           return;
         }
 
-        await this.storeService.addAnchoredNote(
+        await this.storeService.addAnnotation(
           file,
           selected,
           editor.getCursor("from").line + 1,
-          "New selection note",
+          "New annotation",
           "Editorial"
         );
 

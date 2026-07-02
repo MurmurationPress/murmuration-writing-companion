@@ -25,7 +25,7 @@ export class EditorialStoreService {
 
   getPage(file: TFile): PageEditorialNotes {
     if (!this.store.pages[file.path]) {
-      this.store.pages[file.path] = { documentNotes: [], anchoredNotes: [] };
+      this.store.pages[file.path] = { documentNotes: [], annotations: [] };
     }
     return this.store.pages[file.path];
   }
@@ -45,9 +45,9 @@ export class EditorialStoreService {
     new Notice("Document note added.");
   }
 
-  async addAnchoredNote(file: TFile, anchorText: string, line: number, body: string, category: string) {
+  async addAnnotation(file: TFile, anchorText: string, line: number, body: string, category: string) {
     const now = new Date().toISOString();
-    this.getPage(file).anchoredNotes.push({
+    this.getPage(file).annotations.push({
       id: crypto.randomUUID(),
       body,
       category,
@@ -59,7 +59,7 @@ export class EditorialStoreService {
     });
     await this.save();
     this.onChange();
-    new Notice("Selection note added.");
+    new Notice("Annotation added.");
   }
 
   async updateNote(note: EditorialNote, patch: Partial<EditorialNote>) {
