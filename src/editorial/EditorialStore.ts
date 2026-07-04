@@ -1,22 +1,25 @@
 import { Notice, Plugin, TFile } from "obsidian";
 import {
+  Annotation,
   AnnotationAnchor,
-  EditorialNote,
   EditorialStore,
   PageEditorialNotes
 } from "./EditorialNote";
+import { OpenAnnotationPropertyService } from "./OpenAnnotationProperty";
 
 const CHAPTER_NOTE_SAVE_DELAY_MS = 400;
 
 export class EditorialStoreService {
   private plugin: Plugin;
   private chapterNoteSaveTimers = new Map<string, number>();
+  private openAnnotationProperty: OpenAnnotationPropertyService;
 
   store: EditorialStore = { pages: {} };
   onChange: () => void = () => {};
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
+    this.openAnnotationProperty = new OpenAnnotationPropertyService(plugin.app);
   }
 
   async load() {
@@ -114,8 +117,9 @@ export class EditorialStoreService {
   ): Promise<string> {
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
+    const page = this.getPage(file);
 
-    this.getPage(file).annotations.push({
+    page.annotations.push({
       id,
       body,
       category,
@@ -126,16 +130,32 @@ export class EditorialStoreService {
     });
 
     await this.save();
+    await this.syncOpenAnnotationProperty(file, page);
     this.onChange();
     new Notice("Annotation added.");
 
     return id;
   }
 
-  async updateNote(note: EditorialNote, patch: Partial<EditorialNote>) {
-    Object.assign(note, patch, { updated: new Date().toISOString() });
+  async updateAnnotation(
+    file: TFile,
+    annotation: Annotation,
+    patch: Partial<Annotation>
+  ) {
+    const previousStatus = annotation.status;
+    Object.assign(annotation, patch, { updated: new Date().toISOString() });
+
     await this.save();
+
+    if (annotation.status !== previousStatus) {
+      await this.syncOpenAnnotationProperty(file, this.getPage(file));
+    }
+
     this.onChange();
+  }
+
+  async reconcileOpenAnnotationProperties() {
+    await this.openAnnotationProperty.reconcile(this.store);
   }
 
   async handleRename(file: TFile, oldPath: string) {
@@ -151,6 +171,18 @@ export class EditorialStoreService {
     delete this.store.pages[oldPath];
 
     await this.save();
+    await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
     this.onChange();
+  }
+
+  private async syncOpenAnnotationProperty(
+    file: TFile,
+    page: PageEditorialNotes
+  ) {
+    const openCount = page.annotations.filter(
+      (annotation) => annotation.status === "open"
+    ).length;
+
+    await this.openAnnotationProperty.sync(file, openCount);
   }
 }

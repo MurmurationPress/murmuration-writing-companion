@@ -175,7 +175,8 @@ export class WritingCompanionView extends ItemView {
       const card = renderAnnotationCard(
         section,
         annotation,
-        this.plugin.storeService.updateNote.bind(this.plugin.storeService),
+        (selectedAnnotation, patch) =>
+          this.plugin.storeService.updateAnnotation(file, selectedAnnotation, patch),
         focusNoteId,
         (noteId) => this.plugin.clearPendingFocusNoteId(noteId),
         (selectedAnnotation) => {
@@ -185,7 +186,8 @@ export class WritingCompanionView extends ItemView {
           const nextAnnotation = annotations[index + 1] ?? annotations[index - 1] ?? null;
           this.pendingReviewScrollNoteId = nextAnnotation?.id ?? null;
 
-          await this.plugin.storeService.updateNote(
+          await this.plugin.storeService.updateAnnotation(
+            file,
             resolvedAnnotation,
             { status: "resolved" }
           );

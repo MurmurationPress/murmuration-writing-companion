@@ -47,3 +47,12 @@ Responsible for:
 - Buttons
 - Lists
 - Empty states
+
+## Derived reporting properties
+
+`mwc_open_annotations` is a projection of the annotation store into chapter
+frontmatter for Obsidian Bases and other native reporting tools. The editorial
+store remains authoritative. Manual changes to the property do not create,
+resolve, or otherwise modify annotations; the plugin reconciles the projection
+from stored annotation state.
+

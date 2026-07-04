@@ -1,4 +1,4 @@
-import { Annotation, EditorialNote } from "../editorial/EditorialNote";
+import { Annotation } from "../editorial/EditorialNote";
 import { DEFAULT_CATEGORIES } from "../editorial/Categories";
 
 const FOCUS_RETRY_DELAYS_MS = [0, 50, 150, 300, 500];
@@ -6,7 +6,7 @@ const FOCUS_RETRY_DELAYS_MS = [0, 50, 150, 300, 500];
 export function renderAnnotationCard(
   container: Element,
   annotation: Annotation,
-  updateNote: (note: EditorialNote, patch: Partial<EditorialNote>) => Promise<void>,
+  updateAnnotation: (annotation: Annotation, patch: Partial<Annotation>) => Promise<void>,
   focusNoteId?: string | null,
   onFocusComplete?: (noteId: string) => void,
   onNavigate?: (annotation: Annotation) => void,
@@ -48,7 +48,7 @@ export function renderAnnotationCard(
   }
 
   body.onchange = async () => {
-    await updateNote(annotation, { body: body.value });
+    await updateAnnotation(annotation, { body: body.value });
   };
 
   const footer = card.createDiv("mwc-annotation-footer");
@@ -69,7 +69,7 @@ export function renderAnnotationCard(
   }
 
   category.onchange = async () => {
-    await updateNote(annotation, { category: category.value });
+    await updateAnnotation(annotation, { category: category.value });
   };
 
   if (annotation.anchor.line) {
@@ -97,7 +97,7 @@ export function renderAnnotationCard(
       return;
     }
 
-    await updateNote(annotation, { status: "resolved" });
+    await updateAnnotation(annotation, { status: "resolved" });
   };
 
   return card;

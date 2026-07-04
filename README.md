@@ -32,3 +32,12 @@ Select manuscript text and choose **Annotate**. The Companion opens with a blank
 Click an annotation's manuscript extract to open the chapter and select that passage. The Companion matches the stored text nearest its original line and falls back to the stored line if the passage has changed.
 
 Open annotations are displayed in manuscript order with a remaining count. Resolving an annotation removes it from the active list and brings the next annotation into view.
+
+## Reporting open annotations
+
+The plugin exposes each chapter's derived open-annotation count through the
+Markdown property `mwc_open_annotations`. Chapters with no open annotations do
+not retain the property. This makes it possible to filter and sort chapters in
+Obsidian Bases without duplicating the annotation data or adding a separate
+reporting interface.
+

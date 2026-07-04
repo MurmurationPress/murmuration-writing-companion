@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0
+
+- Maintain `mwc_open_annotations` in chapter frontmatter as a derived reporting property
+- Update the property when annotations are created or resolved
+- Remove the property when a chapter has no open annotations
+- Reconcile stored annotation counts with chapter properties when the plugin loads
+- Keep the annotation store as the source of truth
+
+
 ## 0.9.0
 
 - Order open annotations by their manuscript line rather than creation time

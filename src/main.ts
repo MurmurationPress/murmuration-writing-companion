@@ -26,6 +26,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     await this.storeService.load();
 
+    this.app.workspace.onLayoutReady(() => {
+      void this.storeService.reconcileOpenAnnotationProperties();
+    });
+
     this.registerView(
       VIEW_TYPE,
       (leaf) => new WritingCompanionView(leaf, this)
