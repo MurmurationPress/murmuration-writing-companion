@@ -33,6 +33,8 @@ Click an annotation's manuscript extract to open the chapter and select that pas
 
 Open annotations are displayed in manuscript order with a remaining count. Resolving an annotation removes it from the active list and brings the next annotation into view.
 
+Resolved annotations can be revealed beneath the open queue. They remain navigable, appear in a quieter read-only style, and can be reopened when further work is needed.
+
 ## Reporting open annotations
 
 The plugin exposes each chapter's derived open-annotation count through the

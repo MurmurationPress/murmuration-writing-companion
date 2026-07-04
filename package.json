@@ -1,6 +1,6 @@
 {
   "name": "murmuration-writing-companion",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "scripts": {
     "dev": "esbuild src/main.ts --bundle --external:obsidian --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",

@@ -9,6 +9,7 @@ export const VIEW_TYPE = "murmuration-writing-companion-view";
 export class WritingCompanionView extends ItemView {
   plugin: MurmurationWritingCompanionPlugin;
   private pendingReviewScrollNoteId: string | null = null;
+  private showResolvedAnnotations = false;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -149,53 +150,107 @@ export class WritingCompanionView extends ItemView {
     page: PageEditorialNotes,
     focusNoteId: string | null
   ) {
-    const annotations = sortOpenAnnotations(page.annotations);
+    const openAnnotations = sortAnnotationsByManuscriptPosition(
+      page.annotations.filter((annotation) => annotation.status === "open")
+    );
+    const resolvedAnnotations = sortAnnotationsByManuscriptPosition(
+      page.annotations.filter((annotation) => annotation.status === "resolved")
+    );
     const section = container.createDiv("mwc-section");
     const heading = section.createEl("h3", { cls: "mwc-section-heading" });
 
     heading.createSpan({ text: "Annotations" });
     heading.createSpan({
       cls: "mwc-annotation-count",
-      text: `${annotations.length} open`
+      text: `${openAnnotations.length} open`
     });
-
-    if (annotations.length === 0) {
-      section.createEl("p", {
-        cls: "mwc-muted",
-        text: "No open annotations."
-      });
-      this.pendingReviewScrollNoteId = null;
-      return;
-    }
 
     const scrollTargetId = this.pendingReviewScrollNoteId;
     let scrollTarget: HTMLElement | null = null;
 
-    for (const [index, annotation] of annotations.entries()) {
-      const card = renderAnnotationCard(
-        section,
-        annotation,
-        (selectedAnnotation, patch) =>
-          this.plugin.storeService.updateAnnotation(file, selectedAnnotation, patch),
-        focusNoteId,
-        (noteId) => this.plugin.clearPendingFocusNoteId(noteId),
-        (selectedAnnotation) => {
-          void this.plugin.navigateToAnnotation(file, selectedAnnotation);
-        },
-        async (resolvedAnnotation) => {
-          const nextAnnotation = annotations[index + 1] ?? annotations[index - 1] ?? null;
-          this.pendingReviewScrollNoteId = nextAnnotation?.id ?? null;
+    if (openAnnotations.length === 0) {
+      section.createEl("p", {
+        cls: "mwc-muted",
+        text: "No open annotations."
+      });
+    } else {
+      for (const [index, annotation] of openAnnotations.entries()) {
+        const card = renderAnnotationCard(
+          section,
+          annotation,
+          (selectedAnnotation, patch) =>
+            this.plugin.storeService.updateAnnotation(file, selectedAnnotation, patch),
+          focusNoteId,
+          (noteId) => this.plugin.clearPendingFocusNoteId(noteId),
+          (selectedAnnotation) => {
+            void this.plugin.navigateToAnnotation(file, selectedAnnotation);
+          },
+          async (resolvedAnnotation) => {
+            const nextAnnotation =
+              openAnnotations[index + 1] ?? openAnnotations[index - 1] ?? null;
+            this.pendingReviewScrollNoteId = nextAnnotation?.id ?? null;
 
-          await this.plugin.storeService.updateAnnotation(
-            file,
-            resolvedAnnotation,
-            { status: "resolved" }
+            await this.plugin.storeService.updateAnnotation(
+              file,
+              resolvedAnnotation,
+              { status: "resolved" }
+            );
+          }
+        );
+
+        if (annotation.id === scrollTargetId) {
+          scrollTarget = card;
+        }
+      }
+    }
+
+    if (resolvedAnnotations.length > 0) {
+      const resolvedSection = section.createDiv("mwc-resolved-annotations");
+      const toggle = resolvedSection.createEl("button", {
+        cls: "mwc-resolved-toggle",
+        text: this.showResolvedAnnotations
+          ? `Hide ${resolvedAnnotations.length} resolved`
+          : `Show ${resolvedAnnotations.length} resolved`,
+        attr: {
+          "aria-expanded": String(this.showResolvedAnnotations),
+          "aria-label": this.showResolvedAnnotations
+            ? "Hide resolved annotations"
+            : "Show resolved annotations"
+        }
+      });
+
+      toggle.onclick = () => {
+        this.showResolvedAnnotations = !this.showResolvedAnnotations;
+        this.render();
+      };
+
+      if (this.showResolvedAnnotations) {
+        const resolvedList = resolvedSection.createDiv("mwc-resolved-list");
+
+        for (const annotation of resolvedAnnotations) {
+          renderAnnotationCard(
+            resolvedList,
+            annotation,
+            (selectedAnnotation, patch) =>
+              this.plugin.storeService.updateAnnotation(file, selectedAnnotation, patch),
+            null,
+            undefined,
+            (selectedAnnotation) => {
+              void this.plugin.navigateToAnnotation(file, selectedAnnotation);
+            },
+            undefined,
+            "resolved",
+            async (reopenedAnnotation) => {
+              this.pendingReviewScrollNoteId = reopenedAnnotation.id;
+
+              await this.plugin.storeService.updateAnnotation(
+                file,
+                reopenedAnnotation,
+                { status: "open" }
+              );
+            }
           );
         }
-      );
-
-      if (annotation.id === scrollTargetId) {
-        scrollTarget = card;
       }
     }
 
@@ -210,12 +265,12 @@ export class WritingCompanionView extends ItemView {
       }, 0);
     }
   }
+
 }
 
-function sortOpenAnnotations(annotations: Annotation[]): Annotation[] {
+function sortAnnotationsByManuscriptPosition(annotations: Annotation[]): Annotation[] {
   return annotations
     .map((annotation, originalIndex) => ({ annotation, originalIndex }))
-    .filter(({ annotation }) => annotation.status === "open")
     .sort((left, right) => {
       const leftLine = left.annotation.anchor.line ?? Number.MAX_SAFE_INTEGER;
       const rightLine = right.annotation.anchor.line ?? Number.MAX_SAFE_INTEGER;

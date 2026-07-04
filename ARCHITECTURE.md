@@ -56,3 +56,8 @@ store remains authoritative. Manual changes to the property do not create,
 resolve, or otherwise modify annotations; the plugin reconciles the projection
 from stored annotation state.
 
+## Annotation lifecycle
+
+Open and resolved annotations remain in the same editorial store. The Companion
+projects them into separate active and resolved views; reopening changes only the
+annotation status and the derived `mwc_open_annotations` frontmatter count.

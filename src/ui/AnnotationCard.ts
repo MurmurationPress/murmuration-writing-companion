@@ -3,6 +3,8 @@ import { DEFAULT_CATEGORIES } from "../editorial/Categories";
 
 const FOCUS_RETRY_DELAYS_MS = [0, 50, 150, 300, 500];
 
+export type AnnotationCardMode = "open" | "resolved";
+
 export function renderAnnotationCard(
   container: Element,
   annotation: Annotation,
@@ -10,9 +12,16 @@ export function renderAnnotationCard(
   focusNoteId?: string | null,
   onFocusComplete?: (noteId: string) => void,
   onNavigate?: (annotation: Annotation) => void,
-  onResolve?: (annotation: Annotation) => Promise<void>
+  onResolve?: (annotation: Annotation) => Promise<void>,
+  mode: AnnotationCardMode = "open",
+  onReopen?: (annotation: Annotation) => Promise<void>
 ): HTMLElement {
   const card = container.createDiv("mwc-annotation-card");
+  const isResolved = mode === "resolved";
+
+  if (isResolved) {
+    card.addClass("mwc-annotation-card--resolved");
+  }
 
   const extract = card.createEl("blockquote", {
     cls: "mwc-annotation-extract",
@@ -37,40 +46,51 @@ export function renderAnnotationCard(
   const body = card.createEl("textarea", {
     cls: "mwc-annotation-body",
     attr: {
-      placeholder: "Add annotation…",
-      "aria-label": "Annotation text"
+      placeholder: isResolved ? "" : "Add annotation…",
+      "aria-label": isResolved ? "Resolved annotation text" : "Annotation text"
     }
   });
   body.value = annotation.body;
 
-  if (focusNoteId === annotation.id) {
-    scheduleAnnotationFocus(body, annotation.id, onFocusComplete);
-  }
+  if (isResolved) {
+    body.readOnly = true;
+  } else {
+    if (focusNoteId === annotation.id) {
+      scheduleAnnotationFocus(body, annotation.id, onFocusComplete);
+    }
 
-  body.onchange = async () => {
-    await updateAnnotation(annotation, { body: body.value });
-  };
+    body.onchange = async () => {
+      await updateAnnotation(annotation, { body: body.value });
+    };
+  }
 
   const footer = card.createDiv("mwc-annotation-footer");
   const metadata = footer.createDiv("mwc-annotation-metadata");
 
-  const category = metadata.createEl("select", {
-    cls: "mwc-annotation-category",
-    attr: { "aria-label": "Annotation category" }
-  });
-
-  for (const categoryName of DEFAULT_CATEGORIES) {
-    const option = category.createEl("option", {
-      text: categoryName,
-      value: categoryName
+  if (isResolved) {
+    metadata.createEl("span", {
+      cls: "mwc-annotation-category mwc-annotation-category--text",
+      text: annotation.category
+    });
+  } else {
+    const category = metadata.createEl("select", {
+      cls: "mwc-annotation-category",
+      attr: { "aria-label": "Annotation category" }
     });
 
-    if (categoryName === annotation.category) option.selected = true;
-  }
+    for (const categoryName of DEFAULT_CATEGORIES) {
+      const option = category.createEl("option", {
+        text: categoryName,
+        value: categoryName
+      });
 
-  category.onchange = async () => {
-    await updateAnnotation(annotation, { category: category.value });
-  };
+      if (categoryName === annotation.category) option.selected = true;
+    }
+
+    category.onchange = async () => {
+      await updateAnnotation(annotation, { category: category.value });
+    };
+  }
 
   if (annotation.anchor.line) {
     metadata.createEl("span", {
@@ -85,13 +105,25 @@ export function renderAnnotationCard(
     });
   }
 
-  const resolve = footer.createEl("button", {
-    cls: "mwc-annotation-resolve",
-    text: "Resolve",
-    attr: { "aria-label": "Resolve annotation" }
+  const action = footer.createEl("button", {
+    cls: isResolved ? "mwc-annotation-reopen" : "mwc-annotation-resolve",
+    text: isResolved ? "Reopen" : "Resolve",
+    attr: {
+      "aria-label": isResolved ? "Reopen annotation" : "Resolve annotation"
+    }
   });
 
-  resolve.onclick = async () => {
+  action.onclick = async () => {
+    if (isResolved) {
+      if (onReopen) {
+        await onReopen(annotation);
+        return;
+      }
+
+      await updateAnnotation(annotation, { status: "open" });
+      return;
+    }
+
     if (onResolve) {
       await onResolve(annotation);
       return;

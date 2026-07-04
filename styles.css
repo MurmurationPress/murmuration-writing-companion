@@ -210,3 +210,72 @@
   font-weight: 500;
   white-space: nowrap;
 }
+
+.mwc-resolved-annotations {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mwc-resolved-toggle {
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+  font-size: 0.84em;
+  cursor: pointer;
+}
+
+.mwc-resolved-toggle:hover,
+.mwc-resolved-toggle:focus-visible {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+.mwc-resolved-list {
+  margin-top: 6px;
+}
+
+.mwc-annotation-card--resolved {
+  opacity: 0.72;
+  background: var(--background-primary-alt);
+}
+
+.mwc-annotation-card--resolved:hover,
+.mwc-annotation-card--resolved:focus-within {
+  opacity: 0.9;
+}
+
+.mwc-annotation-card--resolved .mwc-annotation-extract {
+  border-left-color: var(--text-faint);
+}
+
+.mwc-annotation-card--resolved .mwc-annotation-body {
+  min-height: 64px;
+  resize: none;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.mwc-annotation-category--text {
+  display: inline-block;
+  font-weight: 600;
+}
+
+.mwc-annotation-reopen {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.mwc-annotation-reopen:hover,
+.mwc-annotation-reopen:focus {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}

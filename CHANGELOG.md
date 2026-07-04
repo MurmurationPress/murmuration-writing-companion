@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0
+
+- Add a collapsed section for viewing resolved annotations in the active chapter
+- Render resolved annotation cards in a quieter, read-only style
+- Keep manuscript extract navigation available for resolved annotations
+- Reopen resolved annotations and return them to the active review queue
+- Update `mwc_open_annotations` automatically when annotations are reopened
+
+
 ## 0.10.0
 
 - Maintain `mwc_open_annotations` in chapter frontmatter as a derived reporting property
