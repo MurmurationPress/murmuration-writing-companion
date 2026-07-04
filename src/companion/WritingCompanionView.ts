@@ -42,7 +42,7 @@ export class WritingCompanionView extends ItemView {
     if (!file) {
       container.createEl("p", {
         cls: "mwc-muted",
-        text: "Open a Markdown page to view its notes."
+        text: "Open a Markdown chapter to view its notes."
       });
       return;
     }
@@ -54,49 +54,35 @@ export class WritingCompanionView extends ItemView {
 
     const page = this.plugin.storeService.getPage(file);
 
-    this.renderDocumentNotes(container, file, page, focusNoteId);
+    this.renderChapterNote(container, file, page);
     this.renderAnnotations(container, page, focusNoteId);
   }
 
-  renderDocumentNotes(
+  renderChapterNote(
     container: Element,
     file: TFile,
-    page: PageEditorialNotes,
-    focusNoteId: string | null
+    page: PageEditorialNotes
   ) {
     const section = container.createDiv("mwc-section");
-    section.createEl("h3", { text: "Document Notes" });
+    section.createEl("h3", { text: "Chapter Notes" });
 
-    const addButton = section.createEl("button", {
-      cls: "mwc-button",
-      text: "Add document note"
+    const editor = section.createEl("textarea", {
+      cls: "mwc-chapter-note-body",
+      attr: {
+        placeholder: "General notes about this chapter…",
+        "aria-label": `Chapter notes for ${file.basename}`
+      }
     });
 
-    addButton.onclick = async () => {
-      await this.plugin.storeService.addDocumentNote(
-        file,
-        "New document note",
-        "Editorial"
-      );
+    editor.value = page.chapterNote.body;
+
+    editor.oninput = () => {
+      this.plugin.storeService.updateChapterNote(file, editor.value);
     };
 
-    const notes = page.documentNotes.filter((note) => note.status === "open");
-
-    if (notes.length === 0) {
-      section.createEl("p", {
-        cls: "mwc-muted",
-        text: "No open document notes."
-      });
-    }
-
-    for (const note of notes) {
-      renderNoteCard(
-        section,
-        note,
-        this.plugin.storeService.updateNote.bind(this.plugin.storeService),
-        focusNoteId
-      );
-    }
+    editor.onblur = () => {
+      void this.plugin.storeService.flushChapterNote(file);
+    };
   }
 
   renderAnnotations(

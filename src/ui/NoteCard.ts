@@ -21,12 +21,11 @@ export function renderNoteCard(
   });
 
   if (focusNoteId === note.id) {
-	window.setTimeout(() => {
-	  body.scrollIntoView({ block: "center" });
-	  body.focus();
-	  body.select();
-	  onFocused?.();
-	}, 150);
+    window.setTimeout(() => {
+      body.focus();
+      body.select();
+      onFocused?.();
+    }, 0);
   }
 
   body.onchange = async () => {

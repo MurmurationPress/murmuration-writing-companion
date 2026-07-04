@@ -11,3 +11,15 @@
 .mwc-select { flex: 1; }
 .mwc-button { cursor: pointer; }
 .mwc-muted { color: var(--text-muted); font-style: italic; }
+.mwc-chapter-note-body {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px;
+  line-height: 1.45;
+}

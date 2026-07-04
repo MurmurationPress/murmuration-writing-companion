@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Replaced addable Document Notes with one always-present Chapter Notes editor per chapter
+- Chapter Notes save automatically while the author writes
+- Existing open Document Notes are carried into the Chapter Notes field on first load
+- Updated the domain model so each chapter has one Chapter Note
+
+
 ## 0.3.5
 
 - Focuses the newly created annotation body automatically

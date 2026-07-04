@@ -45,23 +45,6 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "add-document-note",
-      name: "Add document note",
-      checkCallback: (checking) => {
-        const chapter = this.getActiveChapter();
-        if (!chapter) return false;
-
-        if (!checking) {
-          this.currentChapter = chapter;
-          this.storeService.addDocumentNote(chapter, "New document note", "Editorial");
-          this.activateView();
-        }
-
-        return true;
-      }
-    });
-
-    this.addCommand({
       id: "annotate",
       name: "Annotate",
       editorCallback: async (editor, view) => {
@@ -105,6 +88,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         }
       })
     );
+  }
+
+  onunload() {
+    void this.storeService.flushChapterNote();
   }
 
   getActiveChapter(): TFile | null {

@@ -14,5 +14,9 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 ## Commands
 
 - Open writing companion
-- Add document note
-- Add selection note
+- Annotate
+
+
+## Chapter Notes
+
+Each chapter has one always-present Chapter Notes editor in the Companion. Type general editorial thoughts directly into the box; changes are saved automatically.

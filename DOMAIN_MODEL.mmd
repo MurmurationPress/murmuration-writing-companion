@@ -3,7 +3,7 @@ classDiagram
     Book "1" --> "*" Part
     Part "1" --> "*" Chapter
 
-    Chapter "1" --> "*" ChapterNote
+    Chapter "1" --> "1" ChapterNote
     Chapter "1" --> "*" Annotation
     Chapter "1" --> "1" ChapterProgress
 

@@ -9,7 +9,11 @@ export interface EditorialNote {
   updated: string;
 }
 
-export interface ChapterNote extends EditorialNote {}
+export interface ChapterNote {
+  body: string;
+  created: string;
+  updated: string;
+}
 
 export interface AnnotationAnchor {
   text: string;
@@ -21,8 +25,11 @@ export interface Annotation extends EditorialNote {
 }
 
 export interface PageEditorialNotes {
-  documentNotes: ChapterNote[];
+  chapterNote: ChapterNote;
   annotations: Annotation[];
+
+  /** Retained only so early development data is not discarded during migration. */
+  documentNotes?: EditorialNote[];
 }
 
 export interface EditorialStore {
