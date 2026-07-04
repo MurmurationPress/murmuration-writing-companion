@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- Added a read-only Chapter Context section sourced directly from Markdown properties
+- Presents POV, story date, chapter status, current editorial pass and change summary when available
+- Omits missing and empty properties cleanly
+- Refreshes Chapter Context when Obsidian detects frontmatter changes
+- Keeps Markdown properties as the sole source of truth
+
+
 ## 0.5.0
 
 - Redesigned annotation cards around the natural reading flow

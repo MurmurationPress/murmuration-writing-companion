@@ -20,3 +20,7 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 ## Chapter Notes
 
 Each chapter has one always-present Chapter Notes editor in the Companion. Type general editorial thoughts directly into the box; changes are saved automatically.
+
+## Chapter Context
+
+The Companion presents selected non-empty values from the active chapter's Markdown properties, including POV, story date, chapter status, current editorial pass and change summary. Properties remain the authoritative source and are never copied into the editorial store.

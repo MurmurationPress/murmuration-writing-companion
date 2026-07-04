@@ -131,3 +131,42 @@
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
+
+.mwc-context-list {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+}
+
+.mwc-context-row {
+  display: grid;
+  grid-template-columns: minmax(78px, 0.75fr) minmax(0, 1.5fr);
+  gap: 10px;
+  padding: 7px 9px;
+  border-top: 1px solid var(--background-modifier-border);
+  line-height: 1.35;
+}
+
+.mwc-context-row:first-child {
+  border-top: 0;
+}
+
+.mwc-context-label,
+.mwc-context-value {
+  margin: 0;
+}
+
+.mwc-context-label {
+  color: var(--text-muted);
+  font-size: 0.84em;
+  font-weight: 600;
+}
+
+.mwc-context-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-normal);
+  font-size: 0.9em;
+}

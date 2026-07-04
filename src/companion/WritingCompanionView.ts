@@ -2,6 +2,7 @@ import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
+import { getChapterContextItems } from "./ChapterContext";
 
 export const VIEW_TYPE = "murmuration-writing-companion-view";
 
@@ -54,8 +55,37 @@ export class WritingCompanionView extends ItemView {
 
     const page = this.plugin.storeService.getPage(file);
 
+    this.renderChapterContext(container, file);
     this.renderChapterNote(container, file, page);
     this.renderAnnotations(container, page, focusNoteId);
+  }
+
+  renderChapterContext(container: Element, file: TFile) {
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const items = getChapterContextItems(frontmatter);
+
+    if (items.length === 0) return;
+
+    const section = container.createDiv("mwc-section mwc-chapter-context");
+    section.createEl("h3", { text: "Chapter Context" });
+
+    const list = section.createEl("dl", {
+      cls: "mwc-context-list",
+      attr: { "aria-label": `Chapter context for ${file.basename}` }
+    });
+
+    for (const item of items) {
+      const row = list.createDiv("mwc-context-row");
+      row.createEl("dt", {
+        cls: "mwc-context-label",
+        text: item.label
+      });
+      row.createEl("dd", {
+        cls: "mwc-context-value",
+        text: item.value,
+        attr: { title: `From property: ${item.property}` }
+      });
+    }
   }
 
   renderChapterNote(

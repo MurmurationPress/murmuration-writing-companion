@@ -79,6 +79,14 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.registerEvent(
+      this.app.metadataCache.on("changed", (file) => {
+        if (file.path === this.getCurrentChapter()?.path) {
+          this.refreshView();
+        }
+      })
+    );
+
+    this.registerEvent(
       this.app.vault.on("rename", async (file, oldPath) => {
         if (!(file instanceof TFile)) return;
         await this.storeService.handleRename(file, oldPath);
