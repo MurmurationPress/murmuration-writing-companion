@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Redesigned annotation cards around the natural reading flow
+- Manuscript extracts now appear before the editable annotation
+- Moved category, line number and resolve action into a quiet footer
+- Added compact scrolling for long manuscript selections
+- Split annotation rendering into a dedicated AnnotationCard component
+
+
 ## 0.4.0
 
 - Replaced addable Document Notes with one always-present Chapter Notes editor per chapter

@@ -1,7 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { PageEditorialNotes } from "../editorial/EditorialNote";
-import { renderNoteCard } from "../ui/NoteCard";
+import { renderAnnotationCard } from "../ui/AnnotationCard";
 
 export const VIEW_TYPE = "murmuration-writing-companion-view";
 
@@ -103,24 +103,12 @@ export class WritingCompanionView extends ItemView {
     }
 
     for (const annotation of annotations) {
-      const card = renderNoteCard(
+      renderAnnotationCard(
         section,
         annotation,
         this.plugin.storeService.updateNote.bind(this.plugin.storeService),
         focusNoteId
       );
-
-      card.createEl("blockquote", {
-        cls: "mwc-anchor",
-        text: annotation.anchor.text
-      });
-
-      if (annotation.anchor.line) {
-        card.createEl("div", {
-          cls: "mwc-line",
-          text: `Line ${annotation.anchor.line}`
-        });
-      }
     }
   }
 }
