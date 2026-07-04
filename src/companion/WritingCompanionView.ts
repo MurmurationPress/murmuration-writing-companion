@@ -36,7 +36,7 @@ export class WritingCompanionView extends ItemView {
     container.addClass("mwc-container");
 
     const file = this.plugin.getCurrentChapter();
-    const focusNoteId = this.plugin.consumePendingFocusNoteId();
+    const focusNoteId = this.plugin.getPendingFocusNoteId();
 
     container.createEl("h2", { text: "Writing Companion" });
 
@@ -164,7 +164,8 @@ export class WritingCompanionView extends ItemView {
         section,
         annotation,
         this.plugin.storeService.updateNote.bind(this.plugin.storeService),
-        focusNoteId
+        focusNoteId,
+        (noteId) => this.plugin.clearPendingFocusNoteId(noteId)
       );
     }
   }

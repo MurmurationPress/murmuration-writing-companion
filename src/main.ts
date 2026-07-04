@@ -111,10 +111,14 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     return this.currentChapter ?? this.getActiveChapter();
   }
 
-  consumePendingFocusNoteId(): string | null {
-    const noteId = this.pendingFocusNoteId;
-    this.pendingFocusNoteId = null;
-    return noteId;
+  getPendingFocusNoteId(): string | null {
+    return this.pendingFocusNoteId;
+  }
+
+  clearPendingFocusNoteId(noteId: string) {
+    if (this.pendingFocusNoteId === noteId) {
+      this.pendingFocusNoteId = null;
+    }
   }
 
   async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {
@@ -135,7 +139,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         text: selected,
         line: editor.getCursor("from").line + 1
       },
-      "New annotation",
+      "",
       "Editorial"
     );
 

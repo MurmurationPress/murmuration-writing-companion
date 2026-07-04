@@ -24,3 +24,7 @@ Each chapter has one always-present Chapter Notes editor in the Companion. Type 
 ## Chapter Context
 
 The Companion presents selected non-empty values from the active chapter's Markdown properties, including POV, story date, chapter status, current editorial pass and change summary. Properties remain the authoritative source and are never copied into the editorial store.
+
+## Annotation workflow
+
+Select manuscript text and choose **Annotate**. The Companion opens with a blank annotation editor focused and ready for typing; placeholder guidance disappears as soon as text is entered.

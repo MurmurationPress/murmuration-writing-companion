@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+- Create new annotations with an empty body and placeholder guidance
+- Focus the newly created annotation editor without requiring an extra click
+- Retry focus while Obsidian finishes opening and rendering the Companion sidebar
+
+
 ## 0.6.2
 
 - Open rendered Chapter Context wikilinks through Obsidian's workspace API

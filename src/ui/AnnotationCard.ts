@@ -1,11 +1,14 @@
 import { Annotation, EditorialNote } from "../editorial/EditorialNote";
 import { DEFAULT_CATEGORIES } from "../editorial/Categories";
 
+const FOCUS_RETRY_DELAYS_MS = [0, 50, 150, 300, 500];
+
 export function renderAnnotationCard(
   container: Element,
   annotation: Annotation,
   updateNote: (note: EditorialNote, patch: Partial<EditorialNote>) => Promise<void>,
-  focusNoteId?: string | null
+  focusNoteId?: string | null,
+  onFocusComplete?: (noteId: string) => void
 ): HTMLElement {
   const card = container.createDiv("mwc-annotation-card");
 
@@ -25,10 +28,7 @@ export function renderAnnotationCard(
   body.value = annotation.body;
 
   if (focusNoteId === annotation.id) {
-    window.setTimeout(() => {
-      body.focus();
-      body.select();
-    }, 0);
+    scheduleAnnotationFocus(body, annotation.id, onFocusComplete);
   }
 
   body.onchange = async () => {
@@ -80,4 +80,24 @@ export function renderAnnotationCard(
   };
 
   return card;
+}
+
+function scheduleAnnotationFocus(
+  body: HTMLTextAreaElement,
+  noteId: string,
+  onFocusComplete?: (noteId: string) => void
+) {
+  for (const [index, delay] of FOCUS_RETRY_DELAYS_MS.entries()) {
+    window.setTimeout(() => {
+      if (!body.isConnected) return;
+
+      body.scrollIntoView({ block: "nearest" });
+      body.focus({ preventScroll: true });
+      body.setSelectionRange(body.value.length, body.value.length);
+
+      if (document.activeElement === body || index === FOCUS_RETRY_DELAYS_MS.length - 1) {
+        onFocusComplete?.(noteId);
+      }
+    }, delay);
+  }
 }
