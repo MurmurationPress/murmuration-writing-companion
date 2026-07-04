@@ -61,3 +61,11 @@ from stored annotation state.
 Open and resolved annotations remain in the same editorial store. The Companion
 projects them into separate active and resolved views; reopening changes only the
 annotation status and the derived `mwc_open_annotations` frontmatter count.
+
+## Chapter Context write-through
+
+Chapter status, editorial pass and change summary are edited in the Companion but
+remain ordinary Markdown frontmatter. The plugin updates an existing recognised
+property alias when present, otherwise it creates the canonical properties
+`chapter_status`, `editorial_pass` and `change_summary`. Empty values remove the
+property. No copy is stored in the editorial data model.

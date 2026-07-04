@@ -2,7 +2,11 @@ import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { Annotation, PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
-import { getChapterContextItems } from "./ChapterContext";
+import {
+  EDITABLE_CHAPTER_CONTEXT_FIELDS,
+  getChapterContextItems,
+  getEditableChapterContextValue
+} from "./ChapterContext";
 
 export const VIEW_TYPE = "murmuration-writing-companion-view";
 
@@ -65,9 +69,6 @@ export class WritingCompanionView extends ItemView {
   renderChapterContext(container: Element, file: TFile) {
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const items = getChapterContextItems(frontmatter);
-
-    if (items.length === 0) return;
-
     const section = container.createDiv("mwc-section mwc-chapter-context");
     section.createEl("h3", { text: "Chapter Context" });
 
@@ -114,6 +115,58 @@ export class WritingCompanionView extends ItemView {
           event.metaKey || event.ctrlKey
         );
       });
+    }
+
+    for (const field of EDITABLE_CHAPTER_CONTEXT_FIELDS) {
+      const contextValue = getEditableChapterContextValue(frontmatter, field);
+      const row = list.createDiv("mwc-context-row mwc-context-row--editable");
+      row.createEl("dt", {
+        cls: "mwc-context-label",
+        text: field.label
+      });
+      const value = row.createEl("dd", {
+        cls: "mwc-context-value mwc-context-value--editable"
+      });
+
+      const save = async (nextValue: string) => {
+        const normalizedCurrent = contextValue.value.trim();
+        const normalizedNext = nextValue.trim();
+        if (normalizedCurrent === normalizedNext) return;
+
+        await this.plugin.updateChapterContextProperty(file, field, normalizedNext);
+      };
+
+      if (field.multiline) {
+        const editor = value.createEl("textarea", {
+          cls: "mwc-context-input mwc-context-input--multiline",
+          attr: {
+            placeholder: field.placeholder,
+            "aria-label": field.label
+          }
+        });
+        editor.value = contextValue.value;
+        editor.onblur = () => {
+          void save(editor.value);
+        };
+      } else {
+        const editor = value.createEl("input", {
+          cls: "mwc-context-input",
+          type: "text",
+          attr: {
+            placeholder: field.placeholder,
+            "aria-label": field.label
+          }
+        });
+        editor.value = contextValue.value;
+        editor.onchange = () => {
+          void save(editor.value);
+        };
+        editor.onkeydown = (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          editor.blur();
+        };
+      }
     }
   }
 

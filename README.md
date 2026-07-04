@@ -23,7 +23,7 @@ Each chapter has one always-present Chapter Notes editor in the Companion. Type 
 
 ## Chapter Context
 
-The Companion presents selected non-empty values from the active chapter's Markdown properties, including POV, story date, chapter status, current editorial pass and change summary. Properties remain the authoritative source and are never copied into the editorial store.
+The Companion presents POV and story date from the active chapter's Markdown properties and lets the author edit chapter status, editorial pass and change summary directly in the Chapter Context panel. Changes write through to frontmatter; properties remain the authoritative source and are never copied into the editorial store.
 
 ## Annotation workflow
 

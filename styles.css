@@ -279,3 +279,45 @@
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
+
+.mwc-context-row--editable {
+  align-items: start;
+}
+
+.mwc-context-value--editable {
+  width: 100%;
+}
+
+.mwc-context-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-normal);
+  font: inherit;
+  line-height: 1.35;
+}
+
+.mwc-context-input:hover {
+  border-color: var(--background-modifier-border);
+  background: var(--background-primary);
+}
+
+.mwc-context-input:focus {
+  border-color: var(--interactive-accent);
+  background: var(--background-primary);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+  outline: none;
+}
+
+.mwc-context-input::placeholder {
+  color: var(--text-faint);
+}
+
+.mwc-context-input--multiline {
+  min-height: 64px;
+  resize: vertical;
+}

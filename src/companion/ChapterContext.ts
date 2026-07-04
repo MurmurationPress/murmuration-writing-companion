@@ -4,12 +4,20 @@ export interface ChapterContextItem {
   property: string;
 }
 
+export interface EditableChapterContextField {
+  key: "chapter_status" | "editorial_pass" | "change_summary";
+  label: string;
+  aliases: string[];
+  placeholder: string;
+  multiline?: boolean;
+}
+
 interface ChapterContextField {
   label: string;
   aliases: string[];
 }
 
-const CHAPTER_CONTEXT_FIELDS: ChapterContextField[] = [
+const READ_ONLY_CHAPTER_CONTEXT_FIELDS: ChapterContextField[] = [
   {
     label: "POV",
     aliases: ["pov", "point_of_view", "viewpoint"]
@@ -17,29 +25,51 @@ const CHAPTER_CONTEXT_FIELDS: ChapterContextField[] = [
   {
     label: "Story date",
     aliases: ["story_date", "storydate", "story_day", "narrative_date"]
-  },
-  {
-    label: "Chapter status",
-    aliases: ["chapter_status", "status"]
-  },
-  {
-    label: "Current pass",
-    aliases: ["current_editorial_pass", "editorial_pass", "current_pass", "editing_pass", "pass"]
-  },
-  {
-    label: "Change summary",
-    aliases: ["change_summary", "changes", "what_changed", "whats_changed", "change_log"]
   }
 ];
 
-function normalizePropertyName(name: string): string {
+export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
+  {
+    key: "chapter_status",
+    label: "Chapter status",
+    aliases: ["chapter_status", "status"],
+    placeholder: "Draft, revision, complete…"
+  },
+  {
+    key: "editorial_pass",
+    label: "Editorial pass",
+    aliases: [
+      "editorial_pass",
+      "current_editorial_pass",
+      "current_pass",
+      "editing_pass",
+      "pass"
+    ],
+    placeholder: "Structure, continuity, line edit…"
+  },
+  {
+    key: "change_summary",
+    label: "Change summary",
+    aliases: [
+      "change_summary",
+      "changes",
+      "what_changed",
+      "whats_changed",
+      "change_log"
+    ],
+    placeholder: "What needs to change, or what changed in this pass…",
+    multiline: true
+  }
+];
+
+export function normalizePropertyName(name: string): string {
   return name
     .trim()
     .toLowerCase()
     .replace(/[\s-]+/g, "_");
 }
 
-function formatPropertyValue(value: unknown): string | null {
+export function formatPropertyValue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
 
   if (typeof value === "string") {
@@ -62,10 +92,11 @@ function formatPropertyValue(value: unknown): string | null {
   return null;
 }
 
-export function getChapterContextItems(
-  frontmatter: Record<string, unknown> | undefined
-): ChapterContextItem[] {
-  if (!frontmatter) return [];
+function findProperty(
+  frontmatter: Record<string, unknown> | undefined,
+  aliases: string[]
+): { property: string; value: unknown } | null {
+  if (!frontmatter) return null;
 
   const properties = new Map<string, { property: string; value: unknown }>();
 
@@ -78,25 +109,51 @@ export function getChapterContextItems(
     });
   }
 
+  for (const alias of aliases) {
+    const match = properties.get(normalizePropertyName(alias));
+    if (match) return match;
+  }
+
+  return null;
+}
+
+export function getChapterContextItems(
+  frontmatter: Record<string, unknown> | undefined
+): ChapterContextItem[] {
   const items: ChapterContextItem[] = [];
 
-  for (const field of CHAPTER_CONTEXT_FIELDS) {
-    for (const alias of field.aliases) {
-      const match = properties.get(normalizePropertyName(alias));
-      if (!match) continue;
+  for (const field of READ_ONLY_CHAPTER_CONTEXT_FIELDS) {
+    const match = findProperty(frontmatter, field.aliases);
+    if (!match) continue;
 
-      const value = formatPropertyValue(match.value);
-      if (value !== null) {
-        items.push({
-          label: field.label,
-          value,
-          property: match.property
-        });
-      }
+    const value = formatPropertyValue(match.value);
+    if (value === null) continue;
 
-      break;
-    }
+    items.push({
+      label: field.label,
+      value,
+      property: match.property
+    });
   }
 
   return items;
+}
+
+export function getEditableChapterContextValue(
+  frontmatter: Record<string, unknown> | undefined,
+  field: EditableChapterContextField
+): { property: string; value: string } {
+  const match = findProperty(frontmatter, field.aliases);
+
+  return {
+    property: match?.property ?? field.key,
+    value: formatPropertyValue(match?.value) ?? ""
+  };
+}
+
+export function findEditableChapterContextProperty(
+  frontmatter: Record<string, unknown>,
+  field: EditableChapterContextField
+): string {
+  return findProperty(frontmatter, field.aliases)?.property ?? field.key;
 }

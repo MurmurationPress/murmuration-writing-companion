@@ -14,6 +14,11 @@ import {
 import { EditorialStoreService } from "./editorial/EditorialStore";
 import { Annotation } from "./editorial/EditorialNote";
 import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
+import {
+  EditableChapterContextField,
+  findEditableChapterContextProperty,
+  normalizePropertyName
+} from "./companion/ChapterContext";
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
@@ -126,6 +131,32 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     if (this.pendingFocusNoteId === noteId) {
       this.pendingFocusNoteId = null;
     }
+  }
+
+  async updateChapterContextProperty(
+    chapter: TFile,
+    field: EditableChapterContextField,
+    value: string
+  ) {
+    await this.app.fileManager.processFrontMatter(chapter, (frontmatter) => {
+      const property = findEditableChapterContextProperty(frontmatter, field);
+
+      for (const existingProperty of Object.keys(frontmatter)) {
+        if (existingProperty === property) continue;
+
+        const isAlias = field.aliases.some(
+          (alias) => normalizePropertyName(alias) === normalizePropertyName(existingProperty)
+        );
+
+        if (isAlias) delete frontmatter[existingProperty];
+      }
+
+      if (value.length > 0) {
+        frontmatter[property] = value;
+      } else {
+        delete frontmatter[property];
+      }
+    });
   }
 
   async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {

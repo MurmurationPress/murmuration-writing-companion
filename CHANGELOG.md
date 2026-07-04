@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0
+
+- Edit chapter status, editorial pass and change summary directly in Chapter Context
+- Write changes through to the active chapter's Markdown frontmatter
+- Reuse existing property aliases when present and create canonical properties when missing
+- Remove empty editable properties cleanly
+- Keep POV and story date read-only and preserve frontmatter as the source of truth
+
+
 ## 0.11.0
 
 - Add a collapsed section for viewing resolved annotations in the active chapter
