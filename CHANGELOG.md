@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.2
+
+- Open rendered Chapter Context wikilinks through Obsidian's workspace API
+- Resolve links relative to the active chapter and preserve modifier-click behaviour
+
+
+## 0.6.1
+
+- Render Chapter Context values using Obsidian's native Markdown renderer
+- Display wikilink properties such as `[[Tobias]]` as clickable internal links
+
+
 ## 0.6.0
 
 - Added a read-only Chapter Context section sourced directly from Markdown properties

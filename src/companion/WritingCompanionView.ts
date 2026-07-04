@@ -1,4 +1,4 @@
-import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
@@ -80,10 +80,37 @@ export class WritingCompanionView extends ItemView {
         cls: "mwc-context-label",
         text: item.label
       });
-      row.createEl("dd", {
+      const value = row.createEl("dd", {
         cls: "mwc-context-value",
-        text: item.value,
         attr: { title: `From property: ${item.property}` }
+      });
+
+      void MarkdownRenderer.render(
+        this.app,
+        item.value,
+        value,
+        file.path,
+        this
+      );
+
+      value.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+
+        const link = target.closest<HTMLAnchorElement>("a.internal-link");
+        if (!link || !value.contains(link)) return;
+
+        const destination = link.dataset.href ?? link.getAttribute("href");
+        if (!destination) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        void this.app.workspace.openLinkText(
+          destination,
+          file.path,
+          event.metaKey || event.ctrlKey
+        );
       });
     }
   }

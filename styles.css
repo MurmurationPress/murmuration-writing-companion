@@ -170,3 +170,12 @@
   color: var(--text-normal);
   font-size: 0.9em;
 }
+
+
+.mwc-context-value > :first-child {
+  margin-top: 0;
+}
+
+.mwc-context-value > :last-child {
+  margin-bottom: 0;
+}
