@@ -9,7 +9,8 @@ export function renderAnnotationCard(
   updateNote: (note: EditorialNote, patch: Partial<EditorialNote>) => Promise<void>,
   focusNoteId?: string | null,
   onFocusComplete?: (noteId: string) => void,
-  onNavigate?: (annotation: Annotation) => void
+  onNavigate?: (annotation: Annotation) => void,
+  onResolve?: (annotation: Annotation) => Promise<void>
 ): HTMLElement {
   const card = container.createDiv("mwc-annotation-card");
 
@@ -91,6 +92,11 @@ export function renderAnnotationCard(
   });
 
   resolve.onclick = async () => {
+    if (onResolve) {
+      await onResolve(annotation);
+      return;
+    }
+
     await updateNote(annotation, { status: "resolved" });
   };
 

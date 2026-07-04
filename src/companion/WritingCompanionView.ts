@@ -1,6 +1,6 @@
 import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
-import { PageEditorialNotes } from "../editorial/EditorialNote";
+import { Annotation, PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
 import { getChapterContextItems } from "./ChapterContext";
 
@@ -8,6 +8,7 @@ export const VIEW_TYPE = "murmuration-writing-companion-view";
 
 export class WritingCompanionView extends ItemView {
   plugin: MurmurationWritingCompanionPlugin;
+  private pendingReviewScrollNoteId: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -148,20 +149,30 @@ export class WritingCompanionView extends ItemView {
     page: PageEditorialNotes,
     focusNoteId: string | null
   ) {
+    const annotations = sortOpenAnnotations(page.annotations);
     const section = container.createDiv("mwc-section");
-    section.createEl("h3", { text: "Annotations" });
+    const heading = section.createEl("h3", { cls: "mwc-section-heading" });
 
-    const annotations = page.annotations.filter((note) => note.status === "open");
+    heading.createSpan({ text: "Annotations" });
+    heading.createSpan({
+      cls: "mwc-annotation-count",
+      text: `${annotations.length} open`
+    });
 
     if (annotations.length === 0) {
       section.createEl("p", {
         cls: "mwc-muted",
         text: "No open annotations."
       });
+      this.pendingReviewScrollNoteId = null;
+      return;
     }
 
-    for (const annotation of annotations) {
-      renderAnnotationCard(
+    const scrollTargetId = this.pendingReviewScrollNoteId;
+    let scrollTarget: HTMLElement | null = null;
+
+    for (const [index, annotation] of annotations.entries()) {
+      const card = renderAnnotationCard(
         section,
         annotation,
         this.plugin.storeService.updateNote.bind(this.plugin.storeService),
@@ -169,8 +180,52 @@ export class WritingCompanionView extends ItemView {
         (noteId) => this.plugin.clearPendingFocusNoteId(noteId),
         (selectedAnnotation) => {
           void this.plugin.navigateToAnnotation(file, selectedAnnotation);
+        },
+        async (resolvedAnnotation) => {
+          const nextAnnotation = annotations[index + 1] ?? annotations[index - 1] ?? null;
+          this.pendingReviewScrollNoteId = nextAnnotation?.id ?? null;
+
+          await this.plugin.storeService.updateNote(
+            resolvedAnnotation,
+            { status: "resolved" }
+          );
         }
       );
+
+      if (annotation.id === scrollTargetId) {
+        scrollTarget = card;
+      }
+    }
+
+    if (scrollTargetId) {
+      this.pendingReviewScrollNoteId = null;
+    }
+
+    if (scrollTarget) {
+      window.setTimeout(() => {
+        if (!scrollTarget?.isConnected) return;
+        scrollTarget.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }, 0);
     }
   }
+}
+
+function sortOpenAnnotations(annotations: Annotation[]): Annotation[] {
+  return annotations
+    .map((annotation, originalIndex) => ({ annotation, originalIndex }))
+    .filter(({ annotation }) => annotation.status === "open")
+    .sort((left, right) => {
+      const leftLine = left.annotation.anchor.line ?? Number.MAX_SAFE_INTEGER;
+      const rightLine = right.annotation.anchor.line ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftLine !== rightLine) return leftLine - rightLine;
+
+      const createdComparison = left.annotation.created.localeCompare(
+        right.annotation.created
+      );
+
+      if (createdComparison !== 0) return createdComparison;
+      return left.originalIndex - right.originalIndex;
+    })
+    .map(({ annotation }) => annotation);
 }

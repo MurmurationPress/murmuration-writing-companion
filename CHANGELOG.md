@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- Order open annotations by their manuscript line rather than creation time
+- Show the number of open annotations remaining in the chapter
+- Remove resolved annotations from the active review list immediately
+- Bring the next annotation into view after resolving the current one
+
+
 ## 0.8.0
 
 - Make annotation manuscript extracts clickable and keyboard accessible
