@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- Make annotation manuscript extracts clickable and keyboard accessible
+- Open or activate the annotated chapter and select the matching passage
+- Prefer the exact extract nearest its stored line, then exact matches elsewhere
+- Fall back to the original line when the manuscript text has changed
+
+
 ## 0.7.0
 
 - Create new annotations with an empty body and placeholder guidance

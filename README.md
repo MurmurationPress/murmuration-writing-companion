@@ -28,3 +28,5 @@ The Companion presents selected non-empty values from the active chapter's Markd
 ## Annotation workflow
 
 Select manuscript text and choose **Annotate**. The Companion opens with a blank annotation editor focused and ready for typing; placeholder guidance disappears as soon as text is entered.
+
+Click an annotation's manuscript extract to open the chapter and select that passage. The Companion matches the stored text nearest its original line and falls back to the stored line if the passage has changed.

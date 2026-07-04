@@ -57,7 +57,7 @@ export class WritingCompanionView extends ItemView {
 
     this.renderChapterContext(container, file);
     this.renderChapterNote(container, file, page);
-    this.renderAnnotations(container, page, focusNoteId);
+    this.renderAnnotations(container, file, page, focusNoteId);
   }
 
   renderChapterContext(container: Element, file: TFile) {
@@ -144,6 +144,7 @@ export class WritingCompanionView extends ItemView {
 
   renderAnnotations(
     container: Element,
+    file: TFile,
     page: PageEditorialNotes,
     focusNoteId: string | null
   ) {
@@ -165,7 +166,10 @@ export class WritingCompanionView extends ItemView {
         annotation,
         this.plugin.storeService.updateNote.bind(this.plugin.storeService),
         focusNoteId,
-        (noteId) => this.plugin.clearPendingFocusNoteId(noteId)
+        (noteId) => this.plugin.clearPendingFocusNoteId(noteId),
+        (selectedAnnotation) => {
+          void this.plugin.navigateToAnnotation(file, selectedAnnotation);
+        }
       );
     }
   }

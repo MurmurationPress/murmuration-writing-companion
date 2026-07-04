@@ -8,7 +8,8 @@ export function renderAnnotationCard(
   annotation: Annotation,
   updateNote: (note: EditorialNote, patch: Partial<EditorialNote>) => Promise<void>,
   focusNoteId?: string | null,
-  onFocusComplete?: (noteId: string) => void
+  onFocusComplete?: (noteId: string) => void,
+  onNavigate?: (annotation: Annotation) => void
 ): HTMLElement {
   const card = container.createDiv("mwc-annotation-card");
 
@@ -16,7 +17,21 @@ export function renderAnnotationCard(
     cls: "mwc-annotation-extract",
     text: annotation.anchor.text
   });
-  extract.setAttribute("aria-label", "Selected manuscript text");
+  extract.setAttribute("aria-label", "Go to selected manuscript text");
+  extract.setAttribute("role", "button");
+  extract.setAttribute("tabindex", "0");
+  extract.setAttribute("title", "Go to this passage in the chapter");
+
+  extract.onclick = () => {
+    onNavigate?.(annotation);
+  };
+
+  extract.onkeydown = (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    onNavigate?.(annotation);
+  };
 
   const body = card.createEl("textarea", {
     cls: "mwc-annotation-body",

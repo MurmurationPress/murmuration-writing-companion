@@ -4,13 +4,16 @@ import {
   Menu,
   Notice,
   Plugin,
-  TFile
+  TFile,
+  WorkspaceLeaf
 } from "obsidian";
 import {
   VIEW_TYPE,
   WritingCompanionView
 } from "./companion/WritingCompanionView";
 import { EditorialStoreService } from "./editorial/EditorialStore";
+import { Annotation } from "./editorial/EditorialNote";
+import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
@@ -147,6 +150,58 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     await this.activateView();
     this.refreshView();
+  }
+
+
+  async navigateToAnnotation(chapter: TFile, annotation: Annotation) {
+    const leaf = this.findChapterLeaf(chapter)
+      ?? this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)
+      ?? this.app.workspace.getLeaf(false);
+
+    await leaf.openFile(chapter, { active: true });
+    await this.app.workspace.revealLeaf(leaf);
+    this.app.workspace.setActiveLeaf(leaf, { focus: true });
+
+    if (!(leaf.view instanceof MarkdownView) || !leaf.view.file) {
+      new Notice("Could not open the annotated chapter.");
+      return;
+    }
+
+    const editor = leaf.view.editor;
+    const range = resolveAnnotationRange(editor.getValue(), annotation.anchor);
+
+    if (!range) {
+      new Notice("Could not locate the annotated passage.");
+      return;
+    }
+
+    const from = editor.offsetToPos(range.fromOffset);
+    const to = editor.offsetToPos(range.toOffset);
+
+    editor.setSelection(from, to);
+    editor.scrollIntoView({ from, to }, true);
+    editor.focus();
+
+    if (!range.exact) {
+      new Notice("The passage has changed; moved to its original line.");
+    }
+  }
+
+  private findChapterLeaf(chapter: TFile): WorkspaceLeaf | null {
+    let match: WorkspaceLeaf | null = null;
+
+    this.app.workspace.iterateRootLeaves((leaf) => {
+      if (match) return;
+
+      if (
+        leaf.view instanceof MarkdownView
+        && leaf.view.file?.path === chapter.path
+      ) {
+        match = leaf;
+      }
+    });
+
+    return match;
   }
 
   async activateView() {
