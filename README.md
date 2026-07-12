@@ -4,6 +4,12 @@ A focused writing companion for Obsidian.
 
 Writing a novel is difficult enough. Your tools shouldn't make it harder.
 
+## Project documents
+
+- [Manifesto](MANIFESTO.md) — what the project believes
+- [Constitution](CONSTITUTION.md) — the binding rules for product and development decisions
+- [Architecture](ARCHITECTURE.md) — the current division of responsibilities
+
 ## Development install
 
 1. Copy this folder into `.obsidian/plugins/murmuration-writing-companion/`
@@ -42,4 +48,3 @@ Markdown property `mwc_open_annotations`. Chapters with no open annotations do
 not retain the property. This makes it possible to filter and sort chapters in
 Obsidian Bases without duplicating the annotation data or adding a separate
 reporting interface.
-
