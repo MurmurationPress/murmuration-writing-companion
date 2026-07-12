@@ -1,34 +1,42 @@
-export interface ChapterContextItem {
-  label: string;
-  value: string;
-  property: string;
-}
+export type ChapterContextFieldKey =
+  | "title"
+  | "pov"
+  | "story_date"
+  | "chapter_status"
+  | "editorial_pass"
+  | "change_summary";
 
 export interface EditableChapterContextField {
-  key: "chapter_status" | "editorial_pass" | "change_summary";
+  key: ChapterContextFieldKey;
   label: string;
   aliases: string[];
   placeholder: string;
   multiline?: boolean;
+  inputType?: "text" | "date";
+  renderMarkdownPreview?: boolean;
 }
-
-interface ChapterContextField {
-  label: string;
-  aliases: string[];
-}
-
-const READ_ONLY_CHAPTER_CONTEXT_FIELDS: ChapterContextField[] = [
-  {
-    label: "POV",
-    aliases: ["pov", "point_of_view", "viewpoint"]
-  },
-  {
-    label: "Story date",
-    aliases: ["story_date", "storydate", "story_day", "narrative_date"]
-  }
-];
 
 export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
+  {
+    key: "title",
+    label: "Title",
+    aliases: ["title"],
+    placeholder: "Chapter title…"
+  },
+  {
+    key: "pov",
+    label: "POV",
+    aliases: ["pov", "point_of_view", "viewpoint"],
+    placeholder: "Character or [[link]]…",
+    renderMarkdownPreview: true
+  },
+  {
+    key: "story_date",
+    label: "Story date",
+    aliases: ["story_date", "storydate", "story_day", "narrative_date"],
+    placeholder: "YYYY-MM-DD",
+    inputType: "date"
+  },
   {
     key: "chapter_status",
     label: "Chapter status",
@@ -81,6 +89,10 @@ export function formatPropertyValue(value: unknown): string | null {
     return String(value);
   }
 
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
   if (Array.isArray(value)) {
     const values = value
       .map(formatPropertyValue)
@@ -117,35 +129,6 @@ function findProperty(
   return null;
 }
 
-export function getChapterTitle(
-  frontmatter: Record<string, unknown> | undefined
-): string | null {
-  const match = findProperty(frontmatter, ["title"]);
-  return formatPropertyValue(match?.value);
-}
-
-export function getChapterContextItems(
-  frontmatter: Record<string, unknown> | undefined
-): ChapterContextItem[] {
-  const items: ChapterContextItem[] = [];
-
-  for (const field of READ_ONLY_CHAPTER_CONTEXT_FIELDS) {
-    const match = findProperty(frontmatter, field.aliases);
-    if (!match) continue;
-
-    const value = formatPropertyValue(match.value);
-    if (value === null) continue;
-
-    items.push({
-      label: field.label,
-      value,
-      property: match.property
-    });
-  }
-
-  return items;
-}
-
 export function getEditableChapterContextValue(
   frontmatter: Record<string, unknown> | undefined,
   field: EditableChapterContextField
@@ -163,4 +146,14 @@ export function findEditableChapterContextProperty(
   field: EditableChapterContextField
 ): string {
   return findProperty(frontmatter, field.aliases)?.property ?? field.key;
+}
+
+export function getChapterContextInputType(
+  field: EditableChapterContextField,
+  value: string
+): "text" | "date" {
+  if (field.inputType !== "date") return "text";
+
+  const isIsoDate = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return value.length === 0 || isIsoDate ? "date" : "text";
 }
