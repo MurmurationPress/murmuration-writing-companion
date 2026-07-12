@@ -29,9 +29,11 @@ Each chapter has one always-present Chapter Notes editor in the Companion. Type 
 
 ## Chapter Context
 
-The Companion displays the active chapter's `title` property as its heading, falling back to the Markdown filename when no title is present. Changing the title does not rename the file.
+Title, POV, story date, chapter status, editorial pass and change summary are editable directly in Chapter Context. Changes write through to the active chapter's Markdown frontmatter; properties remain the authoritative source and are never copied into the editorial store.
 
-The Companion presents POV and story date from the active chapter's Markdown properties and lets the author edit chapter status, editorial pass and change summary directly in the Chapter Context panel. Changes write through to frontmatter; properties remain the authoritative source and are never copied into the editorial store.
+Title appears as the first context field. When it is missing, the filename is shown only as placeholder guidance and is not written into frontmatter. Changing the title does not rename the Markdown file.
+
+POV values retain their Markdown form for editing, including wikilinks such as `[[Tobias]]`, with a clickable rendered preview beneath the field. Story date uses a date control for ISO dates while preserving existing non-ISO values as text.
 
 ## Annotation workflow
 

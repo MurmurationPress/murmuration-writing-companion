@@ -62,18 +62,21 @@ Open and resolved annotations remain in the same editorial store. The Companion
 projects them into separate active and resolved views; reopening changes only the
 annotation status and the derived `mwc_open_annotations` frontmatter count.
 
-## Chapter heading
-
-The Companion derives the displayed chapter heading from the Markdown `title`
-property. When no usable title is present, it falls back to the file basename.
-The heading is a presentation of manuscript metadata and never renames the file.
-Metadata-cache changes refresh the heading without introducing a second stored
-copy.
-
 ## Chapter Context write-through
 
-Chapter status, editorial pass and change summary are edited in the Companion but
-remain ordinary Markdown frontmatter. The plugin updates an existing recognised
-property alias when present, otherwise it creates the canonical properties
-`chapter_status`, `editorial_pass` and `change_summary`. Empty values remove the
-property. No copy is stored in the editorial data model.
+Title, POV, story date, chapter status, editorial pass and change summary are
+edited in the Companion but remain ordinary Markdown frontmatter. The plugin
+updates an existing recognised property alias when present, otherwise it creates
+the canonical property name. Empty values remove the property. No copy is stored
+in the editorial data model.
+
+Title is presented as the first Chapter Context field rather than as a separate
+heading. A missing title may use the file basename as placeholder guidance, but
+the basename is never written automatically and changing the title never renames
+the file.
+
+POV retains its Markdown source value for editing and renders a clickable preview
+for Obsidian links. Story date uses an ISO date control when the stored value is
+compatible and falls back to text editing for existing non-ISO values. Metadata
+cache changes refresh the displayed values without introducing a second source of
+truth.

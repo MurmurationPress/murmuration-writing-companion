@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Move Title into Chapter Context and remove the separate chapter heading
+- Edit Title, POV and Story date directly alongside the existing context fields
+- Preserve raw POV wikilinks while providing a clickable rendered preview
+- Use a date control for ISO story dates without rewriting existing non-ISO values
+- Keep Markdown frontmatter authoritative and remove properties when values are cleared
+
+
 ## 0.12.0
 
 - Edit chapter status, editorial pass and change summary directly in Chapter Context
