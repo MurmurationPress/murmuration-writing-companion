@@ -117,6 +117,13 @@ function findProperty(
   return null;
 }
 
+export function getChapterTitle(
+  frontmatter: Record<string, unknown> | undefined
+): string | null {
+  const match = findProperty(frontmatter, ["title"]);
+  return formatPropertyValue(match?.value);
+}
+
 export function getChapterContextItems(
   frontmatter: Record<string, unknown> | undefined
 ): ChapterContextItem[] {

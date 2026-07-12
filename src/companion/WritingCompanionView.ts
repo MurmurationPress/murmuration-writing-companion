@@ -5,6 +5,7 @@ import { renderAnnotationCard } from "../ui/AnnotationCard";
 import {
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
   getChapterContextItems,
+  getChapterTitle,
   getEditableChapterContextValue
 } from "./ChapterContext";
 
@@ -54,9 +55,12 @@ export class WritingCompanionView extends ItemView {
       return;
     }
 
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const chapterTitle = getChapterTitle(frontmatter) ?? file.basename;
+
     container.createEl("div", {
-      cls: "mwc-file-name",
-      text: file.basename
+      cls: "mwc-chapter-title",
+      text: chapterTitle
     });
 
     const page = this.plugin.storeService.getPage(file);
