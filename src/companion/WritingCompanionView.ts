@@ -4,8 +4,7 @@ import { Annotation, PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
 import {
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
-  getChapterContextItems,
-  getChapterTitle,
+  getChapterContextInputType,
   getEditableChapterContextValue
 } from "./ChapterContext";
 
@@ -55,14 +54,6 @@ export class WritingCompanionView extends ItemView {
       return;
     }
 
-    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-    const chapterTitle = getChapterTitle(frontmatter) ?? file.basename;
-
-    container.createEl("div", {
-      cls: "mwc-chapter-title",
-      text: chapterTitle
-    });
-
     const page = this.plugin.storeService.getPage(file);
 
     this.renderChapterContext(container, file);
@@ -72,7 +63,6 @@ export class WritingCompanionView extends ItemView {
 
   renderChapterContext(container: Element, file: TFile) {
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-    const items = getChapterContextItems(frontmatter);
     const section = container.createDiv("mwc-section mwc-chapter-context");
     section.createEl("h3", { text: "Chapter Context" });
 
@@ -80,46 +70,6 @@ export class WritingCompanionView extends ItemView {
       cls: "mwc-context-list",
       attr: { "aria-label": `Chapter context for ${file.basename}` }
     });
-
-    for (const item of items) {
-      const row = list.createDiv("mwc-context-row");
-      row.createEl("dt", {
-        cls: "mwc-context-label",
-        text: item.label
-      });
-      const value = row.createEl("dd", {
-        cls: "mwc-context-value",
-        attr: { title: `From property: ${item.property}` }
-      });
-
-      void MarkdownRenderer.render(
-        this.app,
-        item.value,
-        value,
-        file.path,
-        this
-      );
-
-      value.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) return;
-
-        const link = target.closest<HTMLAnchorElement>("a.internal-link");
-        if (!link || !value.contains(link)) return;
-
-        const destination = link.dataset.href ?? link.getAttribute("href");
-        if (!destination) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        void this.app.workspace.openLinkText(
-          destination,
-          file.path,
-          event.metaKey || event.ctrlKey
-        );
-      });
-    }
 
     for (const field of EDITABLE_CHAPTER_CONTEXT_FIELDS) {
       const contextValue = getEditableChapterContextValue(frontmatter, field);
@@ -129,7 +79,8 @@ export class WritingCompanionView extends ItemView {
         text: field.label
       });
       const value = row.createEl("dd", {
-        cls: "mwc-context-value mwc-context-value--editable"
+        cls: "mwc-context-value mwc-context-value--editable",
+        attr: { title: `Markdown property: ${contextValue.property}` }
       });
 
       const save = async (nextValue: string) => {
@@ -140,11 +91,13 @@ export class WritingCompanionView extends ItemView {
         await this.plugin.updateChapterContextProperty(file, field, normalizedNext);
       };
 
+      const placeholder = field.key === "title" ? file.basename : field.placeholder;
+
       if (field.multiline) {
         const editor = value.createEl("textarea", {
           cls: "mwc-context-input mwc-context-input--multiline",
           attr: {
-            placeholder: field.placeholder,
+            placeholder,
             "aria-label": field.label
           }
         });
@@ -155,9 +108,9 @@ export class WritingCompanionView extends ItemView {
       } else {
         const editor = value.createEl("input", {
           cls: "mwc-context-input",
-          type: "text",
+          type: getChapterContextInputType(field, contextValue.value),
           attr: {
-            placeholder: field.placeholder,
+            placeholder,
             "aria-label": field.label
           }
         });
@@ -171,7 +124,45 @@ export class WritingCompanionView extends ItemView {
           editor.blur();
         };
       }
+
+      if (field.renderMarkdownPreview && contextValue.value.length > 0) {
+        const preview = value.createDiv({
+          cls: "mwc-context-preview",
+          attr: { "aria-label": `${field.label} link preview` }
+        });
+        this.renderMarkdownValue(preview, contextValue.value, file);
+      }
     }
+  }
+
+  private renderMarkdownValue(container: HTMLElement, markdown: string, file: TFile) {
+    void MarkdownRenderer.render(
+      this.app,
+      markdown,
+      container,
+      file.path,
+      this
+    );
+
+    container.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const link = target.closest<HTMLAnchorElement>("a.internal-link");
+      if (!link || !container.contains(link)) return;
+
+      const destination = link.dataset.href ?? link.getAttribute("href");
+      if (!destination) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      void this.app.workspace.openLinkText(
+        destination,
+        file.path,
+        event.metaKey || event.ctrlKey
+      );
+    });
   }
 
   renderChapterNote(
