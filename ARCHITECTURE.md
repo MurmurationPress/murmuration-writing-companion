@@ -62,6 +62,14 @@ Open and resolved annotations remain in the same editorial store. The Companion
 projects them into separate active and resolved views; reopening changes only the
 annotation status and the derived `mwc_open_annotations` frontmatter count.
 
+## Chapter heading
+
+The Companion derives the displayed chapter heading from the Markdown `title`
+property. When no usable title is present, it falls back to the file basename.
+The heading is a presentation of manuscript metadata and never renames the file.
+Metadata-cache changes refresh the heading without introducing a second stored
+copy.
+
 ## Chapter Context write-through
 
 Chapter status, editorial pass and change summary are edited in the Companion but
