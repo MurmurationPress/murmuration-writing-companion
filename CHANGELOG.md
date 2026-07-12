@@ -7,6 +7,9 @@
 - Preserve raw POV wikilinks while providing a clickable rendered preview
 - Use a date control for ISO story dates without rewriting existing non-ISO values
 - Keep Markdown frontmatter authoritative and remove properties when values are cleared
+- Add TypeScript regression tests for Chapter Context and annotation navigation
+- Add local single-run and watch test commands without introducing another test dependency
+- Run automated tests and the production build in GitHub Actions for pushes and pull requests
 
 
 ## 0.12.0
