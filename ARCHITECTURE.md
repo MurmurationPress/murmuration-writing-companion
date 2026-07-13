@@ -22,7 +22,7 @@ Responsible for:
 
 - Entity identity and human-readable description
 - Canon-scoped names and qualified designations
-- Explicit relationship and world assertions
+- Simple entity-owned relationship and world assertions
 - Links to provenance, scope and relevant story time
 
 Story World entities remain ordinary Markdown notes. A note opts in through a non-empty `world_entity` property as defined by the versioned [Story World Entity Standard](docs/story-world-entity-standard.md). Folder placement, prose mentions, `type`, `pov` and `location` do not imply entity status.
@@ -35,9 +35,35 @@ The [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) 
 
 Status describes the author’s commitment to an item. Provenance records why the item is present through source, first-appearance and replacement links. In-world confidence remains separate: a confirmed assertion may accurately record that JANUS holds a low-confidence belief.
 
-Relationship data may be structurally represented as qualified subject–predicate–object assertions. The author-facing product presents these as readable relationship statements or world assertions, using guided forms and progressive disclosure rather than requiring raw triple syntax.
+A simple relationship may be stored on its natural entity owner as a qualified subject–predicate–object assertion. The author-facing product presents it as a readable relationship statement or world assertion rather than raw triple syntax.
 
 The Story World is not stored in the portable editorial store. Future indexes and rendered views are derived and rebuildable. Reading or indexing an entity never modifies its Markdown note.
+
+---
+
+## Supporting Models
+
+Author-maintained relationships and interpretations across the Story World.
+
+Responsible for:
+
+- Relationships with their own lifecycle
+- Relative chronology and curated timelines
+- Character-arc and institutional interpretations
+- Point-of-view knowledge, belief and visibility boundaries
+- Continuity constraints and unresolved questions
+
+A stored supporting model is ordinary Markdown that opts in through `world_model` under the [Supporting Model Conventions](docs/supporting-model-conventions.md). It references authoritative entities and sources rather than copying their names, summaries or core prose.
+
+Simple relationships remain on their natural entity owner. A dedicated model note is used when an assertion changes over time, is disputed or observer-specific, has several sources, needs its own explanation, or cannot be owned naturally by one entity.
+
+Qualified assertions require a subject, predicate and linked target or literal value. Status, provenance, time, perspective, confidence, scope and visibility are optional qualifiers. Unknown predicates and qualifiers remain valid.
+
+Inverse relationships are derived only from an explicit predicate registry and are never written into the target note merely by viewing them. Symmetry, transitivity and conflict resolution are not inferred during the foundation milestone.
+
+Stored models contain authorial choices that cannot be reconstructed safely. Indexes, graphs, sentence renderings, registered inverses and reports are derived and rebuildable and own no canon.
+
+MWC reads supporting models during the 0.14.0 foundation milestone but does not write them. Model authority never enters the portable editorial store.
 
 ---
 
