@@ -17,6 +17,18 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 3. Run `npm run build`
 4. Enable **Murmuration Writing Companion** in Obsidian.
 
+## Testing
+
+Run the automated regression suite once with:
+
+```bash
+npm test
+```
+
+Use `npm run test:watch` while changing pure logic. Tests are written in TypeScript, bundled with the existing esbuild dependency and executed with Node's built-in test runner.
+
+Automate deterministic behaviour such as property normalization, matching, sorting, migration and state transitions. Continue to perform a short Obsidian check for sidebar layout, native editor behaviour, rendered links and other host-application integration. GitHub Actions runs both the tests and production build for every push and pull request.
+
 ## Commands
 
 - Open writing companion
