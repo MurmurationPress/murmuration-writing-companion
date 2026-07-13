@@ -34,19 +34,27 @@ export class EditorialStoreService {
   }
 
   async load() {
-    const legacyData = await this.plugin.loadData();
-    const result = await this.portableStorage.load(legacyData);
-    this.store = result.store;
-    this.ready = true;
+    try {
+      const legacyData = await this.plugin.loadData();
+      const result = await this.portableStorage.load(legacyData);
+      this.store = result.store;
+      this.ready = true;
 
-    if (result.source === "legacy") {
-      new Notice("Writing Companion editorial data moved into the vault.");
-    } else if (result.recovered) {
+      if (result.source === "legacy") {
+        new Notice("Writing Companion editorial data moved into the vault.");
+      } else if (result.recovered) {
+        new Notice(
+          `Writing Companion recovered editorial data from its ${result.source} file.`
+        );
+      } else if (result.migrated) {
+        new Notice("Writing Companion editorial storage was upgraded safely.");
+      }
+    } catch (error) {
+      console.error("Writing Companion portable editorial storage failed to load", error);
       new Notice(
-        `Writing Companion recovered editorial data from its ${result.source} file.`
+        "Writing Companion could not load editorial data. The storage files were not overwritten; check the console."
       );
-    } else if (result.migrated) {
-      new Notice("Writing Companion editorial storage was upgraded safely.");
+      throw error;
     }
   }
 
@@ -155,7 +163,15 @@ export class EditorialStoreService {
   }
 
   async handleRename(file: TFile, oldPath: string) {
-    if (!moveEditorialPage(this.store, oldPath, file.path)) return;
+    try {
+      if (!moveEditorialPage(this.store, oldPath, file.path)) return;
+    } catch (error) {
+      console.error("Writing Companion could not move editorial data", error);
+      new Notice(
+        "Writing Companion did not move editorial data because the destination already has a record."
+      );
+      return;
+    }
 
     const timer = this.chapterNoteSaveTimers.get(oldPath);
     if (timer !== undefined) {
