@@ -235,5 +235,6 @@ export function buildChapterNoteSummary(
   if (compact.length <= maxLength) return compact;
   if (maxLength === 1) return "…";
 
-  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+  const truncated = compact.slice(0, maxLength - 1).replace(/\s+$/, "");
+  return `${truncated}…`;
 }
