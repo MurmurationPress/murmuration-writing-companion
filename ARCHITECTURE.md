@@ -67,6 +67,29 @@ MWC reads supporting models during the 0.14.0 foundation milestone but does not 
 
 ---
 
+## Chapter World Context
+
+Explicit chapter-level relevance to Story World entities.
+
+Responsible for:
+
+- The optional `world_context` chapter property
+- Reusing recognised Story World POV links without duplication
+- Preserving existing manuscript metadata and free-text locations
+- Supplying a deterministic, rebuildable reference set for the future World Context view
+
+The [Chapter World Context Standard](docs/chapter-world-context-standard.md) defines `world_context` as one wikilink string or a list of wikilink strings. Each resolved target contributes only when the note has a non-empty `world_entity` property.
+
+A recognised Story World link in `pov` is included automatically because POV is already explicit, author-maintained chapter metadata. The author does not repeat it in `world_context`. Plain-text, unresolved and non-entity POV values contribute nothing.
+
+`location` retains its current free-text manuscript meaning and is not parsed, rewritten or promoted automatically. Locations and all non-POV entities are added explicitly through `world_context` when they matter to the chapter.
+
+The derived context set places resolved POV entities first, then explicit entries in stored order, and removes duplicates by resolved vault path. Alias and path variants may therefore identify one entity without creating duplicate authority.
+
+No context is inferred from prose, prose wikilinks, backlinks, tags or folder placement. Missing, malformed and unresolved references degrade quietly. Reading or presenting chapter context never modifies chapter frontmatter, Story World notes or the portable editorial store.
+
+---
+
 ## Editorial
 
 Editorial knowledge.

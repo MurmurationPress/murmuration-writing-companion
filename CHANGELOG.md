@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Define the optional `world_context` chapter property for explicit Story World relevance
+- Include recognised Story World POV links without duplicating them in `world_context`
+- Keep free-text location metadata unchanged and avoid prose, backlink or folder inference
+- Resolve wikilinks, aliases and path-qualified references through normal vault semantics
+- Deduplicate resolved entities by vault path while preserving source Markdown unchanged
 - Define Supporting Model conventions for relationships, timelines, knowledge states and continuity
 - Establish qualified subject–predicate–object assertions with optional time, status, provenance and perspective
 - Keep stored models authoritative only for author-maintained interpretation while indexes, inverses and graphs remain derived
