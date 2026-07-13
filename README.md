@@ -52,6 +52,8 @@ The plugin writes through a temporary file and keeps the previous complete file 
 
 Existing editorial data from the plugin's Obsidian `data.json` is migrated automatically only when the portable file does not yet exist. The portable file then becomes authoritative, making the migration safe to repeat. The old plugin data is left in place as a migration backup.
 
+Deleting a Markdown chapter does not delete its Chapter Notes or annotations. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent orphan cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
+
 Editorial notes can contain unpublished material. In a private manuscript repository the portable file can normally be committed. In a public repository, exclude `.murmuration/writing-companion/editorial-data.json*` when those notes should remain private.
 
 ## Chapter Context
