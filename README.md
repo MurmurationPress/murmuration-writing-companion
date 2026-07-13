@@ -11,6 +11,7 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 - [Architecture](ARCHITECTURE.md) — the current division of responsibilities
 - [Story World Entity Standard](docs/story-world-entity-standard.md) — the permissive Markdown contract for fictional entities
 - [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) — how settled truth, plans, alternatives, ambiguity and replacement history are distinguished
+- [Supporting Model Conventions](docs/supporting-model-conventions.md) — how relationships, chronology and knowledge are represented without duplicating canon
 
 ## Development install
 
@@ -42,9 +43,11 @@ The versioned [Story World Entity Standard](docs/story-world-entity-standard.md)
 
 The companion [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) distinguishes Confirmed, Planned, Candidate, Unresolved and Superseded material. Missing status remains unclassified rather than becoming canon implicitly. Lightweight source and replacement links explain why material is present without moving authority away from Markdown.
 
-Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Relationship data is stored as precise qualified assertions but must ultimately be presented to authors as readable relationship statements and guided forms.
+The [Supporting Model Conventions](docs/supporting-model-conventions.md) define how ordinary Markdown can represent relationships, timelines, character arcs, continuity and knowledge states without copying entity identity or prose. Assertions use precise subject–predicate–object structure internally, while the author experience must use readable statements, guided forms and progressive disclosure.
 
-The foundation is documentation-only at present. MWC does not yet index or display Story World entities, does not infer canon from prose, and never stores story-world facts in the portable editorial store.
+Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs and rendered sentences remain derived and rebuildable.
+
+The foundation is documentation-only at present. MWC does not yet index or display Story World entities, does not infer canon from prose, and never stores story-world facts or model authority in the portable editorial store.
 
 ## Chapter Notes
 
