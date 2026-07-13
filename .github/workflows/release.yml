@@ -1,20 +1,26 @@
-name: Publish release
+name: Publish 0.13.0
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    branches:
+      - "agent/release-0.13.0"
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: "0.13.0"
+  RELEASE_TARGET: "caaae85fcaa5a0523d6e5a76254ca5dad5f97442"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Check out merged release commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TARGET }}
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -22,12 +28,12 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Confirm tag matches manifest
+      - name: Confirm release version
         shell: bash
         run: |
           manifest_version="$(node -p "require('./manifest.json').version")"
-          if [ "$GITHUB_REF_NAME" != "$manifest_version" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match manifest version $manifest_version" >&2
+          if [ "$RELEASE_TAG" != "$manifest_version" ]; then
+            echo "Release tag $RELEASE_TAG does not match manifest version $manifest_version" >&2
             exit 1
           fi
 
@@ -46,8 +52,15 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "$GITHUB_REF_NAME"
-          main.js manifest.json styles.css
-          --title "$GITHUB_REF_NAME"
-          --notes-file RELEASE_NOTES.md
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; no action required."
+            exit 0
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            main.js manifest.json styles.css \
+            --target "$RELEASE_TARGET" \
+            --title "$RELEASE_TAG" \
+            --notes-file RELEASE_NOTES.md
