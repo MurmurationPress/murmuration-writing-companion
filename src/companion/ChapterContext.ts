@@ -13,8 +13,22 @@ export interface EditableChapterContextField {
   placeholder: string;
   multiline?: boolean;
   inputType?: "text" | "date";
+  options?: readonly string[];
   renderMarkdownPreview?: boolean;
 }
+
+export interface ChapterContextSelectOption {
+  value: string;
+  label: string;
+  preserved?: boolean;
+}
+
+export const CHAPTER_STATUS_OPTIONS = [
+  "idea",
+  "draft",
+  "revision",
+  "complete"
+] as const;
 
 export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
   {
@@ -41,7 +55,8 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     key: "chapter_status",
     label: "Chapter status",
     aliases: ["chapter_status", "status"],
-    placeholder: "Draft, revision, complete…"
+    placeholder: "Select status…",
+    options: CHAPTER_STATUS_OPTIONS
   },
   {
     key: "editorial_pass",
@@ -148,6 +163,34 @@ export function findEditableChapterContextProperty(
   return findProperty(frontmatter, field.aliases)?.property ?? field.key;
 }
 
+export function updateEditableChapterContextFrontmatter(
+  frontmatter: Record<string, unknown>,
+  field: EditableChapterContextField,
+  value: string
+): string {
+  const property = findEditableChapterContextProperty(frontmatter, field);
+
+  for (const existingProperty of Object.keys(frontmatter)) {
+    if (existingProperty === property) continue;
+
+    const isAlias = field.aliases.some(
+      (alias) => normalizePropertyName(alias) === normalizePropertyName(existingProperty)
+    );
+
+    if (isAlias) delete frontmatter[existingProperty];
+  }
+
+  const normalizedValue = value.trim();
+
+  if (normalizedValue.length > 0) {
+    frontmatter[property] = normalizedValue;
+  } else {
+    delete frontmatter[property];
+  }
+
+  return property;
+}
+
 export function getChapterContextInputType(
   field: EditableChapterContextField,
   value: string
@@ -156,4 +199,31 @@ export function getChapterContextInputType(
 
   const isIsoDate = /^\d{4}-\d{2}-\d{2}$/.test(value);
   return value.length === 0 || isIsoDate ? "date" : "text";
+}
+
+export function getChapterContextSelectOptions(
+  field: EditableChapterContextField,
+  currentValue: string
+): ChapterContextSelectOption[] | null {
+  if (!field.options) return null;
+
+  const options: ChapterContextSelectOption[] = [
+    { value: "", label: "—" }
+  ];
+  const normalizedCurrent = currentValue.trim();
+  const knownCurrent = field.options.includes(normalizedCurrent);
+
+  if (normalizedCurrent.length > 0 && !knownCurrent) {
+    options.push({
+      value: normalizedCurrent,
+      label: `${normalizedCurrent} (current)`,
+      preserved: true
+    });
+  }
+
+  for (const option of field.options) {
+    options.push({ value: option, label: option });
+  }
+
+  return options;
 }

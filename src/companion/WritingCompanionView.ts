@@ -5,6 +5,7 @@ import { renderAnnotationCard } from "../ui/AnnotationCard";
 import {
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
   getChapterContextInputType,
+  getChapterContextSelectOptions,
   getEditableChapterContextValue
 } from "./ChapterContext";
 
@@ -92,8 +93,24 @@ export class WritingCompanionView extends ItemView {
       };
 
       const placeholder = field.key === "title" ? file.basename : field.placeholder;
+      const selectOptions = getChapterContextSelectOptions(field, contextValue.value);
 
-      if (field.multiline) {
+      if (selectOptions) {
+        const editor = value.createEl("select", {
+          cls: "mwc-context-input mwc-context-select",
+          attr: { "aria-label": field.label }
+        });
+
+        for (const option of selectOptions) {
+          const optionEl = editor.createEl("option", { text: option.label });
+          optionEl.value = option.value;
+        }
+
+        editor.value = contextValue.value;
+        editor.onchange = () => {
+          void save(editor.value);
+        };
+      } else if (field.multiline) {
         const editor = value.createEl("textarea", {
           cls: "mwc-context-input mwc-context-input--multiline",
           attr: {
