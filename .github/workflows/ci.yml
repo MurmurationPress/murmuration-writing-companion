@@ -29,3 +29,6 @@ jobs:
 
       - name: Build plugin
         run: npm run build
+
+      - name: Verify release metadata and assets
+        run: npm run release:check
