@@ -1,6 +1,6 @@
 # Story World Entity Standard
 
-**Version:** 0.1.1  
+**Version:** 0.1.2  
 **Status:** Foundation specification  
 **Issue:** #50
 
@@ -78,7 +78,7 @@ Only `world_entity` is required.
 | `world_summary` | scalar string | Concise human-readable description |
 | `world_first_appearance` | wikilink string | First manuscript or published appearance |
 | `world_time` | ISO string or time mapping | Event or state time where relevant |
-| `world_relationships` | list of mappings | Qualified relationship assertions; detailed conventions are defined by #52 |
+| `world_relationships` | list of mappings | Simple entity-owned qualified assertions defined by the Supporting Model Conventions |
 
 Extra properties are permitted and preserved.
 
@@ -177,7 +177,7 @@ The architectural model is a qualified subject–predicate–object assertion. T
 
 A non-technical author must never be required to understand or type raw triple syntax during normal use. Future authoring must use readable phrases, guided forms, progressive disclosure and sentence rendering.
 
-Detailed predicate vocabulary, inverse handling, epistemic qualifiers, dedicated assertion notes and authoring behaviour belong to #52. Unknown predicates and qualifiers remain valid.
+The [Supporting Model Conventions](supporting-model-conventions.md) define required fields, predicates, inverses, epistemic qualifiers, dedicated model notes, derived views and author-facing rendering. Unknown predicates and qualifiers remain valid.
 
 ## Scope
 
@@ -225,9 +225,9 @@ A missing or empty `world_entity` means the note is not opted into this standard
 
 An entity note describes a thing in the story world and remains the authority for its core identity and descriptive prose.
 
-A supporting model explains relationships, chronology, knowledge, interpretation or editorial concerns across entities. It references entity notes rather than copying their core facts.
+A supporting model explains relationships, chronology, knowledge, interpretation or editorial concerns across entities. It opts in separately through `world_model` and references entity notes rather than copying their core facts.
 
-Complex, disputed, changing or multi-party assertions may later live in dedicated model/assertion notes under #52. The existence of those models does not make a derived index authoritative.
+Simple relationships may remain on their natural entity owner. Complex, disputed, changing, observer-specific or multi-party assertions use dedicated model notes under the [Supporting Model Conventions](supporting-model-conventions.md). Derived indexes, graphs, inverses and rendered sentences own no canon.
 
 ## Discovery by Obsidian tools
 
@@ -259,12 +259,12 @@ The stored representation may be structured. The author experience must remain l
 - Manuscript prose remains authoritative in chapter Markdown.
 - Existing chapter properties retain their current meanings.
 - Story-world properties use the `world_` namespace to avoid accidental collisions.
-- No story-world fact is stored in `.murmuration/writing-companion/editorial-data.json`.
+- No story-world fact or model authority is stored in `.murmuration/writing-companion/editorial-data.json`.
 - Merely adopting the standard does not require changing existing prose links, `pov`, `location` or compiler metadata.
 - Existing compiler, Bases, Dataview and ordinary Obsidian wikilink behaviour must remain unaffected.
 
 ## Examples
 
-See [`docs/examples/story-world/`](examples/story-world/) for PRIME-based examples covering a character, location, organisation, intelligence/system, event, canon status and provenance.
+See [`docs/examples/story-world/`](examples/story-world/) and [`docs/examples/story-world/models/`](examples/story-world/models/) for PRIME-based examples covering entities, canon status, provenance, simple relationships and dedicated supporting models.
 
 These are schema examples only. They are not written into the PRIME Trilogy vault and do not independently establish canon.
