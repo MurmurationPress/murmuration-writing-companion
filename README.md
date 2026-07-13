@@ -40,7 +40,7 @@ Each chapter has one always-present Chapter Notes editor in the Companion. Type 
 
 ## Portable editorial storage
 
-Chapter Notes and annotations are stored inside the vault at:
+Chapter Notes, annotations and completed editorial-pass history are stored inside the vault at:
 
 ```text
 .murmuration/writing-companion/editorial-data.json
@@ -52,7 +52,7 @@ The plugin writes through a temporary file and keeps the previous complete file 
 
 Existing editorial data from the plugin's Obsidian `data.json` is migrated automatically only when the portable file does not yet exist. The portable file then becomes authoritative, making the migration safe to repeat. The old plugin data is left in place as a migration backup.
 
-Deleting a Markdown chapter does not delete its Chapter Notes or annotations. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent orphan cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
+Deleting a Markdown chapter does not delete its Chapter Notes, annotations or editorial-pass history. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent orphan cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
 
 Editorial notes can contain unpublished material. In a private manuscript repository the portable file can normally be committed. In a public repository, exclude `.murmuration/writing-companion/editorial-data.json*` when those notes should remain private.
 
@@ -67,6 +67,12 @@ POV values retain their Markdown form for editing, including wikilinks such as `
 Chapter status is selected from `idea`, `draft`, `revision` and `complete`. Existing non-standard values remain visible until the author deliberately selects a replacement, and the blank option removes the property cleanly.
 
 Editorial pass uses the canonical Draft, Structure, Character, Dialogue, Continuity, Style and Proof workflow. The displayed labels are title-cased while the frontmatter values are stored in lowercase. Existing non-standard values remain available until deliberately replaced.
+
+## Editorial Passes
+
+Each chapter has a checklist for Draft, Structure, Character, Dialogue, Continuity, Style and Proof. Completing or reopening a pass writes a timestamped event to the portable editorial store, so earlier completion history is retained even when a pass is reopened.
+
+The checklist is independent of the current `editorial_pass` Markdown property. Selecting a current focus does not complete it, and completing a checklist item does not change frontmatter or manuscript text.
 
 ## Annotation workflow
 
