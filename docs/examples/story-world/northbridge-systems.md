@@ -2,12 +2,15 @@
 world_entity: organisation
 world_name: Northbridge Systems
 world_scope: "[[PRIME Trilogy]]"
-world_status: canon
+world_status: confirmed
+world_sources:
+  - "[[Quiet Load]]"
 world_summary: Infrastructure-resilience consultancy that employs Tobias during the opening of Emergence.
 world_first_appearance: "[[Quiet Load]]"
 world_relationships:
   - predicate: engaged_by
     target: "[[Halcyon Pharmaceuticals]]"
+    status: confirmed
     as_of: "2026-04-05"
     source: "[[Quiet Load]]"
 ---
