@@ -1,12 +1,15 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { test } from "node:test";
 import {
+  CHAPTER_STATUS_OPTIONS,
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
   findEditableChapterContextProperty,
   formatPropertyValue,
   getChapterContextInputType,
+  getChapterContextSelectOptions,
   getEditableChapterContextValue,
-  normalizePropertyName
+  normalizePropertyName,
+  updateEditableChapterContextFrontmatter
 } from "../src/companion/ChapterContext";
 
 function field(key: string) {
@@ -34,7 +37,8 @@ test("formats supported frontmatter values", () => {
 test("resolves existing aliases without replacing their spelling", () => {
   const frontmatter = {
     "Point Of View": "[[Tobias]]",
-    StoryDate: "2032-04-01"
+    StoryDate: "2032-04-01",
+    Status: "revision"
   };
 
   deepEqual(getEditableChapterContextValue(frontmatter, field("pov")), {
@@ -45,6 +49,11 @@ test("resolves existing aliases without replacing their spelling", () => {
   deepEqual(getEditableChapterContextValue(frontmatter, field("story_date")), {
     property: "StoryDate",
     value: "2032-04-01"
+  });
+
+  deepEqual(getEditableChapterContextValue(frontmatter, field("chapter_status")), {
+    property: "Status",
+    value: "revision"
   });
 });
 
@@ -61,4 +70,72 @@ test("uses a date input only for empty or ISO date values", () => {
   equal(getChapterContextInputType(storyDate, "2032-04-01"), "date");
   equal(getChapterContextInputType(storyDate, "1 April 2032"), "text");
   equal(getChapterContextInputType(field("title"), "2032-04-01"), "text");
+});
+
+test("defines chapter statuses in the agreed order", () => {
+  deepEqual([...CHAPTER_STATUS_OPTIONS], [
+    "idea",
+    "draft",
+    "revision",
+    "complete"
+  ]);
+});
+
+test("builds a blank option followed by the known chapter statuses", () => {
+  deepEqual(getChapterContextSelectOptions(field("chapter_status"), "draft"), [
+    { value: "", label: "—" },
+    { value: "idea", label: "idea" },
+    { value: "draft", label: "draft" },
+    { value: "revision", label: "revision" },
+    { value: "complete", label: "complete" }
+  ]);
+
+  equal(getChapterContextSelectOptions(field("title"), "Chapter One"), null);
+});
+
+test("preserves an unknown current status until the author changes it", () => {
+  deepEqual(getChapterContextSelectOptions(field("chapter_status"), "copy edit"), [
+    { value: "", label: "—" },
+    { value: "copy edit", label: "copy edit (current)", preserved: true },
+    { value: "idea", label: "idea" },
+    { value: "draft", label: "draft" },
+    { value: "revision", label: "revision" },
+    { value: "complete", label: "complete" }
+  ]);
+});
+
+test("writes known statuses through an existing alias", () => {
+  const frontmatter: Record<string, unknown> = {
+    title: "A Chapter",
+    Status: "draft"
+  };
+
+  equal(
+    updateEditableChapterContextFrontmatter(
+      frontmatter,
+      field("chapter_status"),
+      "revision"
+    ),
+    "Status"
+  );
+  deepEqual(frontmatter, {
+    title: "A Chapter",
+    Status: "revision"
+  });
+});
+
+test("clearing chapter status removes its property and duplicate aliases", () => {
+  const frontmatter: Record<string, unknown> = {
+    title: "A Chapter",
+    chapter_status: "draft",
+    Status: "idea"
+  };
+
+  updateEditableChapterContextFrontmatter(
+    frontmatter,
+    field("chapter_status"),
+    ""
+  );
+
+  deepEqual(frontmatter, { title: "A Chapter" });
 });
