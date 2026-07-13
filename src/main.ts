@@ -31,7 +31,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     await this.storeService.load();
 
     this.app.workspace.onLayoutReady(() => {
-      void this.storeService.reconcileOpenAnnotationProperties();
+      void (async () => {
+        await this.storeService.reconcileDeletedEditorialPages();
+        await this.storeService.reconcileOpenAnnotationProperties();
+      })();
     });
 
     this.registerView(
@@ -92,6 +95,25 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
         if (file.path === this.getCurrentChapter()?.path) {
+          this.refreshView();
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("create", async (file) => {
+        if (!(file instanceof TFile) || file.extension !== "md") return;
+        await this.storeService.handleCreate(file);
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("delete", async (file) => {
+        if (!(file instanceof TFile) || file.extension !== "md") return;
+        await this.storeService.handleDelete(file);
+
+        if (this.currentChapter?.path === file.path) {
+          this.currentChapter = null;
           this.refreshView();
         }
       })

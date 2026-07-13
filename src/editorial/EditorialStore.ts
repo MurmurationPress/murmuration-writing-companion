@@ -5,7 +5,16 @@ import {
   EditorialStore,
   PageEditorialNotes
 } from "./EditorialNote";
+import { ObsidianEditorialFileSystem } from "./ObsidianEditorialFileSystem";
 import { OpenAnnotationPropertyService } from "./OpenAnnotationProperty";
+import {
+  AtomicTextFileStore,
+  markEditorialPageDeleted,
+  moveEditorialPage,
+  PortableEditorialStorage,
+  reconcileEditorialPagePresence,
+  restoreEditorialPage
+} from "./PortableEditorialStorage";
 
 const CHAPTER_NOTE_SAVE_DELAY_MS = 400;
 
@@ -13,6 +22,8 @@ export class EditorialStoreService {
   private plugin: Plugin;
   private chapterNoteSaveTimers = new Map<string, number>();
   private openAnnotationProperty: OpenAnnotationPropertyService;
+  private portableStorage: PortableEditorialStorage;
+  private ready = false;
 
   store: EditorialStore = { pages: {} };
   onChange: () => void = () => {};
@@ -20,46 +31,46 @@ export class EditorialStoreService {
   constructor(plugin: Plugin) {
     this.plugin = plugin;
     this.openAnnotationProperty = new OpenAnnotationPropertyService(plugin.app);
+    this.portableStorage = new PortableEditorialStorage(
+      new AtomicTextFileStore(new ObsidianEditorialFileSystem(plugin.app))
+    );
   }
 
   async load() {
-    const loaded = (await this.plugin.loadData()) ?? { pages: {} };
-    this.store = loaded as EditorialStore;
+    try {
+      const legacyData = await this.plugin.loadData();
+      const result = await this.portableStorage.load(legacyData);
+      this.store = result.store;
+      this.ready = true;
 
-    if (!this.store.pages) this.store.pages = {};
-
-    let migrated = false;
-
-    for (const page of Object.values(this.store.pages)) {
-      if (!Array.isArray(page.annotations)) {
-        page.annotations = [];
-        migrated = true;
+      if (result.source === "legacy") {
+        new Notice("Writing Companion editorial data moved into the vault.");
+      } else if (result.recovered) {
+        new Notice(
+          `Writing Companion recovered editorial data from its ${result.source} file.`
+        );
+      } else if (result.migrated) {
+        new Notice("Writing Companion editorial storage was upgraded safely.");
       }
-
-      if (!page.chapterNote) {
-        const legacyNotes = Array.isArray(page.documentNotes)
-          ? page.documentNotes.filter((note) => note.status === "open")
-          : [];
-        const now = new Date().toISOString();
-
-        page.chapterNote = {
-          body: legacyNotes.map((note) => note.body).join("\n\n"),
-          created: legacyNotes[0]?.created ?? now,
-          updated: legacyNotes.at(-1)?.updated ?? now
-        };
-
-        migrated = true;
-      }
+    } catch (error) {
+      console.error("Writing Companion portable editorial storage failed to load", error);
+      new Notice(
+        "Writing Companion could not load editorial data. The storage files were not overwritten; check the console."
+      );
+      throw error;
     }
-
-    if (migrated) await this.save();
   }
 
   async save() {
-    await this.plugin.saveData(this.store);
+    if (!this.ready) return;
+    await this.portableStorage.save(this.store);
   }
 
   getPage(file: TFile): PageEditorialNotes {
+    if (restoreEditorialPage(this.store, file.path)) {
+      void this.save();
+    }
+
     if (!this.store.pages[file.path]) {
       const now = new Date().toISOString();
 
@@ -106,7 +117,7 @@ export class EditorialStoreService {
       this.chapterNoteSaveTimers.clear();
     }
 
-    await this.save();
+    if (this.ready) await this.save();
   }
 
   async addAnnotation(
@@ -154,21 +165,62 @@ export class EditorialStoreService {
     this.onChange();
   }
 
+  async reconcileDeletedEditorialPages() {
+    const existingPaths = this.plugin.app.vault
+      .getMarkdownFiles()
+      .map((file) => file.path);
+    const result = reconcileEditorialPagePresence(this.store, existingPaths);
+
+    if (result.deletedPaths.length > 0 || result.restoredPaths.length > 0) {
+      await this.save();
+    }
+
+    return result;
+  }
+
   async reconcileOpenAnnotationProperties() {
     await this.openAnnotationProperty.reconcile(this.store);
   }
 
+  async handleCreate(file: TFile) {
+    if (!restoreEditorialPage(this.store, file.path)) return;
+
+    await this.save();
+    await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
+    this.onChange();
+    new Notice("Writing Companion restored editorial data for this chapter.");
+  }
+
+  async handleDelete(file: TFile) {
+    const timer = this.chapterNoteSaveTimers.get(file.path);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      this.chapterNoteSaveTimers.delete(file.path);
+    }
+
+    if (!markEditorialPageDeleted(this.store, file.path)) return;
+
+    await this.save();
+    this.onChange();
+    new Notice("Writing Companion retained editorial data for the deleted chapter.");
+  }
+
   async handleRename(file: TFile, oldPath: string) {
-    if (!this.store.pages[oldPath]) return;
+    try {
+      if (!moveEditorialPage(this.store, oldPath, file.path)) return;
+    } catch (error) {
+      console.error("Writing Companion could not move editorial data", error);
+      new Notice(
+        "Writing Companion did not move editorial data because the destination already has a record."
+      );
+      return;
+    }
 
     const timer = this.chapterNoteSaveTimers.get(oldPath);
     if (timer !== undefined) {
       window.clearTimeout(timer);
       this.chapterNoteSaveTimers.delete(oldPath);
     }
-
-    this.store.pages[file.path] = this.store.pages[oldPath];
-    delete this.store.pages[oldPath];
 
     await this.save();
     await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);

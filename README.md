@@ -34,10 +34,27 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 - Open writing companion
 - Annotate
 
-
 ## Chapter Notes
 
 Each chapter has one always-present Chapter Notes editor in the Companion. Type general editorial thoughts directly into the box; changes are saved automatically.
+
+## Portable editorial storage
+
+Chapter Notes and annotations are stored inside the vault at:
+
+```text
+.murmuration/writing-companion/editorial-data.json
+```
+
+The file uses a versioned JSON schema and travels with ordinary vault copies and backups. It can be shared through Git or a vault-sync service when the same editorial state is wanted on another installation.
+
+The plugin writes through a temporary file and keeps the previous complete file as `editorial-data.json.bak`. If an interrupted write leaves a complete temporary or backup file, the Companion recovers it without touching manuscript Markdown. A malformed file without a valid recovery copy, or a file created by a newer unsupported schema, stops storage loading rather than being silently replaced.
+
+Existing editorial data from the plugin's Obsidian `data.json` is migrated automatically only when the portable file does not yet exist. The portable file then becomes authoritative, making the migration safe to repeat. The old plugin data is left in place as a migration backup.
+
+Deleting a Markdown chapter does not delete its Chapter Notes or annotations. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent orphan cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
+
+Editorial notes can contain unpublished material. In a private manuscript repository the portable file can normally be committed. In a public repository, exclude `.murmuration/writing-companion/editorial-data.json*` when those notes should remain private.
 
 ## Chapter Context
 
@@ -48,6 +65,8 @@ Title appears as the first context field. When it is missing, the filename is sh
 POV values retain their Markdown form for editing, including wikilinks such as `[[Tobias]]`, with a clickable rendered preview beneath the field. Story date uses a date control for ISO dates while preserving existing non-ISO values as text.
 
 Chapter status is selected from `idea`, `draft`, `revision` and `complete`. Existing non-standard values remain visible until the author deliberately selects a replacement, and the blank option removes the property cleanly.
+
+Editorial pass uses the canonical Draft, Structure, Character, Dialogue, Continuity, Style and Proof workflow. The displayed labels are title-cased while the frontmatter values are stored in lowercase. Existing non-standard values remain available until deliberately replaced.
 
 ## Annotation workflow
 

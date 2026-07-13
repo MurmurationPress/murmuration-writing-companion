@@ -34,6 +34,32 @@ Responsible for:
 - Saving
 - Loading
 - Migration
+- Recovery
+- Schema versioning
+
+The authoritative editorial store is the versioned vault file:
+
+```text
+.murmuration/writing-companion/editorial-data.json
+```
+
+The storage engine is separated from Obsidian through a small file-system adapter so serialization, migration, recovery and failure behaviour can be tested with an in-memory implementation.
+
+Writes use three related paths:
+
+- `editorial-data.json` — current authoritative data;
+- `editorial-data.json.tmp` — complete candidate written before publication;
+- `editorial-data.json.bak` — previous complete version retained after a successful replacement.
+
+A malformed current file may be moved to `editorial-data.json.corrupt` only when a valid temporary or backup file has already been verified and is being restored. Unsupported newer schema versions are never replaced or downgraded.
+
+The plugin's historical Obsidian `data.json` is a migration source only when no portable file exists. After the first successful migration the vault file is authoritative. The legacy source is not deleted automatically.
+
+Deleting a chapter soft-deletes its editorial record by adding `deletedAt` while leaving the Chapter Note and annotations intact. A create event at the same path restores the record. Startup reconciliation performs the same comparison against the vault so offline and sync-driven file changes reach the same state.
+
+An active rename may reuse a path occupied by a soft-deleted record. Before the incoming chapter is placed there, the deleted record is moved into the store's `orphanedPages` archive with its original path and deletion timestamp. This prevents invisible stale records from blocking valid manuscript operations without discarding editorial history. Permanent cleanup is intentionally separate from file deletion.
+
+Manuscript Markdown remains outside this storage layer. The only deliberate editorial projection into frontmatter is the derived `mwc_open_annotations` reporting property.
 
 ---
 
