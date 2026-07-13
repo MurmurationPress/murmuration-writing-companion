@@ -27,6 +27,10 @@
 - Record completion and reopening as timestamped append-only history in portable storage
 - Preserve earlier completion events when a pass is reopened and suppress duplicate transitions
 - Keep completed-pass history independent from the current `editorial_pass` frontmatter field
+- Make Chapter Context, Editorial Passes and Chapter Notes independently collapsible
+- Keep Annotations open while showing compact summaries for collapsed supporting sections
+- Remember section layout as a local per-vault preference rather than manuscript or editorial data
+- Use native keyboard-accessible disclosure buttons with explicit expanded state
 
 
 ## 0.12.0
