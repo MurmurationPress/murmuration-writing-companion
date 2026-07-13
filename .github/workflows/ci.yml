@@ -9,7 +9,14 @@ permissions:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
 
     steps:
       - name: Check out repository
@@ -29,3 +36,6 @@ jobs:
 
       - name: Build plugin
         run: npm run build
+
+      - name: Verify release metadata and assets
+        run: npm run release:check

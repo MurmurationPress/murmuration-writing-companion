@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## 0.13.0 — 2026-07-13
+
 - Move Title into Chapter Context and remove the separate chapter heading
 - Edit Title, POV and Story date directly alongside the existing context fields
 - Preserve raw POV wikilinks while providing a clickable rendered preview
