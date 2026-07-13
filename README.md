@@ -13,6 +13,7 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 - [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) — how settled truth, plans, alternatives, ambiguity and replacement history are distinguished
 - [Supporting Model Conventions](docs/supporting-model-conventions.md) — how relationships, chronology and knowledge are represented without duplicating canon
 - [Chapter World Context Standard](docs/chapter-world-context-standard.md) — how chapters identify explicitly relevant Story World entities
+- [Read-only Story World Index](docs/story-world-index.md) — how opted-in entity notes are discovered and refreshed without copying canon
 
 ## Development install
 
@@ -48,9 +49,11 @@ The [Supporting Model Conventions](docs/supporting-model-conventions.md) define 
 
 The [Chapter World Context Standard](docs/chapter-world-context-standard.md) defines the optional `world_context` chapter property. Recognised Story World POV links are included without duplication, while other relevant entities are listed explicitly. Existing free-text location and manuscript metadata remain unchanged, and no relevance is inferred from prose.
 
+The [read-only Story World index](docs/story-world-index.md) discovers opted-in entity notes from Obsidian's metadata cache. It indexes path, canonical name, aliases, type, scope, status and common links, then updates individual records when notes change, move or disappear. The index is in-memory, disposable and never stored in the editorial data file.
+
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
-The foundation is documentation-only at present. MWC does not yet index or display Story World entities, does not infer canon from prose, and never stores story-world facts or model authority in the portable editorial store.
+MWC does not yet display Story World entities in the sidebar and does not infer canon from prose. Story-world facts and model authority never enter the portable editorial store.
 
 ## Chapter Notes
 
