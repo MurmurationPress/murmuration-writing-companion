@@ -10,7 +10,7 @@ import {
 import {
   VIEW_TYPE,
   WritingCompanionView
-} from "./companion/WritingCompanionView";
+} from "./companion/CollapsibleWritingCompanionView";
 import { EditorialStoreService } from "./editorial/EditorialStore";
 import { Annotation } from "./editorial/EditorialNote";
 import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
