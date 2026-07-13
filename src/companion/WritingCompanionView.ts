@@ -2,6 +2,7 @@ import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { Annotation, PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
+import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
 import {
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
   getChapterContextInputType,
@@ -58,6 +59,13 @@ export class WritingCompanionView extends ItemView {
     const page = this.plugin.storeService.getPage(file);
 
     this.renderChapterContext(container, file);
+    renderEditorialPassChecklist(
+      container,
+      file.basename,
+      this.plugin.storeService.getEditorialPassChecklist(file),
+      (pass, completed) =>
+        this.plugin.storeService.setEditorialPassCompleted(file, pass, completed)
+    );
     this.renderChapterNote(container, file, page);
     this.renderAnnotations(container, file, page, focusNoteId);
   }

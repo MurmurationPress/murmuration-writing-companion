@@ -1,3 +1,10 @@
+import {
+  EDITORIAL_PASS_LABELS,
+  EDITORIAL_PASS_OPTIONS
+} from "../editorial/EditorialPass";
+
+export { EDITORIAL_PASS_OPTIONS } from "../editorial/EditorialPass";
+
 export type ChapterContextFieldKey =
   | "title"
   | "pov"
@@ -36,26 +43,6 @@ const CHAPTER_STATUS_LABELS: Readonly<Record<string, string>> = {
   draft: "Draft",
   revision: "Revision",
   complete: "Complete"
-};
-
-export const EDITORIAL_PASS_OPTIONS = [
-  "draft",
-  "structure",
-  "character",
-  "dialogue",
-  "continuity",
-  "style",
-  "proof"
-] as const;
-
-const EDITORIAL_PASS_LABELS: Readonly<Record<string, string>> = {
-  draft: "Draft",
-  structure: "Structure",
-  character: "Character",
-  dialogue: "Dialogue",
-  continuity: "Continuity",
-  style: "Style",
-  proof: "Proof"
 };
 
 export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
@@ -99,7 +86,7 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     ],
     placeholder: "Select editorial pass…",
     options: EDITORIAL_PASS_OPTIONS,
-    optionLabels: EDITORIAL_PASS_LABELS
+    optionLabels: EDITORIAL_PASS_LABELS as Readonly<Record<string, string>>
   },
   {
     key: "change_summary",

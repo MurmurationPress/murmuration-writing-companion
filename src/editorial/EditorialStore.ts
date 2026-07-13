@@ -5,6 +5,12 @@ import {
   EditorialStore,
   PageEditorialNotes
 } from "./EditorialNote";
+import {
+  EditorialPassChecklistItem,
+  EditorialPassKey,
+  getEditorialPassChecklist,
+  setEditorialPassCompleted as applyEditorialPassCompletion
+} from "./EditorialPass";
 import { ObsidianEditorialFileSystem } from "./ObsidianEditorialFileSystem";
 import { OpenAnnotationPropertyService } from "./OpenAnnotationProperty";
 import {
@@ -80,7 +86,8 @@ export class EditorialStoreService {
           created: now,
           updated: now
         },
-        annotations: []
+        annotations: [],
+        editorialPassHistory: []
       };
     }
 
@@ -101,6 +108,30 @@ export class EditorialStoreService {
     }, CHAPTER_NOTE_SAVE_DELAY_MS);
 
     this.chapterNoteSaveTimers.set(file.path, timer);
+  }
+
+  getEditorialPassChecklist(file: TFile): EditorialPassChecklistItem[] {
+    return getEditorialPassChecklist(this.getPage(file));
+  }
+
+  async setEditorialPassCompleted(
+    file: TFile,
+    pass: EditorialPassKey,
+    completed: boolean
+  ): Promise<boolean> {
+    const changed = applyEditorialPassCompletion(
+      this.getPage(file),
+      pass,
+      completed,
+      new Date().toISOString(),
+      crypto.randomUUID()
+    );
+
+    if (!changed) return false;
+
+    await this.save();
+    this.onChange();
+    return true;
   }
 
   async flushChapterNote(file?: TFile) {
