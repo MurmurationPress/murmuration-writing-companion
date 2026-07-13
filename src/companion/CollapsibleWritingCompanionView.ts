@@ -1,0 +1,225 @@
+import { TFile } from "obsidian";
+import type { PageEditorialNotes } from "../editorial/EditorialNote";
+import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
+import {
+  WritingCompanionView as BaseWritingCompanionView
+} from "./WritingCompanionView";
+import {
+  buildChapterContextSummary,
+  buildChapterNoteSummary,
+  SidebarSectionKey
+} from "./SidebarSections";
+
+export { VIEW_TYPE } from "./WritingCompanionView";
+
+interface CollapsibleSectionOptions {
+  summary?: string;
+  status?: string;
+}
+
+interface CollapsibleSectionElements {
+  section: HTMLDivElement;
+  content: HTMLDivElement;
+  setSummary(summary: string): void;
+  setStatus(status: string): void;
+}
+
+let nextViewInstanceId = 0;
+
+export class WritingCompanionView extends BaseWritingCompanionView {
+  private readonly collapsibleSectionIdPrefix =
+    `mwc-collapsible-view-${++nextViewInstanceId}`;
+
+  override render() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("mwc-container");
+
+    const file = this.plugin.getCurrentChapter();
+    const focusNoteId = this.plugin.getPendingFocusNoteId();
+
+    container.createEl("h2", { text: "Writing Companion" });
+
+    if (!file) {
+      container.createEl("p", {
+        cls: "mwc-muted",
+        text: "Open a Markdown chapter to view its notes."
+      });
+      return;
+    }
+
+    const page = this.plugin.storeService.getPage(file);
+
+    this.renderCollapsibleChapterContext(container, file);
+    this.renderCollapsibleEditorialPasses(container, file);
+    this.renderCollapsibleChapterNote(container, file, page);
+    this.renderAnnotations(container, file, page, focusNoteId);
+  }
+
+  private renderCollapsibleChapterContext(container: Element, file: TFile) {
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const collapsible = this.createCollapsibleSection(
+      container,
+      "chapterContext",
+      "Chapter Context",
+      { summary: buildChapterContextSummary(frontmatter) }
+    );
+    collapsible.section.classList.add("mwc-chapter-context");
+
+    super.renderChapterContext(collapsible.content, file);
+    this.flattenEmbeddedSection(collapsible.content);
+  }
+
+  private renderCollapsibleEditorialPasses(container: Element, file: TFile) {
+    const items = this.plugin.storeService.getEditorialPassChecklist(file);
+    const completedCount = items.filter((item) => item.completed).length;
+    const collapsible = this.createCollapsibleSection(
+      container,
+      "editorialPasses",
+      "Editorial Passes",
+      { status: `${completedCount} of ${items.length}` }
+    );
+    collapsible.section.classList.add("mwc-editorial-passes");
+
+    renderEditorialPassChecklist(
+      collapsible.content,
+      file.basename,
+      items,
+      (pass, completed) =>
+        this.plugin.storeService.setEditorialPassCompleted(file, pass, completed)
+    );
+  }
+
+  private renderCollapsibleChapterNote(
+    container: Element,
+    file: TFile,
+    page: PageEditorialNotes
+  ) {
+    const noteSummary = buildChapterNoteSummary(page.chapterNote.body);
+    const collapsible = this.createCollapsibleSection(
+      container,
+      "chapterNotes",
+      "Chapter Notes",
+      {
+        summary: noteSummary,
+        status: noteSummary ? "Has notes" : "No notes"
+      }
+    );
+    collapsible.section.classList.add("mwc-chapter-notes");
+
+    super.renderChapterNote(collapsible.content, file, page);
+    const embedded = this.flattenEmbeddedSection(collapsible.content);
+    const editor = embedded?.querySelector<HTMLTextAreaElement>(
+      ".mwc-chapter-note-body"
+    );
+
+    editor?.addEventListener("input", () => {
+      const summary = buildChapterNoteSummary(editor.value);
+      collapsible.setSummary(summary);
+      collapsible.setStatus(summary ? "Has notes" : "No notes");
+    });
+  }
+
+  private flattenEmbeddedSection(content: HTMLElement): HTMLElement | null {
+    const embedded = content.lastElementChild;
+    if (!(embedded instanceof HTMLElement)) return null;
+
+    embedded.classList.add("mwc-section-embedded");
+    const heading = embedded.firstElementChild;
+    if (heading instanceof HTMLElement && heading.tagName === "H3") {
+      heading.remove();
+    }
+
+    return embedded;
+  }
+
+  private createCollapsibleSection(
+    container: Element,
+    key: SidebarSectionKey,
+    title: string,
+    options: CollapsibleSectionOptions = {}
+  ): CollapsibleSectionElements {
+    const section = container.createDiv(
+      `mwc-section mwc-collapsible-section mwc-collapsible-section--${key}`
+    );
+    const contentId = `${this.collapsibleSectionIdPrefix}-${key}`;
+    const heading = section.createEl("h3", {
+      cls: "mwc-collapsible-heading"
+    });
+    const toggle = heading.createEl("button", {
+      cls: "mwc-section-toggle",
+      attr: {
+        type: "button",
+        "aria-controls": contentId
+      }
+    });
+    const label = toggle.createSpan({ cls: "mwc-section-toggle-label" });
+    label.createSpan({
+      cls: "mwc-section-toggle-icon",
+      text: "›",
+      attr: { "aria-hidden": "true" }
+    });
+    label.createSpan({
+      cls: "mwc-section-toggle-title",
+      text: title
+    });
+    const status = toggle.createSpan({
+      cls: "mwc-section-toggle-status"
+    });
+    const summary = section.createEl("p", {
+      cls: "mwc-section-summary"
+    });
+    const content = section.createDiv({
+      cls: "mwc-section-content",
+      attr: { id: contentId }
+    });
+
+    let expanded = this.plugin.sidebarSectionPreferences.isExpanded(key);
+    let currentSummary = options.summary?.trim() ?? "";
+    let currentStatus = options.status?.trim() ?? "";
+
+    const applyState = () => {
+      section.classList.toggle(
+        "mwc-collapsible-section--expanded",
+        expanded
+      );
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.setAttribute(
+        "aria-label",
+        `${expanded ? "Collapse" : "Expand"} ${title}`
+      );
+      content.hidden = !expanded;
+      summary.hidden = expanded || currentSummary.length === 0;
+      status.hidden = currentStatus.length === 0;
+    };
+
+    const setSummary = (nextSummary: string) => {
+      currentSummary = nextSummary.trim();
+      summary.textContent = currentSummary;
+      summary.hidden = expanded || currentSummary.length === 0;
+    };
+
+    const setStatus = (nextStatus: string) => {
+      currentStatus = nextStatus.trim();
+      status.textContent = currentStatus;
+      status.hidden = currentStatus.length === 0;
+    };
+
+    toggle.onclick = () => {
+      expanded = !expanded;
+      this.plugin.sidebarSectionPreferences.setExpanded(key, expanded);
+      applyState();
+    };
+
+    setSummary(currentSummary);
+    setStatus(currentStatus);
+    applyState();
+
+    return {
+      section,
+      content,
+      setSummary,
+      setStatus
+    };
+  }
+}
