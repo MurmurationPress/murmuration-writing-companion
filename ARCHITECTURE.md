@@ -23,6 +23,10 @@ Responsible for:
 - Editorial Passes
 - Checklists
 
+Editorial-pass completion is represented as an append-only event history on each chapter record. Valid events identify the pass, action (`completed` or `reopened`), timestamp and stable event ID. The seven-item checklist is derived by replaying valid unique events in storage order. Reopening changes current checklist state without erasing earlier completion events.
+
+The current author-facing `editorial_pass` property is separate Markdown metadata. It identifies the present editing focus; it is not copied into the editorial store and has no automatic relationship with checklist completion.
+
 ---
 
 ## Storage
@@ -55,7 +59,9 @@ A malformed current file may be moved to `editorial-data.json.corrupt` only when
 
 The plugin's historical Obsidian `data.json` is a migration source only when no portable file exists. After the first successful migration the vault file is authoritative. The legacy source is not deleted automatically.
 
-Deleting a chapter soft-deletes its editorial record by adding `deletedAt` while leaving the Chapter Note and annotations intact. A create event at the same path restores the record. Startup reconciliation performs the same comparison against the vault so offline and sync-driven file changes reach the same state.
+Editorial-pass history is a backward-compatible page field. Missing history behaves as an empty checklist. If an existing value is malformed, it is wrapped into the append-only history array and retained; invalid entries are ignored by checklist derivation rather than deleted.
+
+Deleting a chapter soft-deletes its editorial record by adding `deletedAt` while leaving the Chapter Note, annotations and editorial-pass history intact. A create event at the same path restores the record. Startup reconciliation performs the same comparison against the vault so offline and sync-driven file changes reach the same state.
 
 An active rename may reuse a path occupied by a soft-deleted record. Before the incoming chapter is placed there, the deleted record is moved into the store's `orphanedPages` archive with its original path and deletion timestamp. This prevents invisible stale records from blocking valid manuscript operations without discarding editorial history. Permanent cleanup is intentionally separate from file deletion.
 
@@ -73,6 +79,8 @@ Responsible for:
 - Buttons
 - Lists
 - Empty states
+
+The editorial-pass checklist uses native checkboxes in canonical workflow order. Completion timestamps are shown quietly beside completed items, and the section reports overall completed progress without becoming a separate dashboard.
 
 ## Derived reporting properties
 
