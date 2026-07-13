@@ -23,6 +23,10 @@
 - Retain Chapter Notes and annotations when their Markdown chapter is deleted
 - Restore soft-deleted editorial data when the same chapter path returns
 - Archive orphaned editorial records safely when another chapter is renamed into their old path
+- Add a canonical per-chapter editorial-pass checklist beneath Chapter Context
+- Record completion and reopening as timestamped append-only history in portable storage
+- Preserve earlier completion events when a pass is reopened and suppress duplicate transitions
+- Keep completed-pass history independent from the current `editorial_pass` frontmatter field
 
 
 ## 0.12.0
@@ -63,7 +67,7 @@
 ## 0.8.0
 
 - Make annotation manuscript extracts clickable and keyboard accessible
-- Open or activate the annotated chapter and select the matching passage
+- Open or activate the annotated chapter and select that passage
 - Prefer the exact extract nearest its stored line, then exact matches elsewhere
 - Fall back to the original line when the manuscript text has changed
 
