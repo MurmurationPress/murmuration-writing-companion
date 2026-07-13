@@ -1,4 +1,4 @@
-name: Publish 0.13.0
+name: Verify published 0.13.0
 
 on:
   push:
@@ -6,61 +6,52 @@ on:
       - "agent/release-0.13.0"
 
 permissions:
-  contents: write
+  contents: read
+  issues: write
 
 env:
   RELEASE_TAG: "0.13.0"
-  RELEASE_TARGET: "caaae85fcaa5a0523d6e5a76254ca5dad5f97442"
 
 jobs:
-  publish:
+  verify:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out merged release commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RELEASE_TARGET }}
+          ref: caaae85fcaa5a0523d6e5a76254ca5dad5f97442
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Confirm release version
-        shell: bash
-        run: |
-          manifest_version="$(node -p "require('./manifest.json').version")"
-          if [ "$RELEASE_TAG" != "$manifest_version" ]; then
-            echo "Release tag $RELEASE_TAG does not match manifest version $manifest_version" >&2
-            exit 1
-          fi
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build plugin
-        run: npm run build
-
-      - name: Verify release metadata and assets
-        run: npm run release:check
-
-      - name: Create GitHub release
+      - name: Verify release metadata and downloadable assets
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists; no action required."
-            exit 0
-          fi
+          set -euo pipefail
 
-          gh release create "$RELEASE_TAG" \
-            main.js manifest.json styles.css \
-            --target "$RELEASE_TARGET" \
-            --title "$RELEASE_TAG" \
-            --notes-file RELEASE_NOTES.md
+          release_json="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,name,isDraft,isPrerelease,url,assets)"
+
+          test "$(jq -r '.tagName' <<<"$release_json")" = "$RELEASE_TAG"
+          test "$(jq -r '.isDraft' <<<"$release_json")" = "false"
+          test "$(jq -r '.isPrerelease' <<<"$release_json")" = "false"
+
+          actual_assets="$(jq -r '.assets[].name' <<<"$release_json" | sort)"
+          expected_assets="$(printf '%s\n' main.js manifest.json styles.css | sort)"
+          test "$actual_assets" = "$expected_assets"
+
+          jq -e 'all(.assets[]; .size > 0)' <<<"$release_json" >/dev/null
+
+          mkdir -p release-download
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern main.js \
+            --pattern manifest.json \
+            --pattern styles.css \
+            --dir release-download
+
+          test -s release-download/main.js
+          test -s release-download/manifest.json
+          test -s release-download/styles.css
+          test "$(node -p "require('./release-download/manifest.json').version")" = "$RELEASE_TAG"
+
+          release_url="$(jq -r '.url' <<<"$release_json")"
+          gh issue comment 47 --repo "$GITHUB_REPOSITORY" --body "Published release verification succeeded for **$RELEASE_TAG**. The release is public, not a draft or prerelease, and the downloadable assets \`main.js\`, \`manifest.json\`, and \`styles.css\` are present and non-empty. Downloaded manifest version: **$RELEASE_TAG**. $release_url"
