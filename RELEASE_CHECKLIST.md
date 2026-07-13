@@ -6,7 +6,7 @@
 - [ ] `npm test`
 - [ ] `npm run build`
 - [ ] `npm run release:check`
-- [ ] GitHub Actions succeeds for the release PR head
+- [ ] GitHub Actions succeeds on Ubuntu and Windows for the release PR head
 
 ## Existing Linux vault
 
@@ -37,7 +37,8 @@
 
 - [ ] Merge the release PR only after explicit approval
 - [ ] Create tag `0.13.0` from the merged release commit
-- [ ] Create GitHub release `0.13.0`
-- [ ] Use `RELEASE_NOTES.md` as the release description
-- [ ] Attach `main.js`, `manifest.json` and `styles.css`
+- [ ] Push tag `0.13.0`
+- [ ] Confirm the Publish release workflow succeeds
+- [ ] Confirm GitHub release `0.13.0` uses `RELEASE_NOTES.md`
+- [ ] Confirm `main.js`, `manifest.json` and `styles.css` are attached
 - [ ] Download the published assets once and perform a clean manual install
