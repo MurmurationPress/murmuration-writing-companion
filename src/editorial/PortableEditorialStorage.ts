@@ -3,12 +3,13 @@ import type {
   AnnotationAnchor,
   ChapterNote,
   EditorialStore,
+  OrphanedEditorialPage,
   PageEditorialNotes
 } from "./EditorialNote";
 
 export const PORTABLE_EDITORIAL_DATA_PATH =
   ".murmuration/writing-companion/editorial-data.json";
-export const PORTABLE_EDITORIAL_SCHEMA_VERSION = 1;
+export const PORTABLE_EDITORIAL_SCHEMA_VERSION = 2;
 
 export type EditorialStorageErrorCode =
   | "empty"
@@ -287,13 +288,60 @@ function normalizePage(
   const chapterNote = normalizeChapterNote(rawPage, now);
   changed = changed || chapterNote.changed;
 
+  const page = {
+    ...rawPage,
+    chapterNote: chapterNote.value,
+    annotations
+  } as PageEditorialNotes;
+
+  if (rawPage.deletedAt !== undefined) {
+    if (typeof rawPage.deletedAt === "string" && rawPage.deletedAt.length > 0) {
+      page.deletedAt = rawPage.deletedAt;
+    } else {
+      delete page.deletedAt;
+      changed = true;
+    }
+  }
+
+  return { value: page, changed };
+}
+
+function normalizeOrphanedPage(
+  value: unknown,
+  now: string
+): NormalizedResult<OrphanedEditorialPage> {
+  if (!isRecord(value)) {
+    throw new EditorialStorageError(
+      "invalid-shape",
+      "Portable editorial storage contains an invalid orphaned page record."
+    );
+  }
+
+  if (
+    typeof value.originalPath !== "string"
+    || value.originalPath.length === 0
+    || typeof value.deletedAt !== "string"
+    || value.deletedAt.length === 0
+    || !isRecord(value.page)
+  ) {
+    throw new EditorialStorageError(
+      "invalid-shape",
+      "Portable editorial storage contains an incomplete orphaned page record."
+    );
+  }
+
+  const normalizedPage = normalizePage(value.page, now);
+  const page = { ...normalizedPage.value };
+  if (page.deletedAt !== undefined) delete page.deletedAt;
+
   return {
     value: {
-      ...rawPage,
-      chapterNote: chapterNote.value,
-      annotations
-    } as PageEditorialNotes,
-    changed
+      ...value,
+      originalPath: value.originalPath,
+      deletedAt: value.deletedAt,
+      page
+    } as OrphanedEditorialPage,
+    changed: normalizedPage.changed || normalizedPage.value.deletedAt !== undefined
   };
 }
 
@@ -312,18 +360,44 @@ export function normalizeEditorialStore(
     changed = changed || normalized.changed;
   }
 
-  const extras: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(rawStore)) {
-    if (key !== "pages" && key !== "schemaVersion") extras[key] = value;
+  let orphanedPages: Record<string, OrphanedEditorialPage> | undefined;
+  if (rawStore.orphanedPages !== undefined) {
+    if (!isRecord(rawStore.orphanedPages)) {
+      throw new EditorialStorageError(
+        "invalid-shape",
+        "Portable editorial storage orphanedPages must be an object."
+      );
+    }
+
+    orphanedPages = {};
+    for (const [id, rawOrphan] of Object.entries(rawStore.orphanedPages)) {
+      const normalized = normalizeOrphanedPage(rawOrphan, now);
+      orphanedPages[id] = normalized.value;
+      changed = changed || normalized.changed;
+    }
   }
 
-  return {
-    value: {
-      ...extras,
-      pages
-    } as EditorialStore,
-    changed
-  };
+  const extras: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rawStore)) {
+    if (
+      key !== "pages"
+      && key !== "orphanedPages"
+      && key !== "schemaVersion"
+    ) {
+      extras[key] = value;
+    }
+  }
+
+  const store = {
+    ...extras,
+    pages
+  } as EditorialStore;
+
+  if (orphanedPages && Object.keys(orphanedPages).length > 0) {
+    store.orphanedPages = orphanedPages;
+  }
+
+  return { value: store, changed };
 }
 
 function schemaVersion(value: unknown): number {
@@ -391,24 +465,143 @@ export function serializePortableEditorialStore(store: EditorialStore): string {
   const extras: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(store)) {
-    if (key !== "pages" && key !== "schemaVersion") extras[key] = value;
+    if (
+      key !== "pages"
+      && key !== "orphanedPages"
+      && key !== "schemaVersion"
+    ) {
+      extras[key] = value;
+    }
   }
 
-  return `${JSON.stringify(
-    {
-      schemaVersion: PORTABLE_EDITORIAL_SCHEMA_VERSION,
-      ...extras,
-      pages: store.pages
-    },
-    null,
-    2
-  )}\n`;
+  const serialized: Record<string, unknown> = {
+    schemaVersion: PORTABLE_EDITORIAL_SCHEMA_VERSION,
+    ...extras,
+    pages: store.pages
+  };
+
+  if (store.orphanedPages && Object.keys(store.orphanedPages).length > 0) {
+    serialized.orphanedPages = store.orphanedPages;
+  }
+
+  return `${JSON.stringify(serialized, null, 2)}\n`;
 }
 
 export function hasLegacyEditorialData(value: unknown): boolean {
   return isRecord(value)
     && isRecord(value.pages)
     && Object.keys(value.pages).length > 0;
+}
+
+function deletedAt(page: PageEditorialNotes): string | null {
+  return typeof page.deletedAt === "string" && page.deletedAt.length > 0
+    ? page.deletedAt
+    : null;
+}
+
+function uniqueOrphanId(
+  store: EditorialStore,
+  originalPath: string,
+  deletionTime: string
+): string {
+  const base = `${deletionTime}::${originalPath}`;
+  let id = base;
+  let suffix = 2;
+
+  while (store.orphanedPages?.[id]) {
+    id = `${base}::${suffix}`;
+    suffix += 1;
+  }
+
+  return id;
+}
+
+function archiveDeletedDestination(
+  store: EditorialStore,
+  path: string,
+  page: PageEditorialNotes
+): void {
+  const deletionTime = deletedAt(page);
+  if (!deletionTime) return;
+
+  const archivedPage = { ...page };
+  delete archivedPage.deletedAt;
+  const id = uniqueOrphanId(store, path, deletionTime);
+  const orphan: OrphanedEditorialPage = {
+    originalPath: path,
+    deletedAt: deletionTime,
+    page: archivedPage
+  };
+
+  if (!store.orphanedPages) store.orphanedPages = {};
+  store.orphanedPages[id] = orphan;
+}
+
+export function markEditorialPageDeleted(
+  store: EditorialStore,
+  path: string,
+  now = new Date().toISOString()
+): boolean {
+  const page = store.pages[path];
+  if (!page || deletedAt(page)) return false;
+  page.deletedAt = now;
+  return true;
+}
+
+export function restoreEditorialPage(
+  store: EditorialStore,
+  path: string
+): boolean {
+  const page = store.pages[path];
+  if (page) {
+    if (!deletedAt(page)) return false;
+    delete page.deletedAt;
+    return true;
+  }
+
+  const candidates = Object.entries(store.orphanedPages ?? {})
+    .filter(([, orphan]) => orphan.originalPath === path)
+    .sort((left, right) => right[1].deletedAt.localeCompare(left[1].deletedAt));
+  const candidate = candidates[0];
+  if (!candidate) return false;
+
+  store.pages[path] = candidate[1].page;
+  delete store.orphanedPages?.[candidate[0]];
+  if (store.orphanedPages && Object.keys(store.orphanedPages).length === 0) {
+    delete store.orphanedPages;
+  }
+  return true;
+}
+
+export interface EditorialPagePresenceResult {
+  deletedPaths: string[];
+  restoredPaths: string[];
+}
+
+export function reconcileEditorialPagePresence(
+  store: EditorialStore,
+  existingPaths: Iterable<string>,
+  now = new Date().toISOString()
+): EditorialPagePresenceResult {
+  const existing = new Set(existingPaths);
+  const deletedPaths: string[] = [];
+  const restoredPaths: string[] = [];
+
+  for (const path of Object.keys(store.pages)) {
+    if (existing.has(path)) {
+      if (restoreEditorialPage(store, path)) restoredPaths.push(path);
+    } else if (markEditorialPageDeleted(store, path, now)) {
+      deletedPaths.push(path);
+    }
+  }
+
+  for (const path of existing) {
+    if (!store.pages[path] && restoreEditorialPage(store, path)) {
+      restoredPaths.push(path);
+    }
+  }
+
+  return { deletedPaths, restoredPaths };
 }
 
 export function moveEditorialPage(
@@ -418,14 +611,22 @@ export function moveEditorialPage(
 ): boolean {
   if (oldPath === newPath || !store.pages[oldPath]) return false;
 
-  if (store.pages[newPath]) {
-    throw new EditorialStorageError(
-      "path-conflict",
-      `Editorial data already exists for ${newPath}; the rename was not applied.`
-    );
+  const destination = store.pages[newPath];
+  if (destination) {
+    if (deletedAt(destination)) {
+      archiveDeletedDestination(store, newPath, destination);
+      delete store.pages[newPath];
+    } else {
+      throw new EditorialStorageError(
+        "path-conflict",
+        `Editorial data already exists for ${newPath}; the rename was not applied.`
+      );
+    }
   }
 
-  store.pages[newPath] = store.pages[oldPath];
+  const source = store.pages[oldPath];
+  delete source.deletedAt;
+  store.pages[newPath] = source;
   delete store.pages[oldPath];
   return true;
 }
