@@ -10,6 +10,8 @@ Responsible for:
 - Dashboard
 - Navigation
 
+The Companion uses progressive disclosure for supporting material. Chapter Context, Editorial Passes and Chapter Notes collapse independently, while Annotations remains open as the active work queue. Collapsed summaries are projections of the same frontmatter and editorial models already rendered by the expanded sections.
+
 ---
 
 ## Editorial
@@ -81,6 +83,10 @@ Responsible for:
 - Empty states
 
 The editorial-pass checklist uses native checkboxes in canonical workflow order. Completion timestamps are shown quietly beside completed items, and the section reports overall completed progress without becoming a separate dashboard.
+
+Collapsible section headings use native buttons with `aria-expanded` and `aria-controls`; hidden section content is removed from the tab order by the platform. Section states are independent rather than accordion-controlled.
+
+Expanded/collapsed state is a local per-vault UI preference stored through browser local storage. The key includes the vault resource root, parsing falls back safely to defaults, and storage failure degrades to session-only state. These preferences are deliberately excluded from manuscript frontmatter, plugin editorial data and the portable vault store.
 
 ## Derived reporting properties
 
