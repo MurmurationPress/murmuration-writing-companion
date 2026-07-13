@@ -4,7 +4,9 @@ world_name: Enfield
 aliases:
   - Enfield Chase
 world_scope: "[[PRIME Trilogy]]"
-world_status: canon
+world_status: confirmed
+world_sources:
+  - "[[The First Path]]"
 world_summary: North London setting associated with Tobias and Northbridge Systems.
 world_first_appearance: "[[The First Path]]"
 ---
