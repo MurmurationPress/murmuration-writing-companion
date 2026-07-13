@@ -4,12 +4,16 @@ import type { EditorialStore } from "../src/editorial/EditorialNote";
 import {
   AtomicTextFileStore,
   EditorialStorageError,
+  markEditorialPageDeleted,
   moveEditorialPage,
   parsePortableEditorialStore,
   PORTABLE_EDITORIAL_DATA_PATH,
+  PORTABLE_EDITORIAL_SCHEMA_VERSION,
   PortableEditorialFileSystem,
   PortableEditorialStorage,
   portableEditorialStoragePaths,
+  reconcileEditorialPagePresence,
+  restoreEditorialPage,
   serializePortableEditorialStore
 } from "../src/editorial/PortableEditorialStorage";
 
@@ -218,6 +222,7 @@ test("preserves unknown root, page, annotation and anchor fields", async () => {
   const saved = JSON.parse(
     fileSystem.files.get(PORTABLE_EDITORIAL_DATA_PATH) ?? "{}"
   );
+  equal(saved.schemaVersion, PORTABLE_EDITORIAL_SCHEMA_VERSION);
   deepEqual(saved.futureRoot, { enabled: true });
   equal(saved.pages[CHAPTER_PATH].futurePage, "retained");
   equal(saved.pages[CHAPTER_PATH].chapterNote.futureNote, 7);
@@ -242,7 +247,89 @@ test("moves editorial data with a renamed chapter", () => {
   equal(moveEditorialPage(store, CHAPTER_PATH, nextPath), false);
 });
 
-test("refuses a rename collision without changing either page", () => {
+test("marks deleted chapters without discarding their editorial data", () => {
+  const store = editorialStore();
+  const originalPage = store.pages[CHAPTER_PATH];
+
+  equal(markEditorialPageDeleted(store, CHAPTER_PATH, NOW), true);
+  equal(store.pages[CHAPTER_PATH], originalPage);
+  equal(store.pages[CHAPTER_PATH].deletedAt, NOW);
+  equal(store.pages[CHAPTER_PATH].annotations.length, 1);
+  equal(markEditorialPageDeleted(store, CHAPTER_PATH, NOW), false);
+});
+
+test("restores soft-deleted editorial data when the chapter returns", () => {
+  const store = editorialStore();
+  markEditorialPageDeleted(store, CHAPTER_PATH, NOW);
+
+  equal(restoreEditorialPage(store, CHAPTER_PATH), true);
+  equal(store.pages[CHAPTER_PATH].deletedAt, undefined);
+  equal(store.pages[CHAPTER_PATH].chapterNote.body, "Check the storm date.");
+  equal(restoreEditorialPage(store, CHAPTER_PATH), false);
+});
+
+test("reconciles page presence after offline deletion and restoration", () => {
+  const store = editorialStore();
+
+  deepEqual(reconcileEditorialPagePresence(store, [], NOW), {
+    deletedPaths: [CHAPTER_PATH],
+    restoredPaths: []
+  });
+  equal(store.pages[CHAPTER_PATH].deletedAt, NOW);
+
+  deepEqual(reconcileEditorialPagePresence(store, [CHAPTER_PATH], NOW), {
+    deletedPaths: [],
+    restoredPaths: [CHAPTER_PATH]
+  });
+  equal(store.pages[CHAPTER_PATH].deletedAt, undefined);
+});
+
+test("archives a deleted destination rather than blocking an unrelated rename", () => {
+  const store = editorialStore("Incoming chapter");
+  const deletedPath = "PRIME Trilogy/EMERGENCE/PART ONE/Deleted Chapter.md";
+  store.pages[deletedPath] = {
+    chapterNote: { body: "Deleted chapter", created: NOW, updated: NOW },
+    annotations: [],
+    deletedAt: NOW
+  };
+
+  equal(moveEditorialPage(store, CHAPTER_PATH, deletedPath), true);
+  equal(store.pages[deletedPath].chapterNote.body, "Incoming chapter");
+  equal(store.pages[CHAPTER_PATH], undefined);
+
+  const orphan = Object.values(store.orphanedPages ?? {})[0];
+  equal(orphan.originalPath, deletedPath);
+  equal(orphan.deletedAt, NOW);
+  equal(orphan.page.chapterNote.body, "Deleted chapter");
+
+  const movedAgain = "PRIME Trilogy/EMERGENCE/PART ONE/Moved Again.md";
+  equal(moveEditorialPage(store, deletedPath, movedAgain), true);
+  equal(restoreEditorialPage(store, deletedPath), true);
+  equal(store.pages[deletedPath].chapterNote.body, "Deleted chapter");
+  equal(store.orphanedPages, undefined);
+});
+
+test("round trips archived orphan records", async () => {
+  const { fileSystem, storage } = createStorage();
+  const store = editorialStore("Incoming chapter");
+  const deletedPath = "PRIME Trilogy/EMERGENCE/PART ONE/Deleted Chapter.md";
+  store.pages[deletedPath] = {
+    chapterNote: { body: "Deleted chapter", created: NOW, updated: NOW },
+    annotations: [],
+    deletedAt: NOW
+  };
+  moveEditorialPage(store, CHAPTER_PATH, deletedPath);
+
+  await storage.load(undefined, NOW);
+  await storage.save(store);
+  const reloaded = await new PortableEditorialStorage(
+    new AtomicTextFileStore(fileSystem)
+  ).load(undefined, NOW);
+
+  deepEqual(reloaded.store, store);
+});
+
+test("refuses a rename collision without changing either active page", () => {
   const store = editorialStore();
   const nextPath = "PRIME Trilogy/EMERGENCE/PART ONE/Existing.md";
   store.pages[nextPath] = {
@@ -292,7 +379,10 @@ test("recovers the last-known-good backup and quarantines a malformed primary", 
 test("does not downgrade or overwrite an unsupported newer schema", async () => {
   const { fileSystem, storage } = createStorage();
   const paths = portableEditorialStoragePaths();
-  const future = JSON.stringify({ schemaVersion: 2, pages: {} });
+  const future = JSON.stringify({
+    schemaVersion: PORTABLE_EDITORIAL_SCHEMA_VERSION + 1,
+    pages: {}
+  });
   fileSystem.files.set(paths.primary, future);
   fileSystem.files.set(paths.backup, serializePortableEditorialStore(editorialStore()));
 
