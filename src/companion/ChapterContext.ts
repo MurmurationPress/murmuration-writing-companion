@@ -31,6 +31,13 @@ export const CHAPTER_STATUS_OPTIONS = [
   "complete"
 ] as const;
 
+const CHAPTER_STATUS_LABELS: Readonly<Record<string, string>> = {
+  idea: "Idea",
+  draft: "Draft",
+  revision: "Revision",
+  complete: "Complete"
+};
+
 export const EDITORIAL_PASS_OPTIONS = [
   "draft",
   "structure",
@@ -77,7 +84,8 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     label: "Chapter status",
     aliases: ["chapter_status", "status"],
     placeholder: "Select status…",
-    options: CHAPTER_STATUS_OPTIONS
+    options: CHAPTER_STATUS_OPTIONS,
+    optionLabels: CHAPTER_STATUS_LABELS
   },
   {
     key: "editorial_pass",

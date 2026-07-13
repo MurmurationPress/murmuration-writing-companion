@@ -88,13 +88,13 @@ test("defines chapter statuses in the agreed order", () => {
   ]);
 });
 
-test("builds a blank option followed by the known chapter statuses", () => {
+test("builds title-cased chapter status choices with lowercase values", () => {
   deepEqual(getChapterContextSelectOptions(field("chapter_status"), "draft"), [
     { value: "", label: "—" },
-    { value: "idea", label: "idea" },
-    { value: "draft", label: "draft" },
-    { value: "revision", label: "revision" },
-    { value: "complete", label: "complete" }
+    { value: "idea", label: "Idea" },
+    { value: "draft", label: "Draft" },
+    { value: "revision", label: "Revision" },
+    { value: "complete", label: "Complete" }
   ]);
 
   equal(getChapterContextSelectOptions(field("title"), "Chapter One"), null);
@@ -104,10 +104,10 @@ test("preserves an unknown current status until the author changes it", () => {
   deepEqual(getChapterContextSelectOptions(field("chapter_status"), "copy edit"), [
     { value: "", label: "—" },
     { value: "copy edit", label: "copy edit (current)", preserved: true },
-    { value: "idea", label: "idea" },
-    { value: "draft", label: "draft" },
-    { value: "revision", label: "revision" },
-    { value: "complete", label: "complete" }
+    { value: "idea", label: "Idea" },
+    { value: "draft", label: "Draft" },
+    { value: "revision", label: "Revision" },
+    { value: "complete", label: "Complete" }
   ]);
 });
 
