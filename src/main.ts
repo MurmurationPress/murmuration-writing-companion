@@ -10,7 +10,7 @@ import {
 import {
   VIEW_TYPE,
   WritingCompanionView
-} from "./companion/WritingCompanionView";
+} from "./companion/CollapsibleWritingCompanionView";
 import { EditorialStoreService } from "./editorial/EditorialStore";
 import { Annotation } from "./editorial/EditorialNote";
 import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
@@ -18,13 +18,43 @@ import {
   EditableChapterContextField,
   updateEditableChapterContextFrontmatter
 } from "./companion/ChapterContext";
+import {
+  createSidebarSectionPreferenceKey,
+  SidebarSectionPreferences
+} from "./companion/SidebarSections";
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
+  sidebarSectionPreferences!: SidebarSectionPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
 
   async onload() {
+    const vaultName = this.app.vault.getName();
+    let resourceRoot = vaultName;
+    let preferenceStorage: Storage | null = null;
+
+    try {
+      resourceRoot = this.app.vault.adapter.getResourcePath("");
+    } catch {
+      // The vault name still provides a stable fallback on unusual adapters.
+    }
+
+    try {
+      preferenceStorage = window.localStorage;
+    } catch {
+      // The layout still works with in-memory defaults when storage is unavailable.
+    }
+
+    this.sidebarSectionPreferences = new SidebarSectionPreferences(
+      preferenceStorage,
+      createSidebarSectionPreferenceKey(
+        this.manifest.id,
+        vaultName,
+        resourceRoot
+      )
+    );
+
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => this.refreshView();
 
@@ -197,7 +227,6 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const leaf = this.findChapterLeaf(chapter)
       ?? this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)
       ?? this.app.workspace.getLeaf(false);
-
     await leaf.openFile(chapter, { active: true });
     await this.app.workspace.revealLeaf(leaf);
     this.app.workspace.setActiveLeaf(leaf, { focus: true });

@@ -74,6 +74,14 @@ Each chapter has a checklist for Draft, Structure, Character, Dialogue, Continui
 
 The checklist is independent of the current `editorial_pass` Markdown property. Selecting a current focus does not complete it, and completing a checklist item does not change frontmatter or manuscript text.
 
+## Sidebar layout
+
+Chapter Context, Editorial Passes and Chapter Notes can be collapsed independently. Annotations remains open and prominent as the active review queue. Collapsing one section never closes another.
+
+Collapsed Chapter Context shows a compact summary of the available POV, story date, chapter status and current editorial pass. Editorial Passes retains its completed count, while Chapter Notes indicates whether notes exist and shows a one-line preview when available.
+
+The chosen layout is remembered locally for each vault. It is a user-interface preference only: it is not written to manuscript Markdown, frontmatter, portable editorial storage or Git. Chapter Context and Chapter Notes start open; Editorial Passes starts collapsed to preserve sidebar space.
+
 ## Annotation workflow
 
 Select manuscript text and choose **Annotate**. The Companion opens with a blank annotation editor focused and ready for typing; placeholder guidance disappears as soon as text is entered.
