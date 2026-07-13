@@ -10,6 +10,7 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 - [Constitution](CONSTITUTION.md) — the binding rules for product and development decisions
 - [Architecture](ARCHITECTURE.md) — the current division of responsibilities
 - [Story World Entity Standard](docs/story-world-entity-standard.md) — the permissive Markdown contract for fictional entities
+- [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) — how settled truth, plans, alternatives, ambiguity and replacement history are distinguished
 
 ## Development install
 
@@ -38,6 +39,8 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 ## Story World foundations
 
 The versioned [Story World Entity Standard](docs/story-world-entity-standard.md) defines how ordinary Markdown notes can opt into a permissive story-world model through a non-empty `world_entity` property.
+
+The companion [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) distinguishes Confirmed, Planned, Candidate, Unresolved and Superseded material. Missing status remains unclassified rather than becoming canon implicitly. Lightweight source and replacement links explain why material is present without moving authority away from Markdown.
 
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Relationship data is stored as precise qualified assertions but must ultimately be presented to authors as readable relationship statements and guided forms.
 
