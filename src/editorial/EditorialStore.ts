@@ -9,8 +9,11 @@ import { ObsidianEditorialFileSystem } from "./ObsidianEditorialFileSystem";
 import { OpenAnnotationPropertyService } from "./OpenAnnotationProperty";
 import {
   AtomicTextFileStore,
+  markEditorialPageDeleted,
   moveEditorialPage,
-  PortableEditorialStorage
+  PortableEditorialStorage,
+  reconcileEditorialPagePresence,
+  restoreEditorialPage
 } from "./PortableEditorialStorage";
 
 const CHAPTER_NOTE_SAVE_DELAY_MS = 400;
@@ -64,6 +67,10 @@ export class EditorialStoreService {
   }
 
   getPage(file: TFile): PageEditorialNotes {
+    if (restoreEditorialPage(this.store, file.path)) {
+      void this.save();
+    }
+
     if (!this.store.pages[file.path]) {
       const now = new Date().toISOString();
 
@@ -158,8 +165,44 @@ export class EditorialStoreService {
     this.onChange();
   }
 
+  async reconcileDeletedEditorialPages() {
+    const existingPaths = this.plugin.app.vault
+      .getMarkdownFiles()
+      .map((file) => file.path);
+    const result = reconcileEditorialPagePresence(this.store, existingPaths);
+
+    if (result.deletedPaths.length > 0 || result.restoredPaths.length > 0) {
+      await this.save();
+    }
+
+    return result;
+  }
+
   async reconcileOpenAnnotationProperties() {
     await this.openAnnotationProperty.reconcile(this.store);
+  }
+
+  async handleCreate(file: TFile) {
+    if (!restoreEditorialPage(this.store, file.path)) return;
+
+    await this.save();
+    await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
+    this.onChange();
+    new Notice("Writing Companion restored editorial data for this chapter.");
+  }
+
+  async handleDelete(file: TFile) {
+    const timer = this.chapterNoteSaveTimers.get(file.path);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      this.chapterNoteSaveTimers.delete(file.path);
+    }
+
+    if (!markEditorialPageDeleted(this.store, file.path)) return;
+
+    await this.save();
+    this.onChange();
+    new Notice("Writing Companion retained editorial data for the deleted chapter.");
   }
 
   async handleRename(file: TFile, oldPath: string) {
