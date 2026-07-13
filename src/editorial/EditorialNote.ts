@@ -30,13 +30,22 @@ export interface Annotation extends EditorialNote {
 export interface PageEditorialNotes {
   chapterNote: ChapterNote;
   annotations: Annotation[];
+  deletedAt?: string;
 
   /** Retained only so early development data is not discarded during migration. */
   documentNotes?: EditorialNote[];
   [key: string]: unknown;
 }
 
+export interface OrphanedEditorialPage {
+  originalPath: string;
+  deletedAt: string;
+  page: PageEditorialNotes;
+  [key: string]: unknown;
+}
+
 export interface EditorialStore {
   pages: Record<string, PageEditorialNotes>;
+  orphanedPages?: Record<string, OrphanedEditorialPage>;
   [key: string]: unknown;
 }
