@@ -15,17 +15,7 @@ export function renderEditorialPassChecklist(
   items: EditorialPassChecklistItem[],
   onToggle: EditorialPassToggleHandler
 ): HTMLElement {
-  const section = container.createDiv("mwc-section mwc-editorial-passes");
-  const heading = section.createEl("h3", { cls: "mwc-section-heading" });
-  const completedCount = items.filter((item) => item.completed).length;
-
-  heading.createSpan({ text: "Editorial Passes" });
-  heading.createSpan({
-    cls: "mwc-editorial-pass-count",
-    text: `${completedCount} of ${items.length}`
-  });
-
-  const list = section.createDiv({
+  const list = container.createDiv({
     cls: "mwc-editorial-pass-list",
     attr: {
       role: "group",
@@ -79,7 +69,7 @@ export function renderEditorialPassChecklist(
     };
   }
 
-  return section;
+  return list;
 }
 
 function formatEditorialPassDate(value: string): string {
