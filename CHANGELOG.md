@@ -11,6 +11,7 @@
 - Add local single-run and watch test commands without introducing another test dependency
 - Run automated tests and the production build in GitHub Actions for pushes and pull requests
 - Replace free-text chapter status with an `idea`, `draft`, `revision`, `complete` dropdown
+- Display chapter-status choices as Idea, Draft, Revision and Complete while retaining lowercase frontmatter values
 - Preserve existing non-standard chapter status values until deliberately changed
 - Replace free-text editorial pass with the canonical Draft, Structure, Character, Dialogue, Continuity, Style and Proof workflow
 - Store canonical editorial-pass selections as lowercase frontmatter values while preserving unknown existing values
