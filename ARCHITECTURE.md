@@ -14,6 +14,29 @@ The Companion uses progressive disclosure for supporting material. Chapter Conte
 
 ---
 
+## Story World
+
+Fictional entities and their authoritative descriptive knowledge.
+
+Responsible for:
+
+- Entity identity and human-readable description
+- Canon-scoped names and qualified designations
+- Explicit relationship and world assertions
+- Links to provenance, scope and relevant story time
+
+Story World entities remain ordinary Markdown notes. A note opts in through a non-empty `world_entity` property as defined by the versioned [Story World Entity Standard](docs/story-world-entity-standard.md). Folder placement, prose mentions, `type`, `pov` and `location` do not imply entity status.
+
+`world_entity` records one primary kind for stable author-chosen grouping. Optional `world_facets` record additional roles without making list order carry hidden meaning. This allows an intelligence such as PRIME or JANUS to participate as a character and technical system without duplicating the entity.
+
+Ordinary Obsidian aliases are distinct from qualified designations. A designation may belong to an observer, institution, date or confidence level and is therefore retained as a qualified assertion rather than promoted automatically to a universal alias.
+
+Relationship data may be structurally represented as qualified subject–predicate–object assertions. The author-facing product presents these as readable relationship statements or world assertions, using guided forms and progressive disclosure rather than requiring raw triple syntax.
+
+The Story World is not stored in the portable editorial store. Future indexes and rendered views are derived and rebuildable. Reading or indexing an entity never modifies its Markdown note.
+
+---
+
 ## Editorial
 
 Editorial knowledge.
