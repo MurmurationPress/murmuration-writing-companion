@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   CHAPTER_STATUS_OPTIONS,
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
+  EDITORIAL_PASS_OPTIONS,
   findEditableChapterContextProperty,
   formatPropertyValue,
   getChapterContextInputType,
@@ -38,7 +39,8 @@ test("resolves existing aliases without replacing their spelling", () => {
   const frontmatter = {
     "Point Of View": "[[Tobias]]",
     StoryDate: "2032-04-01",
-    Status: "revision"
+    Status: "revision",
+    "Current Pass": "continuity"
   };
 
   deepEqual(getEditableChapterContextValue(frontmatter, field("pov")), {
@@ -54,6 +56,11 @@ test("resolves existing aliases without replacing their spelling", () => {
   deepEqual(getEditableChapterContextValue(frontmatter, field("chapter_status")), {
     property: "Status",
     value: "revision"
+  });
+
+  deepEqual(getEditableChapterContextValue(frontmatter, field("editorial_pass")), {
+    property: "Current Pass",
+    value: "continuity"
   });
 });
 
@@ -138,4 +145,88 @@ test("clearing chapter status removes its property and duplicate aliases", () =>
   );
 
   deepEqual(frontmatter, { title: "A Chapter" });
+});
+
+test("defines editorial passes in the canonical workflow order", () => {
+  deepEqual([...EDITORIAL_PASS_OPTIONS], [
+    "draft",
+    "structure",
+    "character",
+    "dialogue",
+    "continuity",
+    "style",
+    "proof"
+  ]);
+});
+
+test("builds title-cased editorial pass choices with lowercase values", () => {
+  deepEqual(getChapterContextSelectOptions(field("editorial_pass"), "continuity"), [
+    { value: "", label: "—" },
+    { value: "draft", label: "Draft" },
+    { value: "structure", label: "Structure" },
+    { value: "character", label: "Character" },
+    { value: "dialogue", label: "Dialogue" },
+    { value: "continuity", label: "Continuity" },
+    { value: "style", label: "Style" },
+    { value: "proof", label: "Proof" }
+  ]);
+});
+
+test("preserves an unknown editorial pass until deliberately replaced", () => {
+  deepEqual(getChapterContextSelectOptions(field("editorial_pass"), "line edit"), [
+    { value: "", label: "—" },
+    { value: "line edit", label: "line edit (current)", preserved: true },
+    { value: "draft", label: "Draft" },
+    { value: "structure", label: "Structure" },
+    { value: "character", label: "Character" },
+    { value: "dialogue", label: "Dialogue" },
+    { value: "continuity", label: "Continuity" },
+    { value: "style", label: "Style" },
+    { value: "proof", label: "Proof" }
+  ]);
+});
+
+test("writes editorial passes through an existing alias without touching checklist data", () => {
+  const completedPasses = {
+    structure: { completed: "2026-07-01T10:00:00Z" }
+  };
+  const frontmatter: Record<string, unknown> = {
+    title: "A Chapter",
+    "Current Pass": "structure",
+    completed_editorial_passes: completedPasses
+  };
+
+  equal(
+    updateEditableChapterContextFrontmatter(
+      frontmatter,
+      field("editorial_pass"),
+      "continuity"
+    ),
+    "Current Pass"
+  );
+  deepEqual(frontmatter, {
+    title: "A Chapter",
+    "Current Pass": "continuity",
+    completed_editorial_passes: completedPasses
+  });
+});
+
+test("clearing editorial pass removes aliases and leaves unrelated data intact", () => {
+  const frontmatter: Record<string, unknown> = {
+    title: "A Chapter",
+    editorial_pass: "continuity",
+    "Current Pass": "dialogue",
+    chapter_status: "revision"
+  };
+
+  updateEditableChapterContextFrontmatter(
+    frontmatter,
+    field("editorial_pass"),
+    ""
+  );
+
+  deepEqual(frontmatter, {
+    title: "A Chapter",
+    chapter_status: "revision"
+  });
 });

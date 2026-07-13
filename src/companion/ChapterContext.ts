@@ -14,6 +14,7 @@ export interface EditableChapterContextField {
   multiline?: boolean;
   inputType?: "text" | "date";
   options?: readonly string[];
+  optionLabels?: Readonly<Record<string, string>>;
   renderMarkdownPreview?: boolean;
 }
 
@@ -29,6 +30,26 @@ export const CHAPTER_STATUS_OPTIONS = [
   "revision",
   "complete"
 ] as const;
+
+export const EDITORIAL_PASS_OPTIONS = [
+  "draft",
+  "structure",
+  "character",
+  "dialogue",
+  "continuity",
+  "style",
+  "proof"
+] as const;
+
+const EDITORIAL_PASS_LABELS: Readonly<Record<string, string>> = {
+  draft: "Draft",
+  structure: "Structure",
+  character: "Character",
+  dialogue: "Dialogue",
+  continuity: "Continuity",
+  style: "Style",
+  proof: "Proof"
+};
 
 export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
   {
@@ -68,7 +89,9 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
       "editing_pass",
       "pass"
     ],
-    placeholder: "Structure, continuity, line edit…"
+    placeholder: "Select editorial pass…",
+    options: EDITORIAL_PASS_OPTIONS,
+    optionLabels: EDITORIAL_PASS_LABELS
   },
   {
     key: "change_summary",
@@ -222,7 +245,10 @@ export function getChapterContextSelectOptions(
   }
 
   for (const option of field.options) {
-    options.push({ value: option, label: option });
+    options.push({
+      value: option,
+      label: field.optionLabels?.[option] ?? option
+    });
   }
 
   return options;
