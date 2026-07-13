@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Define Supporting Model conventions for relationships, timelines, knowledge states and continuity
+- Establish qualified subject–predicate–object assertions with optional time, status, provenance and perspective
+- Keep stored models authoritative only for author-maintained interpretation while indexes, inverses and graphs remain derived
+- Require readable sentence rendering, guided authoring and progressive disclosure for non-technical authors
+- Add PRIME-based examples for simple, time-bounded, timeline and knowledge-state relationships
 - Define Confirmed, Planned, Candidate, Unresolved and Superseded Story World states
 - Add lightweight source, first-appearance and replacement provenance conventions
 - Keep authorial status separate from in-world confidence and belief
@@ -73,7 +78,7 @@
 - Order open annotations by their manuscript line rather than creation time
 - Show the number of open annotations remaining in the chapter
 - Remove resolved annotations from the active review list immediately
-- Bring the next annotation into view after resolving the current one
+- Bring the next annotation into view after resolving the current annotation
 
 
 ## 0.8.0
