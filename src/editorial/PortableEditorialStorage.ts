@@ -1,5 +1,6 @@
 import type {
   Annotation,
+  AnnotationAnchor,
   ChapterNote,
   EditorialStore,
   PageEditorialNotes
@@ -190,7 +191,7 @@ function normalizeAnnotation(
   if (!isRecord(value)) return null;
 
   const rawAnchor = isRecord(value.anchor) ? value.anchor : {};
-  const anchor = {
+  const anchor: AnnotationAnchor = {
     ...rawAnchor,
     text: stringValue(rawAnchor.text)
   };
@@ -252,7 +253,10 @@ function normalizeChapterNote(
     value: {
       body: legacyNotes.map((note) => stringValue(note.body)).join("\n\n"),
       created: stringValue(legacyNotes[0]?.created, now),
-      updated: stringValue(legacyNotes.at(-1)?.updated, now)
+      updated: stringValue(
+        legacyNotes[legacyNotes.length - 1]?.updated,
+        now
+      )
     },
     changed: true
   };
