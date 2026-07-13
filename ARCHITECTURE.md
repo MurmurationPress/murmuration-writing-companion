@@ -34,6 +34,28 @@ Responsible for:
 - Saving
 - Loading
 - Migration
+- Recovery
+- Schema versioning
+
+The authoritative editorial store is the versioned vault file:
+
+```text
+.murmuration/writing-companion/editorial-data.json
+```
+
+The storage engine is separated from Obsidian through a small file-system adapter so serialization, migration, recovery and failure behaviour can be tested with an in-memory implementation.
+
+Writes use three related paths:
+
+- `editorial-data.json` — current authoritative data;
+- `editorial-data.json.tmp` — complete candidate written before publication;
+- `editorial-data.json.bak` — previous complete version retained after a successful replacement.
+
+A malformed current file may be moved to `editorial-data.json.corrupt` only when a valid temporary or backup file has already been verified and is being restored. Unsupported newer schema versions are never replaced or downgraded.
+
+The plugin's historical Obsidian `data.json` is a migration source only when no portable file exists. After the first successful migration the vault file is authoritative. The legacy source is not deleted automatically.
+
+Manuscript Markdown remains outside this storage layer. The only deliberate editorial projection into frontmatter is the derived `mwc_open_annotations` reporting property.
 
 ---
 
