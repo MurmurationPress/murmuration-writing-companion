@@ -14,6 +14,11 @@
 - Preserve existing non-standard chapter status values until deliberately changed
 - Replace free-text editorial pass with the canonical Draft, Structure, Character, Dialogue, Continuity, Style and Proof workflow
 - Store canonical editorial-pass selections as lowercase frontmatter values while preserving unknown existing values
+- Move Chapter Notes and annotations into versioned vault storage at `.murmuration/writing-companion/editorial-data.json`
+- Migrate existing plugin data once without deleting the legacy migration backup
+- Protect writes with temporary and last-known-good backup files
+- Recover complete interrupted writes while refusing to overwrite malformed or unsupported newer storage
+- Preserve unknown future-compatible editorial fields and chapter rename behaviour
 
 
 ## 0.12.0
