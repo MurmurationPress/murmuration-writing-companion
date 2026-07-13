@@ -31,6 +31,10 @@ Story World entities remain ordinary Markdown notes. A note opts in through a no
 
 Ordinary Obsidian aliases are distinct from qualified designations. A designation may belong to an observer, institution, date or confidence level and is therefore retained as a qualified assertion rather than promoted automatically to a universal alias.
 
+The [Canon Status and Provenance Standard](docs/canon-status-and-provenance.md) defines Confirmed, Planned, Candidate, Unresolved and Superseded material. Missing status is unclassified and unknown values remain preserved. Note-level status classifies the entity’s core identity; it does not silently confirm every assertion in the note.
+
+Status describes the author’s commitment to an item. Provenance records why the item is present through source, first-appearance and replacement links. In-world confidence remains separate: a confirmed assertion may accurately record that JANUS holds a low-confidence belief.
+
 Relationship data may be structurally represented as qualified subject–predicate–object assertions. The author-facing product presents these as readable relationship statements or world assertions, using guided forms and progressive disclosure rather than requiring raw triple syntax.
 
 The Story World is not stored in the portable editorial store. Future indexes and rendered views are derived and rebuildable. Reading or indexing an entity never modifies its Markdown note.

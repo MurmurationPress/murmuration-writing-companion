@@ -4,12 +4,15 @@ world_name: Tobias Hale
 aliases:
   - Tobias
 world_scope: "[[PRIME Trilogy]]"
-world_status: canon
+world_status: confirmed
+world_sources:
+  - "[[Quiet Load]]"
 world_summary: Engineer and systems investigator who becomes one of the first human observers of PRIME.
 world_first_appearance: "[[Quiet Load]]"
 world_relationships:
   - predicate: works_for
     target: "[[Northbridge Systems]]"
+    status: confirmed
     as_of: "2026-04-05"
     source: "[[Quiet Load]]"
 ---

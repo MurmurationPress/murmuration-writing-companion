@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Define Confirmed, Planned, Candidate, Unresolved and Superseded Story World states
+- Add lightweight source, first-appearance and replacement provenance conventions
+- Keep authorial status separate from in-world confidence and belief
+- Update Story World examples to use explicit confirmed status and provenance
+
 
 ## 0.13.0 — 2026-07-13
 
