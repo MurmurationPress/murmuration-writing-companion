@@ -1,6 +1,6 @@
 # Story World Entity Standard
 
-**Version:** 0.1.0  
+**Version:** 0.1.1  
 **Status:** Foundation specification  
 **Issue:** #50
 
@@ -70,7 +70,11 @@ Only `world_entity` is required.
 | `aliases` | native Obsidian scalar or list | Ordinary interchangeable names |
 | `world_designations` | list of mappings | Qualified observer-, institution- or time-specific names |
 | `world_scope` | scalar or list of strings/wikilinks | Series, book, timeline or shared-world scope |
-| `world_status` | scalar string | Canon/planning state; vocabulary is defined by #51 |
+| `world_status` | scalar string | Canon/planning state defined by the Canon Status and Provenance Standard |
+| `world_status_note` | scalar string | Brief human explanation of the current status |
+| `world_sources` | scalar or list of wikilinks | Notes, chapters or records supporting the item |
+| `world_replaces` | scalar or list of wikilinks | Older items replaced by this item |
+| `world_replaced_by` | scalar or list of wikilinks | Current replacement for a superseded item |
 | `world_summary` | scalar string | Concise human-readable description |
 | `world_first_appearance` | wikilink string | First manuscript or published appearance |
 | `world_time` | ISO string or time mapping | Event or state time where relevant |
@@ -107,6 +111,7 @@ world_designations:
     as_of: "2029-01-20"
     source: "[[JANUS Monitoring]]"
     scope: internal
+    status: confirmed
 ```
 
 Each designation is a mapping with:
@@ -116,6 +121,7 @@ Each designation is a mapping with:
 - optional `as_of`, `valid_from` and `valid_until` ISO strings;
 - optional `source` wikilink;
 - optional `scope` string or list;
+- optional `status` from the Canon Status and Provenance Standard;
 - optional `confidence` string or number;
 - any additional qualifiers needed by the author.
 
@@ -162,6 +168,7 @@ When stored on an entity note, the note is the implicit subject. Each item requi
 world_relationships:
   - predicate: works_for
     target: "[[Northbridge Systems]]"
+    status: confirmed
     source: "[[Quiet Load]]"
     as_of: "2026-04-05"
 ```
@@ -184,13 +191,19 @@ world_scope:
 
 Scope does not replace provenance or time. A note may be series-scoped while an individual designation or assertion is book- or date-specific.
 
-## Status boundary
+## Canon status and provenance
 
-`world_status` is reserved for the canon/planning state defined by #51. Until that vocabulary is finalised:
+The companion [Canon Status and Provenance Standard](canon-status-and-provenance.md) defines the canonical values:
 
-- readers must preserve unknown values;
-- missing status must not imply confirmed canon;
-- planned or candidate material must not be presented as confirmed merely because the note is indexable.
+- `confirmed`;
+- `planned`;
+- `candidate`;
+- `unresolved`;
+- `superseded`.
+
+Missing status is unclassified and must never imply confirmed canon. Unknown values are preserved. Planned and candidate material must not be presented as confirmed, unresolved material retains its ambiguity, and superseded material remains discoverable without appearing current by default.
+
+Status describes the author’s commitment to an item. Provenance records why it is present. A source link does not automatically make an assertion true, and an in-world statement may be a confirmed record of a character’s uncertain or mistaken belief.
 
 ## Parsing and preservation rules
 
@@ -201,7 +214,7 @@ Consumers of this standard must:
 - trim strings for interpretation while preserving the original Markdown;
 - omit empty optional fields from derived presentation;
 - ignore an individually malformed optional field without rejecting an otherwise valid entity;
-- preserve unknown primary kinds, facets, predicates, qualifier keys and extra properties;
+- preserve unknown primary kinds, facets, statuses, predicates, qualifier keys and extra properties;
 - distinguish duplicate names and aliases by vault path and scope;
 - retain unresolved wikilinks as unresolved references rather than deleting them;
 - never modify a note merely because it was read or indexed.
@@ -239,7 +252,7 @@ An Obsidian Base may filter for records where `world_entity` is present. Folder 
 
 The stored representation may be structured. The author experience must remain literary and readable.
 
-> Store relationships and designations precisely. Present them as ordinary language, guided choices and understandable statements.
+> Store relationships, designations, status and provenance precisely. Present them as ordinary language, guided choices and understandable statements.
 
 ## Compatibility and ownership
 
@@ -252,6 +265,6 @@ The stored representation may be structured. The author experience must remain l
 
 ## Examples
 
-See [`docs/examples/story-world/`](examples/story-world/) for PRIME-based examples covering a character, location, organisation, intelligence/system and event.
+See [`docs/examples/story-world/`](examples/story-world/) for PRIME-based examples covering a character, location, organisation, intelligence/system, event, canon status and provenance.
 
 These are schema examples only. They are not written into the PRIME Trilogy vault and do not independently establish canon.
