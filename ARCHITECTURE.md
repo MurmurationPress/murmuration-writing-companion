@@ -37,7 +37,28 @@ Status describes the author’s commitment to an item. Provenance records why th
 
 A simple relationship may be stored on its natural entity owner as a qualified subject–predicate–object assertion. The author-facing product presents it as a readable relationship statement or world assertion rather than raw triple syntax.
 
-The Story World is not stored in the portable editorial store. Future indexes and rendered views are derived and rebuildable. Reading or indexing an entity never modifies its Markdown note.
+The Story World is not stored in the portable editorial store. Indexes and rendered views are derived and rebuildable. Reading or indexing an entity never modifies its Markdown note.
+
+---
+
+## Story World Index
+
+Read-only discovery and lookup for opted-in Story World entities.
+
+Responsible for:
+
+- Discovering Markdown notes with a non-empty scalar `world_entity`
+- Parsing canonical names, aliases, type, facets, scope, status, summaries and common links
+- Retaining unknown entity types and extra properties without making them validation failures
+- Looking up entities by path, canonical name, alias and type
+- Resolving ordinary wikilinks through Obsidian's metadata cache
+- Updating one indexed path when relevant vault or metadata events occur
+
+The [read-only Story World index](docs/story-world-index.md) is an in-memory projection. It is built from Markdown metadata at plugin startup and rebuilt once when the Obsidian layout is ready. After that, metadata changes, creation, deletion and rename events update individual paths rather than rescanning the vault on every sidebar render.
+
+Duplicate names and aliases remain separate records ordered by path. Scope and path are retained for disambiguation. A unique indexed name or alias may provide a fallback when normal Obsidian link resolution finds no destination; ambiguous matches are never guessed.
+
+The index contains defensive copies of parsed frontmatter values but owns no canon. It is not serialized, does not enter `.murmuration/writing-companion/editorial-data.json`, and can be discarded and reconstructed at any time. It never modifies, creates, renames or deletes Markdown notes.
 
 ---
 

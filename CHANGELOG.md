@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add a read-only, rebuildable Story World index for opted-in Markdown entity notes
+- Index entities by vault path, canonical name, aliases and entity type
+- Preserve unknown entity types and extra properties while malformed optional values fail softly
+- Refresh individual index records on metadata change, creation, deletion and rename
+- Resolve ordinary wikilinks through Obsidian metadata with a unique name-or-alias fallback
+- Keep Story World authority out of portable editorial storage and avoid sidebar-triggered vault rescans
 - Define the optional `world_context` chapter property for explicit Story World relevance
 - Include recognised Story World POV links without duplicating them in `world_context`
 - Keep free-text location metadata unchanged and avoid prose, backlink or folder inference

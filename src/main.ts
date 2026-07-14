@@ -22,9 +22,11 @@ import {
   createSidebarSectionPreferenceKey,
   SidebarSectionPreferences
 } from "./companion/SidebarSections";
+import { ObsidianStoryWorldIndex } from "./story-world/ObsidianStoryWorldIndex";
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
+  storyWorldIndex!: ObsidianStoryWorldIndex;
   sidebarSectionPreferences!: SidebarSectionPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
@@ -55,12 +57,19 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       )
     );
 
+    this.storyWorldIndex = new ObsidianStoryWorldIndex(this.app);
+    this.storyWorldIndex.rebuild();
+
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => this.refreshView();
 
     await this.storeService.load();
 
     this.app.workspace.onLayoutReady(() => {
+      if (this.storyWorldIndex.rebuild()) {
+        this.refreshView();
+      }
+
       void (async () => {
         await this.storeService.reconcileDeletedEditorialPages();
         await this.storeService.reconcileOpenAnnotationProperties();
@@ -124,7 +133,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
-        if (file.path === this.getCurrentChapter()?.path) {
+        const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
+        const currentChapterChanged = file.path === this.getCurrentChapter()?.path;
+
+        if (worldChanged || currentChapterChanged) {
           this.refreshView();
         }
       })
@@ -133,17 +145,26 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("create", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
+
+        const worldChanged = this.storyWorldIndex.handleCreate(file);
         await this.storeService.handleCreate(file);
+
+        if (worldChanged) this.refreshView();
       })
     );
 
     this.registerEvent(
       this.app.vault.on("delete", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
+
+        const worldChanged = this.storyWorldIndex.handleDelete(file);
         await this.storeService.handleDelete(file);
 
         if (this.currentChapter?.path === file.path) {
           this.currentChapter = null;
+        }
+
+        if (worldChanged || this.currentChapter === null) {
           this.refreshView();
         }
       })
@@ -152,11 +173,15 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("rename", async (file, oldPath) => {
         if (!(file instanceof TFile)) return;
+
+        const worldChanged = this.storyWorldIndex.handleRename(file, oldPath);
         await this.storeService.handleRename(file, oldPath);
 
         if (this.currentChapter?.path === oldPath) {
           this.currentChapter = file;
         }
+
+        if (worldChanged) this.refreshView();
       })
     );
   }
@@ -217,11 +242,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.pendingFocusNoteId = annotationId;
-
     await this.activateView();
     this.refreshView();
   }
-
 
   async navigateToAnnotation(chapter: TFile, annotation: Annotation) {
     const leaf = this.findChapterLeaf(chapter)
