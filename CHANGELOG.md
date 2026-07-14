@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a read-only World Context section for the active chapter
+- Combine recognised Story World POV links with explicit `world_context` references
+- Group resolved entities by type and show concise names, summaries and canon status
+- Distinguish Planned and Candidate material from Confirmed canon
+- Open authoritative entity notes through normal Obsidian navigation
+- Persist World Context collapse state locally per vault and keep Annotations primary
+- Omit malformed references and report unresolved links quietly without writing Markdown
 - Add a read-only, rebuildable Story World index for opted-in Markdown entity notes
 - Index entities by vault path, canonical name, aliases and entity type
 - Preserve unknown entity types and extra properties while malformed optional values fail softly

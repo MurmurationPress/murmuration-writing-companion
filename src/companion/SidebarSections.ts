@@ -6,6 +6,7 @@ import {
 
 export const SIDEBAR_SECTION_KEYS = [
   "chapterContext",
+  "worldContext",
   "editorialPasses",
   "chapterNotes"
 ] as const;
@@ -15,6 +16,7 @@ export type SidebarSectionState = Record<SidebarSectionKey, boolean>;
 
 export const DEFAULT_SIDEBAR_SECTION_STATE: Readonly<SidebarSectionState> = {
   chapterContext: true,
+  worldContext: false,
   editorialPasses: false,
   chapterNotes: true
 };
@@ -76,6 +78,7 @@ export function serializeSidebarSectionState(state: SidebarSectionState): string
     version: SIDEBAR_SECTION_PREFERENCE_VERSION,
     expanded: {
       chapterContext: state.chapterContext,
+      worldContext: state.worldContext,
       editorialPasses: state.editorialPasses,
       chapterNotes: state.chapterNotes
     }

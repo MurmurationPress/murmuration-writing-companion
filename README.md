@@ -53,7 +53,9 @@ The [read-only Story World index](docs/story-world-index.md) discovers opted-in 
 
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
-MWC does not yet display Story World entities in the sidebar and does not infer canon from prose. Story-world facts and model authority never enter the portable editorial store.
+The Writing Companion now presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.
+
+MWC still does not infer canon or relevance from prose. Story-world facts and model authority never enter the portable editorial store.
 
 ## Chapter Notes
 
@@ -73,7 +75,7 @@ The plugin writes through a temporary file and keeps the previous complete file 
 
 Existing editorial data from the plugin's Obsidian `data.json` is migrated automatically only when the portable file does not yet exist. The portable file then becomes authoritative, making the migration safe to repeat. The old plugin data is left in place as a migration backup.
 
-Deleting a Markdown chapter does not delete its Chapter Notes, annotations or editorial-pass history. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent orphan cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
+Deleting a Markdown chapter does not delete its Chapter Notes, annotations or editorial-pass history. The record is marked with a deletion timestamp and restored automatically when a chapter is recreated at the same path. If another annotated chapter is renamed into that path, the deleted record is moved into the store's orphan archive so both editorial histories survive. Permanent cleanup is a deliberate future action rather than an automatic side effect of deleting manuscript files.
 
 Editorial notes can contain unpublished material. In a private manuscript repository the portable file can normally be committed. In a public repository, exclude `.murmuration/writing-companion/editorial-data.json*` when those notes should remain private.
 
@@ -89,6 +91,14 @@ Chapter status is selected from `idea`, `draft`, `revision` and `complete`. Exis
 
 Editorial pass uses the canonical Draft, Structure, Character, Dialogue, Continuity, Style and Proof workflow. The displayed labels are title-cased while the frontmatter values are stored in lowercase. Existing non-standard values remain available until deliberately replaced.
 
+## World Context
+
+World Context is read-only and derives its entries from the active chapter's recognised POV link and explicit `world_context` property. Only notes already indexed as Story World entities are shown.
+
+Entries display their canonical name, entity type, canon status and optional concise summary. Planned and Candidate items remain visibly labelled rather than appearing as Confirmed canon. POV-derived entries are marked separately, and duplicate references to the same resolved path display only once.
+
+Clicking an entry opens the authoritative entity note. Missing, malformed and unresolved links degrade quietly. Merely viewing the section never changes chapter frontmatter, Story World notes or editorial storage.
+
 ## Editorial Passes
 
 Each chapter has a checklist for Draft, Structure, Character, Dialogue, Continuity, Style and Proof. Completing or reopening a pass writes a timestamped event to the portable editorial store, so earlier completion history is retained even when a pass is reopened.
@@ -97,11 +107,11 @@ The checklist is independent of the current `editorial_pass` Markdown property. 
 
 ## Sidebar layout
 
-Chapter Context, Editorial Passes and Chapter Notes can be collapsed independently. Annotations remains open and prominent as the active review queue. Collapsing one section never closes another.
+Chapter Context, World Context, Editorial Passes and Chapter Notes can be collapsed independently. Annotations remains open and prominent as the active review queue. Collapsing one section never closes another.
 
-Collapsed Chapter Context shows a compact summary of the available POV, story date, chapter status and current editorial pass. Editorial Passes retains its completed count, while Chapter Notes indicates whether notes exist and shows a one-line preview when available.
+Collapsed Chapter Context shows a compact summary of the available POV, story date, chapter status and current editorial pass. World Context shows referenced entity names and a resolved count. Editorial Passes retains its completed count, while Chapter Notes indicates whether notes exist and shows a one-line preview when available.
 
-The chosen layout is remembered locally for each vault. It is a user-interface preference only: it is not written to manuscript Markdown, frontmatter, portable editorial storage or Git. Chapter Context and Chapter Notes start open; Editorial Passes starts collapsed to preserve sidebar space.
+The chosen layout is remembered locally for each vault. It is a user-interface preference only: it is not written to manuscript Markdown, frontmatter, portable editorial storage or Git. Chapter Context and Chapter Notes start open; World Context and Editorial Passes start collapsed to preserve sidebar space.
 
 ## Annotation workflow
 

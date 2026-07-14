@@ -41,6 +41,7 @@ class ThrowingStorage implements SidebarPreferenceStorage {
 test("uses quiet sidebar defaults when no preference exists", () => {
   deepEqual(parseSidebarSectionState(null), DEFAULT_SIDEBAR_SECTION_STATE);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.chapterContext, true);
+  equal(DEFAULT_SIDEBAR_SECTION_STATE.worldContext, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.editorialPasses, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.chapterNotes, true);
 });
@@ -51,6 +52,7 @@ test("parses valid partial preferences without trusting malformed values", () =>
       version: 1,
       expanded: {
         chapterContext: false,
+        worldContext: true,
         editorialPasses: true,
         chapterNotes: "closed",
         futureSection: false
@@ -58,6 +60,7 @@ test("parses valid partial preferences without trusting malformed values", () =>
     })),
     {
       chapterContext: false,
+      worldContext: true,
       editorialPasses: true,
       chapterNotes: true
     }
@@ -76,19 +79,40 @@ test("parses valid partial preferences without trusting malformed values", () =>
   );
 });
 
+test("restores the new World Context default from older partial preferences", () => {
+  deepEqual(
+    parseSidebarSectionState(JSON.stringify({
+      version: 1,
+      expanded: {
+        chapterContext: false,
+        editorialPasses: true,
+        chapterNotes: false
+      }
+    })),
+    {
+      chapterContext: false,
+      worldContext: false,
+      editorialPasses: true,
+      chapterNotes: false
+    }
+  );
+});
+
 test("persists each section independently and restores it on reload", () => {
   const storage = new MemoryStorage();
   const key = "test-sidebar";
   const preferences = new SidebarSectionPreferences(storage, key);
 
   equal(preferences.setExpanded("chapterContext", false), true);
+  equal(preferences.setExpanded("worldContext", true), true);
   equal(preferences.setExpanded("editorialPasses", true), true);
   equal(preferences.setExpanded("chapterNotes", false), true);
   equal(preferences.setExpanded("chapterNotes", false), false);
-  equal(storage.writes, 3);
+  equal(storage.writes, 4);
 
   deepEqual(preferences.snapshot(), {
     chapterContext: false,
+    worldContext: true,
     editorialPasses: true,
     chapterNotes: false
   });
@@ -104,8 +128,8 @@ test("keeps in-memory section state when browser storage is unavailable", () => 
   );
 
   deepEqual(preferences.snapshot(), DEFAULT_SIDEBAR_SECTION_STATE);
-  equal(preferences.setExpanded("chapterNotes", false), true);
-  equal(preferences.isExpanded("chapterNotes"), false);
+  equal(preferences.setExpanded("worldContext", true), true);
+  equal(preferences.isExpanded("worldContext"), true);
 });
 
 test("creates stable preference keys isolated by vault resource root", () => {

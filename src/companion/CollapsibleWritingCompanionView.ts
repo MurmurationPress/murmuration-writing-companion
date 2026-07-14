@@ -1,6 +1,12 @@
 import { TFile } from "obsidian";
 import type { PageEditorialNotes } from "../editorial/EditorialNote";
+import {
+  buildWorldContext,
+  buildWorldContextStatus,
+  buildWorldContextSummary
+} from "../story-world/WorldContext";
 import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
+import { renderWorldContext } from "../ui/WorldContext";
 import {
   WritingCompanionView as BaseWritingCompanionView
 } from "./WritingCompanionView";
@@ -51,6 +57,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     const page = this.plugin.storeService.getPage(file);
 
     this.renderCollapsibleChapterContext(container, file);
+    this.renderCollapsibleWorldContext(container, file);
     this.renderCollapsibleEditorialPasses(container, file);
     this.renderCollapsibleChapterNote(container, file, page);
     this.renderAnnotations(container, file, page, focusNoteId);
@@ -68,6 +75,33 @@ export class WritingCompanionView extends BaseWritingCompanionView {
 
     super.renderChapterContext(collapsible.content, file);
     this.flattenEmbeddedSection(collapsible.content);
+  }
+
+  private renderCollapsibleWorldContext(container: Element, file: TFile) {
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const result = buildWorldContext(
+      frontmatter,
+      (reference) => this.plugin.storyWorldIndex.resolveWikilink(reference, file.path)
+    );
+    const collapsible = this.createCollapsibleSection(
+      container,
+      "worldContext",
+      "World Context",
+      {
+        summary: buildWorldContextSummary(result),
+        status: buildWorldContextStatus(result)
+      }
+    );
+    collapsible.section.classList.add("mwc-world-context");
+
+    renderWorldContext(collapsible.content, result, (entry, event) => {
+      const destination = entry.entity.path.replace(/\.md$/i, "");
+      void this.app.workspace.openLinkText(
+        destination,
+        file.path,
+        event.metaKey || event.ctrlKey
+      );
+    });
   }
 
   private renderCollapsibleEditorialPasses(container: Element, file: TFile) {
