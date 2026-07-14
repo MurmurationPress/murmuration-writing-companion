@@ -55,11 +55,21 @@ export function renderWorldContext(
         cls: "mwc-world-context-type",
         text: formatWorldEntityType(entry.entity.entityType)
       });
-      metadata.createDiv({
+      const statusEl = metadata.createDiv({
         cls: `mwc-world-context-status mwc-world-context-status--${status.tone}`,
         text: status.label,
         attr: { title: "Story World canon status" }
       });
+
+      if (status.tone === "provisional") {
+        statusEl.style.color = "var(--text-warning)";
+        statusEl.style.fontWeight = "700";
+      } else if (status.tone === "unresolved") {
+        statusEl.style.color = "var(--text-accent)";
+        statusEl.style.fontWeight = "600";
+      } else if (status.tone === "superseded") {
+        card.style.opacity = "0.68";
+      }
 
       if (entry.reasons.includes("pov")) {
         metadata.createDiv({
