@@ -33,7 +33,7 @@ export function renderWorldContext(
       text: group.label
     });
     const list = groupEl.createDiv({
-      cls: "mwc-world-context-list",
+      cls: "mwc-context-list mwc-world-context-list",
       attr: { role: "list" }
     });
 
@@ -41,14 +41,39 @@ export function renderWorldContext(
       const status = presentWorldStatus(entry.entity.status);
       const card = list.createEl("article", {
         cls: [
+          "mwc-context-row",
+          "mwc-context-row--editable",
           "mwc-world-context-card",
           `mwc-world-context-card--${status.tone}`
         ].join(" "),
         attr: { role: "listitem" }
       });
-      const header = card.createDiv("mwc-world-context-card-header");
-      const link = header.createEl("button", {
-        cls: "mwc-world-context-link",
+      const metadata = card.createDiv({
+        cls: "mwc-context-label mwc-world-context-metadata"
+      });
+      metadata.createDiv({
+        cls: "mwc-world-context-type",
+        text: formatWorldEntityType(entry.entity.entityType)
+      });
+      metadata.createDiv({
+        cls: `mwc-world-context-status mwc-world-context-status--${status.tone}`,
+        text: status.label,
+        attr: { title: "Story World canon status" }
+      });
+
+      if (entry.reasons.includes("pov")) {
+        metadata.createDiv({
+          cls: "mwc-world-context-reason",
+          text: "POV",
+          attr: { title: "Included from the chapter POV property" }
+        });
+      }
+
+      const content = card.createDiv({
+        cls: "mwc-context-value mwc-world-context-card-content"
+      });
+      const link = content.createEl("button", {
+        cls: "mwc-context-input mwc-world-context-link",
         text: entry.entity.name,
         attr: {
           type: "button",
@@ -58,27 +83,8 @@ export function renderWorldContext(
       });
       link.onclick = (event) => openEntity(entry, event);
 
-      const badges = header.createDiv("mwc-world-context-badges");
-      badges.createSpan({
-        cls: "mwc-world-context-type",
-        text: formatWorldEntityType(entry.entity.entityType)
-      });
-      badges.createSpan({
-        cls: `mwc-world-context-status mwc-world-context-status--${status.tone}`,
-        text: status.label,
-        attr: { title: "Story World canon status" }
-      });
-
-      if (entry.reasons.includes("pov")) {
-        badges.createSpan({
-          cls: "mwc-world-context-reason",
-          text: "POV",
-          attr: { title: "Included from the chapter POV property" }
-        });
-      }
-
       if (entry.entity.summary) {
-        card.createEl("p", {
+        content.createEl("p", {
           cls: "mwc-world-context-summary",
           text: entry.entity.summary
         });
