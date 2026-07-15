@@ -11,11 +11,13 @@ import {
   VIEW_TYPE,
   WritingCompanionView
 } from "./companion/CollapsibleWritingCompanionView";
-import { EditorialStoreService } from "./editorial/EditorialStore";
 import { Annotation } from "./editorial/EditorialNote";
+import { EditorialStoreService } from "./editorial/EditorialStore";
 import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
 import {
   EditableChapterContextField,
+  getChapterContextField,
+  getEditableChapterContextValue,
   updateEditableChapterContextFrontmatter
 } from "./companion/ChapterContext";
 import {
@@ -23,6 +25,26 @@ import {
   SidebarSectionPreferences
 } from "./companion/SidebarSections";
 import { ObsidianStoryWorldIndex } from "./story-world/ObsidianStoryWorldIndex";
+import {
+  buildEditorialPassProjection,
+  EditorialPassChecklistItem,
+  EditorialPassKey,
+  EditorialPassProjection
+} from "./editorial/EditorialPass";
+import { updateBookReviewStatusFrontmatter } from "./editorial/BookReview";
+import { resolveOwningBook } from "./companion/ManuscriptHierarchy";
+import {
+  buildPovSuggestions,
+  PovSuggestion
+} from "./companion/PovSuggestions";
+import { TransientAnnotationLocator } from "./companion/AnnotationLocator";
+import { installEditorialEnhancementStyles } from "./ui/EditorialEnhancementStyles";
+
+export interface EditorialPassViewState {
+  items: EditorialPassChecklistItem[];
+  frontier: EditorialPassKey | null;
+  projection: EditorialPassProjection;
+}
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
@@ -30,8 +52,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   sidebarSectionPreferences!: SidebarSectionPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
+  private readonly annotationLocator = new TransientAnnotationLocator();
 
   async onload() {
+    const enhancementStyles = installEditorialEnhancementStyles();
+    this.register(() => enhancementStyles.remove());
+
     const vaultName = this.app.vault.getName();
     let resourceRoot = vaultName;
     let preferenceStorage: Storage | null = null;
@@ -121,7 +147,14 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.registerEvent(
+      this.app.workspace.on("editor-change", () => {
+        this.annotationLocator.clear();
+      })
+    );
+
+    this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
+        this.annotationLocator.clear();
         const activeChapter = this.getActiveChapter();
         if (activeChapter) {
           this.currentChapter = activeChapter;
@@ -134,9 +167,13 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
-        const currentChapterChanged = file.path === this.getCurrentChapter()?.path;
+        const currentChapter = this.getCurrentChapter();
+        const currentChapterChanged = file.path === currentChapter?.path;
+        const currentBookChanged = currentChapter
+          ? file.path === this.getOwningBook(currentChapter)?.path
+          : false;
 
-        if (worldChanged || currentChapterChanged) {
+        if (worldChanged || currentChapterChanged || currentBookChanged) {
           this.refreshView();
         }
       })
@@ -187,6 +224,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   onunload() {
+    this.annotationLocator.dispose();
     void this.storeService.flushChapterNote();
   }
 
@@ -197,6 +235,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   getCurrentChapter(): TFile | null {
     return this.currentChapter ?? this.getActiveChapter();
+  }
+
+  getOwningBook(chapter: TFile): TFile | null {
+    return resolveOwningBook(this.app, chapter);
   }
 
   getPendingFocusNoteId(): string | null {
@@ -217,6 +259,85 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     await this.app.fileManager.processFrontMatter(chapter, (frontmatter) => {
       updateEditableChapterContextFrontmatter(frontmatter, field, value);
     });
+  }
+
+  async updateBookReviewStatus(book: TFile, value: string) {
+    await this.app.fileManager.processFrontMatter(book, (frontmatter) => {
+      updateBookReviewStatusFrontmatter(frontmatter, value);
+    });
+  }
+
+  getEditorialPassState(chapter: TFile): EditorialPassViewState {
+    const field = getChapterContextField("editorial_pass");
+    const frontmatter = this.app.metadataCache.getFileCache(chapter)?.frontmatter as
+      Record<string, unknown> | undefined;
+    const context = getEditableChapterContextValue(frontmatter, field);
+    this.storeService.ensureEditorialPassFrontier(chapter, context.value);
+    const page = this.storeService.getPage(chapter);
+
+    return {
+      items: this.storeService.getEditorialPassChecklist(chapter, context.value),
+      frontier: this.storeService.getEditorialPassFrontier(chapter, context.value),
+      projection: buildEditorialPassProjection(page, context.value)
+    };
+  }
+
+  async setEditorialPassCompleted(
+    chapter: TFile,
+    pass: EditorialPassKey,
+    completed: boolean
+  ): Promise<boolean> {
+    const changed = await this.storeService.setEditorialPassCompleted(
+      chapter,
+      pass,
+      completed
+    );
+
+    if (changed) await this.repairEditorialPassProjection(chapter);
+    return changed;
+  }
+
+  async repairEditorialPassProjection(chapter: TFile) {
+    const field = getChapterContextField("editorial_pass");
+    const frontier = this.storeService.getEditorialPassFrontier(chapter);
+    await this.updateChapterContextProperty(chapter, field, frontier ?? "");
+  }
+
+  getPovSuggestions(chapter: TFile): PovSuggestion[] {
+    const book = this.getOwningBook(chapter);
+    const scopeReferences = new Set<string>();
+
+    const addScope = (value: unknown) => {
+      const values = Array.isArray(value) ? value : [value];
+      for (const item of values) {
+        if (typeof item !== "string") continue;
+        const trimmed = item.trim();
+        if (trimmed) scopeReferences.add(trimmed);
+      }
+    };
+
+    if (book) {
+      scopeReferences.add(book.path);
+      scopeReferences.add(book.basename);
+      const bookFrontmatter = this.app.metadataCache.getFileCache(book)?.frontmatter as
+        Record<string, unknown> | undefined;
+      addScope(bookFrontmatter?.title);
+      addScope(bookFrontmatter?.world_name);
+      addScope(bookFrontmatter?.world_scope);
+      addScope(bookFrontmatter?.series);
+      addScope(bookFrontmatter?.trilogy);
+    }
+
+    const chapterFrontmatter = this.app.metadataCache.getFileCache(chapter)?.frontmatter as
+      Record<string, unknown> | undefined;
+    addScope(chapterFrontmatter?.world_scope);
+    addScope(chapterFrontmatter?.series);
+    addScope(chapterFrontmatter?.trilogy);
+
+    return buildPovSuggestions(
+      this.storyWorldIndex.index.getAll(),
+      [...scopeReferences]
+    );
   }
 
   async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {
@@ -247,6 +368,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async navigateToAnnotation(chapter: TFile, annotation: Annotation) {
+    this.annotationLocator.clear();
     const leaf = this.findChapterLeaf(chapter)
       ?? this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)
       ?? this.app.workspace.getLeaf(false);
@@ -274,7 +396,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     editor.scrollIntoView({ from, to }, true);
     editor.focus();
 
-    if (!range.exact) {
+    if (range.exact) {
+      this.annotationLocator.show(leaf.view.contentEl);
+    } else {
       new Notice("The passage has changed; moved to its original line.");
     }
   }
@@ -313,7 +437,6 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     for (const leaf of leaves) {
       const view = leaf.view;
-
       if (view instanceof WritingCompanionView) {
         view.render();
       }
