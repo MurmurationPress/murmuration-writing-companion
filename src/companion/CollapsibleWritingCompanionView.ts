@@ -8,6 +8,7 @@ import {
 import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
 import { renderWorldContext } from "../ui/WorldContext";
 import {
+  VIEW_TYPE,
   WritingCompanionView as BaseWritingCompanionView
 } from "./EditorialWritingCompanionView";
 import {
@@ -16,7 +17,7 @@ import {
   SidebarSectionKey
 } from "./SidebarSections";
 
-export { VIEW_TYPE } from "./EditorialWritingCompanionView";
+export { VIEW_TYPE };
 
 interface CollapsibleSectionOptions {
   summary?: string;
@@ -95,14 +96,29 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     );
     collapsible.section.classList.add("mwc-world-context");
 
-    renderWorldContext(collapsible.content, result, (entry, event) => {
-      const destination = entry.entity.path.replace(/\.md$/i, "");
-      void this.app.workspace.openLinkText(
-        destination,
-        file.path,
-        event.metaKey || event.ctrlKey
-      );
-    });
+    renderWorldContext(
+      collapsible.content,
+      result,
+      (entry, event) => {
+        const destination = entry.entity.path.replace(/\.md$/i, "");
+        void this.app.workspace.openLinkText(
+          destination,
+          file.path,
+          event.metaKey || event.ctrlKey
+        );
+      },
+      (entry, target, event) => {
+        const destination = entry.entity.path.replace(/\.md$/i, "");
+        this.app.workspace.trigger("hover-link", {
+          event,
+          source: VIEW_TYPE,
+          hoverParent: collapsible.content,
+          targetEl: target,
+          linktext: destination,
+          sourcePath: file.path
+        });
+      }
+    );
   }
 
   private renderCollapsibleEditorialPasses(container: Element, file: TFile) {
