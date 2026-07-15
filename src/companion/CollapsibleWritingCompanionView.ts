@@ -9,14 +9,14 @@ import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
 import { renderWorldContext } from "../ui/WorldContext";
 import {
   WritingCompanionView as BaseWritingCompanionView
-} from "./WritingCompanionView";
+} from "./EditorialWritingCompanionView";
 import {
   buildChapterContextSummary,
   buildChapterNoteSummary,
   SidebarSectionKey
 } from "./SidebarSections";
 
-export { VIEW_TYPE } from "./WritingCompanionView";
+export { VIEW_TYPE } from "./EditorialWritingCompanionView";
 
 interface CollapsibleSectionOptions {
   summary?: string;
@@ -56,6 +56,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
 
     const page = this.plugin.storeService.getPage(file);
 
+    this.renderBookReview(container, file);
     this.renderCollapsibleChapterContext(container, file);
     this.renderCollapsibleWorldContext(container, file);
     this.renderCollapsibleEditorialPasses(container, file);
@@ -105,22 +106,26 @@ export class WritingCompanionView extends BaseWritingCompanionView {
   }
 
   private renderCollapsibleEditorialPasses(container: Element, file: TFile) {
-    const items = this.plugin.storeService.getEditorialPassChecklist(file);
-    const completedCount = items.filter((item) => item.completed).length;
+    const state = this.plugin.getEditorialPassState(file);
+    const completedCount = state.items.filter((item) => item.completed).length;
+    const book = this.plugin.getOwningBook(file);
+    const activeMode = book
+      ? this.plugin.storeService.getBookReviewMode(book)
+      : null;
     const collapsible = this.createCollapsibleSection(
       container,
       "editorialPasses",
       "Editorial Passes",
-      { status: `${completedCount} of ${items.length}` }
+      { status: `${completedCount} of ${state.items.length}` }
     );
     collapsible.section.classList.add("mwc-editorial-passes");
 
     renderEditorialPassChecklist(
       collapsible.content,
       file.basename,
-      items,
-      (pass, completed) =>
-        this.plugin.storeService.setEditorialPassCompleted(file, pass, completed)
+      state.items,
+      (pass, completed) => this.plugin.setEditorialPassCompleted(file, pass, completed),
+      { activeMode }
     );
   }
 
