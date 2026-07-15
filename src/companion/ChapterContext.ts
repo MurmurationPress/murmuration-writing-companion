@@ -23,6 +23,7 @@ export interface EditableChapterContextField {
   options?: readonly string[];
   optionLabels?: Readonly<Record<string, string>>;
   renderMarkdownPreview?: boolean;
+  readOnly?: boolean;
 }
 
 export interface ChapterContextSelectOption {
@@ -76,7 +77,7 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
   },
   {
     key: "editorial_pass",
-    label: "Editorial pass",
+    label: "Pass reached",
     aliases: [
       "editorial_pass",
       "current_editorial_pass",
@@ -84,9 +85,10 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
       "editing_pass",
       "pass"
     ],
-    placeholder: "Select editorial pass…",
+    placeholder: "No pass reached",
     options: EDITORIAL_PASS_OPTIONS,
-    optionLabels: EDITORIAL_PASS_LABELS as Readonly<Record<string, string>>
+    optionLabels: EDITORIAL_PASS_LABELS as Readonly<Record<string, string>>,
+    readOnly: true
   },
   {
     key: "change_summary",
@@ -102,6 +104,14 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     multiline: true
   }
 ];
+
+export function getChapterContextField(
+  key: ChapterContextFieldKey
+): EditableChapterContextField {
+  const field = EDITABLE_CHAPTER_CONTEXT_FIELDS.find((candidate) => candidate.key === key);
+  if (!field) throw new Error(`Missing Chapter Context field definition for ${key}.`);
+  return field;
+}
 
 export function normalizePropertyName(name: string): string {
   return name
