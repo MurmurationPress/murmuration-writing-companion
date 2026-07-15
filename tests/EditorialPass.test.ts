@@ -6,9 +6,13 @@ import type {
 } from "../src/editorial/EditorialNote";
 import {
   EDITORIAL_PASS_OPTIONS,
+  buildEditorialPassProjection,
+  ensureEditorialPassFrontier,
   ensureEditorialPassHistory,
   getEditorialPassChecklist,
-  setEditorialPassCompleted
+  getEditorialPassFrontier,
+  setEditorialPassCompleted,
+  setEditorialPassFrontier
 } from "../src/editorial/EditorialPass";
 import {
   moveEditorialPage,
@@ -31,13 +35,10 @@ function page(): PageEditorialNotes {
   };
 }
 
-test("creates the canonical editorial checklist in workflow order", () => {
+test("creates the canonical ordered editorial progression", () => {
   const checklist = getEditorialPassChecklist(page());
 
-  deepEqual(
-    checklist.map((item) => item.key),
-    [...EDITORIAL_PASS_OPTIONS]
-  );
+  deepEqual(checklist.map((item) => item.key), [...EDITORIAL_PASS_OPTIONS]);
   deepEqual(
     checklist.map((item) => item.label),
     ["Draft", "Structure", "Character", "Dialogue", "Continuity", "Style", "Proof"]
@@ -45,29 +46,76 @@ test("creates the canonical editorial checklist in workflow order", () => {
   equal(checklist.every((item) => !item.completed), true);
 });
 
-test("completes and reopens passes independently without erasing history", () => {
+test("advances directly to a frontier and infers preceding passes", () => {
   const editorialPage = page();
 
   equal(
-    setEditorialPassCompleted(
+    setEditorialPassFrontier(
       editorialPage,
       "continuity",
-      true,
       COMPLETE_AT,
-      "event-complete"
+      "event-continuity"
     ),
     true
   );
+
+  const checklist = getEditorialPassChecklist(editorialPage);
+  deepEqual(
+    checklist.map((item) => [item.key, item.completed, item.inferred, item.frontier]),
+    [
+      ["draft", true, true, false],
+      ["structure", true, true, false],
+      ["character", true, true, false],
+      ["dialogue", true, true, false],
+      ["continuity", true, false, true],
+      ["style", false, false, false],
+      ["proof", false, false, false]
+    ]
+  );
+  equal(editorialPage.editorialPassHistory?.length, 1);
+});
+
+test("moves the frontier backwards without deleting history", () => {
+  const editorialPage = page();
+  setEditorialPassFrontier(
+    editorialPage,
+    "continuity",
+    COMPLETE_AT,
+    "event-continuity"
+  );
+
   equal(
-    setEditorialPassCompleted(
+    setEditorialPassFrontier(
       editorialPage,
-      "style",
-      true,
-      COMPLETE_AT,
-      "event-style"
+      "structure",
+      REOPEN_AT,
+      "event-reopen"
     ),
     true
   );
+
+  equal(getEditorialPassFrontier(editorialPage), "structure");
+  deepEqual(
+    editorialPage.editorialPassHistory?.map((event) => {
+      const value = event as { action?: unknown; pass?: unknown };
+      return [value.action, value.pass];
+    }),
+    [
+      ["completed", "continuity"],
+      ["reopened", "continuity"]
+    ]
+  );
+});
+
+test("reopening a pass moves to its immediately preceding pass", () => {
+  const editorialPage = page();
+  setEditorialPassFrontier(
+    editorialPage,
+    "continuity",
+    COMPLETE_AT,
+    "event-continuity"
+  );
+
   equal(
     setEditorialPassCompleted(
       editorialPage,
@@ -78,113 +126,70 @@ test("completes and reopens passes independently without erasing history", () =>
     ),
     true
   );
-
-  const checklist = getEditorialPassChecklist(editorialPage);
-  const continuity = checklist.find((item) => item.key === "continuity")!;
-  const style = checklist.find((item) => item.key === "style")!;
-
-  equal(continuity.completed, false);
-  equal(continuity.completedAt, undefined);
-  equal(continuity.lastChangedAt, REOPEN_AT);
-  deepEqual(
-    continuity.history.map((event) => [event.action, event.at]),
-    [
-      ["completed", COMPLETE_AT],
-      ["reopened", REOPEN_AT]
-    ]
-  );
-  equal(style.completed, true);
-  equal(style.completedAt, COMPLETE_AT);
+  equal(getEditorialPassFrontier(editorialPage), "dialogue");
 });
 
-test("does not append duplicate state transitions", () => {
+test("migrates legacy history to the furthest completed pass", () => {
+  const editorialPage = page();
+  editorialPage.editorialPassHistory = [
+    { id: "draft", pass: "draft", action: "completed", at: COMPLETE_AT },
+    { id: "style", pass: "style", action: "completed", at: COMPLETE_AT },
+    { id: "continuity", pass: "continuity", action: "reopened", at: REOPEN_AT }
+  ];
+
+  deepEqual(ensureEditorialPassFrontier(editorialPage), {
+    changed: true,
+    frontier: "style",
+    source: "history"
+  });
+  equal(getEditorialPassFrontier(editorialPage), "style");
+});
+
+test("seeds recognised frontmatter without inventing history", () => {
   const editorialPage = page();
 
-  equal(
-    setEditorialPassCompleted(
-      editorialPage,
-      "draft",
-      true,
-      COMPLETE_AT,
-      "event-1"
-    ),
-    true
-  );
-  equal(
-    setEditorialPassCompleted(
-      editorialPage,
-      "draft",
-      true,
-      REOPEN_AT,
-      "event-2"
-    ),
-    false
-  );
-  equal(editorialPage.editorialPassHistory?.length, 1);
-
-  editorialPage.editorialPassHistory?.push({
-    id: "event-1",
-    pass: "draft",
-    action: "reopened",
-    at: REOPEN_AT
+  deepEqual(ensureEditorialPassFrontier(editorialPage, "Continuity"), {
+    changed: true,
+    frontier: "continuity",
+    source: "frontmatter"
   });
-
-  const draft = getEditorialPassChecklist(editorialPage)[0];
-  equal(draft.completed, true);
-  equal(draft.history.length, 1);
+  deepEqual(editorialPage.editorialPassHistory, undefined);
 });
 
-test("migrates missing or malformed history without discarding original data", () => {
-  const missing = page();
-  equal(ensureEditorialPassHistory(missing), true);
-  deepEqual(missing.editorialPassHistory, []);
-
-  const malformed = {
+test("preserves malformed history while adding managed events", () => {
+  const editorialPage = {
     ...page(),
     editorialPassHistory: { legacy: "retain me" }
   } as unknown as PageEditorialNotes;
 
-  equal(ensureEditorialPassHistory(malformed), true);
-  deepEqual(malformed.editorialPassHistory, [{ legacy: "retain me" }]);
-  equal(getEditorialPassChecklist(malformed).every((item) => !item.completed), true);
+  equal(ensureEditorialPassHistory(editorialPage), true);
+  deepEqual(editorialPage.editorialPassHistory, [{ legacy: "retain me" }]);
 
-  setEditorialPassCompleted(
-    malformed,
+  setEditorialPassFrontier(
+    editorialPage,
     "proof",
-    true,
     COMPLETE_AT,
     "event-proof"
   );
-  deepEqual(malformed.editorialPassHistory?.[0], { legacy: "retain me" });
-  equal(malformed.editorialPassHistory?.length, 2);
+  deepEqual(editorialPage.editorialPassHistory?.[0], { legacy: "retain me" });
+  equal(editorialPage.editorialPassHistory?.length, 2);
 });
 
-test("keeps current frontmatter focus independent from completed-pass history", () => {
+test("reports projection mismatches without silently rewriting Markdown", () => {
   const editorialPage = page();
-  const frontmatter = { editorial_pass: "dialogue" };
+  ensureEditorialPassFrontier(editorialPage, "continuity");
 
-  setEditorialPassCompleted(
-    editorialPage,
-    "continuity",
-    true,
-    COMPLETE_AT,
-    "event-continuity"
-  );
-
-  deepEqual(frontmatter, { editorial_pass: "dialogue" });
-  equal(
-    getEditorialPassChecklist(editorialPage)
-      .find((item) => item.key === "continuity")?.completed,
-    true
-  );
+  equal(buildEditorialPassProjection(editorialPage, "continuity").status, "match");
+  equal(buildEditorialPassProjection(editorialPage, "").status, "missing");
+  equal(buildEditorialPassProjection(editorialPage, "style").status, "mismatch");
+  equal(buildEditorialPassProjection(editorialPage, "line edit").status, "unknown");
 });
 
-test("round trips pass history through portable storage and chapter moves", () => {
+test("round trips frontier and history through portable storage and chapter moves", () => {
   const editorialPage = page();
-  setEditorialPassCompleted(
+  setEditorialPassFrontier(
     editorialPage,
     "structure",
-    true,
     COMPLETE_AT,
     "event-structure"
   );
@@ -197,20 +202,10 @@ test("round trips pass history through portable storage and chapter moves", () =
   const serialized = serializePortableEditorialStore(store);
   const parsed = parsePortableEditorialStore(serialized, COMPLETE_AT).store;
 
-  deepEqual(parsed.pages[CHAPTER_PATH].editorialPassHistory, [
-    {
-      id: "event-structure",
-      pass: "structure",
-      action: "completed",
-      at: COMPLETE_AT
-    }
-  ]);
+  equal(parsed.pages[CHAPTER_PATH].editorialPassFrontier, "structure");
+  equal(getEditorialPassFrontier(parsed.pages[CHAPTER_PATH]), "structure");
 
   const movedPath = "PRIME Trilogy/PLURALITY/PART ONE/Renamed Distance.md";
   equal(moveEditorialPage(parsed, CHAPTER_PATH, movedPath), true);
-  equal(
-    getEditorialPassChecklist(parsed.pages[movedPath])
-      .find((item) => item.key === "structure")?.completed,
-    true
-  );
+  equal(getEditorialPassFrontier(parsed.pages[movedPath]), "structure");
 });

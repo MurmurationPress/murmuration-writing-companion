@@ -30,15 +30,10 @@ export interface Annotation extends EditorialNote {
 export interface PageEditorialNotes {
   chapterNote: ChapterNote;
   annotations: Annotation[];
-
-  /**
-   * Append-only editorial-pass events. Unknown or malformed entries are kept
-   * so storage recovery never destroys data; the checklist ignores them.
-   */
   editorialPassHistory?: unknown[];
+  editorialPassFrontier?: unknown;
+  bookReviewMode?: unknown;
   deletedAt?: string;
-
-  /** Retained only so early development data is not discarded during migration. */
   documentNotes?: EditorialNote[];
   [key: string]: unknown;
 }

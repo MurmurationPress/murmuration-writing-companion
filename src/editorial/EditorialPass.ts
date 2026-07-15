@@ -35,6 +35,39 @@ export interface EditorialPassChecklistItem {
   key: EditorialPassKey;
   label: string;
   completed: boolean;
+  inferred: boolean;
+  frontier: boolean;
+  historicallyCompleted: boolean;
+  completedAt?: string;
+  lastChangedAt?: string;
+  history: EditorialPassEvent[];
+}
+
+export type EditorialPassMigrationSource = "managed" | "history" | "frontmatter" | "none";
+
+export interface EditorialPassMigrationResult {
+  changed: boolean;
+  frontier: EditorialPassKey | null;
+  source: EditorialPassMigrationSource;
+}
+
+export type EditorialPassProjectionStatus =
+  | "unmanaged"
+  | "match"
+  | "missing"
+  | "mismatch"
+  | "unknown";
+
+export interface EditorialPassProjection {
+  managed: boolean;
+  frontier: EditorialPassKey | null;
+  frontmatterValue: string;
+  frontmatterPass: EditorialPassKey | null;
+  status: EditorialPassProjectionStatus;
+}
+
+interface HistoricalPassState {
+  completed: boolean;
   completedAt?: string;
   lastChangedAt?: string;
   history: EditorialPassEvent[];
@@ -49,6 +82,12 @@ export function isEditorialPassKey(value: unknown): value is EditorialPassKey {
     && (EDITORIAL_PASS_OPTIONS as readonly string[]).includes(value);
 }
 
+export function parseEditorialPassKey(value: unknown): EditorialPassKey | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  return isEditorialPassKey(normalized) ? normalized : null;
+}
+
 export function parseEditorialPassEvent(value: unknown): EditorialPassEvent | null {
   if (!isRecord(value)) return null;
   if (typeof value.id !== "string" || value.id.length === 0) return null;
@@ -59,11 +98,6 @@ export function parseEditorialPassEvent(value: unknown): EditorialPassEvent | nu
   return value as EditorialPassEvent;
 }
 
-/**
- * Convert missing or malformed history into an append-safe array without
- * discarding the original value. Invalid entries remain stored and are simply
- * ignored when the checklist is derived.
- */
 export function ensureEditorialPassHistory(page: PageEditorialNotes): boolean {
   const history = page.editorialPassHistory;
   if (Array.isArray(history)) return false;
@@ -78,18 +112,13 @@ export function getEditorialPassHistory(page: PageEditorialNotes): unknown[] {
   return history === undefined ? [] : [history];
 }
 
-export function getEditorialPassChecklist(
+function buildHistoricalPassStates(
   page: PageEditorialNotes
-): EditorialPassChecklistItem[] {
-  const items = new Map<EditorialPassKey, EditorialPassChecklistItem>();
+): Map<EditorialPassKey, HistoricalPassState> {
+  const states = new Map<EditorialPassKey, HistoricalPassState>();
 
-  for (const key of EDITORIAL_PASS_OPTIONS) {
-    items.set(key, {
-      key,
-      label: EDITORIAL_PASS_LABELS[key],
-      completed: false,
-      history: []
-    });
+  for (const pass of EDITORIAL_PASS_OPTIONS) {
+    states.set(pass, { completed: false, history: [] });
   }
 
   const seenEventIds = new Set<string>();
@@ -99,22 +128,184 @@ export function getEditorialPassChecklist(
     if (!event || seenEventIds.has(event.id)) continue;
     seenEventIds.add(event.id);
 
-    const item = items.get(event.pass);
-    if (!item) continue;
-
-    item.history.push(event);
-    item.lastChangedAt = event.at;
+    const state = states.get(event.pass)!;
+    state.history.push(event);
+    state.lastChangedAt = event.at;
 
     if (event.action === "completed") {
-      item.completed = true;
-      item.completedAt = event.at;
+      state.completed = true;
+      state.completedAt = event.at;
     } else {
-      item.completed = false;
-      delete item.completedAt;
+      state.completed = false;
+      delete state.completedAt;
     }
   }
 
-  return EDITORIAL_PASS_OPTIONS.map((key) => items.get(key)!);
+  return states;
+}
+
+export function hasManagedEditorialPassFrontier(page: PageEditorialNotes): boolean {
+  if (!Object.prototype.hasOwnProperty.call(page, "editorialPassFrontier")) {
+    return false;
+  }
+
+  return page.editorialPassFrontier === null
+    || isEditorialPassKey(page.editorialPassFrontier);
+}
+
+export function deriveEditorialPassFrontier(
+  page: PageEditorialNotes
+): EditorialPassKey | null {
+  const states = buildHistoricalPassStates(page);
+  let frontier: EditorialPassKey | null = null;
+
+  for (const pass of EDITORIAL_PASS_OPTIONS) {
+    if (states.get(pass)?.completed) frontier = pass;
+  }
+
+  return frontier;
+}
+
+export function getEditorialPassFrontier(
+  page: PageEditorialNotes
+): EditorialPassKey | null {
+  if (hasManagedEditorialPassFrontier(page)) {
+    return page.editorialPassFrontier === null
+      ? null
+      : page.editorialPassFrontier as EditorialPassKey;
+  }
+
+  return deriveEditorialPassFrontier(page);
+}
+
+export function ensureEditorialPassFrontier(
+  page: PageEditorialNotes,
+  frontmatterValue?: unknown
+): EditorialPassMigrationResult {
+  if (hasManagedEditorialPassFrontier(page)) {
+    return {
+      changed: false,
+      frontier: getEditorialPassFrontier(page),
+      source: "managed"
+    };
+  }
+
+  const validHistory = getEditorialPassHistory(page)
+    .some((event) => parseEditorialPassEvent(event) !== null);
+
+  if (validHistory) {
+    const frontier = deriveEditorialPassFrontier(page);
+    page.editorialPassFrontier = frontier;
+    return { changed: true, frontier, source: "history" };
+  }
+
+  const seededFrontier = parseEditorialPassKey(frontmatterValue);
+  if (seededFrontier) {
+    page.editorialPassFrontier = seededFrontier;
+    return {
+      changed: true,
+      frontier: seededFrontier,
+      source: "frontmatter"
+    };
+  }
+
+  return { changed: false, frontier: null, source: "none" };
+}
+
+export function getEditorialPassChecklist(
+  page: PageEditorialNotes
+): EditorialPassChecklistItem[] {
+  const states = buildHistoricalPassStates(page);
+  const frontier = getEditorialPassFrontier(page);
+  const frontierIndex = frontier === null
+    ? -1
+    : EDITORIAL_PASS_OPTIONS.indexOf(frontier);
+
+  return EDITORIAL_PASS_OPTIONS.map((key, index) => {
+    const historical = states.get(key)!;
+    const completed = index <= frontierIndex;
+
+    return {
+      key,
+      label: EDITORIAL_PASS_LABELS[key],
+      completed,
+      inferred: completed && key !== frontier,
+      frontier: key === frontier,
+      historicallyCompleted: historical.completed,
+      completedAt: historical.completedAt,
+      lastChangedAt: historical.lastChangedAt,
+      history: historical.history
+    };
+  });
+}
+
+function appendEditorialPassEvent(
+  page: PageEditorialNotes,
+  pass: EditorialPassKey,
+  action: EditorialPassAction,
+  at: string,
+  eventId: string
+) {
+  ensureEditorialPassHistory(page);
+  page.editorialPassHistory!.push({
+    id: eventId,
+    pass,
+    action,
+    at
+  } satisfies EditorialPassEvent);
+}
+
+export function previousEditorialPass(
+  pass: EditorialPassKey
+): EditorialPassKey | null {
+  const index = EDITORIAL_PASS_OPTIONS.indexOf(pass);
+  return index > 0 ? EDITORIAL_PASS_OPTIONS[index - 1] : null;
+}
+
+export function setEditorialPassFrontier(
+  page: PageEditorialNotes,
+  frontier: EditorialPassKey | null,
+  at: string,
+  eventId: string
+): boolean {
+  const managed = hasManagedEditorialPassFrontier(page);
+  const current = getEditorialPassFrontier(page);
+
+  if (managed && current === frontier) return false;
+
+  if (current !== frontier) {
+    const currentIndex = current === null
+      ? -1
+      : EDITORIAL_PASS_OPTIONS.indexOf(current);
+    const nextIndex = frontier === null
+      ? -1
+      : EDITORIAL_PASS_OPTIONS.indexOf(frontier);
+
+    if (nextIndex > currentIndex && frontier !== null) {
+      appendEditorialPassEvent(page, frontier, "completed", at, eventId);
+    } else if (nextIndex < currentIndex) {
+      const historical = buildHistoricalPassStates(page);
+      const reopened: EditorialPassKey[] = [];
+
+      for (let index = currentIndex; index > nextIndex; index -= 1) {
+        const pass = EDITORIAL_PASS_OPTIONS[index];
+        if (pass === current || historical.get(pass)?.completed) reopened.push(pass);
+      }
+
+      for (const [index, pass] of reopened.entries()) {
+        appendEditorialPassEvent(
+          page,
+          pass,
+          "reopened",
+          at,
+          reopened.length === 1 ? eventId : `${eventId}:${index + 1}:${pass}`
+        );
+      }
+    }
+  }
+
+  page.editorialPassFrontier = frontier;
+  return true;
 }
 
 export function setEditorialPassCompleted(
@@ -124,16 +315,54 @@ export function setEditorialPassCompleted(
   at: string,
   eventId: string
 ): boolean {
-  const current = getEditorialPassChecklist(page).find((item) => item.key === pass);
-  if (!current || current.completed === completed) return false;
+  return setEditorialPassFrontier(
+    page,
+    completed ? pass : previousEditorialPass(pass),
+    at,
+    eventId
+  );
+}
 
-  ensureEditorialPassHistory(page);
-  page.editorialPassHistory!.push({
-    id: eventId,
-    pass,
-    action: completed ? "completed" : "reopened",
-    at
-  } satisfies EditorialPassEvent);
+export function buildEditorialPassProjection(
+  page: PageEditorialNotes,
+  frontmatterValue: unknown
+): EditorialPassProjection {
+  const managed = hasManagedEditorialPassFrontier(page);
+  const frontier = getEditorialPassFrontier(page);
+  const rawValue = typeof frontmatterValue === "string"
+    ? frontmatterValue.trim()
+    : "";
+  const frontmatterPass = parseEditorialPassKey(rawValue);
 
-  return true;
+  if (!managed) {
+    return {
+      managed,
+      frontier,
+      frontmatterValue: rawValue,
+      frontmatterPass,
+      status: "unmanaged"
+    };
+  }
+
+  let status: EditorialPassProjectionStatus;
+
+  if (frontier === null && rawValue.length === 0) {
+    status = "match";
+  } else if (rawValue.length === 0) {
+    status = "missing";
+  } else if (!frontmatterPass) {
+    status = "unknown";
+  } else if (frontmatterPass === frontier) {
+    status = "match";
+  } else {
+    status = "mismatch";
+  }
+
+  return {
+    managed,
+    frontier,
+    frontmatterValue: rawValue,
+    frontmatterPass,
+    status
+  };
 }
