@@ -8,9 +8,17 @@ import {
 import {
   EditorialPassChecklistItem,
   EditorialPassKey,
+  EditorialPassMigrationResult,
+  ensureEditorialPassFrontier,
   getEditorialPassChecklist,
-  setEditorialPassCompleted as applyEditorialPassCompletion
+  getEditorialPassFrontier,
+  setEditorialPassCompleted as applyEditorialPassCompletion,
+  setEditorialPassFrontier as applyEditorialPassFrontier
 } from "./EditorialPass";
+import {
+  getBookReviewMode as readBookReviewMode,
+  setBookReviewMode as applyBookReviewMode
+} from "./BookReview";
 import { ObsidianEditorialFileSystem } from "./ObsidianEditorialFileSystem";
 import { OpenAnnotationPropertyService } from "./OpenAnnotationProperty";
 import {
@@ -110,8 +118,47 @@ export class EditorialStoreService {
     this.chapterNoteSaveTimers.set(file.path, timer);
   }
 
-  getEditorialPassChecklist(file: TFile): EditorialPassChecklistItem[] {
+  ensureEditorialPassFrontier(
+    file: TFile,
+    frontmatterValue?: unknown
+  ): EditorialPassMigrationResult {
+    const result = ensureEditorialPassFrontier(this.getPage(file), frontmatterValue);
+    if (result.changed) void this.save();
+    return result;
+  }
+
+  getEditorialPassChecklist(
+    file: TFile,
+    frontmatterValue?: unknown
+  ): EditorialPassChecklistItem[] {
+    this.ensureEditorialPassFrontier(file, frontmatterValue);
     return getEditorialPassChecklist(this.getPage(file));
+  }
+
+  getEditorialPassFrontier(
+    file: TFile,
+    frontmatterValue?: unknown
+  ): EditorialPassKey | null {
+    this.ensureEditorialPassFrontier(file, frontmatterValue);
+    return getEditorialPassFrontier(this.getPage(file));
+  }
+
+  async setEditorialPassFrontier(
+    file: TFile,
+    pass: EditorialPassKey | null
+  ): Promise<boolean> {
+    const changed = applyEditorialPassFrontier(
+      this.getPage(file),
+      pass,
+      new Date().toISOString(),
+      crypto.randomUUID()
+    );
+
+    if (!changed) return false;
+
+    await this.save();
+    this.onChange();
+    return true;
   }
 
   async setEditorialPassCompleted(
@@ -129,6 +176,20 @@ export class EditorialStoreService {
 
     if (!changed) return false;
 
+    await this.save();
+    this.onChange();
+    return true;
+  }
+
+  getBookReviewMode(file: TFile): EditorialPassKey | null {
+    return readBookReviewMode(this.getPage(file));
+  }
+
+  async setBookReviewMode(
+    file: TFile,
+    mode: EditorialPassKey | null
+  ): Promise<boolean> {
+    if (!applyBookReviewMode(this.getPage(file), mode)) return false;
     await this.save();
     this.onChange();
     return true;
