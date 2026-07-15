@@ -213,7 +213,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const rendered = display.createDiv({ cls: "mwc-pov-value" });
 
       if (value.trim()) {
-        this.renderMarkdownValue(rendered, value, file);
+        this.renderCompactMarkdownValue(rendered, value, file);
       } else {
         rendered.createSpan({ cls: "mwc-pov-placeholder", text: placeholder });
       }
@@ -346,7 +346,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     };
   }
 
-  private renderMarkdownValue(container: HTMLElement, markdown: string, file: TFile) {
+  private renderCompactMarkdownValue(container: HTMLElement, markdown: string, file: TFile) {
     void MarkdownRenderer.render(this.app, markdown, container, file.path, this);
 
     container.addEventListener("click", (event) => {
