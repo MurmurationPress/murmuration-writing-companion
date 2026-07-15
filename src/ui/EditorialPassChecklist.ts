@@ -9,31 +9,43 @@ export type EditorialPassToggleHandler = (
   completed: boolean
 ) => Promise<unknown>;
 
+export interface EditorialPassChecklistOptions {
+  activeMode?: EditorialPassKey | null;
+}
+
 export function renderEditorialPassChecklist(
   container: Element,
   chapterName: string,
   items: EditorialPassChecklistItem[],
-  onToggle: EditorialPassToggleHandler
+  onToggle: EditorialPassToggleHandler,
+  options: EditorialPassChecklistOptions = {}
 ): HTMLElement {
+  if (options.activeMode) {
+    renderActiveModeAction(container, items, options.activeMode, onToggle);
+  }
+
   const list = container.createDiv({
     cls: "mwc-editorial-pass-list",
     attr: {
       role: "group",
-      "aria-label": `Completed editorial passes for ${chapterName}`
+      "aria-label": `Editorial progress for ${chapterName}`
     }
   });
 
   for (const item of items) {
-    const row = list.createEl("label", {
-      cls: item.completed
-        ? "mwc-editorial-pass-item mwc-editorial-pass-item--completed"
-        : "mwc-editorial-pass-item"
-    });
+    const classes = ["mwc-editorial-pass-item"];
+    if (item.completed) classes.push("mwc-editorial-pass-item--completed");
+    if (item.inferred) classes.push("mwc-editorial-pass-item--inferred");
+    if (item.frontier) classes.push("mwc-editorial-pass-item--frontier");
+
+    const row = list.createEl("label", { cls: classes.join(" ") });
     const checkbox = row.createEl("input", {
       cls: "mwc-editorial-pass-checkbox",
       type: "checkbox",
       attr: {
-        "aria-label": `${item.label} editorial pass completed`
+        "aria-label": item.completed
+          ? `Move editorial progress before ${item.label}`
+          : `Advance editorial progress to ${item.label}`
       }
     });
     checkbox.checked = item.completed;
@@ -43,14 +55,19 @@ export function renderEditorialPassChecklist(
       text: item.label
     });
 
-    if (item.completedAt) {
+    if (item.frontier && item.completedAt) {
       row.createEl("time", {
         cls: "mwc-editorial-pass-time",
-        text: `Completed ${formatEditorialPassDate(item.completedAt)}`,
+        text: `Reached ${formatEditorialPassDate(item.completedAt)}`,
         attr: {
           datetime: item.completedAt,
           title: item.completedAt
         }
+      });
+    } else if (item.inferred) {
+      row.createSpan({
+        cls: "mwc-editorial-pass-inferred",
+        text: "Included"
       });
     }
 
@@ -61,15 +78,55 @@ export function renderEditorialPassChecklist(
       try {
         await onToggle(item.key, nextCompleted);
       } catch (error) {
-        console.error("Writing Companion could not update editorial pass", error);
+        console.error("Writing Companion could not update editorial progress", error);
         checkbox.checked = item.completed;
         checkbox.disabled = false;
-        new Notice("Writing Companion could not update the editorial pass.");
+        new Notice("Writing Companion could not update editorial progress.");
       }
     };
   }
 
   return list;
+}
+
+function renderActiveModeAction(
+  container: Element,
+  items: EditorialPassChecklistItem[],
+  activeMode: EditorialPassKey,
+  onToggle: EditorialPassToggleHandler
+) {
+  const item = items.find((candidate) => candidate.key === activeMode);
+  if (!item) return;
+
+  const button = container.createEl("button", {
+    cls: item.completed
+      ? "mwc-editorial-active-action mwc-editorial-active-action--reached"
+      : "mwc-editorial-active-action",
+    attr: {
+      type: "button",
+      "aria-label": item.completed
+        ? `${item.label} review reached for this scene`
+        : `Mark ${item.label} review complete for this scene`
+    }
+  });
+  button.createSpan({
+    text: item.completed
+      ? `${item.label} reached`
+      : `Mark ${item.label} complete`
+  });
+  button.createSpan({ text: item.completed ? "✓" : "→", attr: { "aria-hidden": "true" } });
+  button.disabled = item.completed;
+
+  button.onclick = async () => {
+    button.disabled = true;
+    try {
+      await onToggle(activeMode, true);
+    } catch (error) {
+      console.error("Writing Companion could not complete the active review mode", error);
+      button.disabled = false;
+      new Notice("Writing Companion could not update editorial progress.");
+    }
+  };
 }
 
 function formatEditorialPassDate(value: string): string {
