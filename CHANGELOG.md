@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+- Present explicitly referenced Story World events before supporting entities in World Context
+- Keep event name, authoritative `world_time`, canon status and concise summary permanently visible
+- Present characters, organisations, locations, technologies and other supporting entities as compact linked names
+- Stop duplicating a POV-only character in World Context while retaining explicitly referenced POV entities once
+- Request Obsidian-native page previews for supporting entities on hover and keyboard focus
+- Preserve ordinary click navigation and keep previewing entirely read-only
 - Add a read-only World Context section for the active chapter
-- Combine recognised Story World POV links with explicit `world_context` references
+- Keep POV authority in Chapter Context while displaying only explicit `world_context` references
 - Group resolved entities by type and show concise names, summaries and canon status
 - Distinguish Planned and Candidate material from Confirmed canon
 - Open authoritative entity notes through normal Obsidian navigation
@@ -16,7 +22,7 @@
 - Resolve ordinary wikilinks through Obsidian metadata with a unique name-or-alias fallback
 - Keep Story World authority out of portable editorial storage and avoid sidebar-triggered vault rescans
 - Define the optional `world_context` chapter property for explicit Story World relevance
-- Include recognised Story World POV links without duplicating them in `world_context`
+- Avoid inferring World Context membership from POV, location, prose, backlinks or folders
 - Keep free-text location metadata unchanged and avoid prose, backlink or folder inference
 - Resolve wikilinks, aliases and path-qualified references through normal vault semantics
 - Deduplicate resolved entities by vault path while preserving source Markdown unchanged
@@ -29,6 +35,22 @@
 - Add lightweight source, first-appearance and replacement provenance conventions
 - Keep authorial status separate from in-world confidence and belief
 - Update Story World examples to use explicit confirmed status and provenance
+
+
+## 0.15.0 — 2026-07-15
+
+- Add book-level editorial review mode in portable editorial workflow state
+- Add authoritative book-level `review_status` frontmatter with Not started, In progress and Complete values
+- Resolve the owning book through explicit manuscript hierarchy metadata
+- Replace independent scene pass completion with one ordered editorial progress frontier
+- Infer earlier passes from the furthest pass reached while retaining timestamped completion and reopening history
+- Project the current frontier into authoritative `editorial_pass` Markdown for Bases, Dataview and publishing tools
+- Report external `editorial_pass` disagreement and offer explicit repair instead of silently rewriting frontmatter
+- Present POV as a compact Chapter Context property with Story World character suggestions
+- Preserve free text and unresolved POV wikilinks without creating missing Story World notes
+- Add an exact-only transient manuscript locator when navigating from annotations
+- Keep line fallback navigational without presenting it as an exact match
+- Add regression coverage and cross-platform build, test and release verification
 
 
 ## 0.13.0 — 2026-07-13
@@ -118,73 +140,3 @@
 
 - Open rendered Chapter Context wikilinks through Obsidian's workspace API
 - Resolve links relative to the active chapter and preserve modifier-click behaviour
-
-
-## 0.6.1
-
-- Render Chapter Context values using Obsidian's native Markdown renderer
-- Display wikilink properties such as `[[Tobias]]` as clickable internal links
-
-
-## 0.6.0
-
-- Added a read-only Chapter Context section sourced directly from Markdown properties
-- Presents POV, story date, chapter status, current editorial pass and change summary when available
-- Omits missing and empty properties cleanly
-- Refreshes Chapter Context when Obsidian detects frontmatter changes
-- Keeps Markdown properties as the sole source of truth
-
-
-## 0.5.0
-
-- Redesigned annotation cards around the natural reading flow
-- Manuscript extracts now appear before the editable annotation
-- Moved category, line number and resolve action into a quiet footer
-- Added compact scrolling for long manuscript selections
-- Split annotation rendering into a dedicated AnnotationCard component
-
-
-## 0.4.0
-
-- Replaced addable Document Notes with one always-present Chapter Notes editor per chapter
-- Chapter Notes save automatically while the author writes
-- Existing open Document Notes are carried into the Chapter Notes field on first load
-- Updated the domain model so each chapter has one Chapter Note
-
-
-## 0.3.5
-
-- Focuses the newly created annotation body automatically
-- Selecting text and choosing Annotate now leaves the author ready to type immediately
-
-
-## 0.3.4
-
-- Fixed annotation workflow so the Writing Companion remembers the current chapter after the sidebar opens
-- The Companion no longer loses chapter context when it becomes the active view
-
-
-## 0.3.3
-
-- Added right-click Annotate action for selected text
-- Reused the Annotate command palette workflow
-- Creating an annotation opens the Writing Companion automatically
-
-
-## 0.3.2
-
-- Introduced `AnnotationAnchor`
-- Moved annotation anchor text and line into `annotation.anchor`
-- No intended user-facing behaviour changes
-
-
-## 0.3.1
-
-- Reorganised source into `src/`
-- Split companion view, editorial models, categories and note card rendering into separate modules
-- No feature changes
-
-
-## 0.3.0
-
-- Renamed project to Murmuration Writing Companion
