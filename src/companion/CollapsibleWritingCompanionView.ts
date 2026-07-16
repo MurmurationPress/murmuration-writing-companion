@@ -1,4 +1,6 @@
-import { TFile } from "obsidian";
+import { TFile, WorkspaceLeaf } from "obsidian";
+import type { HoverPopover } from "obsidian";
+import type MurmurationWritingCompanionPlugin from "../main";
 import type { PageEditorialNotes } from "../editorial/EditorialNote";
 import {
   buildWorldContext,
@@ -8,6 +10,7 @@ import {
 import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
 import { renderWorldContext } from "../ui/WorldContext";
 import {
+  VIEW_TYPE,
   WritingCompanionView as BaseWritingCompanionView
 } from "./EditorialWritingCompanionView";
 import {
@@ -16,7 +19,7 @@ import {
   SidebarSectionKey
 } from "./SidebarSections";
 
-export { VIEW_TYPE } from "./EditorialWritingCompanionView";
+export { VIEW_TYPE };
 
 interface CollapsibleSectionOptions {
   summary?: string;
@@ -31,10 +34,25 @@ interface CollapsibleSectionElements {
 }
 
 let nextViewInstanceId = 0;
+const registeredHoverSources = new WeakSet<MurmurationWritingCompanionPlugin>();
 
 export class WritingCompanionView extends BaseWritingCompanionView {
+  hoverPopover: HoverPopover | null = null;
+
   private readonly collapsibleSectionIdPrefix =
     `mwc-collapsible-view-${++nextViewInstanceId}`;
+
+  constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
+    super(leaf, plugin);
+
+    if (!registeredHoverSources.has(plugin)) {
+      plugin.registerHoverLinkSource(VIEW_TYPE, {
+        display: plugin.manifest.name,
+        defaultMod: false
+      });
+      registeredHoverSources.add(plugin);
+    }
+  }
 
   override render() {
     const container = this.containerEl.children[1];
@@ -95,14 +113,29 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     );
     collapsible.section.classList.add("mwc-world-context");
 
-    renderWorldContext(collapsible.content, result, (entry, event) => {
-      const destination = entry.entity.path.replace(/\.md$/i, "");
-      void this.app.workspace.openLinkText(
-        destination,
-        file.path,
-        event.metaKey || event.ctrlKey
-      );
-    });
+    renderWorldContext(
+      collapsible.content,
+      result,
+      (entry, event) => {
+        const destination = entry.entity.path.replace(/\.md$/i, "");
+        void this.app.workspace.openLinkText(
+          destination,
+          file.path,
+          event.metaKey || event.ctrlKey
+        );
+      },
+      (entry, target, event) => {
+        const destination = entry.entity.path.replace(/\.md$/i, "");
+        this.app.workspace.trigger("hover-link", {
+          event,
+          source: VIEW_TYPE,
+          hoverParent: this,
+          targetEl: target,
+          linktext: destination,
+          sourcePath: file.path
+        });
+      }
+    );
   }
 
   private renderCollapsibleEditorialPasses(container: Element, file: TFile) {

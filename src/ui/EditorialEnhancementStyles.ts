@@ -126,6 +126,121 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   white-space: nowrap;
 }
 
+.mwc-world-context-group {
+  margin-top: 12px;
+}
+
+.mwc-world-context-group:first-child {
+  margin-top: 0;
+}
+
+.mwc-world-context-group-title {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.74em;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.mwc-world-context-metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.mwc-world-context-type {
+  color: var(--text-muted);
+}
+
+.mwc-world-context-time {
+  color: var(--text-normal);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mwc-world-context-status {
+  color: var(--text-faint);
+  font-size: 0.82em;
+  font-weight: 500;
+}
+
+.mwc-world-context-event-link {
+  display: inline-block;
+  color: var(--link-color);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.mwc-world-context-event-link:hover,
+.mwc-world-context-event-link:focus-visible {
+  color: var(--link-color-hover);
+  text-decoration: underline;
+}
+
+.mwc-world-context-summary {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.mwc-world-context-supporting-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+}
+
+.mwc-world-context-supporting-item {
+  min-width: 0;
+  color: var(--text-normal);
+}
+
+.mwc-world-context-supporting-item--provisional {
+  color: var(--text-warning);
+}
+
+.mwc-world-context-supporting-item--unresolved {
+  color: var(--text-accent);
+}
+
+.mwc-world-context-supporting-link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 26px;
+  box-sizing: border-box;
+  padding: 3px 8px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-primary-alt);
+  color: inherit;
+  font-size: 0.86em;
+  line-height: 1.25;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mwc-world-context-supporting-link:hover,
+.mwc-world-context-supporting-link:focus-visible {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  outline: none;
+}
+
+.mwc-world-context-supporting-link:focus-visible {
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.mwc-world-context-unresolved {
+  margin-top: 10px;
+  font-size: 0.82em;
+}
+
 .mwc-annotation-locator-active .cm-selectionBackground,
 .mwc-annotation-locator-active .cm-selectionLayer .cm-selectionBackground {
   background: var(--text-highlight-bg) !important;
