@@ -1,13 +1,13 @@
 import {
   buildWorldContextHierarchy,
   formatWorldEntityType,
-  getWorldEventTime,
   presentWorldStatus,
   WorldContextEntry,
   WorldContextGroup,
   WorldContextResult,
   WorldStatusPresentation
 } from "../story-world/WorldContext";
+import { getWorldEventDisplayTime } from "../story-world/WorldTime";
 
 export type OpenWorldContextEntity = (
   entry: WorldContextEntry,
@@ -54,7 +54,6 @@ function createEntityLink(
     attr: {
       href: destination,
       "data-href": destination,
-      title: `Open ${entry.entity.name}`,
       "aria-label": `Open Story World note for ${entry.entity.name}`
     }
   });
@@ -98,7 +97,7 @@ function renderEventGroup(
 
   for (const entry of entries) {
     const status = presentWorldStatus(entry.entity.status);
-    const eventTime = getWorldEventTime(entry.entity);
+    const eventTime = getWorldEventDisplayTime(entry.entity);
     const card = list.createEl("article", {
       cls: [
         "mwc-context-row",
@@ -177,10 +176,7 @@ function renderSupportingGroup(
         "mwc-world-context-supporting-item",
         `mwc-world-context-supporting-item--${status.tone}`
       ].join(" "),
-      attr: {
-        role: "listitem",
-        title: `${formatWorldEntityType(entry.entity.entityType)} · ${status.label}`
-      }
+      attr: { role: "listitem" }
     });
     applyStatusTone(item, item, status);
     createEntityLink(
