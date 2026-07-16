@@ -332,9 +332,16 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   background: var(--background-modifier-hover);
 }
 
-.mwc-manuscript-row--active {
-  background: var(--background-modifier-active-hover);
-  box-shadow: inset 3px 0 0 var(--interactive-accent);
+.mwc-manuscript-row--active,
+.mwc-manuscript-row--active:hover,
+.mwc-manuscript-row--active:focus-within {
+  background: var(--background-modifier-active-hover) !important;
+  box-shadow: inset 3px 0 0 var(--interactive-accent) !important;
+}
+
+.mwc-manuscript-row--active .mwc-manuscript-entry {
+  color: var(--text-normal) !important;
+  font-weight: 650 !important;
 }
 
 .mwc-manuscript-disclosure,
@@ -384,7 +391,8 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   z-index: var(--layer-popover, 1000);
   top: calc(100% - 2px);
   left: min(28px, calc(var(--mwc-manuscript-depth, 0) * 14px + 8px));
-  display: none;
+  display: block;
+  visibility: hidden;
   width: min(250px, calc(100% - 16px));
   padding: 9px 10px;
   border: 1px solid var(--background-modifier-border);
@@ -393,11 +401,27 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   box-shadow: var(--shadow-s);
   color: var(--text-normal);
   font-size: 0.82em;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 70ms ease 0s,
+    transform 70ms ease 0s,
+    visibility 0s linear 70ms;
 }
 
-.mwc-manuscript-row:hover .mwc-manuscript-tooltip,
-.mwc-manuscript-row:focus-within .mwc-manuscript-tooltip {
-  display: block;
+.mwc-manuscript-entry:hover ~ .mwc-manuscript-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 1.2s, 1.2s, 1.2s;
+}
+
+.mwc-manuscript-entry:focus-visible ~ .mwc-manuscript-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .mwc-manuscript-tooltip-title {
@@ -426,6 +450,19 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   overflow-wrap: anywhere;
 }
 
+.mwc-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .mwc-manuscript-diagnostics {
   margin: 12px 4px 0;
   color: var(--text-muted);
@@ -448,10 +485,58 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
 }
 `;
 
-export function installEditorialEnhancementStyles(): HTMLStyleElement {
+export interface EditorialEnhancementInstallation {
+  remove(): void;
+}
+
+let nextAccessibleLabelId = 0;
+
+function suppressNavigatorMoveTooltips(root: ParentNode) {
+  const selector = '.mwc-manuscript-navigator button[aria-label^="Move "]';
+  const buttons: HTMLButtonElement[] = [];
+
+  if (root instanceof HTMLButtonElement && root.matches(selector)) {
+    buttons.push(root);
+  }
+  for (const button of root.querySelectorAll<HTMLButtonElement>(selector)) {
+    buttons.push(button);
+  }
+
+  for (const button of buttons) {
+    const label = button.getAttribute("aria-label");
+    if (!label || button.dataset.mwcAccessibleLabel === "true") continue;
+
+    const hidden = document.createElement("span");
+    hidden.id = `mwc-accessible-label-${++nextAccessibleLabelId}`;
+    hidden.className = "mwc-visually-hidden";
+    hidden.textContent = label;
+    button.appendChild(hidden);
+    button.removeAttribute("aria-label");
+    button.setAttribute("aria-labelledby", hidden.id);
+    button.dataset.mwcAccessibleLabel = "true";
+  }
+}
+
+export function installEditorialEnhancementStyles(): EditorialEnhancementInstallation {
   const style = document.createElement("style");
   style.dataset.mwcEditorialEnhancements = "true";
   style.textContent = EDITORIAL_ENHANCEMENT_STYLES;
   document.head.appendChild(style);
-  return style;
+
+  suppressNavigatorMoveTooltips(document);
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof Element) suppressNavigatorMoveTooltips(node);
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  return {
+    remove() {
+      observer.disconnect();
+      style.remove();
+    }
+  };
 }
