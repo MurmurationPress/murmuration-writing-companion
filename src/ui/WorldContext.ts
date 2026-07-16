@@ -7,7 +7,10 @@ import {
   WorldContextResult,
   WorldStatusPresentation
 } from "../story-world/WorldContext";
-import { getWorldEventDisplayTime } from "../story-world/WorldTime";
+import {
+  getWorldEventRelativeTiming,
+  getWorldEventTimePresentation
+} from "../story-world/WorldTime";
 
 export type OpenWorldContextEntity = (
   entry: WorldContextEntry,
@@ -19,6 +22,10 @@ export type PreviewWorldContextEntity = (
   target: HTMLElement,
   event: MouseEvent | FocusEvent
 ) => void;
+
+export interface WorldContextRenderOptions {
+  storyDate?: unknown;
+}
 
 function entityDestination(entry: WorldContextEntry): string {
   return entry.entity.path.replace(/\.md$/i, "");
@@ -79,7 +86,8 @@ function renderEventGroup(
   container: HTMLElement,
   entries: readonly WorldContextEntry[],
   openEntity: OpenWorldContextEntity,
-  previewEntity: PreviewWorldContextEntity | undefined
+  previewEntity: PreviewWorldContextEntity | undefined,
+  storyDate: unknown
 ) {
   if (entries.length === 0) return;
 
@@ -97,7 +105,12 @@ function renderEventGroup(
 
   for (const entry of entries) {
     const status = presentWorldStatus(entry.entity.status);
-    const eventTime = getWorldEventDisplayTime(entry.entity);
+    const eventTime = getWorldEventTimePresentation(entry.entity);
+    const relativeTiming = getWorldEventRelativeTiming(
+      entry.entity,
+      storyDate,
+      entry.entity.name
+    );
     const card = list.createEl("article", {
       cls: [
         "mwc-context-row",
@@ -116,14 +129,6 @@ function renderEventGroup(
       text: "Event"
     });
 
-    if (eventTime) {
-      metadata.createEl("time", {
-        cls: "mwc-world-context-time",
-        text: eventTime,
-        attr: { datetime: eventTime }
-      });
-    }
-
     const statusEl = metadata.createDiv({
       cls: `mwc-world-context-status mwc-world-context-status--${status.tone}`,
       text: status.label,
@@ -141,6 +146,28 @@ function renderEventGroup(
       previewEntity,
       "mwc-world-context-link mwc-world-context-event-link"
     );
+
+    if (eventTime) {
+      if (eventTime.datetime) {
+        content.createEl("time", {
+          cls: "mwc-world-context-time",
+          text: eventTime.display,
+          attr: { datetime: eventTime.datetime }
+        });
+      } else {
+        content.createDiv({
+          cls: "mwc-world-context-time",
+          text: eventTime.display
+        });
+      }
+    }
+
+    if (relativeTiming) {
+      content.createDiv({
+        cls: "mwc-world-context-relative-time",
+        text: relativeTiming
+      });
+    }
 
     if (entry.entity.summary) {
       content.createEl("p", {
@@ -193,7 +220,8 @@ export function renderWorldContext(
   container: HTMLElement,
   result: WorldContextResult,
   openEntity: OpenWorldContextEntity,
-  previewEntity?: PreviewWorldContextEntity
+  previewEntity?: PreviewWorldContextEntity,
+  options: WorldContextRenderOptions = {}
 ) {
   if (result.entries.length === 0) {
     container.createEl("p", {
@@ -206,7 +234,13 @@ export function renderWorldContext(
   }
 
   const hierarchy = buildWorldContextHierarchy(result.entries);
-  renderEventGroup(container, hierarchy.events, openEntity, previewEntity);
+  renderEventGroup(
+    container,
+    hierarchy.events,
+    openEntity,
+    previewEntity,
+    options.storyDate
+  );
 
   for (const group of hierarchy.supportingGroups) {
     renderSupportingGroup(container, group, openEntity, previewEntity);
