@@ -498,7 +498,9 @@ function suppressNavigatorMoveTooltips(root: ParentNode) {
   if (root instanceof HTMLButtonElement && root.matches(selector)) {
     buttons.push(root);
   }
-  for (const button of root.querySelectorAll<HTMLButtonElement>(selector)) {
+  for (const button of Array.from(
+    root.querySelectorAll<HTMLButtonElement>(selector)
+  )) {
     buttons.push(button);
   }
 
@@ -526,7 +528,7 @@ export function installEditorialEnhancementStyles(): EditorialEnhancementInstall
   suppressNavigatorMoveTooltips(document);
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
+      for (const node of Array.from(mutation.addedNodes)) {
         if (node instanceof Element) suppressNavigatorMoveTooltips(node);
       }
     }
