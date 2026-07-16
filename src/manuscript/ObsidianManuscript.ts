@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TFile, TFolder } from "obsidian";
 import { isBookFrontmatter } from "../editorial/BookReview";
 import { parseWikilink } from "../story-world/StoryWorldIndex";
 import {
@@ -14,6 +14,13 @@ import {
   ManuscriptSceneMetadata,
   manuscriptSceneMetadata
 } from "./ManuscriptMetadata";
+import {
+  findLegacyOwningBookPath,
+  findLegacyParentPath,
+  isTemplateManuscriptPath,
+  LegacyBookFolder,
+  normalizeVaultPath
+} from "./LegacyManuscriptHierarchy";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -21,6 +28,15 @@ interface RawManuscriptFile {
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly parentPath: string | null;
   readonly explicitBookPath: string | null;
+}
+
+interface PreliminaryManuscriptFile {
+  readonly file: TFile;
+  readonly frontmatter: Record<string, unknown> | undefined;
+  readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
+  readonly explicitParentPath: string | null;
+  readonly explicitBookPath: string | null;
+  readonly associatedFolderPath: string | null;
 }
 
 export interface ObsidianManuscriptBook {
@@ -63,18 +79,83 @@ function firstResolvedPath(
   return null;
 }
 
+function associatedFolderPath(app: App, file: TFile): string | null {
+  const parent = file.parent;
+  if (!parent) return null;
+
+  if (parent.name === file.basename) return parent.path;
+
+  const siblingPath = parent.path
+    ? `${parent.path}/${file.basename}`
+    : file.basename;
+  const sibling = app.vault.getAbstractFileByPath(siblingPath);
+  return sibling instanceof TFolder ? sibling.path : null;
+}
+
 function rawFiles(app: App): Map<string, RawManuscriptFile> {
-  const result = new Map<string, RawManuscriptFile>();
+  const preliminary = new Map<string, PreliminaryManuscriptFile>();
 
   for (const file of app.vault.getMarkdownFiles()) {
     const frontmatter = frontmatterFor(app, file);
     const hierarchy = manuscriptHierarchyReferences(frontmatter);
-    result.set(file.path, {
+    preliminary.set(file.path, {
       file,
       frontmatter,
       explicitKind: explicitManuscriptKind(frontmatter),
-      parentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
-      explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences)
+      explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
+      explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
+      associatedFolderPath: associatedFolderPath(app, file)
+    });
+  }
+
+  const folderNotePathByFolder = new Map<string, string>();
+  for (const candidate of preliminary.values()) {
+    if (!candidate.associatedFolderPath) continue;
+    folderNotePathByFolder.set(
+      normalizeVaultPath(candidate.associatedFolderPath),
+      candidate.file.path
+    );
+  }
+
+  const legacyBooks: LegacyBookFolder[] = [...preliminary.values()]
+    .filter((candidate) => (
+      candidate.explicitKind === "book"
+      && candidate.associatedFolderPath !== null
+      && !isTemplateManuscriptPath(candidate.file.path)
+    ))
+    .map((candidate) => ({
+      bookPath: candidate.file.path,
+      folderPath: candidate.associatedFolderPath!
+    }));
+  const legacyBookByPath = new Map(
+    legacyBooks.map((book) => [book.bookPath, book])
+  );
+  const result = new Map<string, RawManuscriptFile>();
+
+  for (const candidate of preliminary.values()) {
+    const legacyBookPath = findLegacyOwningBookPath(
+      candidate.file.path,
+      legacyBooks
+    );
+    const resolvedBookPath = candidate.explicitBookPath ?? legacyBookPath;
+    const legacyBook = resolvedBookPath
+      ? legacyBookByPath.get(resolvedBookPath) ?? null
+      : null;
+    const legacyParentPath = legacyBook
+      ? findLegacyParentPath(
+        candidate.file.path,
+        legacyBook.bookPath,
+        legacyBook.folderPath,
+        folderNotePathByFolder
+      )
+      : null;
+
+    result.set(candidate.file.path, {
+      file: candidate.file,
+      frontmatter: candidate.frontmatter,
+      explicitKind: candidate.explicitKind,
+      parentPath: candidate.explicitParentPath ?? legacyParentPath,
+      explicitBookPath: candidate.explicitBookPath ?? legacyBookPath
     });
   }
 
@@ -228,7 +309,10 @@ export function buildObsidianManuscriptLibrary(app: App): ObsidianManuscriptLibr
   for (const path of files.keys()) owningBookPath(path, files, ownerMemo);
 
   const books = [...files.values()]
-    .filter((candidate) => isBookFrontmatter(candidate.frontmatter))
+    .filter((candidate) => (
+      isBookFrontmatter(candidate.frontmatter)
+      && !isTemplateManuscriptPath(candidate.file.path)
+    ))
     .map((book) => buildBook(app, book, files, ownerMemo))
     .sort((left, right) => left.record.title.localeCompare(right.record.title, "en", {
       numeric: true,
