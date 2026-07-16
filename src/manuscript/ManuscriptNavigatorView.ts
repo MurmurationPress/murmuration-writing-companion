@@ -54,6 +54,12 @@ function metadataRows(metadata: ManuscriptSceneMetadata): Array<[string, string]
   return rows;
 }
 
+function nodeContainsPath(node: ManuscriptOrderNode, path: string | null): boolean {
+  if (!path) return false;
+  if (node.entry.path === path) return true;
+  return node.children.some((child) => nodeContainsPath(child, path));
+}
+
 export class ManuscriptNavigatorView extends ItemView {
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
@@ -219,7 +225,8 @@ export class ManuscriptNavigatorView extends ItemView {
     wrapper.style.setProperty("--mwc-manuscript-depth", String(depth));
 
     if (isPart) {
-      const collapsed = this.collapsedParts.has(node.entry.path);
+      const containsActive = nodeContainsPath(node, activeFile?.path ?? null);
+      const collapsed = this.collapsedParts.has(node.entry.path) && !containsActive;
       wrapper.setAttribute("aria-expanded", String(!collapsed));
       const row = wrapper.createDiv("mwc-manuscript-row mwc-manuscript-row--part");
       const disclosure = row.createEl("button", {
@@ -233,8 +240,11 @@ export class ManuscriptNavigatorView extends ItemView {
       disclosure.onclick = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (collapsed) this.collapsedParts.delete(node.entry.path);
-        else this.collapsedParts.add(node.entry.path);
+        if (this.collapsedParts.has(node.entry.path)) {
+          this.collapsedParts.delete(node.entry.path);
+        } else {
+          this.collapsedParts.add(node.entry.path);
+        }
         this.render();
       };
 
