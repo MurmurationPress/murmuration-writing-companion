@@ -3,10 +3,12 @@ import {
   MANUSCRIPT_PARENT_ALIASES,
   normalizeBookPropertyName
 } from "../editorial/BookReview";
+import { buildObsidianManuscriptLibrary } from "./ObsidianManuscript";
 import { MANUSCRIPT_ORDER_PROPERTY } from "./ManuscriptOrder";
 import {
   manuscriptOrderReferences,
-  ManuscriptMoveProposal
+  ManuscriptMoveProposal,
+  sameManuscriptStructure
 } from "./ManuscriptReorder";
 
 interface PropertySnapshot {
@@ -25,6 +27,13 @@ export interface ManuscriptReorderUndoToken {
   readonly orderAfter: PropertySnapshot;
   readonly parent: ParentUndoState | null;
   readonly message: string;
+}
+
+export class StaleManuscriptMoveError extends Error {
+  constructor() {
+    super("The manuscript structure changed before this move could be written. Try the move again.");
+    this.name = "StaleManuscriptMoveError";
+  }
 }
 
 export class StaleManuscriptUndoError extends Error {
@@ -132,6 +141,16 @@ export async function applyManuscriptReorder(
 ): Promise<ManuscriptReorderUndoToken> {
   if (!proposal.valid) throw new Error(proposal.message);
 
+  const currentBook = buildObsidianManuscriptLibrary(app).books.find((candidate) => (
+    candidate.file.path === book.path
+  ));
+  if (
+    !currentBook
+    || !sameManuscriptStructure(currentBook.result.entries, proposal.beforeEntries)
+  ) {
+    throw new StaleManuscriptMoveError();
+  }
+
   const references = manuscriptOrderReferences(proposal.entries);
   let orderBefore: PropertySnapshot | null = null;
   let orderAfter: PropertySnapshot | null = null;
@@ -148,7 +167,8 @@ export async function applyManuscriptReorder(
 
   let parentState: ParentUndoState | null = null;
   if (proposal.parentChange) {
-    const movedFile = filesByPath.get(proposal.parentChange.path);
+    const movedFile = currentBook.filesByPath.get(proposal.parentChange.path)
+      ?? filesByPath.get(proposal.parentChange.path);
     if (!movedFile || !proposal.parentChange.afterParentPath) {
       await app.fileManager.processFrontMatter(book, (frontmatter) => {
         replaceProperties(frontmatter, ORDER_ALIASES, orderBefore!);
