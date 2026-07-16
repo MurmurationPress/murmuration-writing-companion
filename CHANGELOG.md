@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add a dedicated read-only Manuscript navigator to Obsidian's left sidebar
+- Support both book-part-scene and direct book-scene manuscript structures
+- Recognise existing Longform-style folder notes and numeric filename order during migration
+- Exclude manuscript templates from the selectable book list without configuration
+- Keep scene metadata secondary through hover and keyboard-focus tooltips
+- Define authoritative book-level `manuscript_order` as a flat Markdown wikilink sequence
+- Keep manuscript sequence separate from parent-owned containment and out of editorial storage
+- Add deterministic hierarchy, previous/next scene and structural diagnostic services
+- Add a numeric filename-prefix fallback for reviewed migration from File Order
 - Render authoritative Story World event times as readable British-English dates without rewriting ISO source values
 - Respect declared or evident year, month, day, hour, minute and second precision without manufacturing detail
 - Preserve written story dates, wall-clock times and offsets rather than converting through the system timezone

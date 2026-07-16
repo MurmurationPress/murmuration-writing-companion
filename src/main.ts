@@ -39,6 +39,10 @@ import {
 } from "./companion/PovSuggestions";
 import { TransientAnnotationLocator } from "./companion/AnnotationLocator";
 import { installEditorialEnhancementStyles } from "./ui/EditorialEnhancementStyles";
+import {
+  MANUSCRIPT_NAVIGATOR_VIEW_TYPE,
+  ManuscriptNavigatorView
+} from "./manuscript/ManuscriptNavigatorView";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -87,7 +91,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.storyWorldIndex.rebuild();
 
     this.storeService = new EditorialStoreService(this);
-    this.storeService.onChange = () => this.refreshView();
+    this.storeService.onChange = () => {
+      this.refreshView();
+      this.refreshManuscriptNavigator();
+    };
 
     await this.storeService.load();
 
@@ -95,6 +102,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       if (this.storyWorldIndex.rebuild()) {
         this.refreshView();
       }
+      this.refreshManuscriptNavigator();
 
       void (async () => {
         await this.storeService.reconcileDeletedEditorialPages();
@@ -106,11 +114,18 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       VIEW_TYPE,
       (leaf) => new WritingCompanionView(leaf, this)
     );
+    this.registerView(
+      MANUSCRIPT_NAVIGATOR_VIEW_TYPE,
+      (leaf) => new ManuscriptNavigatorView(leaf, this)
+    );
 
     this.addRibbonIcon("notebook-pen", "Murmuration Writing Companion", () => {
       const activeChapter = this.getActiveChapter();
       if (activeChapter) this.currentChapter = activeChapter;
       this.activateView();
+    });
+    this.addRibbonIcon("list-tree", "Open Manuscript navigator", () => {
+      void this.activateManuscriptNavigator();
     });
 
     this.addCommand({
@@ -121,6 +136,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (activeChapter) this.currentChapter = activeChapter;
         this.activateView();
       }
+    });
+    this.addCommand({
+      id: "open-manuscript-navigator",
+      name: "Open Manuscript navigator",
+      callback: () => void this.activateManuscriptNavigator()
     });
 
     this.addCommand({
@@ -161,6 +181,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         }
 
         this.refreshView();
+        this.refreshManuscriptNavigator();
       })
     );
 
@@ -176,6 +197,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (worldChanged || currentChapterChanged || currentBookChanged) {
           this.refreshView();
         }
+        this.refreshManuscriptNavigator();
       })
     );
 
@@ -187,6 +209,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         await this.storeService.handleCreate(file);
 
         if (worldChanged) this.refreshView();
+        this.refreshManuscriptNavigator();
       })
     );
 
@@ -204,6 +227,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (worldChanged || this.currentChapter === null) {
           this.refreshView();
         }
+        this.refreshManuscriptNavigator();
       })
     );
 
@@ -219,6 +243,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         }
 
         if (worldChanged) this.refreshView();
+        this.refreshManuscriptNavigator();
       })
     );
   }
@@ -432,12 +457,45 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.app.workspace.revealLeaf(leaf);
   }
 
+  async activateManuscriptNavigator() {
+    const existing = this.app.workspace.getLeavesOfType(
+      MANUSCRIPT_NAVIGATOR_VIEW_TYPE
+    )[0];
+    const leaf = existing ?? this.app.workspace.getLeftLeaf(false);
+
+    if (!leaf) {
+      new Notice("Could not open the Manuscript navigator sidebar.");
+      return;
+    }
+
+    if (!existing) {
+      await leaf.setViewState({
+        type: MANUSCRIPT_NAVIGATOR_VIEW_TYPE,
+        active: true
+      });
+    }
+    this.app.workspace.revealLeaf(leaf);
+  }
+
   refreshView() {
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 
     for (const leaf of leaves) {
       const view = leaf.view;
       if (view instanceof WritingCompanionView) {
+        view.render();
+      }
+    }
+  }
+
+  refreshManuscriptNavigator() {
+    const leaves = this.app.workspace.getLeavesOfType(
+      MANUSCRIPT_NAVIGATOR_VIEW_TYPE
+    );
+
+    for (const leaf of leaves) {
+      const view = leaf.view;
+      if (view instanceof ManuscriptNavigatorView) {
         view.render();
       }
     }
