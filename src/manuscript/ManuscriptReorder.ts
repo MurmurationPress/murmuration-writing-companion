@@ -16,6 +16,7 @@ export interface ManuscriptParentChange {
 
 export interface ManuscriptMoveProposal {
   readonly valid: boolean;
+  readonly beforeEntries: readonly ManuscriptDocumentRecord[];
   readonly entries: readonly ManuscriptDocumentRecord[];
   readonly parentChange: ManuscriptParentChange | null;
   readonly message: string;
@@ -67,16 +68,24 @@ function invalid(
   entries: readonly ManuscriptDocumentRecord[],
   message: string
 ): ManuscriptMoveProposal {
-  return { valid: false, entries, parentChange: null, message };
+  return {
+    valid: false,
+    beforeEntries: entries,
+    entries,
+    parentChange: null,
+    message
+  };
 }
 
-function sameOrder(
+export function sameManuscriptStructure(
   left: readonly ManuscriptDocumentRecord[],
   right: readonly ManuscriptDocumentRecord[]
 ): boolean {
   return left.length === right.length
     && left.every((entry, index) => (
       entry.path === right[index]?.path
+      && entry.kind === right[index]?.kind
+      && entry.bookPath === right[index]?.bookPath
       && entry.parentPath === right[index]?.parentPath
     ));
 }
@@ -154,7 +163,7 @@ export function proposeManuscriptMove(
     ...remaining.slice(insertionIndex)
   ];
 
-  if (sameOrder(entries, reordered)) {
+  if (sameManuscriptStructure(entries, reordered)) {
     return invalid(entries, `${moved.title} is already in that position.`);
   }
 
@@ -172,6 +181,7 @@ export function proposeManuscriptMove(
 
   return {
     valid: true,
+    beforeEntries: entries,
     entries: reordered,
     parentChange,
     message: parentChange
