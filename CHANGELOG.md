@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add drag-and-drop scene and part reordering to the Manuscript navigator
+- Adopt reviewed filename order as authoritative `manuscript_order` only after explicit confirmation
+- Update a scene's authoritative parent only when a move changes containment
+- Preserve complete part subtrees and reject cycles, descendant drops and invalid targets before writing
+- Add keyboard sibling moves and a compact Move menu for cross-part placement
+- Treat each structural move as one recoverable operation with immediate Undo and stale-edit protection
 - Add a dedicated read-only Manuscript navigator to Obsidian's left sidebar
 - Support both book-part-scene and direct book-scene manuscript structures
 - Recognise existing Longform-style folder notes and numeric filename order during migration
