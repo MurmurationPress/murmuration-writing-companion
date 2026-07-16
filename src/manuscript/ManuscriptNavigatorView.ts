@@ -1,4 +1,12 @@
-import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import {
+  App,
+  ItemView,
+  Menu,
+  Modal,
+  Notice,
+  TFile,
+  WorkspaceLeaf
+} from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import {
   EDITORIAL_PASS_LABELS,
@@ -13,6 +21,17 @@ import {
   buildObsidianManuscriptLibrary,
   ObsidianManuscriptBook
 } from "./ObsidianManuscript";
+import {
+  applyManuscriptReorder,
+  ManuscriptReorderUndoToken,
+  StaleManuscriptUndoError,
+  undoManuscriptReorder
+} from "./ObsidianManuscriptReorder";
+import {
+  ManuscriptDropPosition,
+  proposeManuscriptMove,
+  siblingMoveRequest
+} from "./ManuscriptReorder";
 import {
   formatNavigatorStoryDate,
   ManuscriptSceneMetadata
@@ -72,12 +91,89 @@ function collectPartPaths(nodes: readonly ManuscriptOrderNode[]): string[] {
   return paths;
 }
 
+function effectiveParent(
+  entry: ManuscriptDocumentRecord,
+  bookPath: string
+): string {
+  return entry.parentPath ?? bookPath;
+}
+
+function plainButton(button: HTMLButtonElement) {
+  button.style.border = "0";
+  button.style.background = "transparent";
+  button.style.boxShadow = "none";
+  button.style.color = "var(--text-muted)";
+  button.style.cursor = "pointer";
+  button.style.font = "inherit";
+}
+
+class ConfirmOrderAdoptionModal extends Modal {
+  private settled = false;
+
+  constructor(
+    app: App,
+    private readonly resolve: (accepted: boolean) => void
+  ) {
+    super(app);
+  }
+
+  onOpen() {
+    this.titleEl.setText("Adopt manuscript order");
+    this.contentEl.createEl("p", {
+      text: "This manuscript currently uses filename order. Reordering will adopt the displayed sequence as authoritative manuscript order and apply this move."
+    });
+    this.contentEl.createEl("p", {
+      cls: "mwc-muted",
+      text: "Filenames will not be renamed. Codex Press alignment remains a separate migration step."
+    });
+
+    const actions = this.contentEl.createDiv();
+    actions.style.display = "flex";
+    actions.style.justifyContent = "flex-end";
+    actions.style.gap = "8px";
+    actions.style.marginTop = "16px";
+
+    const cancel = actions.createEl("button", { text: "Cancel" });
+    cancel.onclick = () => this.finish(false);
+    const adopt = actions.createEl("button", {
+      text: "Adopt and reorder",
+      cls: "mod-cta"
+    });
+    adopt.onclick = () => this.finish(true);
+    window.setTimeout(() => adopt.focus(), 0);
+  }
+
+  onClose() {
+    this.contentEl.empty();
+    if (!this.settled) this.resolve(false);
+  }
+
+  private finish(accepted: boolean) {
+    if (this.settled) return;
+    this.settled = true;
+    this.resolve(accepted);
+    this.close();
+  }
+}
+
+function confirmOrderAdoption(app: App): Promise<boolean> {
+  return new Promise((resolve) => {
+    new ConfirmOrderAdoptionModal(app, resolve).open();
+  });
+}
+
 export class ManuscriptNavigatorView extends ItemView {
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
   private selectedBookPath: string | null = null;
   private suppressedActiveRevealPath: string | null = null;
   private readonly preferenceKey: string;
+  private draggedPath: string | null = null;
+  private dropRow: HTMLElement | null = null;
+  private dropPosition: ManuscriptDropPosition | null = null;
+  private undoToken: ManuscriptReorderUndoToken | null = null;
+  private operationMessage: string | null = null;
+  private operationRunning = false;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -108,6 +204,18 @@ export class ManuscriptNavigatorView extends ItemView {
   }
 
   async onOpen() {
+    this.registerDomEvent(this.containerEl, "keydown", (event) => {
+      if (
+        this.undoToken
+        && (event.ctrlKey || event.metaKey)
+        && !event.shiftKey
+        && event.key.toLowerCase() === "z"
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void this.undoLastMove();
+      }
+    });
     this.render();
   }
 
@@ -162,6 +270,8 @@ export class ManuscriptNavigatorView extends ItemView {
       selector.onchange = () => {
         this.setSelectedBookPath(selector.value);
         this.suppressedActiveRevealPath = null;
+        this.undoToken = null;
+        this.operationMessage = null;
         this.render();
       };
     } else if (selected) {
@@ -173,6 +283,7 @@ export class ManuscriptNavigatorView extends ItemView {
 
     if (!selected) return;
     this.renderSourceNotice(container, selected);
+    this.renderOperationStatus(container);
 
     if (selected.result.roots.length === 0) {
       container.createEl("p", {
@@ -214,6 +325,56 @@ export class ManuscriptNavigatorView extends ItemView {
     }
   }
 
+  async undoLastMove() {
+    if (!this.undoToken || this.operationRunning) return;
+    const token = this.undoToken;
+    this.operationRunning = true;
+
+    try {
+      await undoManuscriptReorder(this.app, token);
+      this.undoToken = null;
+      this.operationMessage = "Manuscript move undone.";
+    } catch (error) {
+      this.undoToken = null;
+      this.operationMessage = error instanceof StaleManuscriptUndoError
+        ? error.message
+        : "Could not undo the manuscript move.";
+      new Notice(this.operationMessage);
+    } finally {
+      this.operationRunning = false;
+      this.render();
+    }
+  }
+
+  private renderOperationStatus(container: HTMLElement) {
+    if (!this.operationMessage && !this.undoToken) return;
+
+    const status = container.createDiv();
+    status.style.display = "flex";
+    status.style.alignItems = "center";
+    status.style.justifyContent = "space-between";
+    status.style.gap = "8px";
+    status.style.margin = "0 4px 8px";
+    status.style.padding = "6px 8px";
+    status.style.borderRadius = "5px";
+    status.style.background = "var(--background-secondary-alt)";
+    status.style.color = "var(--text-muted)";
+    status.style.fontSize = "0.76em";
+    status.setAttribute("role", "status");
+    status.createSpan({ text: this.operationMessage ?? "Manuscript order updated." });
+
+    if (this.undoToken) {
+      const undo = status.createEl("button", {
+        text: "Undo",
+        attr: { type: "button", "aria-label": "Undo last manuscript move" }
+      });
+      plainButton(undo);
+      undo.style.color = "var(--text-accent)";
+      undo.style.fontWeight = "650";
+      undo.onclick = () => void this.undoLastMove();
+    }
+  }
+
   private renderTreeControls(
     container: HTMLElement,
     partPaths: readonly string[],
@@ -235,12 +396,9 @@ export class ManuscriptNavigatorView extends ItemView {
           : "Collapse all manuscript parts"
       }
     });
+    plainButton(toggle);
     toggle.style.padding = "2px 6px";
-    toggle.style.border = "0";
-    toggle.style.background = "transparent";
-    toggle.style.color = "var(--text-muted)";
     toggle.style.fontSize = "0.78em";
-    toggle.style.cursor = "pointer";
 
     toggle.onclick = () => {
       if (allCollapsed) {
@@ -261,7 +419,7 @@ export class ManuscriptNavigatorView extends ItemView {
     if (book.result.source === "legacy") {
       container.createDiv({
         cls: "mwc-manuscript-notice",
-        text: "Previewing the current filename-prefix order. It has not yet been adopted as authoritative manuscript order."
+        text: "Previewing the current filename-prefix order. The first reorder will offer to adopt it as authoritative manuscript order."
       });
     } else if (book.result.source === "invalid") {
       container.createDiv({
@@ -300,6 +458,7 @@ export class ManuscriptNavigatorView extends ItemView {
       const collapsed = this.collapsedParts.has(node.entry.path) && !revealActive;
       wrapper.setAttribute("aria-expanded", String(!collapsed));
       const row = wrapper.createDiv("mwc-manuscript-row mwc-manuscript-row--part");
+      row.style.gridTemplateColumns = "22px minmax(0, 1fr) 24px";
       const disclosure = row.createEl("button", {
         cls: "mwc-manuscript-disclosure",
         text: collapsed ? "›" : "⌄",
@@ -322,6 +481,8 @@ export class ManuscriptNavigatorView extends ItemView {
       };
 
       const label = this.createOpenButton(row, node.entry, book, isActive);
+      this.createMoveMenuButton(row, node.entry, book);
+      this.configureDrag(row, node.entry, book);
       this.renderMetadataTooltip(row, label, book, node.entry);
 
       const children = wrapper.createDiv({
@@ -345,6 +506,7 @@ export class ManuscriptNavigatorView extends ItemView {
         ? "mwc-manuscript-row mwc-manuscript-row--active"
         : "mwc-manuscript-row"
     );
+    row.style.gridTemplateColumns = "minmax(0, 1fr) 24px";
     const label = this.createOpenButton(row, node.entry, book, isActive);
     if (isActive) {
       row.style.background = "var(--interactive-accent)";
@@ -352,6 +514,8 @@ export class ManuscriptNavigatorView extends ItemView {
       label.style.color = "var(--text-on-accent)";
       label.style.fontWeight = "650";
     }
+    this.createMoveMenuButton(row, node.entry, book);
+    this.configureDrag(row, node.entry, book);
     this.renderMetadataTooltip(row, label, book, node.entry);
     return isActive ? row : null;
   }
@@ -368,6 +532,7 @@ export class ManuscriptNavigatorView extends ItemView {
       attr: {
         type: "button",
         "aria-label": `Open ${entry.title}`,
+        "aria-keyshortcuts": "Alt+ArrowUp Alt+ArrowDown",
         ...(active ? { "aria-current": "page" } : {})
       }
     });
@@ -378,7 +543,280 @@ export class ManuscriptNavigatorView extends ItemView {
       const leaf = this.app.workspace.getLeaf(event.metaKey || event.ctrlKey);
       void leaf.openFile(file, { active: true });
     };
+    button.onkeydown = (event) => {
+      if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) {
+        return;
+      }
+      const request = siblingMoveRequest(
+        book.file.path,
+        book.result.entries,
+        entry.path,
+        event.key === "ArrowUp" ? -1 : 1
+      );
+      if (!request) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void this.handleMove(book, request.movedPath, request.targetPath, request.position);
+    };
     return button;
+  }
+
+  private createMoveMenuButton(
+    row: HTMLElement,
+    entry: ManuscriptDocumentRecord,
+    book: ObsidianManuscriptBook
+  ) {
+    const button = row.createEl("button", {
+      text: "⋮",
+      attr: {
+        type: "button",
+        "aria-label": `Move ${entry.title}`
+      }
+    });
+    plainButton(button);
+    button.style.width = "24px";
+    button.style.height = "24px";
+    button.style.padding = "0";
+    button.style.opacity = "0.72";
+    button.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showMoveMenu(button, entry, book);
+    };
+  }
+
+  private showMoveMenu(
+    anchor: HTMLElement,
+    entry: ManuscriptDocumentRecord,
+    book: ObsidianManuscriptBook
+  ) {
+    const menu = new Menu();
+    let actionCount = 0;
+    const addMove = (title: string, request: ReturnType<typeof siblingMoveRequest>) => {
+      if (!request) return;
+      actionCount += 1;
+      menu.addItem((item) => item
+        .setTitle(title)
+        .setIcon(title.includes("earlier") ? "arrow-up" : "arrow-down")
+        .onClick(() => void this.handleMove(
+          book,
+          request.movedPath,
+          request.targetPath,
+          request.position
+        )));
+    };
+
+    addMove(
+      "Move earlier",
+      siblingMoveRequest(book.file.path, book.result.entries, entry.path, -1)
+    );
+    addMove(
+      "Move later",
+      siblingMoveRequest(book.file.path, book.result.entries, entry.path, 1)
+    );
+
+    if (entry.kind === "scene") {
+      const currentParent = effectiveParent(entry, book.file.path);
+      const parts = book.result.entries.filter((candidate) => candidate.kind === "part");
+
+      for (const part of parts) {
+        if (part.path === currentParent) continue;
+        actionCount += 1;
+        menu.addItem((item) => item
+          .setTitle(`Move to ${part.title}`)
+          .setIcon("folder-input")
+          .onClick(() => void this.handleMove(
+            book,
+            entry.path,
+            part.path,
+            "inside-end"
+          )));
+      }
+
+      if (currentParent !== book.file.path) {
+        const roots = book.result.entries.filter((candidate) => (
+          candidate.path !== entry.path
+          && effectiveParent(candidate, book.file.path) === book.file.path
+        ));
+        const target = roots[roots.length - 1];
+        if (target) {
+          actionCount += 1;
+          menu.addItem((item) => item
+            .setTitle("Move to book level")
+            .setIcon("book-open")
+            .onClick(() => void this.handleMove(
+              book,
+              entry.path,
+              target.path,
+              "after"
+            )));
+        }
+      }
+    }
+
+    if (actionCount === 0) {
+      menu.addItem((item) => item.setTitle("No available moves").setDisabled(true));
+    }
+
+    const rect = anchor.getBoundingClientRect();
+    menu.showAtPosition({ x: rect.right, y: rect.bottom });
+  }
+
+  private configureDrag(
+    row: HTMLElement,
+    entry: ManuscriptDocumentRecord,
+    book: ObsidianManuscriptBook
+  ) {
+    row.draggable = true;
+    row.setAttribute("aria-grabbed", "false");
+
+    row.addEventListener("dragstart", (event) => {
+      if (this.operationRunning) {
+        event.preventDefault();
+        return;
+      }
+      this.draggedPath = entry.path;
+      row.setAttribute("aria-grabbed", "true");
+      row.style.opacity = "0.55";
+      event.dataTransfer?.setData("text/plain", entry.path);
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    });
+
+    row.addEventListener("dragend", () => {
+      row.setAttribute("aria-grabbed", "false");
+      row.style.opacity = "";
+      this.clearDropIndicator();
+      this.draggedPath = null;
+    });
+
+    row.addEventListener("dragover", (event) => {
+      if (!this.draggedPath || this.draggedPath === entry.path) return;
+      const moved = book.result.entries.find((candidate) => (
+        candidate.path === this.draggedPath
+      ));
+      if (!moved) return;
+
+      const rect = row.getBoundingClientRect();
+      const ratio = rect.height > 0
+        ? (event.clientY - rect.top) / rect.height
+        : 0.5;
+      const position: ManuscriptDropPosition = entry.kind === "part"
+        && moved.kind === "scene"
+        && ratio >= 0.3
+        && ratio <= 0.7
+        ? "inside-end"
+        : ratio < 0.5 ? "before" : "after";
+      const proposal = proposeManuscriptMove(book.file.path, book.result.entries, {
+        movedPath: moved.path,
+        targetPath: entry.path,
+        position
+      });
+      if (!proposal.valid) {
+        if (this.dropRow === row) this.clearDropIndicator();
+        return;
+      }
+
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      this.setDropIndicator(row, position);
+    });
+
+    row.addEventListener("dragleave", (event) => {
+      const related = event.relatedTarget;
+      if (related instanceof Node && row.contains(related)) return;
+      if (this.dropRow === row) this.clearDropIndicator();
+    });
+
+    row.addEventListener("drop", (event) => {
+      if (!this.draggedPath || this.dropRow !== row || !this.dropPosition) return;
+      event.preventDefault();
+      const movedPath = this.draggedPath;
+      const position = this.dropPosition;
+      this.clearDropIndicator();
+      this.draggedPath = null;
+      void this.handleMove(book, movedPath, entry.path, position);
+    });
+  }
+
+  private setDropIndicator(row: HTMLElement, position: ManuscriptDropPosition) {
+    if (this.dropRow !== row) this.clearDropIndicator();
+    this.dropRow = row;
+    this.dropPosition = position;
+    row.style.borderTop = position === "before"
+      ? "2px solid var(--interactive-accent)"
+      : "";
+    row.style.borderBottom = position === "after"
+      ? "2px solid var(--interactive-accent)"
+      : "";
+    row.style.outline = position === "inside-end"
+      ? "2px solid var(--interactive-accent)"
+      : "";
+    row.style.outlineOffset = position === "inside-end" ? "-2px" : "";
+  }
+
+  private clearDropIndicator() {
+    if (this.dropRow) {
+      this.dropRow.style.borderTop = "";
+      this.dropRow.style.borderBottom = "";
+      this.dropRow.style.outline = "";
+      this.dropRow.style.outlineOffset = "";
+    }
+    this.dropRow = null;
+    this.dropPosition = null;
+  }
+
+  private async handleMove(
+    book: ObsidianManuscriptBook,
+    movedPath: string,
+    targetPath: string,
+    position: ManuscriptDropPosition
+  ) {
+    if (this.operationRunning) return;
+    if (book.result.source === "invalid") {
+      new Notice("Correct manuscript_order before reordering this book.");
+      return;
+    }
+
+    const proposal = proposeManuscriptMove(book.file.path, book.result.entries, {
+      movedPath,
+      targetPath,
+      position
+    });
+    if (!proposal.valid) {
+      new Notice(proposal.message);
+      return;
+    }
+
+    if (book.result.source === "legacy") {
+      const ambiguous = book.result.diagnostics.some((diagnostic) => (
+        diagnostic.kind === "legacy_ambiguous"
+      ));
+      if (ambiguous) {
+        new Notice("Review the filename-order structure notices before adopting manuscript order.");
+        return;
+      }
+      if (!await confirmOrderAdoption(this.app)) return;
+    }
+
+    this.operationRunning = true;
+    try {
+      const token = await applyManuscriptReorder(
+        this.app,
+        book.file,
+        book.filesByPath,
+        proposal
+      );
+      this.undoToken = token;
+      this.operationMessage = token.message;
+    } catch (error) {
+      this.operationMessage = error instanceof Error
+        ? error.message
+        : "Could not update manuscript order.";
+      new Notice(this.operationMessage);
+    } finally {
+      this.operationRunning = false;
+      this.render();
+    }
   }
 
   private renderMetadataTooltip(
