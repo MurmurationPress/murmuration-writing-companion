@@ -50,7 +50,9 @@ Book
 - parts appear as collapsible groups;
 - scenes appear beneath their authoritative parent;
 - collapsing a part does not change Markdown;
-- activating a scene inside a collapsed part reveals it again.
+- activating a different scene inside a collapsed part reveals its part again;
+- **Collapse all** closes every part, including the part containing the current scene;
+- the control changes to **Expand all** and restores every part.
 
 ### Book without parts
 
@@ -61,7 +63,8 @@ Book
 ```
 
 - scenes appear directly beneath the book;
-- no synthetic or required part is introduced.
+- no synthetic or required part is introduced;
+- no Collapse all control is shown when there are no parts.
 
 ## Ordering
 
@@ -81,7 +84,8 @@ For a test book with explicit `manuscript_order`:
 
 - click a scene title and confirm that the note opens normally;
 - modifier-click a scene and confirm that Obsidian opens another leaf/tab;
-- the active scene is highlighted;
+- the selected scene has a clear accent highlight;
+- the highlight remains visible while focus is in the Manuscript sidebar;
 - switching scenes updates the highlight and scrolls it into view;
 - titles come from `title` frontmatter where present;
 - numeric filename prefixes are omitted from fallback display titles.
@@ -109,4 +113,4 @@ During all tests confirm:
 - no editorial-store structure is created;
 - compiler output is unaffected by this PR.
 
-Compiler adoption and File Order migration remain #86. Drag-and-drop writes remain #85.
+Compiler adoption and File Order migration remain #86. Drag-and-drop writes and undo remain #85.
