@@ -18,6 +18,10 @@ import {
   buildChapterNoteSummary,
   SidebarSectionKey
 } from "./SidebarSections";
+import {
+  getChapterContextField,
+  getEditableChapterContextValue
+} from "./ChapterContext";
 
 export { VIEW_TYPE };
 
@@ -102,6 +106,10 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       frontmatter,
       (reference) => this.plugin.storyWorldIndex.resolveWikilink(reference, file.path)
     );
+    const storyDate = getEditableChapterContextValue(
+      frontmatter,
+      getChapterContextField("story_date")
+    ).value;
     const collapsible = this.createCollapsibleSection(
       container,
       "worldContext",
@@ -134,7 +142,8 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           linktext: destination,
           sourcePath: file.path
         });
-      }
+      },
+      { storyDate }
     );
   }
 

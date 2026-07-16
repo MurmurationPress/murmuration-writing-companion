@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Render authoritative Story World event times as readable British-English dates without rewriting ISO source values
+- Respect declared or evident year, month, day, hour, minute and second precision without manufacturing detail
+- Preserve written story dates, wall-clock times and offsets rather than converting through the system timezone
+- Show deterministic before, after and same-day labels from chapter `story_date` and referenced point-event dates
 - Present explicitly referenced Story World events before supporting entities in World Context
 - Keep event name, authoritative `world_time`, canon status and concise summary permanently visible
 - Present characters, organisations, locations, technologies and other supporting entities as compact linked names

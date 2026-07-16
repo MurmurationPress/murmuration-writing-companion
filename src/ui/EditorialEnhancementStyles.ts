@@ -155,9 +155,20 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
 }
 
 .mwc-world-context-time {
+  display: block;
+  margin-top: 3px;
   color: var(--text-normal);
-  font-size: 0.92em;
+  font-size: 0.84em;
   font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.mwc-world-context-relative-time {
+  margin-top: 2px;
+  color: var(--text-accent);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .mwc-world-context-status {
