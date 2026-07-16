@@ -2,12 +2,11 @@
 
 ## Unreleased
 
-- Add a dedicated read-only Manuscript navigator in Obsidian's left sidebar
-- Support both book–part–scene and direct book–scene manuscript hierarchies
-- Show scene titles rather than filename prefixes and track the active scene automatically
-- Keep POV, story date, chapter status and editorial pass secondary in hover/focus metadata
-- Open manuscript entries through ordinary Obsidian navigation without changing Markdown
-- Surface explicit-order and migration-preview diagnostics without silently repairing structure
+- Add a dedicated read-only Manuscript navigator to Obsidian's left sidebar
+- Support both book-part-scene and direct book-scene manuscript structures
+- Recognise existing Longform-style folder notes and numeric filename order during migration
+- Exclude manuscript templates from the selectable book list without configuration
+- Keep scene metadata secondary through hover and keyboard-focus tooltips
 - Define authoritative book-level `manuscript_order` as a flat Markdown wikilink sequence
 - Keep manuscript sequence separate from parent-owned containment and out of editorial storage
 - Add deterministic hierarchy, previous/next scene and structural diagnostic services
