@@ -24,6 +24,7 @@ export type ManuscriptOrderDiagnosticKind =
   | "invalid_property_shape"
   | "invalid_reference"
   | "unresolved_reference"
+  | "invalid_entry_kind"
   | "duplicate_entry"
   | "cross_book_entry"
   | "unlisted_entry"
@@ -61,6 +62,11 @@ interface ExplicitOrderRead {
   readonly diagnostics: readonly ManuscriptOrderDiagnostic[];
 }
 
+interface MutableManuscriptOrderNode {
+  readonly entry: ManuscriptDocumentRecord;
+  readonly children: MutableManuscriptOrderNode[];
+}
+
 function nonEmptyString(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -73,6 +79,10 @@ function canonicalLinkpath(value: string): string {
     .replace(/\\/g, "/")
     .replace(/^\.\//, "")
     .replace(/\.md$/i, "");
+}
+
+function isManuscriptOrderEntry(record: ManuscriptDocumentRecord): boolean {
+  return record.kind === "part" || record.kind === "scene";
 }
 
 function readExplicitOrder(
@@ -148,7 +158,7 @@ export function proposeLegacyFilenameOrder(
   const eligible = records.filter((record) => (
     record.path !== bookPath
     && record.bookPath === bookPath
-    && (record.kind === "part" || record.kind === "scene")
+    && isManuscriptOrderEntry(record)
   ));
   const byParent = new Map<string, ManuscriptDocumentRecord[]>();
 
@@ -170,6 +180,7 @@ export function proposeLegacyFilenameOrder(
         ambiguous.add(sibling.path);
         continue;
       }
+
       const existing = usedPrefixes.get(prefix);
       if (existing) {
         ambiguous.add(existing);
@@ -250,6 +261,16 @@ function resolveExplicitEntries(
       continue;
     }
 
+    if (!isManuscriptOrderEntry(entry)) {
+      diagnostics.push({
+        kind: "invalid_entry_kind",
+        reference,
+        path: entry.path,
+        message: `${entry.title} is not a recognised manuscript part or scene.`
+      });
+      continue;
+    }
+
     if (seenPaths.has(entry.path)) {
       diagnostics.push({
         kind: "duplicate_entry",
@@ -301,13 +322,14 @@ function buildTree(
   entries: readonly ManuscriptDocumentRecord[],
   diagnostics: ManuscriptOrderDiagnostic[]
 ): ManuscriptOrderNode[] {
-  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
-  const children = new Map<string, ManuscriptOrderNode[]>();
-  const roots: ManuscriptOrderNode[] = [];
-  const cycles = cyclePaths(entries);
+  const nodes = new Map<string, MutableManuscriptOrderNode>();
+  for (const entry of entries) {
+    nodes.set(entry.path, { entry, children: [] });
+  }
 
+  const cycles = cyclePaths(entries);
   for (const path of cycles) {
-    const entry = byPath.get(path);
+    const entry = nodes.get(path)?.entry;
     diagnostics.push({
       kind: "parent_cycle",
       path,
@@ -315,21 +337,18 @@ function buildTree(
     });
   }
 
+  const roots: MutableManuscriptOrderNode[] = [];
   for (const entry of entries) {
-    const node: ManuscriptOrderNode = {
-      entry,
-      children: children.get(entry.path) ?? []
-    };
-    children.set(entry.path, node.children as ManuscriptOrderNode[]);
-
+    const node = nodes.get(entry.path)!;
     const parentPath = entry.parentPath;
+
     if (!parentPath || parentPath === book.path || cycles.has(entry.path)) {
       roots.push(node);
       continue;
     }
 
-    const parent = byPath.get(parentPath);
-    if (!parent || cycles.has(parent.path)) {
+    const parent = nodes.get(parentPath);
+    if (!parent || cycles.has(parentPath)) {
       diagnostics.push({
         kind: "missing_parent",
         path: entry.path,
@@ -339,40 +358,10 @@ function buildTree(
       continue;
     }
 
-    let parentChildren = children.get(parent.path);
-    if (!parentChildren) {
-      parentChildren = [];
-      children.set(parent.path, parentChildren);
-    }
-    parentChildren.push(node);
+    parent.children.push(node);
   }
 
-  // The first pass may create a parent node before its child array is known.
-  // Rebuild once from the ordered entries so every node owns the final array.
-  const finalNodes = new Map<string, ManuscriptOrderNode>();
-  for (const entry of entries) {
-    finalNodes.set(entry.path, {
-      entry,
-      children: children.get(entry.path) ?? []
-    });
-  }
-
-  const finalRoots: ManuscriptOrderNode[] = [];
-  for (const entry of entries) {
-    const node = finalNodes.get(entry.path)!;
-    const parentPath = entry.parentPath;
-    if (
-      !parentPath
-      || parentPath === book.path
-      || cycles.has(entry.path)
-      || !finalNodes.has(parentPath)
-      || cycles.has(parentPath)
-    ) {
-      finalRoots.push(node);
-    }
-  }
-
-  return finalRoots;
+  return roots;
 }
 
 export function buildManuscriptOrder(
@@ -395,7 +384,7 @@ export function buildManuscriptOrder(
       if (
         record.path === book.path
         || record.bookPath !== book.path
-        || (record.kind !== "part" && record.kind !== "scene")
+        || !isManuscriptOrderEntry(record)
         || listed.has(record.path)
       ) continue;
 
@@ -451,19 +440,31 @@ export function nextManuscriptScene(
     : null;
 }
 
+function referenceTargetMatches(target: string, oldPath: string): boolean {
+  const canonicalTarget = canonicalLinkpath(target).toLowerCase();
+  const canonicalOldPath = canonicalLinkpath(oldPath).toLowerCase();
+  return canonicalTarget === canonicalOldPath
+    || canonicalOldPath.endsWith(`/${canonicalTarget}`);
+}
+
+function preserveReferenceDepth(target: string, newPath: string): string {
+  const targetSegments = canonicalLinkpath(target).split("/").filter(Boolean);
+  const newSegments = canonicalLinkpath(newPath).split("/").filter(Boolean);
+  if (targetSegments.length === 0 || targetSegments.length >= newSegments.length) {
+    return canonicalLinkpath(newPath);
+  }
+  return newSegments.slice(-targetSegments.length).join("/");
+}
+
 function rewriteReferenceTarget(
   reference: string,
   oldPath: string,
   newPath: string
 ): string {
   const parsed = parseWikilink(reference);
-  if (!parsed) return reference;
-  if (
-    canonicalLinkpath(parsed.linkpath).toLowerCase()
-    !== canonicalLinkpath(oldPath).toLowerCase()
-  ) return reference;
+  if (!parsed || !referenceTargetMatches(parsed.linkpath, oldPath)) return reference;
 
-  const target = canonicalLinkpath(newPath);
+  const target = preserveReferenceDepth(parsed.linkpath, newPath);
   return parsed.displayText
     ? `[[${target}|${parsed.displayText}]]`
     : `[[${target}]]`;
