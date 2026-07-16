@@ -1,4 +1,6 @@
-import { TFile } from "obsidian";
+import { TFile, WorkspaceLeaf } from "obsidian";
+import type { HoverPopover } from "obsidian";
+import type MurmurationWritingCompanionPlugin from "../main";
 import type { PageEditorialNotes } from "../editorial/EditorialNote";
 import {
   buildWorldContext,
@@ -32,10 +34,25 @@ interface CollapsibleSectionElements {
 }
 
 let nextViewInstanceId = 0;
+const registeredHoverSources = new WeakSet<MurmurationWritingCompanionPlugin>();
 
 export class WritingCompanionView extends BaseWritingCompanionView {
+  hoverPopover: HoverPopover | null = null;
+
   private readonly collapsibleSectionIdPrefix =
     `mwc-collapsible-view-${++nextViewInstanceId}`;
+
+  constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
+    super(leaf, plugin);
+
+    if (!registeredHoverSources.has(plugin)) {
+      plugin.registerHoverLinkSource(VIEW_TYPE, {
+        display: plugin.manifest.name,
+        defaultMod: false
+      });
+      registeredHoverSources.add(plugin);
+    }
+  }
 
   override render() {
     const container = this.containerEl.children[1];
@@ -112,7 +129,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         this.app.workspace.trigger("hover-link", {
           event,
           source: VIEW_TYPE,
-          hoverParent: collapsible.content,
+          hoverParent: this,
           targetEl: target,
           linktext: destination,
           sourcePath: file.path
