@@ -61,7 +61,10 @@ const prime = record(
 function resolver(records: readonly ManuscriptDocumentRecord[]) {
   const map = new Map<string, ManuscriptDocumentRecord>();
   for (const item of records) {
-    map.set(item.path.replace(/\.md$/i, "").toLowerCase(), item);
+    const withoutExtension = item.path.replace(/\.md$/i, "");
+    const relativeToManuscripts = withoutExtension.replace(/^Manuscripts\//i, "");
+    map.set(withoutExtension.toLowerCase(), item);
+    map.set(relativeToManuscripts.toLowerCase(), item);
     map.set(item.basename.toLowerCase(), item);
     map.set(item.title.toLowerCase(), item);
   }
@@ -82,13 +85,7 @@ test("resolves explicit order and derives hierarchy from parent metadata", () =>
       ]
     },
     records,
-    resolver([
-      record(experiment.path, experiment.title, experiment.kind, bookPath, bookPath, "EXPERIMENT"),
-      domestic,
-      wilderness,
-      record(containment.path, containment.title, containment.kind, bookPath, bookPath, "CONTAINMENT"),
-      prime
-    ])
+    resolver(records)
   );
 
   equal(result.source, "explicit");
@@ -163,56 +160,16 @@ test("does not hide an invalid explicit property behind legacy fallback", () => 
   equal(result.diagnostics[0]?.kind, "invalid_property_shape");
 });
 
-test("proposes a depth-first legacy order from numeric sibling prefixes", () => {
-  const legacyExperiment = record(
-    experiment.path,
-    experiment.title,
-    "part",
-    bookPath,
-    bookPath,
-    "1 EXPERIMENT"
-  );
-  const legacyContainment = record(
-    containment.path,
-    containment.title,
-    "part",
-    bookPath,
-    bookPath,
-    "2 CONTAINMENT"
-  );
-  const legacyDomestic = record(
-    domestic.path,
-    domestic.title,
-    "scene",
-    bookPath,
-    experiment.path,
-    "1 Domestic Distance"
-  );
-  const legacyWilderness = record(
-    wilderness.path,
-    wilderness.title,
-    "scene",
-    bookPath,
-    experiment.path,
-    "2 Tobias in the Wilderness"
-  );
-  const legacyPrime = record(
-    prime.path,
-    prime.title,
-    "scene",
-    bookPath,
-    containment.path,
-    "1 Prime Without Interpreter"
-  );
+test("proposes depth-first legacy order from numeric sibling prefixes", () => {
+  const legacyRecords = [
+    record(containment.path, containment.title, "part", bookPath, bookPath, "2 CONTAINMENT"),
+    record(prime.path, prime.title, "scene", bookPath, containment.path, "1 Prime Without Interpreter"),
+    record(experiment.path, experiment.title, "part", bookPath, bookPath, "1 EXPERIMENT"),
+    record(wilderness.path, wilderness.title, "scene", bookPath, experiment.path, "2 Tobias in the Wilderness"),
+    record(domestic.path, domestic.title, "scene", bookPath, experiment.path, "1 Domestic Distance")
+  ];
 
-  const proposal = proposeLegacyFilenameOrder(bookPath, [
-    legacyPrime,
-    legacyContainment,
-    legacyWilderness,
-    legacyExperiment,
-    legacyDomestic
-  ]);
-
+  const proposal = proposeLegacyFilenameOrder(bookPath, legacyRecords);
   deepEqual(proposal.entries.map((entry) => entry.title), [
     "EXPERIMENT",
     "Domestic Distance",
@@ -224,36 +181,10 @@ test("proposes a depth-first legacy order from numeric sibling prefixes", () => 
 });
 
 test("marks missing and duplicate numeric prefixes as migration ambiguities", () => {
-  const first = record(
-    domestic.path,
-    domestic.title,
-    "scene",
-    bookPath,
-    bookPath,
-    "1 Domestic Distance"
-  );
-  const duplicate = record(
-    wilderness.path,
-    wilderness.title,
-    "scene",
-    bookPath,
-    bookPath,
-    "1 Tobias in the Wilderness"
-  );
-  const unnumbered = record(
-    prime.path,
-    prime.title,
-    "scene",
-    bookPath,
-    bookPath,
-    "Prime Without Interpreter"
-  );
-
-  const proposal = proposeLegacyFilenameOrder(bookPath, [
-    unnumbered,
-    duplicate,
-    first
-  ]);
+  const first = record(domestic.path, domestic.title, "scene", bookPath, bookPath, "1 Domestic Distance");
+  const duplicate = record(wilderness.path, wilderness.title, "scene", bookPath, bookPath, "1 Tobias in the Wilderness");
+  const unnumbered = record(prime.path, prime.title, "scene", bookPath, bookPath, "Prime Without Interpreter");
+  const proposal = proposeLegacyFilenameOrder(bookPath, [unnumbered, duplicate, first]);
 
   deepEqual(new Set(proposal.ambiguousPaths), new Set([
     first.path,
@@ -286,27 +217,9 @@ test("finds previous and next scenes across part boundaries", () => {
 });
 
 test("reports parent cycles and missing listed parents without dropping scenes", () => {
-  const partA = record(
-    "Manuscripts/Parts/A.md",
-    "A",
-    "part",
-    bookPath,
-    "Manuscripts/Parts/B.md"
-  );
-  const partB = record(
-    "Manuscripts/Parts/B.md",
-    "B",
-    "part",
-    bookPath,
-    partA.path
-  );
-  const orphan = record(
-    "Manuscripts/Scenes/Orphan.md",
-    "Orphan",
-    "scene",
-    bookPath,
-    "Manuscripts/Parts/Unlisted.md"
-  );
+  const partA = record("Manuscripts/Parts/A.md", "A", "part", bookPath, "Manuscripts/Parts/B.md");
+  const partB = record("Manuscripts/Parts/B.md", "B", "part", bookPath, partA.path);
+  const orphan = record("Manuscripts/Scenes/Orphan.md", "Orphan", "scene", bookPath, "Manuscripts/Parts/Unlisted.md");
   const records = [book, partA, partB, orphan];
   const result = buildManuscriptOrder(
     book,
