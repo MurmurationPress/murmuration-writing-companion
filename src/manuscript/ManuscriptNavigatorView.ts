@@ -117,7 +117,7 @@ export class ManuscriptNavigatorView extends ItemView {
     container.addClass("mwc-manuscript-navigator");
 
     const library = buildObsidianManuscriptLibrary(this.app);
-    const activeFile = this.plugin.getActiveChapter();
+    const activeFile = this.plugin.getCurrentChapter();
     const activePath = activeFile?.path ?? null;
     const activeBookPath = activeFile
       ? library.owningBookPathByFile.get(activeFile.path) ?? null
@@ -221,6 +221,10 @@ export class ManuscriptNavigatorView extends ItemView {
   ) {
     const allCollapsed = partPaths.every((path) => this.collapsedParts.has(path));
     const controls = container.createDiv("mwc-manuscript-controls");
+    controls.style.display = "flex";
+    controls.style.justifyContent = "flex-end";
+    controls.style.margin = "0 4px 6px";
+
     const toggle = controls.createEl("button", {
       cls: "mwc-manuscript-collapse-all",
       text: allCollapsed ? "Expand all" : "Collapse all",
@@ -231,6 +235,12 @@ export class ManuscriptNavigatorView extends ItemView {
           : "Collapse all manuscript parts"
       }
     });
+    toggle.style.padding = "2px 6px";
+    toggle.style.border = "0";
+    toggle.style.background = "transparent";
+    toggle.style.color = "var(--text-muted)";
+    toggle.style.fontSize = "0.78em";
+    toggle.style.cursor = "pointer";
 
     toggle.onclick = () => {
       if (allCollapsed) {
@@ -336,6 +346,12 @@ export class ManuscriptNavigatorView extends ItemView {
         : "mwc-manuscript-row"
     );
     const label = this.createOpenButton(row, node.entry, book, isActive);
+    if (isActive) {
+      row.style.background = "var(--interactive-accent)";
+      row.style.boxShadow = "inset 3px 0 0 var(--text-on-accent)";
+      label.style.color = "var(--text-on-accent)";
+      label.style.fontWeight = "650";
+    }
     this.renderMetadataTooltip(row, label, book, node.entry);
     return isActive ? row : null;
   }
