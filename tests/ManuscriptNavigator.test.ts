@@ -10,6 +10,11 @@ import {
   manuscriptDisplayTitle,
   manuscriptSceneMetadata
 } from "../src/manuscript/ManuscriptMetadata";
+import {
+  findLegacyOwningBookPath,
+  findLegacyParentPath,
+  isTemplateManuscriptPath
+} from "../src/manuscript/LegacyManuscriptHierarchy";
 
 function record(
   path: string,
@@ -77,6 +82,7 @@ test("recognises explicit book, part and scene vocabulary", () => {
   equal(explicitManuscriptKind({ type: "book" }), "book");
   equal(explicitManuscriptKind({ manuscript_type: "part" }), "part");
   equal(explicitManuscriptKind({ document_type: "chapter" }), "scene");
+  equal(explicitManuscriptKind({ type: "scene", book: 2, Part: 1 }), "scene");
   equal(explicitManuscriptKind({ type: "research" }), null);
 });
 
@@ -129,4 +135,39 @@ test("formats valid ISO story dates without shifting calendar day", () => {
   equal(formatNavigatorStoryDate("Spring 2029"), "Spring 2029");
   equal(formatNavigatorStoryDate("2026-02-30"), "2026-02-30");
   equal(formatNavigatorStoryDate(null), null);
+});
+
+test("derives existing Longform-style book, part and scene hierarchy from folder notes", () => {
+  const bookPath = "PRIME Trilogy/BOOK 2 - PLURALITY.md";
+  const bookFolder = "PRIME Trilogy/BOOK 2 - PLURALITY";
+  const partPath = `${bookFolder}/1 ABSENCE.md`;
+  const partFolder = `${bookFolder}/1 ABSENCE`;
+  const directScenePath = `${bookFolder}/0 Prologue.md`;
+  const nestedScenePath = `${partFolder}/11 Convergence.md`;
+  const books = [{ bookPath, folderPath: bookFolder }];
+  const folderNotes = new Map([
+    [bookFolder, bookPath],
+    [partFolder, partPath]
+  ]);
+
+  equal(findLegacyOwningBookPath(nestedScenePath, books), bookPath);
+  equal(findLegacyOwningBookPath(directScenePath, books), bookPath);
+  equal(
+    findLegacyParentPath(partPath, bookPath, bookFolder, folderNotes),
+    bookPath
+  );
+  equal(
+    findLegacyParentPath(directScenePath, bookPath, bookFolder, folderNotes),
+    bookPath
+  );
+  equal(
+    findLegacyParentPath(nestedScenePath, bookPath, bookFolder, folderNotes),
+    partPath
+  );
+});
+
+test("excludes manuscript templates from book selection without configuration", () => {
+  equal(isTemplateManuscriptPath("Templates/Codex Press/Book.md"), true);
+  equal(isTemplateManuscriptPath("PRIME Trilogy/Templates/Book Template.md"), true);
+  equal(isTemplateManuscriptPath("PRIME Trilogy/BOOK 2 - PLURALITY.md"), false);
 });
