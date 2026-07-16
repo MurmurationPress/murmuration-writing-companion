@@ -60,10 +60,23 @@ function nodeContainsPath(node: ManuscriptOrderNode, path: string | null): boole
   return node.children.some((child) => nodeContainsPath(child, path));
 }
 
+function collectPartPaths(nodes: readonly ManuscriptOrderNode[]): string[] {
+  const paths: string[] = [];
+
+  const visit = (node: ManuscriptOrderNode) => {
+    if (node.entry.kind === "part") paths.push(node.entry.path);
+    for (const child of node.children) visit(child);
+  };
+
+  for (const node of nodes) visit(node);
+  return paths;
+}
+
 export class ManuscriptNavigatorView extends ItemView {
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
   private selectedBookPath: string | null = null;
+  private suppressedActiveRevealPath: string | null = null;
   private readonly preferenceKey: string;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
@@ -105,9 +118,17 @@ export class ManuscriptNavigatorView extends ItemView {
 
     const library = buildObsidianManuscriptLibrary(this.app);
     const activeFile = this.plugin.getActiveChapter();
+    const activePath = activeFile?.path ?? null;
     const activeBookPath = activeFile
       ? library.owningBookPathByFile.get(activeFile.path) ?? null
       : null;
+
+    if (
+      this.suppressedActiveRevealPath
+      && this.suppressedActiveRevealPath !== activePath
+    ) {
+      this.suppressedActiveRevealPath = null;
+    }
 
     if (activeBookPath) this.setSelectedBookPath(activeBookPath);
 
@@ -140,6 +161,7 @@ export class ManuscriptNavigatorView extends ItemView {
       selector.value = selected?.file.path ?? "";
       selector.onchange = () => {
         this.setSelectedBookPath(selector.value);
+        this.suppressedActiveRevealPath = null;
         this.render();
       };
     } else if (selected) {
@@ -161,6 +183,11 @@ export class ManuscriptNavigatorView extends ItemView {
       });
       this.renderDiagnostics(container, selected);
       return;
+    }
+
+    const partPaths = collectPartPaths(selected.result.roots);
+    if (partPaths.length > 0) {
+      this.renderTreeControls(container, partPaths, activePath);
     }
 
     const tree = container.createDiv({
@@ -185,6 +212,36 @@ export class ManuscriptNavigatorView extends ItemView {
         activeRow.scrollIntoView({ block: "nearest" });
       }, 0);
     }
+  }
+
+  private renderTreeControls(
+    container: HTMLElement,
+    partPaths: readonly string[],
+    activePath: string | null
+  ) {
+    const allCollapsed = partPaths.every((path) => this.collapsedParts.has(path));
+    const controls = container.createDiv("mwc-manuscript-controls");
+    const toggle = controls.createEl("button", {
+      cls: "mwc-manuscript-collapse-all",
+      text: allCollapsed ? "Expand all" : "Collapse all",
+      attr: {
+        type: "button",
+        "aria-label": allCollapsed
+          ? "Expand all manuscript parts"
+          : "Collapse all manuscript parts"
+      }
+    });
+
+    toggle.onclick = () => {
+      if (allCollapsed) {
+        for (const path of partPaths) this.collapsedParts.delete(path);
+        this.suppressedActiveRevealPath = null;
+      } else {
+        for (const path of partPaths) this.collapsedParts.add(path);
+        this.suppressedActiveRevealPath = activePath;
+      }
+      this.render();
+    };
   }
 
   private renderSourceNotice(
@@ -219,14 +276,18 @@ export class ManuscriptNavigatorView extends ItemView {
         : "mwc-manuscript-node mwc-manuscript-node--scene",
       attr: {
         role: "treeitem",
-        "aria-level": String(depth + 1)
+        "aria-level": String(depth + 1),
+        "aria-selected": String(isActive)
       }
     });
     wrapper.style.setProperty("--mwc-manuscript-depth", String(depth));
 
     if (isPart) {
-      const containsActive = nodeContainsPath(node, activeFile?.path ?? null);
-      const collapsed = this.collapsedParts.has(node.entry.path) && !containsActive;
+      const activePath = activeFile?.path ?? null;
+      const containsActive = nodeContainsPath(node, activePath);
+      const revealActive = containsActive
+        && this.suppressedActiveRevealPath !== activePath;
+      const collapsed = this.collapsedParts.has(node.entry.path) && !revealActive;
       wrapper.setAttribute("aria-expanded", String(!collapsed));
       const row = wrapper.createDiv("mwc-manuscript-row mwc-manuscript-row--part");
       const disclosure = row.createEl("button", {
@@ -242,8 +303,10 @@ export class ManuscriptNavigatorView extends ItemView {
         event.stopPropagation();
         if (this.collapsedParts.has(node.entry.path)) {
           this.collapsedParts.delete(node.entry.path);
+          if (containsActive) this.suppressedActiveRevealPath = null;
         } else {
           this.collapsedParts.add(node.entry.path);
+          if (containsActive) this.suppressedActiveRevealPath = activePath;
         }
         this.render();
       };
