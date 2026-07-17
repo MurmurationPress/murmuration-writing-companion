@@ -63,6 +63,7 @@ export interface ManuscriptPreparationInput {
   readonly explicitBookPathByPath: ReadonlyMap<string, string | null>;
   readonly parentReferencesByPath: ReadonlyMap<string, readonly string[]>;
   readonly bookReferencesByPath: ReadonlyMap<string, readonly string[]>;
+  readonly missingLegacyParentFolderByPath: ReadonlyMap<string, string | null>;
 }
 
 function cloneValue<T>(value: T): T {
@@ -129,6 +130,8 @@ function plannedFile(
   const explicitBookPath = input.explicitBookPathByPath.get(record.path) ?? null;
   const parentReferences = input.parentReferencesByPath.get(record.path) ?? [];
   const bookReferences = input.bookReferencesByPath.get(record.path) ?? [];
+  const missingLegacyParentFolder = input.missingLegacyParentFolderByPath
+    .get(record.path) ?? null;
   const changes: ManuscriptPreparationChange[] = [];
   const remove = new Set<string>();
   const set: Record<string, unknown> = {};
@@ -161,6 +164,13 @@ function plannedFile(
     diagnostics.push({
       path: record.path,
       message: `${record.title}'s explicit book conflicts with the selected manuscript.`
+    });
+  }
+
+  if (expectedKind !== "book" && missingLegacyParentFolder) {
+    diagnostics.push({
+      path: record.path,
+      message: `${record.title} is inside ${missingLegacyParentFolder}, which has no recognised folder note. Add the missing part note or set an explicit parent before preparation.`
     });
   }
 
