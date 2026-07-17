@@ -38,7 +38,8 @@ export function manuscriptOrderKey(value: unknown): string | null {
 }
 
 export function compareManuscriptOrderKeys(left: string, right: string): number {
-  return left.localeCompare(right, "en", { sensitivity: "case" });
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
 }
 
 export function manuscriptOrderKeyBetween(
