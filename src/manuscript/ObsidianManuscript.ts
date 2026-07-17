@@ -29,6 +29,9 @@ interface RawManuscriptFile {
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly parentPath: string | null;
   readonly explicitParentPath: string | null;
+  readonly resolvedExplicitBookPath: string | null;
+  readonly parentReferences: readonly string[];
+  readonly bookReferences: readonly string[];
   readonly explicitBookPath: string | null;
 }
 
@@ -38,6 +41,8 @@ interface PreliminaryManuscriptFile {
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly explicitParentPath: string | null;
   readonly explicitBookPath: string | null;
+  readonly parentReferences: readonly string[];
+  readonly bookReferences: readonly string[];
   readonly associatedFolderPath: string | null;
 }
 
@@ -53,6 +58,9 @@ export interface ObsidianManuscriptBook {
   >;
   readonly explicitKindByPath: ReadonlyMap<string, ManuscriptEntryKind | null>;
   readonly explicitParentPathByPath: ReadonlyMap<string, string | null>;
+  readonly explicitBookPathByPath: ReadonlyMap<string, string | null>;
+  readonly parentReferencesByPath: ReadonlyMap<string, readonly string[]>;
+  readonly bookReferencesByPath: ReadonlyMap<string, readonly string[]>;
 }
 
 export interface ObsidianManuscriptLibrary {
@@ -112,6 +120,8 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       explicitKind: explicitManuscriptKind(frontmatter),
       explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
+      parentReferences: hierarchy.parentReferences,
+      bookReferences: hierarchy.bookReferences,
       associatedFolderPath: associatedFolderPath(app, file)
     });
   }
@@ -164,6 +174,9 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       explicitKind: candidate.explicitKind,
       parentPath: candidate.explicitParentPath ?? legacyParentPath,
       explicitParentPath: candidate.explicitParentPath,
+      resolvedExplicitBookPath: candidate.explicitBookPath,
+      parentReferences: candidate.parentReferences,
+      bookReferences: candidate.bookReferences,
       explicitBookPath: candidate.explicitBookPath ?? legacyBookPath
     });
   }
@@ -278,6 +291,9 @@ function buildBook(
   >();
   const explicitKindByPath = new Map<string, ManuscriptEntryKind | null>();
   const explicitParentPathByPath = new Map<string, string | null>();
+  const explicitBookPathByPath = new Map<string, string | null>();
+  const parentReferencesByPath = new Map<string, readonly string[]>();
+  const bookReferencesByPath = new Map<string, readonly string[]>();
 
   for (const candidate of ownedRaw) {
     if (!recordsByPath.has(candidate.file.path)) continue;
@@ -291,6 +307,18 @@ function buildBook(
     explicitParentPathByPath.set(
       candidate.file.path,
       candidate.explicitParentPath
+    );
+    explicitBookPathByPath.set(
+      candidate.file.path,
+      candidate.resolvedExplicitBookPath
+    );
+    parentReferencesByPath.set(
+      candidate.file.path,
+      candidate.parentReferences
+    );
+    bookReferencesByPath.set(
+      candidate.file.path,
+      candidate.bookReferences
     );
   }
 
@@ -322,7 +350,10 @@ function buildBook(
     metadataByPath,
     frontmatterByPath,
     explicitKindByPath,
-    explicitParentPathByPath
+    explicitParentPathByPath,
+    explicitBookPathByPath,
+    parentReferencesByPath,
+    bookReferencesByPath
   };
 }
 
