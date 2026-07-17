@@ -117,7 +117,8 @@ test("migrates a valid legacy array into independent sibling keys", () => {
   ));
   equal(sceneKeys.every(Boolean), true);
   equal(compareManuscriptOrderKeys(sceneKeys[0]!, sceneKeys[1]!), -1);
-  equal(rootKeys.includes(sceneKeys[0]), false);
+  equal(rootKeys[0], sceneKeys[0]);
+  equal(rootKeys[1], sceneKeys[1]);
 });
 
 test("canonicalises type and parent without touching reporting fields", () => {
