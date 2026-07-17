@@ -20,7 +20,8 @@ import {
   findLegacyParentPath,
   isTemplateManuscriptPath,
   LegacyBookFolder,
-  normalizeVaultPath
+  normalizeVaultPath,
+  parentVaultPath
 } from "./LegacyManuscriptHierarchy";
 
 interface RawManuscriptFile {
@@ -32,6 +33,7 @@ interface RawManuscriptFile {
   readonly resolvedExplicitBookPath: string | null;
   readonly parentReferences: readonly string[];
   readonly bookReferences: readonly string[];
+  readonly missingLegacyParentFolder: string | null;
   readonly explicitBookPath: string | null;
 }
 
@@ -61,6 +63,7 @@ export interface ObsidianManuscriptBook {
   readonly explicitBookPathByPath: ReadonlyMap<string, string | null>;
   readonly parentReferencesByPath: ReadonlyMap<string, readonly string[]>;
   readonly bookReferencesByPath: ReadonlyMap<string, readonly string[]>;
+  readonly missingLegacyParentFolderByPath: ReadonlyMap<string, string | null>;
 }
 
 export interface ObsidianManuscriptLibrary {
@@ -167,6 +170,16 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
         folderNotePathByFolder
       )
       : null;
+    const physicalParentFolder = parentVaultPath(candidate.file.path);
+    const missingLegacyParentFolder = (
+      legacyBook
+      && !candidate.explicitParentPath
+      && legacyParentPath === legacyBook.bookPath
+      && normalizeVaultPath(physicalParentFolder)
+        !== normalizeVaultPath(legacyBook.folderPath)
+    )
+      ? physicalParentFolder
+      : null;
 
     result.set(candidate.file.path, {
       file: candidate.file,
@@ -177,6 +190,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       resolvedExplicitBookPath: candidate.explicitBookPath,
       parentReferences: candidate.parentReferences,
       bookReferences: candidate.bookReferences,
+      missingLegacyParentFolder,
       explicitBookPath: candidate.explicitBookPath ?? legacyBookPath
     });
   }
@@ -294,6 +308,7 @@ function buildBook(
   const explicitBookPathByPath = new Map<string, string | null>();
   const parentReferencesByPath = new Map<string, readonly string[]>();
   const bookReferencesByPath = new Map<string, readonly string[]>();
+  const missingLegacyParentFolderByPath = new Map<string, string | null>();
 
   for (const candidate of ownedRaw) {
     if (!recordsByPath.has(candidate.file.path)) continue;
@@ -319,6 +334,10 @@ function buildBook(
     bookReferencesByPath.set(
       candidate.file.path,
       candidate.bookReferences
+    );
+    missingLegacyParentFolderByPath.set(
+      candidate.file.path,
+      candidate.missingLegacyParentFolder
     );
   }
 
@@ -353,7 +372,8 @@ function buildBook(
     explicitParentPathByPath,
     explicitBookPathByPath,
     parentReferencesByPath,
-    bookReferencesByPath
+    bookReferencesByPath,
+    missingLegacyParentFolderByPath
   };
 }
 
