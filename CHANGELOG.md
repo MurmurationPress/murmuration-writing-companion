@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add a previewed **Prepare existing manuscript** action to the Manuscript navigator
+- Canonicalise prepared book, part and scene metadata to stable `type`, `parent` and `manuscript_order` properties
+- Preserve unrelated frontmatter, legacy reporting properties, filenames, folders and prose during preparation
+- Apply preparation as one multi-file transaction with automatic rollback and stale-aware explicit Undo
+- Document one reusable Base ancestry-and-sequence formula for editorial reporting across prepared books
 - Add drag-and-drop scene and part reordering to the Manuscript navigator
 - Adopt reviewed filename order as authoritative `manuscript_order` only after explicit confirmation
 - Update a scene's authoritative parent only when a move changes containment
