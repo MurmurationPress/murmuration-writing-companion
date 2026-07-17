@@ -104,7 +104,8 @@ export function planObsidianManuscriptPreparation(
     explicitParentPathByPath: book.explicitParentPathByPath,
     explicitBookPathByPath: book.explicitBookPathByPath,
     parentReferencesByPath: book.parentReferencesByPath,
-    bookReferencesByPath: book.bookReferencesByPath
+    bookReferencesByPath: book.bookReferencesByPath,
+    missingLegacyParentFolderByPath: book.missingLegacyParentFolderByPath
   });
 }
 
