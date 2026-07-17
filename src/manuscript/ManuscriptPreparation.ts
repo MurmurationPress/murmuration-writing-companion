@@ -2,10 +2,7 @@ import {
   MANUSCRIPT_PARENT_ALIASES,
   normalizeBookPropertyName
 } from "../editorial/BookReview";
-import {
-  explicitManuscriptKind,
-  MANUSCRIPT_TYPE_ALIASES
-} from "./ManuscriptMetadata";
+import { MANUSCRIPT_TYPE_ALIASES } from "./ManuscriptMetadata";
 import {
   MANUSCRIPT_ORDER_PROPERTY,
   ManuscriptDocumentRecord,
@@ -63,6 +60,9 @@ export interface ManuscriptPreparationInput {
   >;
   readonly explicitKindByPath: ReadonlyMap<string, ManuscriptEntryKind | null>;
   readonly explicitParentPathByPath: ReadonlyMap<string, string | null>;
+  readonly explicitBookPathByPath: ReadonlyMap<string, string | null>;
+  readonly parentReferencesByPath: ReadonlyMap<string, readonly string[]>;
+  readonly bookReferencesByPath: ReadonlyMap<string, readonly string[]>;
 }
 
 function cloneValue<T>(value: T): T {
@@ -126,6 +126,9 @@ function plannedFile(
   const frontmatter = cloneValue(input.frontmatterByPath.get(record.path) ?? {});
   const explicitKind = input.explicitKindByPath.get(record.path) ?? null;
   const explicitParentPath = input.explicitParentPathByPath.get(record.path) ?? null;
+  const explicitBookPath = input.explicitBookPathByPath.get(record.path) ?? null;
+  const parentReferences = input.parentReferencesByPath.get(record.path) ?? [];
+  const bookReferences = input.bookReferencesByPath.get(record.path) ?? [];
   const changes: ManuscriptPreparationChange[] = [];
   const remove = new Set<string>();
   const set: Record<string, unknown> = {};
@@ -134,6 +137,30 @@ function plannedFile(
     diagnostics.push({
       path: record.path,
       message: `${record.title} is explicitly classified as ${explicitKind}; expected ${expectedKind}.`
+    });
+  }
+
+  if (parentReferences.length > 0 && !explicitParentPath) {
+    diagnostics.push({
+      path: record.path,
+      message: `${record.title}'s explicit parent could not be resolved: ${parentReferences[0]}`
+    });
+  }
+
+  if (bookReferences.length > 0 && !explicitBookPath) {
+    diagnostics.push({
+      path: record.path,
+      message: `${record.title}'s explicit book could not be resolved: ${bookReferences[0]}`
+    });
+  }
+
+  if (
+    explicitBookPath
+    && normalizedPath(explicitBookPath) !== normalizedPath(input.book.path)
+  ) {
+    diagnostics.push({
+      path: record.path,
+      message: `${record.title}'s explicit book conflicts with the selected manuscript.`
     });
   }
 
@@ -298,10 +325,4 @@ export function describePreparationValue(value: unknown): string {
       .join(", ");
   }
   return String(value);
-}
-
-export function inferredExplicitKind(
-  frontmatter: Record<string, unknown> | undefined
-): ManuscriptEntryKind | null {
-  return explicitManuscriptKind(frontmatter);
 }
