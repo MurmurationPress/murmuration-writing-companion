@@ -3,10 +3,10 @@
   "version": "0.13.0",
   "private": true,
   "scripts": {
-    "dev": "esbuild src/main.ts --bundle --external:obsidian --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",
+    "dev": "esbuild src/entry.ts --bundle --external:obsidian --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",
     "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs",
     "test:watch": "node scripts/run-tests.mjs --watch",
-    "build": "tsc -noEmit -skipLibCheck && esbuild src/main.ts --bundle --external:obsidian --format=cjs --target=es2018 --outfile=main.js",
+    "build": "tsc -noEmit -skipLibCheck && esbuild src/entry.ts --bundle --external:obsidian --format=cjs --target=es2018 --outfile=main.js",
     "release:check": "node scripts/verify-release.mjs"
   },
   "devDependencies": {
