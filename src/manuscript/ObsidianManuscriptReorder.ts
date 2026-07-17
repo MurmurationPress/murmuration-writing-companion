@@ -1,13 +1,13 @@
-import { App, TFile } from "obsidian";
+import { App, parseYaml, TFile } from "obsidian";
 import {
   MANUSCRIPT_PARENT_ALIASES,
   normalizeBookPropertyName
 } from "../editorial/BookReview";
 import { buildObsidianManuscriptLibrary } from "./ObsidianManuscript";
-import { MANUSCRIPT_ORDER_PROPERTY } from "./ManuscriptOrder";
+import { MANUSCRIPT_ORDER_KEY_PROPERTY, manuscriptOrderKey } from "./ManuscriptOrderKey";
 import {
-  manuscriptOrderReferences,
   ManuscriptMoveProposal,
+  planDistributedManuscriptMoveWrites,
   sameManuscriptStructure
 } from "./ManuscriptReorder";
 
@@ -15,17 +15,14 @@ interface PropertySnapshot {
   readonly values: Readonly<Record<string, unknown>>;
 }
 
-interface ParentUndoState {
+interface FileUndoState {
   readonly file: TFile;
   readonly before: PropertySnapshot;
   readonly after: PropertySnapshot;
 }
 
 export interface ManuscriptReorderUndoToken {
-  readonly book: TFile;
-  readonly orderBefore: PropertySnapshot;
-  readonly orderAfter: PropertySnapshot;
-  readonly parent: ParentUndoState | null;
+  readonly states: readonly FileUndoState[];
   readonly message: string;
 }
 
@@ -43,6 +40,13 @@ export class StaleManuscriptUndoError extends Error {
   }
 }
 
+export class ManuscriptSyncConflictError extends Error {
+  constructor(path: string) {
+    super(`Resolve sync or Git conflict markers before changing manuscript structure: ${path}`);
+    this.name = "ManuscriptSyncConflictError";
+  }
+}
+
 function cloneValue<T>(value: T): T {
   if (value === undefined || value === null) return value;
   return JSON.parse(JSON.stringify(value)) as T;
@@ -52,9 +56,14 @@ function normalizedAliasSet(aliases: readonly string[]): Set<string> {
   return new Set(aliases.map(normalizeBookPropertyName));
 }
 
+const STRUCTURE_ALIASES = [
+  ...MANUSCRIPT_PARENT_ALIASES,
+  MANUSCRIPT_ORDER_KEY_PROPERTY
+] as const;
+
 function captureProperties(
   frontmatter: Record<string, unknown>,
-  aliases: readonly string[]
+  aliases: readonly string[] = STRUCTURE_ALIASES
 ): PropertySnapshot {
   const normalized = normalizedAliasSet(aliases);
   const values: Record<string, unknown> = {};
@@ -65,73 +74,111 @@ function captureProperties(
       values[property] = cloneValue(value);
     }
   }
-
   return { values };
 }
 
 function replaceProperties(
   frontmatter: Record<string, unknown>,
-  aliases: readonly string[],
-  snapshot: PropertySnapshot
+  snapshot: PropertySnapshot,
+  aliases: readonly string[] = STRUCTURE_ALIASES
 ) {
   const normalized = normalizedAliasSet(aliases);
-
   for (const property of Object.keys(frontmatter)) {
     if (property === "position") continue;
     if (normalized.has(normalizeBookPropertyName(property))) {
       delete frontmatter[property];
     }
   }
-
   for (const [property, value] of Object.entries(snapshot.values)) {
     frontmatter[property] = cloneValue(value);
   }
 }
 
-function snapshotsEqual(left: PropertySnapshot, right: PropertySnapshot): boolean {
-  const ordered = (snapshot: PropertySnapshot) => Object.fromEntries(
-    Object.entries(snapshot.values).sort(([leftKey], [rightKey]) => (
-      leftKey.localeCompare(rightKey)
-    ))
+function orderedSnapshot(snapshot: PropertySnapshot): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(snapshot.values).sort(([left], [right]) => left.localeCompare(right))
   );
-  return JSON.stringify(ordered(left)) === JSON.stringify(ordered(right));
 }
 
-function assertSnapshot(
-  frontmatter: Record<string, unknown>,
-  aliases: readonly string[],
-  expected: PropertySnapshot
-) {
-  if (!snapshotsEqual(captureProperties(frontmatter, aliases), expected)) {
-    throw new StaleManuscriptUndoError();
-  }
+function snapshotsEqual(left: PropertySnapshot, right: PropertySnapshot): boolean {
+  return JSON.stringify(orderedSnapshot(left)) === JSON.stringify(orderedSnapshot(right));
 }
 
 function manuscriptReference(path: string): string {
   return `[[${path.replace(/\.md$/i, "")}]]`;
 }
 
-function setParentReference(
+function setCanonicalParent(
   frontmatter: Record<string, unknown>,
   parentPath: string
 ) {
   const normalized = normalizedAliasSet(MANUSCRIPT_PARENT_ALIASES);
-  const existing = Object.keys(frontmatter).find((property) => (
-    property !== "position"
-    && normalized.has(normalizeBookPropertyName(property))
-  ));
-  const property = existing ?? "parent";
-
-  for (const candidate of Object.keys(frontmatter)) {
-    if (candidate === property || candidate === "position") continue;
-    if (normalized.has(normalizeBookPropertyName(candidate))) {
-      delete frontmatter[candidate];
-    }
+  for (const property of Object.keys(frontmatter)) {
+    if (property === "position") continue;
+    if (normalized.has(normalizeBookPropertyName(property))) delete frontmatter[property];
   }
-  frontmatter[property] = manuscriptReference(parentPath);
+  frontmatter.parent = manuscriptReference(parentPath);
 }
 
-const ORDER_ALIASES = [MANUSCRIPT_ORDER_PROPERTY] as const;
+function setOrderKey(frontmatter: Record<string, unknown>, orderKey: string) {
+  for (const property of Object.keys(frontmatter)) {
+    if (
+      property !== "position"
+      && normalizeBookPropertyName(property)
+        === normalizeBookPropertyName(MANUSCRIPT_ORDER_KEY_PROPERTY)
+    ) {
+      delete frontmatter[property];
+    }
+  }
+  frontmatter[MANUSCRIPT_ORDER_KEY_PROPERTY] = orderKey;
+}
+
+function hasConflictMarkers(content: string): boolean {
+  return /^(?:<{7}|={7}|>{7})(?:\s|$)/m.test(content);
+}
+
+async function assertNoConflictMarkers(app: App, file: TFile): Promise<void> {
+  const content = await app.vault.read(file);
+  if (hasConflictMarkers(content)) throw new ManuscriptSyncConflictError(file.path);
+}
+
+function frontmatterFromMarkdown(content: string): Record<string, unknown> {
+  const match = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---(?:\s*\r?\n|$)/);
+  if (!match) return {};
+  const parsed = parseYaml(match[1]);
+  return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : {};
+}
+
+async function verifyWrittenSnapshot(
+  app: App,
+  file: TFile,
+  expected: PropertySnapshot
+): Promise<void> {
+  const content = await app.vault.read(file);
+  if (hasConflictMarkers(content)) throw new ManuscriptSyncConflictError(file.path);
+  const actual = captureProperties(frontmatterFromMarkdown(content));
+  if (!snapshotsEqual(actual, expected)) {
+    throw new Error(`Could not verify manuscript structure after writing ${file.path}.`);
+  }
+}
+
+async function rollbackStates(app: App, states: readonly FileUndoState[]): Promise<void> {
+  for (const state of [...states].reverse()) {
+    try {
+      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+        const current = captureProperties(frontmatter);
+        if (snapshotsEqual(current, state.after)) {
+          replaceProperties(frontmatter, state.before);
+        }
+      });
+      await verifyWrittenSnapshot(app, state.file, state.before);
+    } catch {
+      // A later edit is never overwritten while recovering from a failed transaction.
+    }
+  }
+}
 
 export async function applyManuscriptReorder(
   app: App,
@@ -146,72 +193,62 @@ export async function applyManuscriptReorder(
   ));
   if (
     !currentBook
+    || currentBook.result.source !== "distributed"
     || !sameManuscriptStructure(currentBook.result.entries, proposal.beforeEntries)
   ) {
     throw new StaleManuscriptMoveError();
   }
 
-  const references = manuscriptOrderReferences(proposal.entries);
-  let orderBefore: PropertySnapshot | null = null;
-  let orderAfter: PropertySnapshot | null = null;
+  const writePlan = planDistributedManuscriptMoveWrites(book.path, proposal);
+  if (!writePlan.valid) throw new Error(writePlan.message);
 
-  await app.fileManager.processFrontMatter(book, (frontmatter) => {
-    orderBefore = captureProperties(frontmatter, ORDER_ALIASES);
-    frontmatter[MANUSCRIPT_ORDER_PROPERTY] = references;
-    orderAfter = captureProperties(frontmatter, ORDER_ALIASES);
-  });
+  const currentByPath = new Map(
+    currentBook.result.entries.map((entry) => [entry.path, entry])
+  );
+  const states: FileUndoState[] = [];
 
-  if (!orderBefore || !orderAfter) {
-    throw new Error("Could not capture the manuscript order transaction.");
-  }
+  try {
+    for (const change of writePlan.changes) {
+      const file = currentBook.filesByPath.get(change.path) ?? filesByPath.get(change.path);
+      const currentEntry = currentByPath.get(change.path);
+      if (!file || !currentEntry) throw new StaleManuscriptMoveError();
 
-  let parentState: ParentUndoState | null = null;
-  if (proposal.parentChange) {
-    const movedFile = currentBook.filesByPath.get(proposal.parentChange.path)
-      ?? filesByPath.get(proposal.parentChange.path);
-    if (!movedFile || !proposal.parentChange.afterParentPath) {
-      await app.fileManager.processFrontMatter(book, (frontmatter) => {
-        replaceProperties(frontmatter, ORDER_ALIASES, orderBefore!);
-      });
-      throw new Error("Could not resolve the moved manuscript entry.");
-    }
+      await assertNoConflictMarkers(app, file);
+      const version = { mtime: file.stat.mtime, size: file.stat.size };
+      let before: PropertySnapshot | null = null;
+      let after: PropertySnapshot | null = null;
 
-    try {
-      let parentBefore: PropertySnapshot | null = null;
-      let parentAfter: PropertySnapshot | null = null;
-
-      await app.fileManager.processFrontMatter(movedFile, (frontmatter) => {
-        parentBefore = captureProperties(frontmatter, MANUSCRIPT_PARENT_ALIASES);
-        setParentReference(frontmatter, proposal.parentChange!.afterParentPath!);
-        parentAfter = captureProperties(frontmatter, MANUSCRIPT_PARENT_ALIASES);
-      });
-
-      if (!parentBefore || !parentAfter) {
-        throw new Error("Could not capture the manuscript parent transaction.");
-      }
-
-      parentState = {
-        file: movedFile,
-        before: parentBefore,
-        after: parentAfter
-      };
-    } catch (error) {
-      await app.fileManager.processFrontMatter(book, (frontmatter) => {
-        const current = captureProperties(frontmatter, ORDER_ALIASES);
-        if (snapshotsEqual(current, orderAfter!)) {
-          replaceProperties(frontmatter, ORDER_ALIASES, orderBefore!);
+      await app.fileManager.processFrontMatter(file, (frontmatter) => {
+        if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) {
+          throw new StaleManuscriptMoveError();
         }
+        const currentKey = manuscriptOrderKey(frontmatter[MANUSCRIPT_ORDER_KEY_PROPERTY]);
+        if (currentKey !== change.beforeOrderKey) {
+          throw new StaleManuscriptMoveError();
+        }
+
+        before = captureProperties(frontmatter);
+        setOrderKey(frontmatter, change.afterOrderKey);
+        if (change.beforeParentPath !== change.afterParentPath) {
+          setCanonicalParent(frontmatter, change.afterParentPath);
+        }
+        after = captureProperties(frontmatter);
       });
-      throw error;
+
+      if (!before || !after) {
+        throw new Error(`Could not capture manuscript changes for ${file.path}.`);
+      }
+      await verifyWrittenSnapshot(app, file, after);
+      states.push({ file, before, after });
     }
+  } catch (error) {
+    await rollbackStates(app, states);
+    throw error;
   }
 
   return {
-    book,
-    orderBefore,
-    orderAfter,
-    parent: parentState,
-    message: proposal.message
+    states,
+    message: writePlan.message
   };
 }
 
@@ -219,29 +256,32 @@ export async function undoManuscriptReorder(
   app: App,
   token: ManuscriptReorderUndoToken
 ): Promise<void> {
-  let parentRestored = false;
-
-  if (token.parent) {
-    await app.fileManager.processFrontMatter(token.parent.file, (frontmatter) => {
-      assertSnapshot(frontmatter, MANUSCRIPT_PARENT_ALIASES, token.parent!.after);
-      replaceProperties(frontmatter, MANUSCRIPT_PARENT_ALIASES, token.parent!.before);
-      parentRestored = true;
-    });
-  }
+  const restored: FileUndoState[] = [];
 
   try {
-    await app.fileManager.processFrontMatter(token.book, (frontmatter) => {
-      assertSnapshot(frontmatter, ORDER_ALIASES, token.orderAfter);
-      replaceProperties(frontmatter, ORDER_ALIASES, token.orderBefore);
-    });
-  } catch (error) {
-    if (parentRestored && token.parent) {
-      await app.fileManager.processFrontMatter(token.parent.file, (frontmatter) => {
-        const current = captureProperties(frontmatter, MANUSCRIPT_PARENT_ALIASES);
-        if (snapshotsEqual(current, token.parent!.before)) {
-          replaceProperties(frontmatter, MANUSCRIPT_PARENT_ALIASES, token.parent!.after);
-        }
+    for (const state of [...token.states].reverse()) {
+      await assertNoConflictMarkers(app, state.file);
+      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+        const current = captureProperties(frontmatter);
+        if (!snapshotsEqual(current, state.after)) throw new StaleManuscriptUndoError();
+        replaceProperties(frontmatter, state.before);
       });
+      await verifyWrittenSnapshot(app, state.file, state.before);
+      restored.push(state);
+    }
+  } catch (error) {
+    for (const state of [...restored].reverse()) {
+      try {
+        await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+          const current = captureProperties(frontmatter);
+          if (snapshotsEqual(current, state.before)) {
+            replaceProperties(frontmatter, state.after);
+          }
+        });
+        await verifyWrittenSnapshot(app, state.file, state.after);
+      } catch {
+        // Do not overwrite a later edit while rolling back an unsafe Undo.
+      }
     }
     throw error;
   }
