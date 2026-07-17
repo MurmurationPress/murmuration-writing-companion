@@ -33,7 +33,7 @@ function record(
   };
 }
 
-test("parts are optional and direct book scenes remain ordered roots", () => {
+test("parts are optional and a legacy array can stage direct book scenes for migration", () => {
   const bookPath = "Books/EMERGENCE.md";
   const book = record(bookPath, "EMERGENCE", "book", bookPath, null);
   const first = record(
@@ -67,7 +67,7 @@ test("parts are optional and direct book scenes remain ordered roots", () => {
     (linkpath) => lookup.get(linkpath.toLowerCase()) ?? null
   );
 
-  equal(result.source, "explicit");
+  equal(result.source, "legacy_array");
   deepEqual(result.scenes.map((scene) => scene.title), [
     "Field Research",
     "Strange Conversation"
