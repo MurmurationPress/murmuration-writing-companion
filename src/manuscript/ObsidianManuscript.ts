@@ -4,6 +4,7 @@ import { parseWikilink } from "../story-world/StoryWorldIndex";
 import {
   buildManuscriptOrder,
   ManuscriptDocumentRecord,
+  ManuscriptEntryKind,
   ManuscriptOrderResult
 } from "./ManuscriptOrder";
 import {
@@ -27,6 +28,7 @@ interface RawManuscriptFile {
   readonly frontmatter: Record<string, unknown> | undefined;
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly parentPath: string | null;
+  readonly explicitParentPath: string | null;
   readonly explicitBookPath: string | null;
 }
 
@@ -45,6 +47,12 @@ export interface ObsidianManuscriptBook {
   readonly result: ManuscriptOrderResult;
   readonly filesByPath: ReadonlyMap<string, TFile>;
   readonly metadataByPath: ReadonlyMap<string, ManuscriptSceneMetadata>;
+  readonly frontmatterByPath: ReadonlyMap<
+    string,
+    Record<string, unknown> | undefined
+  >;
+  readonly explicitKindByPath: ReadonlyMap<string, ManuscriptEntryKind | null>;
+  readonly explicitParentPathByPath: ReadonlyMap<string, string | null>;
 }
 
 export interface ObsidianManuscriptLibrary {
@@ -155,6 +163,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       frontmatter: candidate.frontmatter,
       explicitKind: candidate.explicitKind,
       parentPath: candidate.explicitParentPath ?? legacyParentPath,
+      explicitParentPath: candidate.explicitParentPath,
       explicitBookPath: candidate.explicitBookPath ?? legacyBookPath
     });
   }
@@ -263,6 +272,12 @@ function buildBook(
   const recordsByPath = new Map(records.map((record) => [record.path, record]));
   const filesByPath = new Map<string, TFile>();
   const metadataByPath = new Map<string, ManuscriptSceneMetadata>();
+  const frontmatterByPath = new Map<
+    string,
+    Record<string, unknown> | undefined
+  >();
+  const explicitKindByPath = new Map<string, ManuscriptEntryKind | null>();
+  const explicitParentPathByPath = new Map<string, string | null>();
 
   for (const candidate of ownedRaw) {
     if (!recordsByPath.has(candidate.file.path)) continue;
@@ -270,6 +285,12 @@ function buildBook(
     metadataByPath.set(
       candidate.file.path,
       manuscriptSceneMetadata(candidate.frontmatter)
+    );
+    frontmatterByPath.set(candidate.file.path, candidate.frontmatter);
+    explicitKindByPath.set(candidate.file.path, candidate.explicitKind);
+    explicitParentPathByPath.set(
+      candidate.file.path,
+      candidate.explicitParentPath
     );
   }
 
@@ -298,7 +319,10 @@ function buildBook(
     record: bookRecord,
     result,
     filesByPath,
-    metadataByPath
+    metadataByPath,
+    frontmatterByPath,
+    explicitKindByPath,
+    explicitParentPathByPath
   };
 }
 
