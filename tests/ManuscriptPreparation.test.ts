@@ -45,6 +45,22 @@ function result(source: ManuscriptOrderResult["source"]): ManuscriptOrderResult 
   };
 }
 
+function emptyReferences() {
+  return new Map<string, readonly string[]>([
+    [bookPath, []],
+    [partPath, []],
+    [scenePath, []]
+  ]);
+}
+
+function emptyResolvedBooks() {
+  return new Map<string, string | null>([
+    [bookPath, null],
+    [partPath, null],
+    [scenePath, null]
+  ]);
+}
+
 test("prepares legacy book, part and scene metadata without touching reporting fields", () => {
   const frontmatterByPath = new Map<string, Record<string, unknown>>([
     [bookPath, { type: "book", title: "PLURALITY", book: 2 }],
@@ -64,7 +80,10 @@ test("prepares legacy book, part and scene metadata without touching reporting f
       [bookPath, null],
       [partPath, null],
       [scenePath, null]
-    ])
+    ]),
+    explicitBookPathByPath: emptyResolvedBooks(),
+    parentReferencesByPath: emptyReferences(),
+    bookReferencesByPath: emptyReferences()
   });
 
   equal(plan.canApply, true);
@@ -115,7 +134,14 @@ test("canonicalises valid type and parent aliases for reusable Bases", () => {
       [bookPath, null],
       [partPath, bookPath],
       [scenePath, partPath]
-    ])
+    ]),
+    explicitBookPathByPath: emptyResolvedBooks(),
+    parentReferencesByPath: new Map([
+      [bookPath, []],
+      [partPath, ["[[BOOK 2 - PLURALITY]]"]],
+      [scenePath, ["[[1 ABSENCE]]"]]
+    ]),
+    bookReferencesByPath: emptyReferences()
   });
 
   equal(plan.canApply, true);
@@ -151,11 +177,50 @@ test("blocks a conflicting explicit parent", () => {
       [bookPath, null],
       [partPath, "Other/OTHER BOOK.md"],
       [scenePath, partPath]
-    ])
+    ]),
+    explicitBookPathByPath: emptyResolvedBooks(),
+    parentReferencesByPath: new Map([
+      [bookPath, []],
+      [partPath, ["[[OTHER BOOK]]"]],
+      [scenePath, ["[[1 ABSENCE]]"]]
+    ]),
+    bookReferencesByPath: emptyReferences()
   });
 
   equal(plan.canApply, false);
   match(plan.diagnostics[0].message, /conflicts/i);
+});
+
+test("blocks an unresolved explicit hierarchy reference", () => {
+  const plan = planManuscriptPreparation({
+    book,
+    result: result("legacy"),
+    frontmatterByPath: new Map([
+      [bookPath, { type: "book" }],
+      [partPath, { title: "ABSENCE" }],
+      [scenePath, { title: "Domestic Distance", parent: "[[Missing Part]]" }]
+    ]),
+    explicitKindByPath: new Map([
+      [bookPath, "book"],
+      [partPath, null],
+      [scenePath, null]
+    ]),
+    explicitParentPathByPath: new Map([
+      [bookPath, null],
+      [partPath, null],
+      [scenePath, null]
+    ]),
+    explicitBookPathByPath: emptyResolvedBooks(),
+    parentReferencesByPath: new Map([
+      [bookPath, []],
+      [partPath, []],
+      [scenePath, ["[[Missing Part]]"]]
+    ]),
+    bookReferencesByPath: emptyReferences()
+  });
+
+  equal(plan.canApply, false);
+  match(plan.diagnostics[0].message, /could not be resolved/i);
 });
 
 test("is idempotent once canonical metadata exists", () => {
@@ -188,7 +253,14 @@ test("is idempotent once canonical metadata exists", () => {
       [bookPath, null],
       [partPath, bookPath],
       [scenePath, partPath]
-    ])
+    ]),
+    explicitBookPathByPath: emptyResolvedBooks(),
+    parentReferencesByPath: new Map([
+      [bookPath, []],
+      [partPath, ["[[PRIME Trilogy/BOOK 2 - PLURALITY]]"]],
+      [scenePath, ["[[PRIME Trilogy/BOOK 2 - PLURALITY/1 ABSENCE]]"]]
+    ]),
+    bookReferencesByPath: emptyReferences()
   });
 
   equal(plan.alreadyPrepared, true);
