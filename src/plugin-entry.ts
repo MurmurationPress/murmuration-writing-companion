@@ -67,19 +67,6 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         );
         actions = { prepare, undo };
         this.preparationActions.set(view, actions);
-
-        this.registerDomEvent(view.containerEl, "keydown", (event) => {
-          if (
-            this.preparationUndoToken
-            && (event.ctrlKey || event.metaKey)
-            && !event.shiftKey
-            && event.key.toLowerCase() === "z"
-          ) {
-            event.preventDefault();
-            event.stopPropagation();
-            void this.undoPreparation();
-          }
-        });
       }
       actions.undo.style.display = this.preparationUndoToken ? "" : "none";
     }
