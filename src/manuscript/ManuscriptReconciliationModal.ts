@@ -3,6 +3,7 @@ import type { ObsidianManuscriptBook } from "./ObsidianManuscript";
 import { planObsidianManuscriptReconciliation } from "./ObsidianManuscriptReconciliation";
 import {
   ManuscriptReconciliationChoices,
+  ManuscriptReconciliationPlacementChoice,
   ManuscriptReconciliationPlan,
   manuscriptReconciliationPlacementOptions
 } from "./ManuscriptReconciliation";
@@ -28,7 +29,7 @@ class ManuscriptReconciliationModal extends Modal {
   private settled = false;
   private closed = false;
   private refreshing = false;
-  private readonly placements: Record<string, ManuscriptReconciliationChoices["placements"][string]> = {};
+  private readonly placements: Record<string, ManuscriptReconciliationPlacementChoice> = {};
   private readonly rebalanceParents = new Set<string>();
   private currentPlan: ManuscriptReconciliationPlan | null = null;
 
@@ -116,7 +117,10 @@ class ManuscriptReconciliationModal extends Modal {
         });
         select.style.width = "100%";
         select.style.marginTop = "5px";
-        select.createEl("option", { text: "Choose a deliberate position…", value: "" });
+        const placeholder = select.createEl("option", {
+          text: "Choose a deliberate position…"
+        });
+        placeholder.value = "";
         const options = manuscriptReconciliationPlacementOptions({
           book: this.book.record,
           result: this.book.result,
@@ -125,7 +129,8 @@ class ManuscriptReconciliationModal extends Modal {
         const selected = this.placements[issue.path!];
         let selectedId = "";
         for (const option of options) {
-          select.createEl("option", { text: option.label, value: option.id });
+          const element = select.createEl("option", { text: option.label });
+          element.value = option.id;
           if (
             selected
             && selected.parentPath === option.choice.parentPath
@@ -154,7 +159,9 @@ class ManuscriptReconciliationModal extends Modal {
         label.style.gap = "8px";
         label.style.alignItems = "flex-start";
         label.style.margin = "8px 0";
-        const checkbox = label.createEl("input", { type: "checkbox" });
+        const checkbox = label.createEl("input", {
+          attr: { type: "checkbox" }
+        });
         checkbox.checked = this.rebalanceParents.has(issue.parentPath!);
         label.createSpan({
           text: `${issue.message} Rebalance only this sibling set in the order currently displayed.`
