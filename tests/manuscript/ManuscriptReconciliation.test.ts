@@ -102,7 +102,7 @@ test("requires an explicit placement for a newly added unranked scene", () => {
   equal(plan.canApply, true);
   equal(plan.files.length, 1);
   equal(plan.files[0].path, secondPath);
-  equal(plan.files[0].mutation.set.parent, `[[${partPath.replace(/\.md$/, "")}]]`);
+  equal(plan.files[0].mutation.set.parent, undefined);
   equal(typeof plan.files[0].mutation.set.manuscript_order_key, "string");
 });
 
