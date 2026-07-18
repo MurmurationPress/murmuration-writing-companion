@@ -7,6 +7,10 @@ import {
   ManuscriptOrderResult
 } from "./ManuscriptOrder";
 import {
+  MANUSCRIPT_ORDER_KEY_PROPERTY,
+  manuscriptOrderKey
+} from "./ManuscriptOrderKey";
+import {
   explicitManuscriptKind,
   hasSceneMetadataSignal,
   manuscriptDisplayTitle,
@@ -27,7 +31,11 @@ interface RawManuscriptFile {
   readonly frontmatter: Record<string, unknown> | undefined;
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly parentPath: string | null;
+  readonly explicitParent: boolean;
+  readonly parentReferenceInvalid: boolean;
   readonly explicitBookPath: string | null;
+  readonly orderKeyPresent: boolean;
+  readonly orderKey: string | null;
 }
 
 interface PreliminaryManuscriptFile {
@@ -35,8 +43,11 @@ interface PreliminaryManuscriptFile {
   readonly frontmatter: Record<string, unknown> | undefined;
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
   readonly explicitParentPath: string | null;
+  readonly parentReferences: readonly string[];
   readonly explicitBookPath: string | null;
   readonly associatedFolderPath: string | null;
+  readonly orderKeyPresent: boolean;
+  readonly orderKey: string | null;
 }
 
 export interface ObsidianManuscriptBook {
@@ -58,6 +69,13 @@ function frontmatterFor(
 ): Record<string, unknown> | undefined {
   return app.metadataCache.getFileCache(file)?.frontmatter as
     Record<string, unknown> | undefined;
+}
+
+function hasOwnProperty(
+  frontmatter: Record<string, unknown> | undefined,
+  property: string
+): boolean {
+  return Boolean(frontmatter && Object.prototype.hasOwnProperty.call(frontmatter, property));
 }
 
 function resolveReference(app: App, source: TFile, reference: string): TFile | null {
@@ -82,7 +100,6 @@ function firstResolvedPath(
 function associatedFolderPath(app: App, file: TFile): string | null {
   const parent = file.parent;
   if (!parent) return null;
-
   if (parent.name === file.basename) return parent.path;
 
   const siblingPath = parent.path
@@ -103,8 +120,11 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       frontmatter,
       explicitKind: explicitManuscriptKind(frontmatter),
       explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
+      parentReferences: hierarchy.parentReferences,
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
-      associatedFolderPath: associatedFolderPath(app, file)
+      associatedFolderPath: associatedFolderPath(app, file),
+      orderKeyPresent: hasOwnProperty(frontmatter, MANUSCRIPT_ORDER_KEY_PROPERTY),
+      orderKey: manuscriptOrderKey(frontmatter?.[MANUSCRIPT_ORDER_KEY_PROPERTY])
     });
   }
 
@@ -155,7 +175,12 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       frontmatter: candidate.frontmatter,
       explicitKind: candidate.explicitKind,
       parentPath: candidate.explicitParentPath ?? legacyParentPath,
-      explicitBookPath: candidate.explicitBookPath ?? legacyBookPath
+      explicitParent: candidate.parentReferences.length > 0,
+      parentReferenceInvalid: candidate.parentReferences.length > 0
+        && candidate.explicitParentPath === null,
+      explicitBookPath: candidate.explicitBookPath ?? legacyBookPath,
+      orderKeyPresent: candidate.orderKeyPresent,
+      orderKey: candidate.orderKey
     });
   }
 
@@ -180,12 +205,10 @@ function owningBookPath(
 
   visiting.add(path);
   let owner: string | null = null;
-
   if (current.explicitBookPath) {
     const explicitBook = files.get(current.explicitBookPath);
     if (explicitBook?.explicitKind === "book") owner = explicitBook.file.path;
   }
-
   if (!owner && current.parentPath) {
     owner = owningBookPath(current.parentPath, files, memo, visiting);
   }
@@ -226,7 +249,11 @@ function recordFor(
     }),
     kind,
     bookPath,
-    parentPath: kind === "book" ? null : raw.parentPath ?? bookPath
+    parentPath: kind === "book" ? null : raw.parentPath ?? bookPath,
+    orderKey: kind === "book" ? null : raw.orderKey,
+    orderKeyPresent: kind !== "book" && raw.orderKeyPresent,
+    explicitParent: kind !== "book" && raw.explicitParent,
+    parentReferenceInvalid: kind !== "book" && raw.parentReferenceInvalid
   };
 }
 
@@ -258,7 +285,11 @@ function buildBook(
     }),
     kind: "book" as const,
     bookPath,
-    parentPath: null
+    parentPath: null,
+    orderKey: null,
+    orderKeyPresent: false,
+    explicitParent: false,
+    parentReferenceInvalid: false
   };
   const recordsByPath = new Map(records.map((record) => [record.path, record]));
   const filesByPath = new Map<string, TFile>();
@@ -305,7 +336,6 @@ function buildBook(
 export function buildObsidianManuscriptLibrary(app: App): ObsidianManuscriptLibrary {
   const files = rawFiles(app);
   const ownerMemo = new Map<string, string | null>();
-
   for (const path of files.keys()) owningBookPath(path, files, ownerMemo);
 
   const books = [...files.values()]

@@ -1,5 +1,10 @@
 import { parseWikilink } from "../story-world/StoryWorldIndex";
+import {
+  compareManuscriptOrderKeys,
+  manuscriptOrderKey
+} from "./ManuscriptOrderKey";
 
+/** Legacy migration input only. Distributed keys are the permanent authority. */
 export const MANUSCRIPT_ORDER_PROPERTY = "manuscript_order";
 
 export type ManuscriptEntryKind = "book" | "part" | "scene" | "other";
@@ -11,6 +16,10 @@ export interface ManuscriptDocumentRecord {
   readonly kind: ManuscriptEntryKind;
   readonly bookPath: string;
   readonly parentPath: string | null;
+  readonly orderKey?: string | null;
+  readonly orderKeyPresent?: boolean;
+  readonly explicitParent?: boolean;
+  readonly parentReferenceInvalid?: boolean;
 }
 
 export interface ManuscriptOrderNode {
@@ -18,7 +27,12 @@ export interface ManuscriptOrderNode {
   readonly children: readonly ManuscriptOrderNode[];
 }
 
-export type ManuscriptOrderSource = "explicit" | "legacy" | "none" | "invalid";
+export type ManuscriptOrderSource =
+  | "distributed"
+  | "legacy_array"
+  | "legacy"
+  | "none"
+  | "invalid";
 
 export type ManuscriptOrderDiagnosticKind =
   | "invalid_property_shape"
@@ -29,7 +43,12 @@ export type ManuscriptOrderDiagnosticKind =
   | "cross_book_entry"
   | "unlisted_entry"
   | "missing_parent"
+  | "invalid_parent_kind"
   | "parent_cycle"
+  | "missing_order_key"
+  | "invalid_order_key"
+  | "duplicate_order_key"
+  | "obsolete_order_array"
   | "legacy_ambiguous";
 
 export interface ManuscriptOrderDiagnostic {
@@ -56,7 +75,7 @@ export type ManuscriptOrderResolver = (
   linkpath: string
 ) => ManuscriptDocumentRecord | null;
 
-interface ExplicitOrderRead {
+interface LegacyArrayRead {
   readonly state: "missing" | "valid" | "invalid";
   readonly references: readonly string[];
   readonly diagnostics: readonly ManuscriptOrderDiagnostic[];
@@ -85,9 +104,9 @@ function isManuscriptOrderEntry(record: ManuscriptDocumentRecord): boolean {
   return record.kind === "part" || record.kind === "scene";
 }
 
-function readExplicitOrder(
+function readLegacyArray(
   frontmatter: Record<string, unknown> | undefined
-): ExplicitOrderRead {
+): LegacyArrayRead {
   if (!frontmatter || !Object.prototype.hasOwnProperty.call(
     frontmatter,
     MANUSCRIPT_ORDER_PROPERTY
@@ -102,26 +121,24 @@ function readExplicitOrder(
       references: [],
       diagnostics: [{
         kind: "invalid_property_shape",
-        message: `${MANUSCRIPT_ORDER_PROPERTY} must be a YAML list of wikilinks.`
+        message: `${MANUSCRIPT_ORDER_PROPERTY} must be a YAML list of wikilinks while it is used for migration.`
       }]
     };
   }
 
   const references: string[] = [];
   const diagnostics: ManuscriptOrderDiagnostic[] = [];
-
   for (const item of value) {
     const reference = nonEmptyString(item);
     if (!reference) {
       diagnostics.push({
         kind: "invalid_reference",
-        message: "Manuscript order entries must be non-empty wikilink strings."
+        message: "Legacy manuscript-order entries must be non-empty wikilink strings."
       });
       continue;
     }
     references.push(reference);
   }
-
   return { state: "valid", references, diagnostics };
 }
 
@@ -180,7 +197,6 @@ export function proposeLegacyFilenameOrder(
         ambiguous.add(sibling.path);
         continue;
       }
-
       const existing = usedPrefixes.get(prefix);
       if (existing) {
         ambiguous.add(existing);
@@ -193,7 +209,6 @@ export function proposeLegacyFilenameOrder(
 
   const entries: ManuscriptDocumentRecord[] = [];
   const visited = new Set<string>();
-
   const appendChildren = (parentPath: string) => {
     for (const child of byParent.get(parentPath) ?? []) {
       if (visited.has(child.path)) continue;
@@ -202,11 +217,8 @@ export function proposeLegacyFilenameOrder(
       appendChildren(child.path);
     }
   };
-
   appendChildren(bookPath);
 
-  // Malformed or incomplete hierarchy remains visible at the end of the
-  // proposal rather than disappearing from migration review.
   for (const record of [...eligible].sort(compareLegacySiblings)) {
     if (visited.has(record.path)) continue;
     visited.add(record.path);
@@ -215,13 +227,10 @@ export function proposeLegacyFilenameOrder(
     appendChildren(record.path);
   }
 
-  return {
-    entries,
-    ambiguousPaths: [...ambiguous]
-  };
+  return { entries, ambiguousPaths: [...ambiguous] };
 }
 
-function resolveExplicitEntries(
+function resolveLegacyArrayEntries(
   book: ManuscriptDocumentRecord,
   references: readonly string[],
   resolve: ManuscriptOrderResolver,
@@ -236,7 +245,7 @@ function resolveExplicitEntries(
       diagnostics.push({
         kind: "invalid_reference",
         reference,
-        message: `Invalid manuscript-order wikilink: ${reference}`
+        message: `Invalid legacy manuscript-order wikilink: ${reference}`
       });
       continue;
     }
@@ -246,11 +255,10 @@ function resolveExplicitEntries(
       diagnostics.push({
         kind: "unresolved_reference",
         reference,
-        message: `Manuscript-order reference could not be resolved: ${reference}`
+        message: `Legacy manuscript-order reference could not be resolved: ${reference}`
       });
       continue;
     }
-
     if (entry.path === book.path || entry.bookPath !== book.path) {
       diagnostics.push({
         kind: "cross_book_entry",
@@ -260,7 +268,6 @@ function resolveExplicitEntries(
       });
       continue;
     }
-
     if (!isManuscriptOrderEntry(entry)) {
       diagnostics.push({
         kind: "invalid_entry_kind",
@@ -270,27 +277,22 @@ function resolveExplicitEntries(
       });
       continue;
     }
-
     if (seenPaths.has(entry.path)) {
       diagnostics.push({
         kind: "duplicate_entry",
         reference,
         path: entry.path,
-        message: `${entry.title} appears more than once in manuscript order.`
+        message: `${entry.title} appears more than once in the legacy manuscript order.`
       });
       continue;
     }
-
     seenPaths.add(entry.path);
     entries.push(entry);
   }
-
   return entries;
 }
 
-function cyclePaths(
-  entries: readonly ManuscriptDocumentRecord[]
-): Set<string> {
+function cyclePaths(entries: readonly ManuscriptDocumentRecord[]): Set<string> {
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   const cycles = new Set<string>();
 
@@ -305,15 +307,11 @@ function cyclePaths(
         for (const path of chain.slice(existingPosition)) cycles.add(path);
         break;
       }
-
       position.set(current.path, chain.length);
       chain.push(current.path);
-      current = current.parentPath
-        ? byPath.get(current.parentPath)
-        : undefined;
+      current = current.parentPath ? byPath.get(current.parentPath) : undefined;
     }
   }
-
   return cycles;
 }
 
@@ -323,9 +321,7 @@ function buildTree(
   diagnostics: ManuscriptOrderDiagnostic[]
 ): ManuscriptOrderNode[] {
   const nodes = new Map<string, MutableManuscriptOrderNode>();
-  for (const entry of entries) {
-    nodes.set(entry.path, { entry, children: [] });
-  }
+  for (const entry of entries) nodes.set(entry.path, { entry, children: [] });
 
   const cycles = cyclePaths(entries);
   for (const path of cycles) {
@@ -352,16 +348,147 @@ function buildTree(
       diagnostics.push({
         kind: "missing_parent",
         path: entry.path,
-        message: `${entry.title}'s parent is not present in manuscript order.`
+        message: `${entry.title}'s parent is not present in the manuscript structure.`
       });
       roots.push(node);
       continue;
     }
-
     parent.children.push(node);
   }
-
   return roots;
+}
+
+function compareDistributedSiblings(
+  left: ManuscriptDocumentRecord,
+  right: ManuscriptDocumentRecord
+): number {
+  const leftKey = manuscriptOrderKey(left.orderKey);
+  const rightKey = manuscriptOrderKey(right.orderKey);
+  if (leftKey && rightKey) {
+    const compared = compareManuscriptOrderKeys(leftKey, rightKey);
+    if (compared !== 0) return compared;
+  } else if (leftKey) {
+    return -1;
+  } else if (rightKey) {
+    return 1;
+  }
+  return left.path.localeCompare(right.path, "en", { sensitivity: "base" });
+}
+
+function distributedEntries(
+  book: ManuscriptDocumentRecord,
+  knownRecords: readonly ManuscriptDocumentRecord[],
+  diagnostics: ManuscriptOrderDiagnostic[]
+): ManuscriptDocumentRecord[] | null {
+  const eligible = knownRecords.filter((record) => (
+    record.path !== book.path
+    && record.bookPath === book.path
+    && isManuscriptOrderEntry(record)
+  ));
+  const distributedPresent = eligible.some((record) => (
+    record.orderKeyPresent === true || manuscriptOrderKey(record.orderKey) !== null
+  ));
+  if (!distributedPresent) return null;
+
+  const byPath = new Map(eligible.map((entry) => [entry.path, entry]));
+  const byParent = new Map<string, ManuscriptDocumentRecord[]>();
+
+  for (const entry of eligible) {
+    const key = manuscriptOrderKey(entry.orderKey);
+    if (!entry.orderKeyPresent) {
+      diagnostics.push({
+        kind: "missing_order_key",
+        path: entry.path,
+        message: `${entry.title} has no manuscript_order_key.`
+      });
+    } else if (!key) {
+      diagnostics.push({
+        kind: "invalid_order_key",
+        path: entry.path,
+        message: `${entry.title}'s manuscript_order_key is malformed.`
+      });
+    }
+
+    if (entry.parentReferenceInvalid) {
+      diagnostics.push({
+        kind: "missing_parent",
+        path: entry.path,
+        message: `${entry.title}'s explicit parent could not be resolved.`
+      });
+    } else if (!entry.explicitParent) {
+      diagnostics.push({
+        kind: "missing_parent",
+        path: entry.path,
+        message: `${entry.title} needs a canonical parent property.`
+      });
+    }
+
+    const parentPath = entry.parentPath ?? book.path;
+    if (entry.kind === "part" && parentPath !== book.path) {
+      diagnostics.push({
+        kind: "invalid_parent_kind",
+        path: entry.path,
+        message: `${entry.title} is a part and must belong directly to ${book.title}.`
+      });
+    }
+    if (entry.kind === "scene" && parentPath !== book.path) {
+      const parent = byPath.get(parentPath);
+      if (!parent || parent.kind !== "part") {
+        diagnostics.push({
+          kind: "invalid_parent_kind",
+          path: entry.path,
+          message: `${entry.title}'s parent must be ${book.title} or a recognised part.`
+        });
+      }
+    }
+
+    const siblings = byParent.get(parentPath);
+    if (siblings) siblings.push(entry);
+    else byParent.set(parentPath, [entry]);
+  }
+
+  for (const [parentPath, siblings] of byParent) {
+    const pathsByKey = new Map<string, string[]>();
+    for (const sibling of siblings) {
+      const key = manuscriptOrderKey(sibling.orderKey);
+      if (!key) continue;
+      const paths = pathsByKey.get(key);
+      if (paths) paths.push(sibling.path);
+      else pathsByKey.set(key, [sibling.path]);
+    }
+    for (const [key, paths] of pathsByKey) {
+      if (paths.length < 2) continue;
+      for (const path of paths) {
+        const entry = byPath.get(path)!;
+        diagnostics.push({
+          kind: "duplicate_order_key",
+          path,
+          message: `${entry.title} shares manuscript_order_key ${key} with another child of ${parentPath}.`
+        });
+      }
+    }
+    siblings.sort(compareDistributedSiblings);
+  }
+
+  const entries: ManuscriptDocumentRecord[] = [];
+  const visited = new Set<string>();
+  const appendChildren = (parentPath: string) => {
+    for (const child of byParent.get(parentPath) ?? []) {
+      if (visited.has(child.path)) continue;
+      visited.add(child.path);
+      entries.push(child);
+      appendChildren(child.path);
+    }
+  };
+  appendChildren(book.path);
+
+  for (const entry of [...eligible].sort(compareDistributedSiblings)) {
+    if (visited.has(entry.path)) continue;
+    visited.add(entry.path);
+    entries.push(entry);
+    appendChildren(entry.path);
+  }
+  return entries;
 }
 
 export function buildManuscriptOrder(
@@ -370,45 +497,60 @@ export function buildManuscriptOrder(
   knownRecords: readonly ManuscriptDocumentRecord[],
   resolve: ManuscriptOrderResolver
 ): ManuscriptOrderResult {
-  const read = readExplicitOrder(bookFrontmatter);
-  const diagnostics = [...read.diagnostics];
+  const diagnostics: ManuscriptOrderDiagnostic[] = [];
   let source: ManuscriptOrderSource;
   let entries: ManuscriptDocumentRecord[];
 
-  if (read.state === "valid") {
-    source = "explicit";
-    entries = resolveExplicitEntries(book, read.references, resolve, diagnostics);
-
-    const listed = new Set(entries.map((entry) => entry.path));
-    for (const record of knownRecords) {
-      if (
-        record.path === book.path
-        || record.bookPath !== book.path
-        || !isManuscriptOrderEntry(record)
-        || listed.has(record.path)
-      ) continue;
-
+  const distributed = distributedEntries(book, knownRecords, diagnostics);
+  if (distributed) {
+    source = "distributed";
+    entries = distributed;
+    if (bookFrontmatter && Object.prototype.hasOwnProperty.call(
+      bookFrontmatter,
+      MANUSCRIPT_ORDER_PROPERTY
+    )) {
       diagnostics.push({
-        kind: "unlisted_entry",
-        path: record.path,
-        message: `${record.title} belongs to the book but is not listed in manuscript order.`
+        kind: "obsolete_order_array",
+        path: book.path,
+        message: `${MANUSCRIPT_ORDER_PROPERTY} is obsolete once distributed order keys exist and should be removed by migration.`
       });
     }
-  } else if (read.state === "invalid") {
-    source = "invalid";
-    entries = [];
   } else {
-    const legacy = proposeLegacyFilenameOrder(book.path, knownRecords);
-    entries = [...legacy.entries];
-    source = entries.length > 0 ? "legacy" : "none";
+    const read = readLegacyArray(bookFrontmatter);
+    diagnostics.push(...read.diagnostics);
 
-    for (const path of legacy.ambiguousPaths) {
-      const record = knownRecords.find((candidate) => candidate.path === path);
-      diagnostics.push({
-        kind: "legacy_ambiguous",
-        path,
-        message: `${record?.title ?? path} needs review before legacy order is adopted.`
-      });
+    if (read.state === "valid") {
+      source = "legacy_array";
+      entries = resolveLegacyArrayEntries(book, read.references, resolve, diagnostics);
+      const listed = new Set(entries.map((entry) => entry.path));
+      for (const record of knownRecords) {
+        if (
+          record.path === book.path
+          || record.bookPath !== book.path
+          || !isManuscriptOrderEntry(record)
+          || listed.has(record.path)
+        ) continue;
+        diagnostics.push({
+          kind: "unlisted_entry",
+          path: record.path,
+          message: `${record.title} belongs to the book but is not listed in the legacy manuscript order.`
+        });
+      }
+    } else if (read.state === "invalid") {
+      source = "invalid";
+      entries = [];
+    } else {
+      const legacy = proposeLegacyFilenameOrder(book.path, knownRecords);
+      entries = [...legacy.entries];
+      source = entries.length > 0 ? "legacy" : "none";
+      for (const path of legacy.ambiguousPaths) {
+        const record = knownRecords.find((candidate) => candidate.path === path);
+        diagnostics.push({
+          kind: "legacy_ambiguous",
+          path,
+          message: `${record?.title ?? path} needs review before filename order is migrated.`
+        });
+      }
     }
   }
 
@@ -463,13 +605,13 @@ function rewriteReferenceTarget(
 ): string {
   const parsed = parseWikilink(reference);
   if (!parsed || !referenceTargetMatches(parsed.linkpath, oldPath)) return reference;
-
   const target = preserveReferenceDepth(parsed.linkpath, newPath);
   return parsed.displayText
     ? `[[${target}|${parsed.displayText}]]`
     : `[[${target}]]`;
 }
 
+/** Maintained only so legacy arrays remain recoverable during migration. */
 export function rewriteManuscriptOrderForRename(
   frontmatter: Record<string, unknown>,
   oldPath: string,
