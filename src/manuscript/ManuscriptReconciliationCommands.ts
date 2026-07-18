@@ -10,6 +10,7 @@ import {
   undoManuscriptReconciliation
 } from "./ObsidianManuscriptReconciliation";
 import { chooseManuscriptReconciliation } from "./ManuscriptReconciliationModal";
+import { manuscriptNeedsReconciliation } from "./ManuscriptReconciliation";
 import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
 
 export interface ManuscriptReconciliationCommandHost extends Plugin {
@@ -46,6 +47,29 @@ function selectedBook(
   return library.books.length === 1 ? library.books[0] : null;
 }
 
+function installStatus(
+  host: ManuscriptReconciliationCommandHost,
+  view: ItemView
+) {
+  const existing = view.containerEl.querySelector<HTMLElement>(
+    ".mwc-manuscript-reconciliation-status"
+  );
+  const book = selectedBook(host, view);
+  if (!book || !manuscriptNeedsReconciliation(book.result)) {
+    existing?.remove();
+    return;
+  }
+
+  const content = view.containerEl.children[1] as HTMLElement | undefined;
+  const heading = content?.querySelector<HTMLElement>(".mwc-manuscript-heading");
+  if (!content || !heading) return;
+  const status = existing ?? document.createElement("div");
+  status.className = "mwc-manuscript-reconciliation-status mwc-manuscript-notice mwc-manuscript-notice--warning";
+  status.textContent = "Reconciliation needed. Review structural drift before publishing.";
+  status.setAttribute("role", "status");
+  if (!existing) heading.insertAdjacentElement("afterend", status);
+}
+
 export function installManuscriptReconciliationCommands(
   host: ManuscriptReconciliationCommandHost
 ) {
@@ -76,6 +100,7 @@ export function installManuscriptReconciliationCommands(
       }
       actions.reconcile.style.display = operationRunning ? "none" : "";
       actions.undo.style.display = undoToken && !operationRunning ? "" : "none";
+      installStatus(host, view);
     }
   };
 
