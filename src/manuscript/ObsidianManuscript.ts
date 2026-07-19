@@ -25,6 +25,7 @@ import {
   LegacyBookFolder,
   normalizeVaultPath
 } from "./LegacyManuscriptHierarchy";
+import { visibleManuscriptOrder } from "./VisibleManuscriptOrder";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -304,7 +305,7 @@ function buildBook(
     );
   }
 
-  const result = buildManuscriptOrder(
+  const resolvedResult = buildManuscriptOrder(
     bookRecord,
     bookRaw.frontmatter,
     records,
@@ -323,6 +324,7 @@ function buildBook(
       return matches.length === 1 ? matches[0] : null;
     }
   );
+  const result = visibleManuscriptOrder(bookPath, resolvedResult);
 
   return {
     file: bookRaw.file,
