@@ -1,11 +1,10 @@
 import MurmurationWritingCompanionPlugin from "./main";
 import { installManuscriptPreparationCommands } from "./manuscript/ManuscriptPreparationCommands";
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
-import { NavigatorActivationGuard } from "./manuscript/NavigatorActivationGuard";
+import { isRepeatedNavigatorActivation } from "./manuscript/NavigatorActivationGuard";
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
-  private readonly navigatorActivationGuard = new NavigatorActivationGuard();
 
   async onload() {
     await super.onload();
@@ -16,27 +15,32 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.app.metadataCache.on("changed", () => this.queueNavigatorRefresh())
     );
 
-    const guardRapidNavigatorActivation = (event: MouseEvent) => {
+    const suppressRepeatedNavigatorActivation = (event: MouseEvent) => {
+      if (!isRepeatedNavigatorActivation(event.detail)) return;
+
       const target = event.target;
       if (!(target instanceof Element)) return;
-      const navigator = target.closest(".mwc-manuscript-navigator");
-      if (!navigator) return;
+      if (!target.closest(".mwc-manuscript-navigator")) return;
 
-      if (this.navigatorActivationGuard.blocks()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-
-      if (target.closest(".mwc-manuscript-entry")) {
-        this.navigatorActivationGuard.begin();
-      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
     };
 
-    document.addEventListener("click", guardRapidNavigatorActivation, true);
+    const guardedEvents: Array<keyof DocumentEventMap> = [
+      "mousedown",
+      "mouseup",
+      "click",
+      "dblclick"
+    ];
+
+    for (const eventName of guardedEvents) {
+      document.addEventListener(eventName, suppressRepeatedNavigatorActivation, true);
+    }
+
     this.register(() => {
-      document.removeEventListener("click", guardRapidNavigatorActivation, true);
-      this.navigatorActivationGuard.clear();
+      for (const eventName of guardedEvents) {
+        document.removeEventListener(eventName, suppressRepeatedNavigatorActivation, true);
+      }
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);
         this.navigatorRefreshTimer = null;
