@@ -1,8 +1,10 @@
+export const NAVIGATOR_CLICK_SHIELD_MS = 450;
+
 /**
- * Browsers retain the click count across a rapid mouse sequence even when the
- * navigator rerenders between presses. Treat only the first activation as
- * meaningful so a shifted DOM target cannot receive the second press.
+ * Only a genuine first mouse click needs a temporary click shield. Keyboard or
+ * programmatic activation has detail 0, while repeated clicks are already aimed
+ * at the shield created by the first click.
  */
-export function isRepeatedNavigatorActivation(detail: number): boolean {
-  return Number.isFinite(detail) && detail > 1;
+export function shouldShieldNavigatorSceneActivation(detail: number): boolean {
+  return detail === 1;
 }
