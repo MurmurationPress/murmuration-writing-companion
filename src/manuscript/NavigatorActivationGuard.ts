@@ -1,21 +1,8 @@
-export const NAVIGATOR_ACTIVATION_GUARD_MS = 400;
-
 /**
- * Prevent a rapid second click from acting on a navigator tree that has already
- * rerendered after the first scene activation.
+ * Browsers retain the click count across a rapid mouse sequence even when the
+ * navigator rerenders between presses. Treat only the first activation as
+ * meaningful so a shifted DOM target cannot receive the second press.
  */
-export class NavigatorActivationGuard {
-  private blockedUntil = 0;
-
-  begin(now = Date.now()): void {
-    this.blockedUntil = now + NAVIGATOR_ACTIVATION_GUARD_MS;
-  }
-
-  blocks(now = Date.now()): boolean {
-    return now < this.blockedUntil;
-  }
-
-  clear(): void {
-    this.blockedUntil = 0;
-  }
+export function isRepeatedNavigatorActivation(detail: number): boolean {
+  return Number.isFinite(detail) && detail > 1;
 }
