@@ -26,12 +26,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       event.stopImmediatePropagation();
     };
 
-    const guardedEvents: Array<keyof DocumentEventMap> = [
-      "mousedown",
-      "mouseup",
-      "click",
-      "dblclick"
-    ];
+    const guardedEvents = ["mousedown", "mouseup", "click", "dblclick"] as const;
 
     for (const eventName of guardedEvents) {
       document.addEventListener(eventName, suppressRepeatedNavigatorActivation, true);
