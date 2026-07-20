@@ -151,9 +151,30 @@ function uniqueCharacterPath(
   return `${base} (character ${suffix}).md`;
 }
 
-function canonicalPovValue(path: string, name: string): string {
-  const target = path.replace(/\.md$/i, "");
+function hasMarkdownBasenameCollision(
+  path: string,
+  existingPaths: readonly string[]
+): boolean {
+  const basenameKey = normalizeLookup(basenameWithoutExtension(path));
+  return existingPaths.some((candidate) => (
+    candidate.toLowerCase().endsWith(".md")
+    && normalizeLookup(basenameWithoutExtension(candidate)) === basenameKey
+  ));
+}
+
+function canonicalPovValue(
+  path: string,
+  name: string,
+  existingPaths: readonly string[],
+  preserveExplicitTarget: boolean
+): string {
+  const fullTarget = path.replace(/\.md$/i, "");
   const basename = basenameWithoutExtension(path);
+  const target = preserveExplicitTarget
+    || hasMarkdownBasenameCollision(path, existingPaths)
+    ? fullTarget
+    : basename;
+
   return normalizeLookup(basename) === normalizeLookup(name)
     ? `[[${target}]]`
     : `[[${target}|${name}]]`;
@@ -198,12 +219,18 @@ export function buildPovCharacterCreationProposal(
     ? withMarkdownExtension(explicitTarget)
     : `${fallbackFolder}/${filename}.md`;
   const path = uniqueCharacterPath(preferredPath, options.existingPaths);
+  const preserveExplicitTarget = Boolean(explicitTarget?.includes("/"));
 
   return {
     sourceValue,
     name,
     path,
-    povValue: canonicalPovValue(path, name),
+    povValue: canonicalPovValue(
+      path,
+      name,
+      options.existingPaths,
+      preserveExplicitTarget
+    ),
     scope: normalizedScope(options.scope ?? [])
   };
 }
