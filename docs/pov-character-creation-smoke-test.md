@@ -1,6 +1,6 @@
 # POV Story World character creation smoke test
 
-Use a backed-up vault and a disposable or genuinely new POV name.
+Use a backed-up vault and two disposable or genuinely new POV names.
 
 ## Existing-character boundary
 
@@ -18,7 +18,7 @@ Use a backed-up vault and a disposable or genuinely new POV name.
    - **Create character**
    - **Use without creating**
 4. Choose **Use without creating** and confirm that no file or other property changes.
-5. Edit and recommit the same value to make the offer available again.
+5. Enter a second new POV value, such as `Alex Vale`, for the creation test below.
 
 ## Creation preview
 
