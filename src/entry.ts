@@ -1,6 +1,7 @@
 import MurmurationWritingCompanionPlugin from "./main";
 import { installManuscriptPreparationCommands } from "./manuscript/ManuscriptPreparationCommands";
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
+import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyles";
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
@@ -9,6 +10,9 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     await super.onload();
     installManuscriptPreparationCommands(this);
     installManuscriptReconciliationCommands(this);
+
+    const povCharacterStyles = installPovCharacterCreationStyles();
+    this.register(() => povCharacterStyles.remove());
 
     this.registerEvent(
       this.app.metadataCache.on("changed", () => this.queueNavigatorRefresh())

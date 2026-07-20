@@ -1,4 +1,4 @@
-import { MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
+import { MarkdownRenderer, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import {
   BOOK_REVIEW_MODE_LABELS,
@@ -17,6 +17,12 @@ import {
   getEditableChapterContextValue
 } from "./ChapterContext";
 import {
+  buildPovCharacterCreationProposal,
+  PovCharacterCreationProposal
+} from "./PovCharacterCreation";
+import { confirmPovCharacterCreation } from "./PovCharacterCreationModal";
+import { createPovCharacterFromProposal } from "./ObsidianPovCharacterCreation";
+import {
   collectPovSuggestionValues,
   PovSuggestion,
   resolvePovInput
@@ -31,6 +37,8 @@ export { VIEW_TYPE };
 let nextPovSuggestionListId = 0;
 
 export class WritingCompanionView extends BaseWritingCompanionView {
+  private readonly dismissedPovCharacterOffers = new Set<string>();
+
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf, plugin);
   }
@@ -241,6 +249,8 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         event.preventDefault();
         startEditing();
       };
+
+      this.renderPovCharacterOffer(container, value, file, renderResting);
     };
 
     const renderEditor = (value: string) => {
@@ -285,6 +295,108 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     };
 
     renderResting(currentValue);
+  }
+
+  private povCharacterOfferKey(file: TFile, value: string): string {
+    return `${file.path}\u0000${value.trim().toLowerCase()}`;
+  }
+
+  private buildPovCharacterProposal(
+    file: TFile,
+    value: string
+  ): PovCharacterCreationProposal | null {
+    const book = this.plugin.getOwningBook(file);
+    const scope = book
+      ? [`[[${book.path.replace(/\.md$/i, "")}]]`]
+      : [];
+
+    return buildPovCharacterCreationProposal(value, {
+      suggestions: this.plugin.getPovSuggestions(file),
+      existingPaths: this.app.vault.getAllLoadedFiles().map((item) => item.path),
+      scope
+    });
+  }
+
+  private renderPovCharacterOffer(
+    container: HTMLElement,
+    value: string,
+    file: TFile,
+    renderResting: (value: string) => void
+  ) {
+    const key = this.povCharacterOfferKey(file, value);
+    if (this.dismissedPovCharacterOffers.has(key)) return;
+
+    const proposal = this.buildPovCharacterProposal(file, value);
+    if (!proposal) return;
+
+    const offer = container.createDiv({
+      cls: "mwc-pov-character-offer",
+      attr: { role: "status" }
+    });
+    offer.createEl("p", {
+      cls: "mwc-pov-character-offer-text",
+      text: `“${proposal.name}” is not yet a Story World character.`
+    });
+    const actions = offer.createDiv("mwc-pov-character-offer-actions");
+    const keep = actions.createEl("button", {
+      text: "Use without creating",
+      attr: { type: "button" }
+    });
+    const create = actions.createEl("button", {
+      cls: "mwc-pov-character-create",
+      text: "Create character",
+      attr: { type: "button" }
+    });
+
+    const focusDisplay = () => window.setTimeout(() => {
+      container.querySelector<HTMLElement>(".mwc-pov-display")?.focus();
+    }, 0);
+
+    keep.onclick = () => {
+      this.dismissedPovCharacterOffers.add(key);
+      renderResting(value);
+      focusDisplay();
+    };
+
+    create.onclick = async () => {
+      const accepted = await confirmPovCharacterCreation(this.app, proposal);
+      if (!accepted) {
+        focusDisplay();
+        return;
+      }
+
+      create.disabled = true;
+      keep.disabled = true;
+
+      try {
+        const refreshed = this.buildPovCharacterProposal(file, value);
+        if (!refreshed) {
+          throw new Error(
+            "A matching Story World character now exists. Reopen the POV editor to select it."
+          );
+        }
+        if (
+          refreshed.path !== proposal.path
+          || refreshed.name !== proposal.name
+          || refreshed.povValue !== proposal.povValue
+        ) {
+          throw new Error("The proposed character destination changed. Open the preview again.");
+        }
+
+        const result = await createPovCharacterFromProposal(this.app, file, proposal);
+        this.dismissedPovCharacterOffers.delete(key);
+        renderResting(result.povValue);
+        new Notice(`Created Story World character ${proposal.name}.`);
+        focusDisplay();
+      } catch (error) {
+        const message = error instanceof Error
+          ? error.message
+          : "Could not create the Story World character.";
+        new Notice(message);
+        renderResting(value);
+        focusDisplay();
+      }
+    };
   }
 
   private renderPovSuggestionOptions(
