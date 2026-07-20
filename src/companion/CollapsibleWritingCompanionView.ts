@@ -22,6 +22,10 @@ import {
   getChapterContextField,
   getEditableChapterContextValue
 } from "./ChapterContext";
+import {
+  createWorldContextTimePreferenceKey,
+  WorldContextTimePreferences
+} from "./WorldContextTimePreferences";
 
 export { VIEW_TYPE };
 
@@ -40,14 +44,45 @@ interface CollapsibleSectionElements {
 let nextViewInstanceId = 0;
 const registeredHoverSources = new WeakSet<MurmurationWritingCompanionPlugin>();
 
+function createWorldContextTimePreferences(
+  plugin: MurmurationWritingCompanionPlugin
+): WorldContextTimePreferences {
+  const vaultName = plugin.app.vault.getName();
+  let resourceRoot = vaultName;
+  let storage: Storage | null = null;
+
+  try {
+    resourceRoot = plugin.app.vault.adapter.getResourcePath("");
+  } catch {
+    // The vault name remains a stable fallback on unusual adapters.
+  }
+
+  try {
+    storage = window.localStorage;
+  } catch {
+    // The in-memory default remains usable when local storage is unavailable.
+  }
+
+  return new WorldContextTimePreferences(
+    storage,
+    createWorldContextTimePreferenceKey(
+      plugin.manifest.id,
+      vaultName,
+      resourceRoot
+    )
+  );
+}
+
 export class WritingCompanionView extends BaseWritingCompanionView {
   hoverPopover: HoverPopover | null = null;
 
   private readonly collapsibleSectionIdPrefix =
     `mwc-collapsible-view-${++nextViewInstanceId}`;
+  private readonly worldContextTimePreferences: WorldContextTimePreferences;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf, plugin);
+    this.worldContextTimePreferences = createWorldContextTimePreferences(plugin);
 
     if (!registeredHoverSources.has(plugin)) {
       plugin.registerHoverLinkSource(VIEW_TYPE, {
@@ -143,7 +178,15 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           sourcePath: file.path
         });
       },
-      { storyDate }
+      {
+        storyDate,
+        relativeTimeMode: this.worldContextTimePreferences.getMode(),
+        onRelativeTimeModeChange: (mode) => {
+          if (this.worldContextTimePreferences.setMode(mode)) {
+            this.plugin.refreshView();
+          }
+        }
+      }
     );
   }
 
