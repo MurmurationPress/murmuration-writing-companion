@@ -4,6 +4,7 @@ import { installManuscriptPreparationCommands } from "./manuscript/ManuscriptPre
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
 import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyles";
 import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAuthoringStyles";
+import { renderStoryWorldEventAuthoring } from "./ui/StoryWorldEventAuthoring";
 import {
   PendingProseEventCreation,
   PendingStoryWorldEventAuthoring,
@@ -15,6 +16,8 @@ import {
   explicitManuscriptKind,
   hasSceneMetadataSignal
 } from "./manuscript/ManuscriptMetadata";
+
+const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
@@ -62,6 +65,30 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         this.navigatorRefreshTimer = null;
       }
     });
+  }
+
+  override async activateView() {
+    await super.activateView();
+    this.refreshView();
+  }
+
+  override refreshView() {
+    super.refreshView();
+    const chapter = this.getCurrentChapter();
+    if (!chapter) return;
+
+    for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
+      const container = leaf.view.containerEl.children[1];
+      if (!(container instanceof HTMLElement)) continue;
+      const staging = document.createElement("div");
+      renderStoryWorldEventAuthoring(staging, chapter, this);
+      const before = container.querySelector(".mwc-world-context");
+      while (staging.firstElementChild) {
+        const child = staging.firstElementChild;
+        if (before) before.before(child);
+        else container.appendChild(child);
+      }
+    }
   }
 
   getPendingStoryWorldEventAuthoring(
