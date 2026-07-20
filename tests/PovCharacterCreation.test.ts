@@ -35,7 +35,7 @@ test("extracts a character name from free text and unresolved wikilinks", () => 
   equal(extractPovCharacterName(""), null);
 });
 
-test("uses the scoped character folder and book scope for a new free-text POV", () => {
+test("uses the scoped character folder, compact link and book scope for new free text", () => {
   const suggestions = buildPovSuggestions([entity()], ["PLURALITY"]);
   const proposal = buildPovCharacterCreationProposal("Robin", {
     suggestions,
@@ -45,7 +45,7 @@ test("uses the scoped character folder and book scope for a new free-text POV", 
 
   equal(proposal?.name, "Robin");
   equal(proposal?.path, "Story World/Characters/Robin.md");
-  equal(proposal?.povValue, "[[Story World/Characters/Robin]]");
+  equal(proposal?.povValue, "[[Robin]]");
   deepEqual(proposal?.scope, ["[[Books/PLURALITY]]"]);
 });
 
@@ -57,6 +57,16 @@ test("honours an explicit unresolved path and keeps the display name", () => {
 
   equal(proposal?.path, "Story World/People/RV.md");
   equal(proposal?.povValue, "[[Story World/People/RV|Robin Vale]]");
+});
+
+test("uses a path-qualified link only when the new basename would be ambiguous", () => {
+  const proposal = buildPovCharacterCreationProposal("Peter", {
+    suggestions: [],
+    existingPaths: ["Research/Peter.md"]
+  });
+
+  equal(proposal?.path, "Story World/Characters/Peter.md");
+  equal(proposal?.povValue, "[[Story World/Characters/Peter]]");
 });
 
 test("does not offer creation when a canonical name, alias or target already matches", () => {
@@ -76,10 +86,7 @@ test("never overwrites a case-insensitive path collision", () => {
   });
 
   equal(proposal?.path, "Story World/Characters/Robin (character).md");
-  equal(
-    proposal?.povValue,
-    "[[Story World/Characters/Robin (character)|Robin]]"
-  );
+  equal(proposal?.povValue, "[[Robin (character)|Robin]]");
 });
 
 test("sanitises only the filename while preserving the canonical name", () => {
@@ -92,7 +99,7 @@ test("sanitises only the filename while preserving the canonical name", () => {
   equal(proposal?.path, "Story World/Characters/Robin- First-Prime.md");
   equal(
     proposal?.povValue,
-    "[[Story World/Characters/Robin- First-Prime|Robin: First/Prime]]"
+    "[[Robin- First-Prime|Robin: First/Prime]]"
   );
 });
 
