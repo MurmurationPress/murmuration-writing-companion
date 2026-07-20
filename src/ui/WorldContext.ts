@@ -8,7 +8,12 @@ import {
   WorldStatusPresentation
 } from "../story-world/WorldContext";
 import {
-  getWorldEventRelativeTiming,
+  getWorldEventRelativeTimingPresentation,
+  isWorldEventRelativeTimeMode,
+  WORLD_EVENT_RELATIVE_TIME_MODE_OPTIONS,
+  WorldEventRelativeTimeMode
+} from "../story-world/WorldRelativeTime";
+import {
   getWorldEventTimePresentation
 } from "../story-world/WorldTime";
 
@@ -25,6 +30,8 @@ export type PreviewWorldContextEntity = (
 
 export interface WorldContextRenderOptions {
   storyDate?: unknown;
+  relativeTimeMode?: WorldEventRelativeTimeMode;
+  onRelativeTimeModeChange?: (mode: WorldEventRelativeTimeMode) => void;
 }
 
 function entityDestination(entry: WorldContextEntry): string {
@@ -82,22 +89,75 @@ function createEntityLink(
   return link;
 }
 
+function renderRelativeTimeModeControl(
+  heading: HTMLElement,
+  mode: WorldEventRelativeTimeMode,
+  onChange: ((mode: WorldEventRelativeTimeMode) => void) | undefined
+) {
+  if (!onChange) return;
+
+  const label = heading.createEl("label", {
+    cls: "mwc-world-context-relative-time-control"
+  });
+  label.style.display = "inline-flex";
+  label.style.alignItems = "center";
+  label.style.gap = "5px";
+  label.style.color = "var(--text-muted)";
+  label.style.fontSize = "0.72em";
+  label.createSpan({ text: "Intervals" });
+
+  const select = label.createEl("select", {
+    attr: { "aria-label": "Event relative time presentation" }
+  });
+  select.style.height = "24px";
+  select.style.maxWidth = "145px";
+  select.style.padding = "1px 22px 1px 6px";
+  select.style.fontSize = "1em";
+
+  for (const option of WORLD_EVENT_RELATIVE_TIME_MODE_OPTIONS) {
+    const optionEl = select.createEl("option", { text: option.label });
+    optionEl.value = option.value;
+  }
+
+  select.value = mode;
+  select.onchange = () => {
+    if (isWorldEventRelativeTimeMode(select.value)) onChange(select.value);
+  };
+}
+
 function renderEventGroup(
   container: HTMLElement,
   entries: readonly WorldContextEntry[],
   openEntity: OpenWorldContextEntity,
   previewEntity: PreviewWorldContextEntity | undefined,
-  storyDate: unknown
+  options: WorldContextRenderOptions
 ) {
   if (entries.length === 0) return;
 
   const groupEl = container.createDiv(
     "mwc-world-context-group mwc-world-context-group--events"
   );
-  groupEl.createEl("h4", {
+  const heading = groupEl.createDiv("mwc-world-context-group-heading");
+  heading.style.display = "flex";
+  heading.style.alignItems = "center";
+  heading.style.justifyContent = "space-between";
+  heading.style.flexWrap = "wrap";
+  heading.style.gap = "6px";
+  heading.style.marginBottom = "6px";
+
+  const title = heading.createEl("h4", {
     cls: "mwc-world-context-group-title",
     text: "Events"
   });
+  title.style.margin = "0";
+
+  const relativeTimeMode = options.relativeTimeMode ?? "automatic";
+  renderRelativeTimeModeControl(
+    heading,
+    relativeTimeMode,
+    options.onRelativeTimeModeChange
+  );
+
   const list = groupEl.createDiv({
     cls: "mwc-context-list mwc-world-context-list mwc-world-context-event-list",
     attr: { role: "list" }
@@ -106,10 +166,11 @@ function renderEventGroup(
   for (const entry of entries) {
     const status = presentWorldStatus(entry.entity.status);
     const eventTime = getWorldEventTimePresentation(entry.entity);
-    const relativeTiming = getWorldEventRelativeTiming(
+    const relativeTiming = getWorldEventRelativeTimingPresentation(
       entry.entity,
-      storyDate,
-      entry.entity.name
+      options.storyDate,
+      entry.entity.name,
+      relativeTimeMode
     );
     const card = list.createEl("article", {
       cls: [
@@ -163,9 +224,18 @@ function renderEventGroup(
     }
 
     if (relativeTiming) {
+      const accessibleLabel = relativeTiming.display
+        === relativeTiming.exactTotalDayDisplay
+        ? relativeTiming.display
+        : `${relativeTiming.display}. Exact total: ${relativeTiming.exactTotalDayDisplay}`;
       content.createDiv({
         cls: "mwc-world-context-relative-time",
-        text: relativeTiming
+        text: relativeTiming.display,
+        attr: {
+          "aria-label": accessibleLabel,
+          "data-relative-time-mode": relativeTiming.resolvedMode,
+          "data-exact-total-days": String(relativeTiming.exactTotalDays)
+        }
       });
     }
 
@@ -239,7 +309,7 @@ export function renderWorldContext(
     hierarchy.events,
     openEntity,
     previewEntity,
-    options.storyDate
+    options
   );
 
   for (const group of hierarchy.supportingGroups) {
