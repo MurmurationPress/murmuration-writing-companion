@@ -36,6 +36,10 @@ import {
   formatNavigatorStoryDate,
   ManuscriptSceneMetadata
 } from "./ManuscriptMetadata";
+import {
+  reconcileNavigatorBookSelection,
+  renderAndRetainFirst
+} from "./NavigatorViewState";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -166,6 +170,8 @@ export class ManuscriptNavigatorView extends ItemView {
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
   private selectedBookPath: string | null = null;
+  private lastActivePath: string | null = null;
+  private bookSelectionPinned = false;
   private suppressedActiveRevealPath: string | null = null;
   private readonly preferenceKey: string;
   private draggedPath: string | null = null;
@@ -238,7 +244,19 @@ export class ManuscriptNavigatorView extends ItemView {
       this.suppressedActiveRevealPath = null;
     }
 
-    if (activeBookPath) this.setSelectedBookPath(activeBookPath);
+    const selection = reconcileNavigatorBookSelection({
+      selectedBookPath: this.selectedBookPath,
+      lastActivePath: this.lastActivePath,
+      pinned: this.bookSelectionPinned
+    }, activePath, activeBookPath);
+    const selectedBookChanged = selection.selectedBookPath !== this.selectedBookPath;
+    this.lastActivePath = selection.lastActivePath;
+    this.bookSelectionPinned = selection.pinned;
+    if (selection.selectedBookPath && selectedBookChanged) {
+      this.setSelectedBookPath(selection.selectedBookPath);
+    } else {
+      this.selectedBookPath = selection.selectedBookPath;
+    }
 
     const selected = library.books.find((book) => (
       book.file.path === this.selectedBookPath
@@ -268,6 +286,7 @@ export class ManuscriptNavigatorView extends ItemView {
 
       selector.value = selected?.file.path ?? "";
       selector.onchange = () => {
+        this.bookSelectionPinned = true;
         this.setSelectedBookPath(selector.value);
         this.suppressedActiveRevealPath = null;
         this.undoToken = null;
@@ -311,8 +330,10 @@ export class ManuscriptNavigatorView extends ItemView {
     let activeRow: HTMLElement | null = null;
 
     for (const node of selected.result.roots) {
-      const rendered = this.renderNode(tree, node, selected, activeFile, 0);
-      activeRow = activeRow ?? rendered;
+      activeRow = renderAndRetainFirst(
+        activeRow,
+        () => this.renderNode(tree, node, selected, activeFile, 0)
+      );
     }
 
     this.renderDiagnostics(container, selected);
@@ -494,10 +515,13 @@ export class ManuscriptNavigatorView extends ItemView {
 
       if (!collapsed) {
         for (const child of node.children) {
-          activeDescendant = activeDescendant
-            ?? this.renderNode(children, child, book, activeFile, depth + 1);
+          activeDescendant = renderAndRetainFirst(
+            activeDescendant,
+            () => this.renderNode(children, child, book, activeFile, depth + 1)
+          );
         }
       }
+
       return activeDescendant;
     }
 
