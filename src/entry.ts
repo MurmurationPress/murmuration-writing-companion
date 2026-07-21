@@ -7,43 +7,30 @@ import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAutho
 import { installStoryWorldRelationAuthoringStyles } from "./ui/StoryWorldRelationAuthoringStyles";
 import { renderStoryWorldEventAuthoring } from "./ui/StoryWorldEventAuthoring";
 import { renderStoryWorldRelationAuthoring } from "./ui/StoryWorldRelationAuthoring";
-import {
-  PendingProseEventCreation,
-  PendingStoryWorldEventAuthoring,
-  PendingWorldContextAddition,
-  StoryWorldEventAuthoringSession
-} from "./companion/StoryWorldEventAuthoringSession";
+import { renderStoryWorldEntityInspector, storyWorldBuilderItemForFile } from "./ui/StoryWorldEntityInspector";
+import { STORY_WORLD_NAVIGATOR_VIEW_TYPE, StoryWorldNavigatorView } from "./story-world/StoryWorldNavigatorView";
+import { PendingProseEventCreation, PendingStoryWorldEventAuthoring, PendingWorldContextAddition, StoryWorldEventAuthoringSession } from "./companion/StoryWorldEventAuthoringSession";
 import { extractProseEventName } from "./companion/StoryWorldEventCreation";
-import {
-  PendingStoryWorldRelationAuthoring,
-  PendingStoryWorldRelationContextAddition,
-  PendingStoryWorldRelationMeaning,
-  StoryWorldRelationAuthoringSession
-} from "./companion/StoryWorldRelationAuthoringSession";
+import { PendingStoryWorldRelationAuthoring, PendingStoryWorldRelationContextAddition, PendingStoryWorldRelationMeaning, StoryWorldRelationAuthoringSession } from "./companion/StoryWorldRelationAuthoringSession";
 import { resolvePovRelationSource } from "./companion/StoryWorldRelationAuthoring";
 import { hasCurrentStoryWorldRelationForChapter } from "./companion/ObsidianStoryWorldRelationAuthoring";
-import {
-  getChapterContextField,
-  getEditableChapterContextValue
-} from "./companion/ChapterContext";
-import {
-  explicitManuscriptKind,
-  hasSceneMetadataSignal
-} from "./manuscript/ManuscriptMetadata";
+import { getChapterContextField, getEditableChapterContextValue } from "./companion/ChapterContext";
+import { explicitManuscriptKind, hasSceneMetadataSignal } from "./manuscript/ManuscriptMetadata";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
-  private readonly storyWorldEventAuthoringSession =
-    new StoryWorldEventAuthoringSession();
-  private readonly storyWorldRelationAuthoringSession =
-    new StoryWorldRelationAuthoringSession();
+  private readonly storyWorldEventAuthoringSession = new StoryWorldEventAuthoringSession();
+  private readonly storyWorldRelationAuthoringSession = new StoryWorldRelationAuthoringSession();
 
   async onload() {
     await super.onload();
     installManuscriptPreparationCommands(this);
     installManuscriptReconciliationCommands(this);
+    this.registerView(STORY_WORLD_NAVIGATOR_VIEW_TYPE, (leaf) => new StoryWorldNavigatorView(leaf, this));
+    this.addRibbonIcon("map", "Open Story World navigator", () => void this.activateStoryWorldNavigator());
+    this.addCommand({ id: "open-story-world-navigator", name: "Open Story World navigator", callback: () => void this.activateStoryWorldNavigator() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -52,33 +39,22 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     const relationAuthoringStyles = installStoryWorldRelationAuthoringStyles();
     this.register(() => relationAuthoringStyles.remove());
 
-    this.registerEvent(
-      this.app.workspace.on("editor-change", (editor, info) => {
-        this.handleStoryWorldAuthoringEditorChange(editor, info.file);
-      })
-    );
-    this.registerEvent(
-      this.app.workspace.on("active-leaf-change", () => this.seedActiveEditor())
-    );
-    this.registerEvent(
-      this.app.vault.on("delete", (file) => {
-        if (!(file instanceof TFile)) return;
-        this.storyWorldEventAuthoringSession.clear(file.path);
-        this.storyWorldRelationAuthoringSession.clear(file.path);
-      })
-    );
-    this.registerEvent(
-      this.app.vault.on("rename", (file, oldPath) => {
-        if (!(file instanceof TFile)) return;
-        this.storyWorldEventAuthoringSession.rename(oldPath, file.path);
-        this.storyWorldRelationAuthoringSession.rename(oldPath, file.path);
-      })
-    );
-    this.app.workspace.onLayoutReady(() => this.seedActiveEditor());
-
-    this.registerEvent(
-      this.app.metadataCache.on("changed", () => this.queueNavigatorRefresh())
-    );
+    this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); }));
+    this.registerEvent(this.app.vault.on("delete", (file) => {
+      if (!(file instanceof TFile)) return;
+      this.storyWorldEventAuthoringSession.clear(file.path);
+      this.storyWorldRelationAuthoringSession.clear(file.path);
+      this.refreshStoryWorldNavigator();
+    }));
+    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+      if (!(file instanceof TFile)) return;
+      this.storyWorldEventAuthoringSession.rename(oldPath, file.path);
+      this.storyWorldRelationAuthoringSession.rename(oldPath, file.path);
+      this.refreshStoryWorldNavigator();
+    }));
+    this.app.workspace.onLayoutReady(() => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); });
+    this.registerEvent(this.app.metadataCache.on("changed", () => this.queueNavigatorRefresh()));
     this.register(() => {
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);
@@ -93,10 +69,19 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   override refreshView() {
+    const active = this.app.workspace.getActiveViewOfType(MarkdownView)?.file ?? null;
+    const item = active ? storyWorldBuilderItemForFile(this, active) : null;
+    if (active && item) {
+      for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
+        const container = leaf.view.containerEl.children[1];
+        if (container instanceof HTMLElement) renderStoryWorldEntityInspector(container, this, active, item);
+      }
+      return;
+    }
+
     super.refreshView();
     const chapter = this.getCurrentChapter();
     if (!chapter) return;
-
     for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
       const container = leaf.view.containerEl.children[1];
       if (!(container instanceof HTMLElement)) continue;
@@ -112,60 +97,28 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     }
   }
 
-  getPendingStoryWorldEventAuthoring(
-    chapter: TFile
-  ): PendingStoryWorldEventAuthoring | null {
-    return this.storyWorldEventAuthoringSession.getPending(chapter.path);
+  async activateStoryWorldNavigator() {
+    const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_NAVIGATOR_VIEW_TYPE)[0];
+    const leaf = existing ?? this.app.workspace.getLeftLeaf(false);
+    if (!leaf) return;
+    if (!existing) await leaf.setViewState({ type: STORY_WORLD_NAVIGATOR_VIEW_TYPE, active: true });
+    await this.app.workspace.revealLeaf(leaf);
   }
 
-  dismissPendingStoryWorldEventAuthoring(chapter: TFile): void {
-    this.storyWorldEventAuthoringSession.dismiss(chapter.path);
+  refreshStoryWorldNavigator() {
+    for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_NAVIGATOR_VIEW_TYPE)) {
+      if (leaf.view instanceof StoryWorldNavigatorView) leaf.view.render();
+    }
   }
 
-  markPendingStoryWorldEventCreated(
-    chapter: TFile,
-    pending: PendingProseEventCreation,
-    followUp: Omit<PendingWorldContextAddition, "kind" | "chapterPath">
-  ): void {
-    this.storyWorldEventAuthoringSession.markCreated(
-      chapter.path,
-      pending,
-      followUp
-    );
-  }
-
-  completePendingStoryWorldEventAuthoring(chapter: TFile): void {
-    this.storyWorldEventAuthoringSession.complete(chapter.path);
-  }
-
-  getPendingStoryWorldRelationAuthoring(
-    chapter: TFile
-  ): PendingStoryWorldRelationAuthoring | null {
-    return this.storyWorldRelationAuthoringSession.getPending(chapter.path);
-  }
-
-  dismissPendingStoryWorldRelationAuthoring(chapter: TFile): void {
-    this.storyWorldRelationAuthoringSession.dismiss(chapter.path);
-  }
-
-  advancePendingStoryWorldRelationAuthoring(
-    chapter: TFile,
-    pending: PendingStoryWorldRelationMeaning,
-    followUp: Omit<
-      PendingStoryWorldRelationContextAddition,
-      "kind" | "chapterPath"
-    > | null
-  ): void {
-    this.storyWorldRelationAuthoringSession.advance(
-      chapter.path,
-      pending,
-      followUp
-    );
-  }
-
-  completePendingStoryWorldRelationAuthoring(chapter: TFile): void {
-    this.storyWorldRelationAuthoringSession.complete(chapter.path);
-  }
+  getPendingStoryWorldEventAuthoring(chapter: TFile): PendingStoryWorldEventAuthoring | null { return this.storyWorldEventAuthoringSession.getPending(chapter.path); }
+  dismissPendingStoryWorldEventAuthoring(chapter: TFile): void { this.storyWorldEventAuthoringSession.dismiss(chapter.path); }
+  markPendingStoryWorldEventCreated(chapter: TFile, pending: PendingProseEventCreation, followUp: Omit<PendingWorldContextAddition, "kind" | "chapterPath">): void { this.storyWorldEventAuthoringSession.markCreated(chapter.path, pending, followUp); }
+  completePendingStoryWorldEventAuthoring(chapter: TFile): void { this.storyWorldEventAuthoringSession.complete(chapter.path); }
+  getPendingStoryWorldRelationAuthoring(chapter: TFile): PendingStoryWorldRelationAuthoring | null { return this.storyWorldRelationAuthoringSession.getPending(chapter.path); }
+  dismissPendingStoryWorldRelationAuthoring(chapter: TFile): void { this.storyWorldRelationAuthoringSession.dismiss(chapter.path); }
+  advancePendingStoryWorldRelationAuthoring(chapter: TFile, pending: PendingStoryWorldRelationMeaning, followUp: Omit<PendingStoryWorldRelationContextAddition, "kind" | "chapterPath"> | null): void { this.storyWorldRelationAuthoringSession.advance(chapter.path, pending, followUp); }
+  completePendingStoryWorldRelationAuthoring(chapter: TFile): void { this.storyWorldRelationAuthoringSession.complete(chapter.path); }
 
   private seedActiveEditor(): void {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -175,114 +128,52 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.storyWorldRelationAuthoringSession.seed(view.file.path, text);
   }
 
-  private handleStoryWorldAuthoringEditorChange(
-    editor: Editor,
-    file: TFile | null
-  ): void {
+  private handleStoryWorldAuthoringEditorChange(editor: Editor, file: TFile | null): void {
     if (!file) return;
     const text = editor.getValue();
     const cursorOffset = editor.posToOffset(editor.getCursor());
-    const eventOccurrence = this.storyWorldEventAuthoringSession.updateText(
-      file.path,
-      text,
-      cursorOffset
-    );
-    const relationOccurrence = this.storyWorldRelationAuthoringSession.updateText(
-      file.path,
-      text,
-      cursorOffset
-    );
+    const eventOccurrence = this.storyWorldEventAuthoringSession.updateText(file.path, text, cursorOffset);
+    const relationOccurrence = this.storyWorldRelationAuthoringSession.updateText(file.path, text, cursorOffset);
     if (!this.isManuscriptScene(file)) return;
 
     let changed = false;
     if (eventOccurrence) {
-      const resolved = this.app.metadataCache.getFirstLinkpathDest(
-        eventOccurrence.linkpath,
-        file.path
-      );
-      if (
-        !resolved
-        && !this.storyWorldIndex.resolveWikilink(eventOccurrence.raw, file.path)
-      ) {
+      const resolved = this.app.metadataCache.getFirstLinkpathDest(eventOccurrence.linkpath, file.path);
+      if (!resolved && !this.storyWorldIndex.resolveWikilink(eventOccurrence.raw, file.path)) {
         const name = extractProseEventName(eventOccurrence);
-        if (name) {
-          changed = this.storyWorldEventAuthoringSession.enqueueCandidate(
-            file.path,
-            eventOccurrence,
-            name
-          ) || changed;
-        }
+        if (name) changed = this.storyWorldEventAuthoringSession.enqueueCandidate(file.path, eventOccurrence, name) || changed;
       }
     }
 
     if (relationOccurrence) {
-      const targetFile = this.app.metadataCache.getFirstLinkpathDest(
-        relationOccurrence.linkpath,
-        file.path
-      );
-      const targetEntity = targetFile
-        ? this.storyWorldIndex.index.getByPath(targetFile.path)
-        : null;
-      const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as
-        Record<string, unknown> | undefined;
-      const pov = getEditableChapterContextValue(
-        frontmatter,
-        getChapterContextField("pov")
-      ).value;
-      const sourceEntity = resolvePovRelationSource(
-        pov,
-        this.getPovSuggestions(file)
-      );
-      const sourceFile = sourceEntity
-        ? this.app.vault.getAbstractFileByPath(sourceEntity.path)
-        : null;
+      const targetFile = this.app.metadataCache.getFirstLinkpathDest(relationOccurrence.linkpath, file.path);
+      const targetEntity = targetFile ? this.storyWorldIndex.index.getByPath(targetFile.path) : null;
+      const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+      const pov = getEditableChapterContextValue(frontmatter, getChapterContextField("pov")).value;
+      const sourceEntity = resolvePovRelationSource(pov, this.getPovSuggestions(file));
+      const sourceFile = sourceEntity ? this.app.vault.getAbstractFileByPath(sourceEntity.path) : null;
 
-      if (
-        targetFile
-        && targetEntity
-        && sourceEntity
-        && sourceEntity.path !== targetEntity.path
-        && sourceFile instanceof TFile
-        && !hasCurrentStoryWorldRelationForChapter(
-          this.app,
-          sourceFile,
-          targetFile,
-          file,
-          relationOccurrence.raw
-        )
-      ) {
+      if (targetFile && targetEntity && sourceEntity && sourceEntity.path !== targetEntity.path && sourceFile instanceof TFile && !hasCurrentStoryWorldRelationForChapter(this.app, sourceFile, targetFile, file, relationOccurrence.raw)) {
         const sourceLine = text.slice(0, relationOccurrence.start).split(/\r?\n/).length;
-        changed = this.storyWorldRelationAuthoringSession.enqueueCandidate(
-          file.path,
-          relationOccurrence,
-          sourceLine,
-          sourceEntity.path,
-          sourceEntity.name,
-          targetEntity.path,
-          targetEntity.name,
-          targetEntity.entityType
-        ) || changed;
+        changed = this.storyWorldRelationAuthoringSession.enqueueCandidate(file.path, relationOccurrence, sourceLine, sourceEntity.path, sourceEntity.name, targetEntity.path, targetEntity.name, targetEntity.entityType) || changed;
       }
     }
-
     if (changed) this.refreshView();
   }
 
   private isManuscriptScene(file: TFile): boolean {
-    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as
-      Record<string, unknown> | undefined;
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
     const kind = explicitManuscriptKind(frontmatter);
     if (kind) return kind === "scene";
     return hasSceneMetadataSignal(frontmatter) && this.getOwningBook(file) !== null;
   }
 
   private queueNavigatorRefresh() {
-    if (this.navigatorRefreshTimer !== null) {
-      window.clearTimeout(this.navigatorRefreshTimer);
-    }
+    if (this.navigatorRefreshTimer !== null) window.clearTimeout(this.navigatorRefreshTimer);
     this.navigatorRefreshTimer = window.setTimeout(() => {
       this.navigatorRefreshTimer = null;
       this.refreshManuscriptNavigator();
+      this.refreshStoryWorldNavigator();
     }, 100);
   }
 }
