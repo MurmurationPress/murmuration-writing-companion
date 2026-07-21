@@ -195,7 +195,8 @@ function state(
 test("rejects a stale write before invoking the frontmatter writer", async () => {
   let writes = 0;
   const host: EntityRelationshipWriteHost = {
-    read: async () => state("newer"),
+    readCurrent: async () => state("newer"),
+    readAuthoritative: async () => state("newer"),
     processFrontmatter: async () => { writes += 1; },
     restore: async () => {}
   };
@@ -215,7 +216,8 @@ test("verifies add, edit, supersede and remove writes while preserving unrelated
   ] as const) {
     let current = state("original");
     const host: EntityRelationshipWriteHost = {
-      read: async () => current,
+      readCurrent: async () => current,
+      readAuthoritative: async () => current,
       processFrontmatter: async (change) => {
         const frontmatter = structuredClone(current.frontmatter);
         change(frontmatter);
@@ -228,11 +230,40 @@ test("verifies add, edit, supersede and remove writes while preserving unrelated
   }
 });
 
+test("verifies against the saved document when the open editor still reports pre-write text", async () => {
+  const editorState = state("original");
+  let savedState = state("original");
+  const host: EntityRelationshipWriteHost = {
+    readCurrent: async () => editorState,
+    readAuthoritative: async () => savedState,
+    processFrontmatter: async (change) => {
+      const frontmatter = structuredClone(savedState.frontmatter);
+      change(frontmatter);
+      savedState = { revision: "saved", text: "saved", frontmatter };
+    },
+    restore: async () => { throw new Error("Successful writes must not roll back"); }
+  };
+
+  const written = await writeEntityRelationshipMutation(host, editorState, {
+    kind: "add",
+    draft: {
+      predicate: "knows",
+      objectKind: "target",
+      objectValue: "[[Pip]]",
+      status: "confirmed"
+    }
+  });
+  equal(written.revision, "saved");
+  equal((written.frontmatter.world_relationships as unknown[]).length, 2);
+  equal(editorState.revision, "original");
+});
+
 test("rolls back only its own failed verification result", async () => {
   let current = state("original");
   let restored: string | null = null;
   const host: EntityRelationshipWriteHost = {
-    read: async () => current,
+    readCurrent: async () => current,
+    readAuthoritative: async () => current,
     processFrontmatter: async () => { current = state("bad-write"); },
     restore: async (text) => { restored = text; }
   };
@@ -244,7 +275,8 @@ test("does not roll back over a concurrent unrelated author change", async () =>
   let current = state("original");
   let restores = 0;
   const host: EntityRelationshipWriteHost = {
-    read: async () => current,
+    readCurrent: async () => current,
+    readAuthoritative: async () => current,
     processFrontmatter: async () => {
       current = state("concurrent", { ...baseFrontmatter, unrelated: { newer: true } });
     },

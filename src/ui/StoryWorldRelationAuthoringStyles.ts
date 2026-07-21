@@ -56,6 +56,10 @@ export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
 .mwc-entity-relationship-controls label { display: grid; grid-template-columns: minmax(90px, auto) minmax(0, 1fr); align-items: center; gap: 7px; color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .mwc-entity-relationship-controls input,
 .mwc-entity-relationship-controls select { min-width: 0; width: 100%; }
+.mwc-entity-relationship-target-error { grid-column: 1 / -1; margin: 0; color: var(--text-error); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship-date { display: grid; gap: 4px; }
+.mwc-entity-relationship-date button { justify-self: start; }
+.mwc-entity-relationship-preserved-date { color: var(--text-muted); overflow-wrap: anywhere; }
 .mwc-entity-relationship-advanced { margin: 8px 0; }
 .mwc-entity-relationship-preview { margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--interactive-accent); background: var(--background-primary-alt); }
 .mwc-entity-relationship-form > button { margin-right: 6px; }

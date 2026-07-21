@@ -16,6 +16,12 @@ import {
   writeObsidianEntityRelationship
 } from "../story-world/ObsidianEntityRelationshipWriting";
 import { parseWikilink } from "../story-world/StoryWorldIndex";
+import {
+  exactDateQualifierState,
+  exactDateQualifierUpdate,
+  ExactDateQualifierState,
+  resolveEntityRelationshipTarget
+} from "../story-world/EntityRelationshipFormValues";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -118,6 +124,44 @@ function addField(container: Element, label: string, value: string): HTMLInputEl
   return input;
 }
 
+interface ExactDateControl {
+  readonly input: HTMLInputElement;
+  readonly state: ExactDateQualifierState;
+  replacementEnabled(): boolean;
+  previewValue(): string;
+}
+
+function addExactDateField(container: Element, label: string, value: unknown): ExactDateControl {
+  const state = exactDateQualifierState(value);
+  const row = container.createEl("label");
+  row.createSpan({ text: label });
+  const field = row.createDiv("mwc-entity-relationship-date");
+  const input = field.createEl("input", { type: "date" });
+  input.value = state.exactValue;
+  let replacing = !state.requiresReplacement;
+  if (state.requiresReplacement) {
+    input.hidden = true;
+    field.createEl("span", { cls: "mwc-entity-relationship-preserved-date", text: `Preserved: ${state.preservedLabel}` });
+    const replace = field.createEl("button", { text: "Replace with exact date", attr: { type: "button" } });
+    replace.onclick = () => {
+      replacing = true;
+      replace.remove();
+      field.querySelector(".mwc-entity-relationship-preserved-date")?.remove();
+      input.hidden = false;
+      input.focus();
+      input.dispatchEvent(new Event("input"));
+    };
+  }
+  return {
+    input,
+    state,
+    replacementEnabled: () => replacing,
+    previewValue: () => state.requiresReplacement && !replacing
+      ? state.preservedLabel ?? ""
+      : input.value
+  };
+}
+
 async function writeMutation(
   plugin: MurmurationWritingCompanionPlugin,
   file: TFile,
@@ -161,10 +205,23 @@ function renderGuidedForm(
   objectKind.createEl("option", { value: "target", text: "Story World entity" });
   objectKind.createEl("option", { value: "value", text: "Literal value" });
   objectKind.value = relation?.objectKind ?? "target";
-  const objectInput = addField(controls, "Target or value", relation?.objectValue == null ? "" : String(relation.objectValue));
+  const entities = plugin.storyWorldIndex.index.getAll();
+  const existingPaths = plugin.app.vault.getMarkdownFiles().map((candidate) => candidate.path);
+  const storedTarget = relation?.objectKind === "target" && typeof relation.objectValue === "string"
+    ? resolveEntityRelationshipTarget(relation.objectValue, entities, existingPaths)
+    : null;
+  const objectInput = addField(
+    controls,
+    "Target or value",
+    storedTarget?.displayName ?? (relation?.objectValue == null ? "" : String(relation.objectValue))
+  );
   objectInput.setAttr("list", "mwc-story-world-relationship-targets");
   const datalist = controls.createEl("datalist", { attr: { id: "mwc-story-world-relationship-targets" } });
-  for (const entity of plugin.storyWorldIndex.index.getAll()) datalist.createEl("option", { value: `[[${entity.name}]]` });
+  for (const entity of entities) {
+    datalist.createEl("option", { value: entity.name });
+    for (const alias of entity.aliases) datalist.createEl("option", { value: alias, attr: { label: entity.name } });
+  }
+  const targetError = controls.createEl("p", { cls: "mwc-entity-relationship-target-error" });
 
   const statusRow = controls.createEl("label");
   statusRow.createSpan({ text: "Authorial status" });
@@ -180,12 +237,9 @@ function renderGuidedForm(
   const advancedControls = advanced.createDiv("mwc-entity-relationship-controls");
   const originalSource = qualifierText(relation?.qualifiers.source ?? "");
   const source = addField(advancedControls, "Source note(s)", originalSource);
-  const originalAsOf = qualifierText(relation?.qualifiers.as_of ?? "");
-  const asOf = addField(advancedControls, "As of", originalAsOf);
-  const originalFrom = qualifierText(relation?.qualifiers.valid_from ?? "");
-  const validFrom = addField(advancedControls, "Valid from", originalFrom);
-  const originalUntil = qualifierText(relation?.qualifiers.valid_until ?? "");
-  const validUntil = addField(advancedControls, "Valid until", originalUntil);
+  const asOf = addExactDateField(advancedControls, "As of", relation?.qualifiers.as_of);
+  const validFrom = addExactDateField(advancedControls, "Valid from", relation?.qualifiers.valid_from);
+  const validUntil = addExactDateField(advancedControls, "Valid until", relation?.qualifiers.valid_until);
 
   const preview = form.createEl("p", { cls: "mwc-entity-relationship-preview" });
   const save = form.createEl("button", { text: relation ? "Confirm changes" : "Confirm relationship", cls: "mod-cta" });
@@ -201,20 +255,23 @@ function renderGuidedForm(
       ? relation?.predicate && customLabel === relation.predicateLabel ? relation.predicate : customPredicateId(customLabel)
       : selected;
     const objectValue = objectInput.value.trim();
-    if (!storedPredicate || !objectValue || !status.value || (objectKind.value === "target" && !parseWikilink(objectValue))) return null;
-    if (objectKind.value === "target" && !plugin.storyWorldIndex.resolveWikilink(objectValue, file.path)) return null;
+    const target = objectKind.value === "target"
+      ? resolveEntityRelationshipTarget(objectValue, entities, existingPaths)
+      : null;
+    if (!storedPredicate || !objectValue || !status.value || target?.error) return null;
     const qualifierUpdates: Record<string, unknown | undefined> = {};
     if (source.value !== originalSource) qualifierUpdates.source = parseSources(source.value);
-    if (asOf.value !== originalAsOf) qualifierUpdates.as_of = asOf.value.trim() || undefined;
-    if (validFrom.value !== originalFrom) qualifierUpdates.valid_from = validFrom.value.trim() || undefined;
-    if (validUntil.value !== originalUntil) qualifierUpdates.valid_until = validUntil.value.trim() || undefined;
+    for (const [key, control] of [["as_of", asOf], ["valid_from", validFrom], ["valid_until", validUntil]] as const) {
+      const update = exactDateQualifierUpdate(control.state, control.replacementEnabled(), control.input.value);
+      if (update.changed) qualifierUpdates[key] = update.value;
+    }
     return {
       predicate: storedPredicate,
       predicateLabel: selected === "other" ? (customUnchanged ? storedPredicateLabel || null : customLabel) : null,
       objectKind: objectKind.value as "target" | "value",
-      objectValue: relation?.objectKind === "value" && String(relation.objectValue) === objectValue
+      objectValue: target?.reference ?? (relation?.objectKind === "value" && String(relation.objectValue) === objectValue
         ? relation.objectValue as string | number | boolean
-        : objectValue,
+        : objectValue),
       status: status.value,
       qualifierUpdates
     };
@@ -222,22 +279,27 @@ function renderGuidedForm(
   const update = () => {
     custom.parentElement!.hidden = predicate.value !== "other";
     objectInput.previousElementSibling!.textContent = objectKind.value === "target" ? "Target entity" : "Literal value";
+    const target = objectKind.value === "target"
+      ? resolveEntityRelationshipTarget(objectInput.value, entities, existingPaths)
+      : null;
+    targetError.setText(target?.error ?? "");
+    targetError.hidden = !target?.error;
     const draft = currentDraft();
     save.disabled = !draft;
     if (!draft) preview.setText("Complete the relationship to preview the statement before writing.");
     else {
       const label = draft.predicateLabel || ENTITY_RELATIONSHIP_PREDICATES.find((option) => option.value === draft.predicate)?.label || draft.predicate.replace(/_/g, " ");
-      const object = draft.objectKind === "target" ? (parseWikilink(draft.objectValue)?.displayText ?? parseWikilink(draft.objectValue)?.linkpath ?? draft.objectValue) : draft.objectValue;
+      const object = draft.objectKind === "target" ? target?.displayName ?? draft.objectValue : draft.objectValue;
       const qualifiers = [
-        asOf.value.trim() ? `As of ${asOf.value.trim()}.` : "",
-        validFrom.value.trim() ? `Valid from ${validFrom.value.trim()}.` : "",
-        validUntil.value.trim() ? `Valid until ${validUntil.value.trim()}.` : "",
+        asOf.previewValue() ? `As of ${asOf.previewValue()}.` : "",
+        validFrom.previewValue() ? `Valid from ${validFrom.previewValue()}.` : "",
+        validUntil.previewValue() ? `Valid until ${validUntil.previewValue()}.` : "",
         source.value.trim() ? `Source: ${source.value.trim()}.` : ""
       ].filter(Boolean).join(" ");
       preview.setText(`${subject} ${label} ${object}. ${ENTITY_RELATIONSHIP_STATUSES.find((option) => option.value === draft.status)?.label ?? draft.status}.${qualifiers ? ` ${qualifiers}` : ""}`);
     }
   };
-  for (const element of [predicate, custom, objectKind, objectInput, status, source, asOf, validFrom, validUntil]) {
+  for (const element of [predicate, custom, objectKind, objectInput, status, source, asOf.input, validFrom.input, validUntil.input]) {
     element.addEventListener("input", update);
     element.addEventListener("change", update);
   }

@@ -37,6 +37,14 @@ export async function readEntityRelationshipDocument(
   return { revision: revision(text), text, frontmatter: parseFrontmatter(text) };
 }
 
+export async function readAuthoritativeEntityRelationshipDocument(
+  app: App,
+  file: TFile
+): Promise<EntityRelationshipDocumentState> {
+  const text = await app.vault.read(file);
+  return { revision: revision(text), text, frontmatter: parseFrontmatter(text) };
+}
+
 export async function writeObsidianEntityRelationship(
   app: App,
   file: TFile,
@@ -44,7 +52,8 @@ export async function writeObsidianEntityRelationship(
   mutation: EntityRelationshipMutation
 ): Promise<EntityRelationshipDocumentState> {
   const host: EntityRelationshipWriteHost = {
-    read: () => readEntityRelationshipDocument(app, file),
+    readCurrent: () => readEntityRelationshipDocument(app, file),
+    readAuthoritative: () => readAuthoritativeEntityRelationshipDocument(app, file),
     processFrontmatter: (change) => app.fileManager.processFrontMatter(file, change),
     restore: (text) => app.vault.modify(file, text)
   };

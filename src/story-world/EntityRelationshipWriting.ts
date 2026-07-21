@@ -13,7 +13,8 @@ export interface EntityRelationshipDocumentState {
 }
 
 export interface EntityRelationshipWriteHost {
-  read(): Promise<EntityRelationshipDocumentState>;
+  readCurrent(): Promise<EntityRelationshipDocumentState>;
+  readAuthoritative(): Promise<EntityRelationshipDocumentState>;
   processFrontmatter(change: (frontmatter: Record<string, unknown>) => void): Promise<void>;
   restore(text: string): Promise<void>;
 }
@@ -50,7 +51,7 @@ export async function writeEntityRelationshipMutation(
   expected: EntityRelationshipDocumentState,
   mutation: EntityRelationshipMutation
 ): Promise<EntityRelationshipDocumentState> {
-  const current = await host.read();
+  const current = await host.readCurrent();
   if (current.revision !== expected.revision
     || !relationshipValuesEqual(current.frontmatter, expected.frontmatter)) {
     throw new StaleEntityRelationshipWriteError();
@@ -65,10 +66,10 @@ export async function writeEntityRelationshipMutation(
     replaceRecord(frontmatter, nextFrontmatter);
   });
 
-  const written = await host.read();
+  const written = await host.readAuthoritative();
   if (relationshipValuesEqual(written.frontmatter, nextFrontmatter)) return written;
 
-  const latest = await host.read();
+  const latest = await host.readAuthoritative();
   const onlyThisOperationCanBeRolledBack = relationshipValuesEqual(
     withoutRelationship(written.frontmatter),
     withoutRelationship(current.frontmatter)
