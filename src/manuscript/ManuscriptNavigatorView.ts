@@ -103,12 +103,7 @@ function effectiveParent(
 }
 
 function plainButton(button: HTMLButtonElement) {
-  button.style.border = "0";
-  button.style.background = "transparent";
-  button.style.boxShadow = "none";
-  button.style.color = "var(--text-muted)";
-  button.style.cursor = "pointer";
-  button.style.font = "inherit";
+  button.addClass("mwc-quiet-button");
 }
 
 class ConfirmOrderAdoptionModal extends Modal {
@@ -370,17 +365,7 @@ export class ManuscriptNavigatorView extends ItemView {
   private renderOperationStatus(container: HTMLElement) {
     if (!this.operationMessage && !this.undoToken) return;
 
-    const status = container.createDiv();
-    status.style.display = "flex";
-    status.style.alignItems = "center";
-    status.style.justifyContent = "space-between";
-    status.style.gap = "8px";
-    status.style.margin = "0 4px 8px";
-    status.style.padding = "6px 8px";
-    status.style.borderRadius = "5px";
-    status.style.background = "var(--background-secondary-alt)";
-    status.style.color = "var(--text-muted)";
-    status.style.fontSize = "0.76em";
+    const status = container.createDiv("mwc-manuscript-operation-status");
     status.setAttribute("role", "status");
     status.createSpan({ text: this.operationMessage ?? "Manuscript order updated." });
 
@@ -390,8 +375,7 @@ export class ManuscriptNavigatorView extends ItemView {
         attr: { type: "button", "aria-label": "Undo last manuscript move" }
       });
       plainButton(undo);
-      undo.style.color = "var(--text-accent)";
-      undo.style.fontWeight = "650";
+      undo.addClass("mwc-manuscript-undo");
       undo.onclick = () => void this.undoLastMove();
     }
   }
@@ -403,9 +387,6 @@ export class ManuscriptNavigatorView extends ItemView {
   ) {
     const allCollapsed = partPaths.every((path) => this.collapsedParts.has(path));
     const controls = container.createDiv("mwc-manuscript-controls");
-    controls.style.display = "flex";
-    controls.style.justifyContent = "flex-end";
-    controls.style.margin = "0 4px 6px";
 
     const toggle = controls.createEl("button", {
       cls: "mwc-manuscript-collapse-all",
@@ -418,8 +399,6 @@ export class ManuscriptNavigatorView extends ItemView {
       }
     });
     plainButton(toggle);
-    toggle.style.padding = "2px 6px";
-    toggle.style.fontSize = "0.78em";
 
     toggle.onclick = () => {
       if (allCollapsed) {
@@ -479,7 +458,6 @@ export class ManuscriptNavigatorView extends ItemView {
       const collapsed = this.collapsedParts.has(node.entry.path) && !revealActive;
       wrapper.setAttribute("aria-expanded", String(!collapsed));
       const row = wrapper.createDiv("mwc-manuscript-row mwc-manuscript-row--part");
-      row.style.gridTemplateColumns = "22px minmax(0, 1fr) 24px";
       const disclosure = row.createEl("button", {
         cls: "mwc-manuscript-disclosure",
         text: collapsed ? "›" : "⌄",
@@ -530,14 +508,7 @@ export class ManuscriptNavigatorView extends ItemView {
         ? "mwc-manuscript-row mwc-manuscript-row--active"
         : "mwc-manuscript-row"
     );
-    row.style.gridTemplateColumns = "minmax(0, 1fr) 24px";
     const label = this.createOpenButton(row, node.entry, book, isActive);
-    if (isActive) {
-      row.style.background = "var(--interactive-accent)";
-      row.style.boxShadow = "inset 3px 0 0 var(--text-on-accent)";
-      label.style.color = "var(--text-on-accent)";
-      label.style.fontWeight = "650";
-    }
     this.createMoveMenuButton(row, node.entry, book);
     this.configureDrag(row, node.entry, book);
     this.renderMetadataTooltip(row, label, book, node.entry);
@@ -591,6 +562,7 @@ export class ManuscriptNavigatorView extends ItemView {
     book: ObsidianManuscriptBook
   ) {
     const button = row.createEl("button", {
+      cls: "mwc-manuscript-move",
       text: "⋮",
       attr: {
         type: "button",
@@ -598,10 +570,6 @@ export class ManuscriptNavigatorView extends ItemView {
       }
     });
     plainButton(button);
-    button.style.width = "24px";
-    button.style.height = "24px";
-    button.style.padding = "0";
-    button.style.opacity = "0.72";
     button.onclick = (event) => {
       event.preventDefault();
       event.stopPropagation();
