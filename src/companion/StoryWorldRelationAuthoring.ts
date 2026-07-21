@@ -29,6 +29,39 @@ export interface StoryWorldPredicateOption {
   readonly label: string;
 }
 
+export const STORY_WORLD_RELATION_PREDICATE_OPTIONS: readonly StoryWorldPredicateOption[] = [
+  { value: "works_for", label: "works for" },
+  { value: "parent_of", label: "is parent of" },
+  { value: "member_of", label: "is a member of" },
+  { value: "located_in", label: "is located in" },
+  { value: "created_by", label: "was created by" },
+  { value: "participates_in", label: "participates in" },
+  { value: "precedes", label: "precedes" },
+  { value: "authored", label: "authored" },
+  { value: "performs", label: "performs" },
+  { value: "controls", label: "controls" },
+  { value: "depends_on", label: "depends on" },
+  { value: "opposes", label: "opposes" },
+  { value: "observes", label: "observes" },
+  { value: "conceals_from", label: "conceals from" },
+  { value: "knows", label: "knows" },
+  { value: "knows_about", label: "knows about" },
+  { value: "believes", label: "believes" },
+  { value: "suspects", label: "suspects" },
+  { value: "designates", label: "designates as" },
+  { value: "unaware_of", label: "remains unaware of" },
+  { value: "becomes_aware_of", label: "becomes aware of" },
+  { value: "responds_to", label: "responds to" },
+  { value: "investigates", label: "investigates" },
+  { value: "affected_by", label: "is affected by" },
+  { value: "trusts", label: "trusts" },
+  { value: "protects", label: "protects" },
+  { value: "works_with", label: "works with" },
+  { value: "visits", label: "visits" },
+  { value: "leaves", label: "leaves" },
+  { value: "uses", label: "uses" }
+];
+
 const EVENT_PREDICATES: readonly StoryWorldPredicateOption[] = [
   { value: "unaware_of", label: "remains unaware of" },
   { value: "becomes_aware_of", label: "becomes aware of" },

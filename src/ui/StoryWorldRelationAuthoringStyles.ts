@@ -36,6 +36,29 @@ export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
 .mwc-story-world-inspector-values { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .mwc-story-world-inspector-value { min-width: 0; max-width: 100%; overflow-wrap: anywhere; padding: 0.18rem 0.38rem; border-radius: var(--radius-s); background: var(--background-secondary); }
 .mwc-story-world-inspector-prose { margin: 0; line-height: 1.45; }
+
+.mwc-entity-relationships-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mwc-entity-relationships-heading h3 { margin: 0; }
+.mwc-entity-relationships-empty { color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship { margin-top: 8px; padding: 8px; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); background: var(--background-secondary-alt); }
+.mwc-entity-relationship-invalid { border-color: var(--color-orange); }
+.mwc-entity-relationship-sentence { display: inline; margin: 0; line-height: 1.45; }
+.mwc-entity-relationship-link { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: var(--link-color); text-decoration: underline; cursor: pointer; }
+.mwc-entity-relationship-status { margin-left: 6px; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship-warning { margin: 6px 0 0; color: var(--text-warning); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship-details { margin-top: 6px; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship-details dl { margin: 6px 0 0; }
+.mwc-entity-relationship-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-top: 7px; }
+.mwc-entity-relationship-editor:not(:empty) { margin-top: 8px; }
+.mwc-entity-relationship-form { padding: 8px; border: 1px solid var(--interactive-accent); border-radius: var(--radius-s); }
+.mwc-entity-relationship-form h4 { margin: 0 0 7px; }
+.mwc-entity-relationship-controls { display: grid; gap: 7px; }
+.mwc-entity-relationship-controls label { display: grid; grid-template-columns: minmax(90px, auto) minmax(0, 1fr); align-items: center; gap: 7px; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-entity-relationship-controls input,
+.mwc-entity-relationship-controls select { min-width: 0; width: 100%; }
+.mwc-entity-relationship-advanced { margin: 8px 0; }
+.mwc-entity-relationship-preview { margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--interactive-accent); background: var(--background-primary-alt); }
+.mwc-entity-relationship-form > button { margin-right: 6px; }
 `;
 
 export function installStoryWorldRelationAuthoringStyles(): HTMLStyleElement {
