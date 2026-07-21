@@ -22,6 +22,30 @@ test("parses and serialises ranges with distinct endpoints", () => {
   equal(projectEventTime(value), "Thursday, 16 July 2026 – Saturday, 18 July 2026");
 });
 
+test("parses and serialises hour-precision points and ranges", () => {
+  const point = supported({ at: "2026-07-16T14+01:00", precision: "hour" });
+  equal(point.precision, "hour");
+  equal(point.from.time, "14:00");
+  deepEqual(serialiseEventTime(point), { at: "2026-07-16T14:00+01:00", precision: "hour" });
+  const range = supported({ from: "2026-07-16T14:00+01:00", until: "2026-07-16T16:00+01:00", precision: "hour" });
+  equal(range.mode, "range");
+  deepEqual(serialiseEventTime(range), { from: "2026-07-16T14:00+01:00", until: "2026-07-16T16:00+01:00", precision: "hour" });
+});
+
+test("accepts established single-from points and safely projects finer ISO detail", () => {
+  const day = supported({ from: "2027-06-23T09:31:00+01:00", precision: "day" });
+  equal(day.mode, "point");
+  equal(day.precision, "day");
+  equal(projectEventTime(day), "Wednesday, 23 June 2027");
+  const hour = supported({ from: "2029-04-19T09:00:00+01:00", precision: "hour" });
+  equal(hour.precision, "hour");
+  equal(hour.from.time, "09:00");
+  equal(hour.from.offset, "+01:00");
+  const minute = supported({ from: "2029-06-29T19:40:00+01:00", precision: "minute" });
+  equal(minute.precision, "minute");
+  equal(minute.from.time, "19:40");
+});
+
 test("preserves written timezone offsets without conversion", () => {
   const value = supported({ at: "2026-07-16T00:30+14:00", precision: "minute" });
   equal(value.from.offset, "+14:00");

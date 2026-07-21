@@ -1,7 +1,7 @@
 import { getWorldEventTimePresentation } from "./WorldTime";
 import type { StoryWorldEntityRecord } from "./StoryWorldIndex";
 
-export type EventTimePrecision = "year" | "month" | "day" | "minute";
+export type EventTimePrecision = "year" | "month" | "day" | "hour" | "minute";
 export type EventTimeMode = "point" | "range";
 
 export interface EventTimeEndpoint {
@@ -22,7 +22,7 @@ export type EventTimeEditorState =
   | { readonly kind: "supported"; readonly value: SupportedEventTime }
   | { readonly kind: "unsupported"; readonly preserved: unknown; readonly summary: string };
 
-const EXACT = /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:T(\d{2}):(\d{2})(Z|[+-]\d{2}:\d{2})?)?)?)?$/;
+const EXACT = /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:T(\d{2})(?::(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?(Z|[+-]\d{2}:\d{2})?)?)?)?$/;
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -32,7 +32,8 @@ function endpoint(source: unknown, precision: EventTimePrecision | null): { valu
   if (typeof source !== "string") return null;
   const match = EXACT.exec(source.trim());
   if (!match) return null;
-  const inferred: EventTimePrecision = match[5] ? "minute" : match[3] ? "day" : match[2] ? "month" : "year";
+  if (match[6] && !precision) return null;
+  const inferred: EventTimePrecision = match[5] ? "minute" : match[4] ? "hour" : match[3] ? "day" : match[2] ? "month" : "year";
   const month = match[2] ? Number(match[2]) : null;
   const day = match[3] ? Number(match[3]) : null;
   if (month !== null && (month < 1 || month > 12)) return null;
@@ -41,17 +42,19 @@ function endpoint(source: unknown, precision: EventTimePrecision | null): { valu
     date.setUTCFullYear(Number(match[1]));
     if (date.getUTCMonth() !== month! - 1 || date.getUTCDate() !== day) return null;
   }
-  if (match[4] && Number(match[4]) > 23 || match[5] && Number(match[5]) > 59) return null;
-  if (match[6] && match[6] !== "Z") {
-    const [hours, minutes] = match[6].slice(1).split(":").map(Number);
+  if (match[4] && Number(match[4]) > 23 || match[5] && Number(match[5]) > 59 || match[6] && Number(match[6]) > 59) return null;
+  if (match[7] && match[7] !== "Z") {
+    const [hours, minutes] = match[7].slice(1).split(":").map(Number);
     if (hours > 23 || minutes > 59) return null;
   }
   const effective = precision ?? inferred;
   if (effective === "minute" && !match[5]) return null;
+  if (effective === "hour" && !match[4]) return null;
   if (effective === "day" && !match[3]) return null;
   if (effective === "month" && !match[2]) return null;
   const date = effective === "year" ? match[1] : effective === "month" ? `${match[1]}-${match[2]}` : `${match[1]}-${match[2]}-${match[3]}`;
-  return { value: { date, time: effective === "minute" ? `${match[4]}:${match[5]}` : "", offset: effective === "minute" ? match[6] ?? "" : "" }, precision: effective };
+  const timed = effective === "hour" || effective === "minute";
+  return { value: { date, time: timed ? `${match[4]}:${match[5] ?? "00"}` : "", offset: timed ? match[7] ?? "" : "" }, precision: effective };
 }
 
 function unsupported(value: unknown): EventTimeEditorState {
@@ -77,12 +80,16 @@ export function parseEventTime(value: unknown): EventTimeEditorState {
   const keys = Object.keys(value);
   const allowed = new Set(["at", "from", "until", "precision"]);
   if (keys.some((key) => !allowed.has(key))) return unsupported(value);
-  const precision = typeof value.precision === "string" && ["year", "month", "day", "minute"].includes(value.precision)
+  const precision = typeof value.precision === "string" && ["year", "month", "day", "hour", "minute"].includes(value.precision)
     ? value.precision as EventTimePrecision : null;
   if (value.precision !== undefined && !precision) return unsupported(value);
   if (value.at !== undefined && value.from === undefined && value.until === undefined) {
     const at = endpoint(value.at, precision);
     return at ? { kind: "supported", value: { mode: "point", precision: at.precision, from: at.value, to: null } } : unsupported(value);
+  }
+  if (value.from !== undefined && value.until === undefined && value.at === undefined) {
+    const from = endpoint(value.from, precision);
+    return from ? { kind: "supported", value: { mode: "point", precision: from.precision, from: from.value, to: null } } : unsupported(value);
   }
   if (value.from !== undefined && value.until !== undefined && value.at === undefined) {
     const from = endpoint(value.from, precision);
@@ -95,7 +102,7 @@ export function parseEventTime(value: unknown): EventTimeEditorState {
 }
 
 function serialiseEndpoint(value: EventTimeEndpoint, precision: EventTimePrecision): string {
-  if (precision === "minute") return `${value.date}T${value.time}${value.offset}`;
+  if (precision === "hour" || precision === "minute") return `${value.date}T${value.time}${value.offset}`;
   return value.date;
 }
 
