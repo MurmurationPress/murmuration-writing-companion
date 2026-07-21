@@ -126,7 +126,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       if (activeChapter) this.currentChapter = activeChapter;
       this.activateView();
     });
-    this.addRibbonIcon("list-tree", "Open Manuscript navigator", () => {
+    this.addRibbonIcon("list-tree", "Open Manuscript", () => {
       void this.activateManuscriptNavigator();
     });
 
@@ -141,7 +141,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     });
     this.addCommand({
       id: "open-manuscript-navigator",
-      name: "Open Manuscript navigator",
+      name: "Open Manuscript",
       callback: () => void this.activateManuscriptNavigator()
     });
 
@@ -464,7 +464,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const leaf = existing ?? this.app.workspace.getLeftLeaf(false);
 
     if (!leaf) {
-      new Notice("Could not open the Manuscript navigator sidebar.");
+      new Notice("Could not open the Manuscript sidebar.");
       return;
     }
 

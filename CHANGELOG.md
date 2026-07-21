@@ -2,58 +2,62 @@
 
 ## Unreleased
 
-- Add drag-and-drop scene and part reordering to the Manuscript navigator
-- Adopt reviewed filename order as authoritative `manuscript_order` only after explicit confirmation
-- Update a scene's authoritative parent only when a move changes containment
-- Preserve complete part subtrees and reject cycles, descendant drops and invalid targets before writing
-- Add keyboard sibling moves and a compact Move menu for cross-part placement
-- Treat each structural move as one recoverable operation with immediate Undo and stale-edit protection
-- Add a dedicated read-only Manuscript navigator to Obsidian's left sidebar
-- Support both book-part-scene and direct book-scene manuscript structures
-- Recognise existing Longform-style folder notes and numeric filename order during migration
-- Exclude manuscript templates from the selectable book list without configuration
-- Keep scene metadata secondary through hover and keyboard-focus tooltips
-- Define authoritative book-level `manuscript_order` as a flat Markdown wikilink sequence
-- Keep manuscript sequence separate from parent-owned containment and out of editorial storage
-- Add deterministic hierarchy, previous/next scene and structural diagnostic services
-- Add a numeric filename-prefix fallback for reviewed migration from File Order
-- Render authoritative Story World event times as readable British-English dates without rewriting ISO source values
-- Respect declared or evident year, month, day, hour, minute and second precision without manufacturing detail
-- Preserve written story dates, wall-clock times and offsets rather than converting through the system timezone
-- Show deterministic before, after and same-day labels from chapter `story_date` and referenced point-event dates
-- Present explicitly referenced Story World events before supporting entities in World Context
-- Keep event name, authoritative `world_time`, canon status and concise summary permanently visible
-- Present characters, organisations, locations, technologies and other supporting entities as compact linked names
-- Stop duplicating a POV-only character in World Context while retaining explicitly referenced POV entities once
-- Request Obsidian-native page previews for supporting entities on hover and keyboard focus
-- Preserve ordinary click navigation and keep previewing entirely read-only
-- Add a read-only World Context section for the active chapter
-- Keep POV authority in Chapter Context while displaying only explicit `world_context` references
-- Group resolved entities by type and show concise names, summaries and canon status
-- Distinguish Planned and Candidate material from Confirmed canon
-- Open authoritative entity notes through normal Obsidian navigation
-- Persist World Context collapse state locally per vault and keep Annotations primary
-- Omit malformed references and report unresolved links quietly without writing Markdown
-- Add a read-only, rebuildable Story World index for opted-in Markdown entity notes
-- Index entities by vault path, canonical name, aliases and entity type
-- Preserve unknown entity types and extra properties while malformed optional values fail softly
-- Refresh individual index records on metadata change, creation, deletion and rename
-- Resolve ordinary wikilinks through Obsidian metadata with a unique name-or-alias fallback
-- Keep Story World authority out of portable editorial storage and avoid sidebar-triggered vault rescans
-- Define the optional `world_context` chapter property for explicit Story World relevance
-- Avoid inferring World Context membership from POV, location, prose, backlinks or folders
-- Keep free-text location metadata unchanged and avoid prose, backlink or folder inference
-- Resolve wikilinks, aliases and path-qualified references through normal vault semantics
-- Deduplicate resolved entities by vault path while preserving source Markdown unchanged
-- Define Supporting Model conventions for relationships, timelines, knowledge states and continuity
-- Establish qualified subject–predicate–object assertions with optional time, status, provenance and perspective
-- Keep stored models authoritative only for author-maintained interpretation while indexes, inverses and graphs remain derived
-- Require readable sentence rendering, guided authoring and progressive disclosure for non-technical authors
-- Add PRIME-based examples for simple, time-bounded, timeline and knowledge-state relationships
-- Define Confirmed, Planned, Candidate, Unresolved and Superseded Story World states
-- Add lightweight source, first-appearance and replacement provenance conventions
-- Keep authorial status separate from in-world confidence and belief
-- Update Story World examples to use explicit confirmed status and provenance
+
+## 0.16.0 — 2026-07-21
+
+### Manuscript navigation and ordering
+
+- Add the **Manuscript** left-sidebar view for book–part–scene and direct book–scene structures, with book selection, active-scene tracking and scene opening.
+- Support reviewed migration from Longform-style folders and numeric filename order into authoritative Markdown `manuscript_order` links.
+- Add drag-and-drop, keyboard and menu-based scene and part reordering with structural validation, stale-edit protection and immediate Undo.
+
+### Editorial workflow
+
+- Add book review modes and status, an ordered scene editorial frontier and explicit repair when projected `editorial_pass` Markdown disagrees with portable workflow state.
+- Keep Chapter Context editing, annotations, chapter notes and editorial-pass completion together in the **Writing Companion**, with exact manuscript navigation and locally remembered section layout.
+- Preserve free-text and unresolved POV values while offering indexed Story World character suggestions.
+
+### Story World foundations
+
+- Define Story World entities, canon status and provenance, supporting models and explicit chapter `world_context` references as ordinary authoritative Markdown.
+- Add a read-only, rebuildable index with vault-native wikilink resolution, aliases, incremental refresh and soft handling of unknown or malformed optional values.
+- Present explicit World Context without inferring canon or relevance from prose, backlinks or folder placement.
+
+### Prose-first Story World authoring
+
+- Offer explicit, collision-safe character creation from unmatched POV values and event creation from newly written unresolved prose links.
+- Offer guided relationship authoring when a newly written prose link resolves to an indexed entity, while allowing the author to keep the link as a reference only.
+- Keep every proposed write previewable and require confirmation before changing Story World Markdown or chapter context.
+
+### World Builder and entity creation
+
+- Add the **Story World Navigator** and role-aware **Entity Inspector** for browsing entities and supporting models while their Markdown remains open in the editor.
+- Add explicit entity creation with guided kind selection, minimal Markdown output and path and name collision checks.
+- Group and order entities for scanning, including chronological event ordering, status presentation, search and accessible navigation.
+
+### Relationships
+
+- Render entity-owned relationships as readable statements with progressive disclosure of qualifiers, provenance and status.
+- Add guided add, edit, supersede and remove workflows with target resolution, previews, stale-write protection and authoritative Markdown updates.
+- Keep inverses, indexes and visual projections derived rather than storing duplicate relationship truth.
+
+### Event-time editing and temporal reasoning
+
+- Add guided editing for point, range, approximate and partially specified event times, preserving written precision, wall-clock values and offsets.
+- Render British-English dates without rewriting ISO source values and calculate calendar-aware before, after and same-day context where the source data supports it.
+- Keep relative-time presentation preferences local to the vault and avoid manufacturing missing temporal detail.
+
+### Chronology and event–scene mapping
+
+- Add the **Story World Timeline** centre view with filtered chronology, explicit ranges, unsupported or approximate times and undated events.
+- Add an event–scene map derived from authoritative event time and source links, with synchronized selection and event/source navigation back to Markdown.
+- Reuse a single timeline tab and the existing right-sidebar companion while switching cleanly between scenes and entities.
+
+### Interface and accessibility
+
+- Introduce a cohesive visual system for Manuscript, Story World Navigator, Story World Timeline, Writing Companion and Entity Inspector across light and dark themes and narrow and wide layouts.
+- Improve hierarchy, density, focus states, keyboard access, accessible labels and restrained empty-state copy without changing stored workspace view IDs.
+- Align panel titles, commands and tooltips with each panel's current role while preserving existing icons, navigation and saved workspace compatibility.
 
 
 ## 0.15.0 — 2026-07-15
