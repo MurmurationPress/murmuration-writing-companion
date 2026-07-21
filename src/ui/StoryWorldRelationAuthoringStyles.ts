@@ -30,8 +30,7 @@ export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
 .mwc-story-world-item-name { min-width: 0; overflow-wrap: anywhere; color: var(--text-normal); font-weight: 600; }
 .mwc-story-world-item-details { margin-top: 0.12rem; color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .mwc-story-world-inspector-heading { flex-wrap: wrap; }
-.mwc-story-world-inspector-kind,
-.mwc-story-world-inspector-note { margin: 0.2rem 0 0; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-story-world-inspector-kind { margin: 0.2rem 0 0; color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .mwc-story-world-inspector-section { margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px solid var(--background-modifier-border); }
 .mwc-story-world-inspector-section h3 { margin: 0 0 0.35rem; font-size: var(--font-ui-small); }
 .mwc-story-world-inspector-values { display: flex; flex-wrap: wrap; gap: 0.3rem; }
