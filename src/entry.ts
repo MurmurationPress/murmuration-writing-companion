@@ -4,6 +4,7 @@ import { installManuscriptPreparationCommands } from "./manuscript/ManuscriptPre
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
 import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyles";
 import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAuthoringStyles";
+import { installStoryWorldBuilderStyles } from "./ui/StoryWorldBuilderStyles";
 import { installStoryWorldRelationAuthoringStyles } from "./ui/StoryWorldRelationAuthoringStyles";
 import { renderStoryWorldEventAuthoring } from "./ui/StoryWorldEventAuthoring";
 import { renderStoryWorldRelationAuthoring } from "./ui/StoryWorldRelationAuthoring";
@@ -45,6 +46,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => povCharacterStyles.remove());
     const eventAuthoringStyles = installStoryWorldEventAuthoringStyles();
     this.register(() => eventAuthoringStyles.remove());
+    const storyWorldBuilderStyles = installStoryWorldBuilderStyles();
+    this.register(() => storyWorldBuilderStyles.remove());
     const relationAuthoringStyles = installStoryWorldRelationAuthoringStyles();
     this.register(() => relationAuthoringStyles.remove());
     const timelineStyles = installStoryWorldTimelineStyles();
