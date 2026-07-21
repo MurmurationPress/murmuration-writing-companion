@@ -2,6 +2,7 @@ import { MarkdownRenderer, TFile } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-world/WorldBuilder";
 import { renderEntityRelationshipWorkspace } from "./EntityRelationshipWorkspace";
+import { renderEventTimeWorkspace } from "./EventTimeWorkspace";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -51,7 +52,8 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
 
   addText(container, "Summary", item.summary);
   addText(container, "Status note", typeof item.properties.world_status_note === "string" ? item.properties.world_status_note : null);
-  addText(container, "World time", formatTime(item.worldTime));
+  if (item.kind === "entity" && item.type.trim().toLowerCase() === "event") renderEventTimeWorkspace(container, plugin, file, item.worldTime);
+  else addText(container, "World time", formatTime(item.worldTime));
   addValues(container, "Aliases", item.aliases, plugin, file);
   addValues(container, "Scope", item.scope, plugin, file);
   addValues(container, "First appearance", item.firstAppearance ? [item.firstAppearance] : [], plugin, file);
