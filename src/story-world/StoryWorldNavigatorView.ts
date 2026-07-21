@@ -1,6 +1,6 @@
 import { ItemView, MarkdownView, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
-import { StoryWorldEntityCreationModal } from "../ui/StoryWorldEntityCreationModal";
+import { StoryWorldEntityCreationHost, StoryWorldEntityCreationModal } from "../ui/StoryWorldEntityCreationModal";
 import {
   filterStoryWorldBuilderItems,
   groupStoryWorldBuilderItems,
@@ -28,7 +28,7 @@ export class StoryWorldNavigatorView extends ItemView {
   private query = "";
   private manuallySelectedPath: string | null = null;
 
-  constructor(leaf: WorkspaceLeaf, private readonly plugin: MurmurationWritingCompanionPlugin) {
+  constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldEntityCreationHost) {
     super(leaf);
   }
 

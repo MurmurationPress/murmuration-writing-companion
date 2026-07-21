@@ -2,6 +2,7 @@ import { equal, match } from "node:assert/strict";
 import { test } from "node:test";
 import {
   findStoryWorldCreationCollision,
+  findStoryWorldPathCollision,
   planStoryWorldEntityCreation,
   safeStoryWorldFilename
 } from "../src/story-world/StoryWorldEntityCreation";
@@ -37,4 +38,5 @@ test("blocks path, canonical-name and alias collisions case-insensitively", () =
   equal(findStoryWorldCreationCollision(plan, [{ path: "Story World/Characters/PIP.md", name: "Philippa Fenwick", aliases: [] }]), "A file already exists at Story World/Characters/Pip.md.");
   equal(findStoryWorldCreationCollision(plan, [{ path: "Elsewhere.md", name: "pip", aliases: [] }]), "An entity already uses the canonical name Pip.");
   equal(findStoryWorldCreationCollision(plan, [{ path: "Elsewhere.md", name: "Philippa Fenwick", aliases: ["PIP"] }]), "Pip is already used as an alias.");
+  equal(findStoryWorldPathCollision(plan, ["Story World/Characters/PIP.md"]), "A file already exists at Story World/Characters/Pip.md.");
 });

@@ -3,10 +3,15 @@ import type MurmurationWritingCompanionPlugin from "../main";
 import { storyWorldBuilderItems, StoryWorldBuilderDocument } from "../story-world/WorldBuilder";
 import {
   findStoryWorldCreationCollision,
+  findStoryWorldPathCollision,
   planStoryWorldEntityCreation,
   STORY_WORLD_ENTITY_KINDS,
   StoryWorldEntityKind
 } from "../story-world/StoryWorldEntityCreation";
+
+export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
+  refreshStoryWorldNavigator(): void;
+}
 
 function documents(plugin: MurmurationWritingCompanionPlugin): StoryWorldBuilderDocument[] {
   return plugin.app.vault.getMarkdownFiles().map((file) => ({
@@ -29,11 +34,11 @@ export class StoryWorldEntityCreationModal extends Modal {
   private kind: StoryWorldEntityKind = "character";
   private customKind = "";
   private name = "";
-  private scope = "";
+  private scopeInput = "";
   private preview!: HTMLElement;
   private createButton!: HTMLButtonElement;
 
-  constructor(private readonly plugin: MurmurationWritingCompanionPlugin) {
+  constructor(private readonly plugin: StoryWorldEntityCreationHost) {
     super(plugin.app);
   }
 
@@ -60,7 +65,7 @@ export class StoryWorldEntityCreationModal extends Modal {
     new Setting(this.contentEl)
       .setName("Scope")
       .setDesc("Optional explicit book or series wikilink; no scope is inferred.")
-      .addText((text) => text.setPlaceholder("[[PRIME Trilogy]]").onChange((value) => { this.scope = value; this.renderPreview(); }));
+      .addText((text) => text.setPlaceholder("[[PRIME Trilogy]]").onChange((value) => { this.scopeInput = value; this.renderPreview(); }));
 
     this.preview = this.contentEl.createDiv("mwc-story-world-create-preview");
     const actions = this.contentEl.createDiv("modal-button-container");
@@ -72,7 +77,7 @@ export class StoryWorldEntityCreationModal extends Modal {
 
   private currentPlan() {
     try {
-      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scope }), error: null };
+      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput }), error: null };
     } catch (error) {
       return { plan: null, error: error instanceof Error ? error.message : String(error) };
     }
@@ -88,7 +93,8 @@ export class StoryWorldEntityCreationModal extends Modal {
       return;
     }
     const items = storyWorldBuilderItems(documents(this.plugin));
-    const collision = findStoryWorldCreationCollision(result.plan, items);
+    const collision = findStoryWorldPathCollision(result.plan, this.plugin.app.vault.getMarkdownFiles().map((file) => file.path))
+      ?? findStoryWorldCreationCollision(result.plan, items);
     this.preview.createEl("h4", { text: "Creation preview" });
     const list = this.preview.createEl("dl");
     for (const [label, value] of [["Name", result.plan.name], ["Kind", result.plan.entityType], ["Path", result.plan.path], ["Scope", result.plan.scope ?? "None"]]) {
@@ -104,7 +110,8 @@ export class StoryWorldEntityCreationModal extends Modal {
     const result = this.currentPlan();
     if (!result.plan) { new Notice(result.error ?? "Invalid entity details."); return; }
     const items = storyWorldBuilderItems(documents(this.plugin));
-    const collision = findStoryWorldCreationCollision(result.plan, items);
+    const collision = findStoryWorldPathCollision(result.plan, this.plugin.app.vault.getMarkdownFiles().map((file) => file.path))
+      ?? findStoryWorldCreationCollision(result.plan, items);
     if (collision || this.plugin.app.vault.getAbstractFileByPath(result.plan.path)) { new Notice(collision ?? `A file already exists at ${result.plan.path}.`); return; }
 
     let created: TFile | null = null;

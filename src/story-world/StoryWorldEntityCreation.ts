@@ -74,3 +74,13 @@ export function findStoryWorldCreationCollision(
   }
   return null;
 }
+
+export function findStoryWorldPathCollision(
+  plan: StoryWorldEntityCreationPlan,
+  paths: readonly string[]
+): string | null {
+  const targetPath = plan.path.toLocaleLowerCase();
+  return paths.some((path) => path.toLocaleLowerCase() === targetPath)
+    ? `A file already exists at ${plan.path}.`
+    : null;
+}
