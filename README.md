@@ -4,6 +4,12 @@ A focused writing companion for Obsidian.
 
 Writing a novel is difficult enough. Your tools shouldn't make it harder.
 
+## Author workflow
+
+Use **Manuscript** in the left sidebar to choose a book, open scenes and manage explicit manuscript order. Review the active chapter in the **Writing Companion**, including Chapter Context, book and editorial progress, Chapter Notes and annotations. Browse or create Story World material in the **Story World Navigator**; selecting an entity or supporting model opens its Markdown and changes the right sidebar to **Entity Inspector**. Use the relationship workspace there, then open **Story World Timeline** in the centre to explore chronology or the event–scene map.
+
+Manuscript and Story World Markdown remain authoritative. The plugin derives navigation, indexes, relationship presentation and temporal views from those files. Portable editorial data is stored separately for notes, annotations and workflow history.
+
 ## Project documents
 
 - [Manifesto](MANIFESTO.md) — what the project believes
@@ -36,8 +42,17 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 
 ## Commands
 
-- Open writing companion
+- Open Writing Companion
+- Open Manuscript
+- Open Story World Navigator
+- Open Story World Timeline
 - Annotate
+
+## Manuscript navigation and ordering
+
+**Manuscript** supports books containing parts and scenes as well as books containing scenes directly. It recognises explicit Markdown hierarchy and order, can help adopt reviewed legacy filename order, and excludes manuscript templates from book selection.
+
+Scenes and parts can be reordered by drag-and-drop, keyboard commands or a compact Move menu. Every structural move is validated before writing, updates authoritative Markdown only where required and can be undone immediately while the source state remains current.
 
 ## Story World foundations
 
@@ -53,9 +68,29 @@ The [read-only Story World index](docs/story-world-index.md) discovers opted-in 
 
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
-The Writing Companion now presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.
+The **Writing Companion** presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.
 
 MWC still does not infer canon or relevance from prose. Story-world facts and model authority never enter the portable editorial store.
+
+## Prose-first Story World authoring
+
+The Writing Companion can offer explicit Story World actions at natural points in the writing process: creating a character from an unmatched POV value, creating an event from a newly written unresolved link, or describing a relationship introduced by a newly written link to an indexed entity. Each offer may be dismissed, previews its intended Markdown and requires confirmation before writing. Keeping a prose link does not by itself make it Story World canon or chapter context.
+
+## Story World navigation and entity creation
+
+**Story World Navigator** is a searchable left-sidebar view of explicitly opted-in entities and supporting models. It groups items by role, shows concise status and temporal cues, and opens the authoritative Markdown note in the centre editor.
+
+The right sidebar becomes **Entity Inspector** while a Story World entity or model is active. The entity name, kind and status remain primary, followed by available summary, provenance, time and relationship content. Creating an entity uses a guided, collision-checked flow that writes minimal ordinary Markdown; returning to a manuscript chapter restores the **Writing Companion**.
+
+## Relationships
+
+Entity-owned relationships are rendered as readable statements in Entity Inspector. Guided controls support adding, editing, superseding and removing a relationship, with explicit target resolution, preview and stale-write protection. Qualifiers, time, status, provenance and perspective remain in authoritative Markdown; derived sentences and inverse views are rebuildable presentation.
+
+## Event time and Story World Timeline
+
+Event time editing supports exact points, ranges, approximate values and partial precision without manufacturing missing detail or converting authored wall-clock values through the system timezone. Readable British-English presentation and relative chapter context are derived from the stored values.
+
+**Story World Timeline** is a centre workspace with chronology and event–scene map presentations. Chronology groups dated points, ranges, approximate or unsupported values and undated events. The map derives scene connections from explicit event source links. Both presentations navigate back to authoritative event, source and scene Markdown and do not provide an independent timeline data store.
 
 ## Chapter Notes
 
@@ -105,9 +140,11 @@ Each chapter has a checklist for Draft, Structure, Character, Dialogue, Continui
 
 The checklist is independent of the current `editorial_pass` Markdown property. Selecting a current focus does not complete it, and completing a checklist item does not change frontmatter or manuscript text.
 
-## Sidebar layout
+## Interface and sidebar layout
 
-Chapter Context, World Context, Editorial Passes and Chapter Notes can be collapsed independently. Annotations remains open and prominent as the active review queue. Collapsing one section never closes another.
+Manuscript, Story World Navigator, Writing Companion, Entity Inspector and Story World Timeline share a restrained visual system designed for light and dark themes, keyboard navigation and both narrow and wide pane layouts.
+
+Within Writing Companion, Chapter Context, World Context, Editorial Passes and Chapter Notes can be collapsed independently. Annotations remains open and prominent as the active review queue. Collapsing one section never closes another.
 
 Collapsed Chapter Context shows a compact summary of the available POV, story date, chapter status and current editorial pass. World Context shows referenced entity names and a resolved count. Editorial Passes retains its completed count, while Chapter Notes indicates whether notes exist and shows a one-line preview when available.
 
