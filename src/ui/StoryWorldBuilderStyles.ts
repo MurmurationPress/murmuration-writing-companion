@@ -29,12 +29,13 @@ export const STORY_WORLD_BUILDER_STYLES = `
 }
 .mwc-story-world-list { margin: 0; padding: 0; list-style: none; }
 .mwc-story-world-item { min-width: 0; margin: 0; }
-.mwc-story-world-item-button {
+.mwc-story-world-navigator button.mwc-story-world-item-button {
   appearance: none;
   display: block;
   width: 100%;
-  min-height: 32px;
-  padding: var(--mwc-space-1, 4px) 7px 5px;
+  height: auto;
+  min-height: 34px;
+  padding: 5px 7px 6px;
   border: 0;
   border-radius: var(--radius-s);
   background: transparent;
@@ -43,9 +44,10 @@ export const STORY_WORLD_BUILDER_STYLES = `
   font: inherit;
   text-align: left;
   cursor: pointer;
+  overflow: visible;
 }
-.mwc-story-world-item-button:hover { background: var(--background-modifier-hover); }
-.mwc-story-world-item--active .mwc-story-world-item-button {
+.mwc-story-world-navigator button.mwc-story-world-item-button:hover { background: var(--background-modifier-hover); }
+.mwc-story-world-navigator .mwc-story-world-item--active button.mwc-story-world-item-button {
   background: var(--background-modifier-active-hover);
   box-shadow: inset 2px 0 0 var(--interactive-accent);
 }
