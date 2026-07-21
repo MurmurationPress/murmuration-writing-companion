@@ -11,6 +11,7 @@ import {
 } from "./WorldBuilder";
 
 export const STORY_WORLD_NAVIGATOR_VIEW_TYPE = "murmuration-story-world-navigator";
+interface StoryWorldNavigatorHost extends StoryWorldEntityCreationHost { activateStoryWorldTimeline(): Promise<void>; }
 
 function documents(plugin: MurmurationWritingCompanionPlugin): StoryWorldBuilderDocument[] {
   return plugin.app.vault.getMarkdownFiles().map((file) => ({
@@ -28,7 +29,7 @@ export class StoryWorldNavigatorView extends ItemView {
   private query = "";
   private manuallySelectedPath: string | null = null;
 
-  constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldEntityCreationHost) {
+  constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldNavigatorHost) {
     super(leaf);
   }
 
@@ -53,6 +54,11 @@ export class StoryWorldNavigatorView extends ItemView {
     });
     createButton.setText("+");
     createButton.onclick = () => new StoryWorldEntityCreationModal(this.plugin).open();
+    const timelineButton = headingActions.createEl("button", {
+      cls: "clickable-icon", attr: { type: "button", "aria-label": "Open Story World timeline", title: "Open Story World timeline" }
+    });
+    timelineButton.setText("↕");
+    timelineButton.onclick = () => void this.plugin.activateStoryWorldTimeline();
 
     const search = container.createEl("input", {
       cls: "mwc-story-world-search",

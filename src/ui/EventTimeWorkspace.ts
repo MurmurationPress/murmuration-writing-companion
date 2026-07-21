@@ -71,7 +71,7 @@ function renderForm(host: Element, plugin: MurmurationWritingCompanionPlugin, fi
   update();
 }
 
-async function begin(host: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, replacing: boolean): Promise<void> {
+export async function beginEventTimeEditing(host: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, replacing = false): Promise<void> {
   try {
     const snapshot = await readEventTimeDocument(plugin.app, file);
     const state = parseEventTime(snapshot.frontmatter[eventTimeProperty(snapshot.frontmatter)]);
@@ -96,7 +96,7 @@ export function renderEventTimeWorkspace(container: Element, plugin: Murmuration
   const state = parseEventTime(value);
   const section = container.createDiv("mwc-section mwc-event-time");
   const heading = section.createDiv("mwc-event-time-heading"); heading.createEl("h3", { text: "World time" });
-  heading.createEl("button", { text: "Edit event time" }).onclick = () => void begin(editor, plugin, file, false);
+  heading.createEl("button", { text: "Edit event time" }).onclick = () => void beginEventTimeEditing(editor, plugin, file, false);
   if (state.kind === "supported") section.createEl("p", { text: projectEventTime(state.value) });
   else if (state.kind === "undated") section.createEl("p", { cls: "mwc-event-time-muted", text: "Undated" });
   else section.createEl("p", { cls: "mwc-event-time-muted", text: state.summary });
