@@ -30,11 +30,12 @@ export const STORY_WORLD_BUILDER_STYLES = `
 .mwc-story-world-list { margin: 0; padding: 0; list-style: none; }
 .mwc-story-world-item { min-width: 0; margin: 0; }
 .mwc-story-world-item-button {
+  appearance: none;
   display: block;
   width: 100%;
   min-height: 30px;
-  padding: 4px 7px;
-  border: 1px solid transparent;
+  padding: 5px 7px 6px;
+  border: 0;
   border-radius: var(--radius-s);
   background: transparent;
   box-shadow: none;
@@ -48,27 +49,46 @@ export const STORY_WORLD_BUILDER_STYLES = `
   background: var(--background-modifier-active-hover);
   box-shadow: inset 2px 0 0 var(--interactive-accent);
 }
-.mwc-story-world-item-primary { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.mwc-story-world-item-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
 
 .mwc-story-world-item-name {
-  flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
   color: var(--text-normal);
-  font-weight: 580;
+  font-weight: 620;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.mwc-story-world-item-status {
+  color: var(--text-faint);
+  font-weight: 450;
   line-height: 1.3;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.mwc-story-world-item-status { flex: 0 0 auto; white-space: nowrap; }
 
 .mwc-story-world-item-details {
-  margin-top: 1px;
-  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  min-width: 0;
+  margin-top: 2px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-variant-numeric: tabular-nums;
-  line-height: 1.25;
+  line-height: 1.3;
+}
+.mwc-story-world-item-type,
+.mwc-story-world-item-time {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -130,10 +150,8 @@ export const STORY_WORLD_BUILDER_STYLES = `
 }
 
 @media (max-width: 300px) {
-  .mwc-story-world-item-primary { flex-wrap: wrap; }
-  .mwc-story-world-item-status { flex-basis: 100%; }
-  .mwc-story-world-item-name,
-  .mwc-story-world-item-details { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+  .mwc-story-world-item-primary { grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .mwc-story-world-item-status { grid-row: 2; }
 }
 `;
 

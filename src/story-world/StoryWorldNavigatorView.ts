@@ -101,8 +101,13 @@ export class StoryWorldNavigatorView extends ItemView {
         const primary = button.createDiv("mwc-story-world-item-primary");
         primary.createSpan({ cls: "mwc-story-world-item-name", text: item.name });
         if (item.status) primary.createSpan({ cls: "mwc-story-world-item-status", text: item.status });
-        const details = [item.kind === "model" ? item.type : null, compactDate(item.worldTime)].filter(Boolean).join(" · ");
-        if (details) button.createDiv({ cls: "mwc-story-world-item-details", text: details });
+        const modelType = item.kind === "model" ? item.type : null;
+        const eventTime = compactDate(item.worldTime);
+        if (modelType || eventTime) {
+          const details = button.createDiv("mwc-story-world-item-details");
+          if (modelType) details.createSpan({ cls: "mwc-story-world-item-type", text: modelType });
+          if (eventTime) details.createSpan({ cls: "mwc-story-world-item-time", text: eventTime });
+        }
         button.onclick = () => {
           this.manuallySelectedPath = item.path;
           void this.openItem(item);
