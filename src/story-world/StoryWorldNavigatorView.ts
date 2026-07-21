@@ -9,6 +9,7 @@ import {
   StoryWorldBuilderDocument,
   StoryWorldBuilderItem
 } from "./WorldBuilder";
+import { storyWorldNavigatorStatus } from "./StoryWorldNavigatorPresentation";
 
 export const STORY_WORLD_NAVIGATOR_VIEW_TYPE = "murmuration-story-world-navigator";
 interface StoryWorldNavigatorHost extends StoryWorldEntityCreationHost { activateStoryWorldTimeline(): Promise<void>; }
@@ -92,15 +93,21 @@ export class StoryWorldNavigatorView extends ItemView {
       const list = section.createEl("ul", { cls: "mwc-story-world-list" });
 
       for (const item of group.items) {
+        const status = storyWorldNavigatorStatus(item.status);
         const row = list.createEl("li", { cls: "mwc-story-world-item" });
         if (item.path === activePath) row.addClass("mwc-story-world-item--active");
         const button = row.createEl("button", {
           cls: "mwc-story-world-item-button",
-          attr: { type: "button", "aria-label": `Open ${item.name}` }
+          attr: { type: "button", "aria-label": `Open ${item.name}. Status: ${status.accessibleLabel}` }
         });
         const primary = button.createDiv("mwc-story-world-item-primary");
         primary.createSpan({ cls: "mwc-story-world-item-name", text: item.name });
-        if (item.status) primary.createSpan({ cls: "mwc-story-world-item-status", text: item.status });
+        const statusElement = primary.createSpan({
+          cls: `mwc-story-world-item-status mwc-story-world-item-status--${status.kind}${status.visibleLabel ? "" : " is-default"}`,
+          attr: { title: `Status: ${status.accessibleLabel}` }
+        });
+        statusElement.createSpan({ cls: "mwc-story-world-item-status-dot", attr: { "aria-hidden": "true" } });
+        if (status.visibleLabel) statusElement.createSpan({ cls: "mwc-story-world-item-status-label", text: status.visibleLabel });
         const modelType = item.kind === "model" ? item.type : null;
         const eventTime = compactDate(item.worldTime);
         if (modelType || eventTime) {

@@ -33,8 +33,8 @@ export const STORY_WORLD_BUILDER_STYLES = `
   appearance: none;
   display: block;
   width: 100%;
-  min-height: 30px;
-  padding: 5px 7px 6px;
+  min-height: 28px;
+  padding: 3px 7px 4px;
   border: 0;
   border-radius: var(--radius-s);
   background: transparent;
@@ -66,11 +66,29 @@ export const STORY_WORLD_BUILDER_STYLES = `
   white-space: normal;
 }
 .mwc-story-world-item-status {
-  color: var(--text-faint);
+  --mwc-status-color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mwc-status-color);
   font-weight: 450;
   line-height: 1.3;
   white-space: nowrap;
 }
+.mwc-story-world-item-status-dot {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 48%, transparent);
+}
+.mwc-story-world-item-status--confirmed { --mwc-status-color: var(--text-faint); }
+.mwc-story-world-item-status--planned { --mwc-status-color: var(--text-accent); }
+.mwc-story-world-item-status--candidate { --mwc-status-color: var(--text-muted); }
+.mwc-story-world-item-status--unresolved { --mwc-status-color: var(--text-warning); }
+.mwc-story-world-item-status--superseded { --mwc-status-color: var(--text-faint); }
+.mwc-story-world-item-status--superseded .mwc-story-world-item-status-label { text-decoration: line-through; }
 
 .mwc-story-world-item-details {
   display: flex;
@@ -150,8 +168,8 @@ export const STORY_WORLD_BUILDER_STYLES = `
 }
 
 @media (max-width: 300px) {
-  .mwc-story-world-item-primary { grid-template-columns: minmax(0, 1fr); gap: 1px; }
-  .mwc-story-world-item-status { grid-row: 2; }
+  .mwc-story-world-item-primary { gap: 1px 5px; }
+  .mwc-story-world-item-status:not(.is-default) { grid-row: 2; grid-column: 1 / -1; }
 }
 `;
 
