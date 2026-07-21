@@ -2,10 +2,6 @@ import { MarkdownRenderer, TFile } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-world/WorldBuilder";
 
-function listText(values: readonly string[]): string {
-  return values.join(" · ");
-}
-
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -18,67 +14,47 @@ function formatTime(value: unknown): string | null {
   return base ? [base, precision].filter(Boolean).join(" · ") : null;
 }
 
-function addRow(
-  list: HTMLElement,
-  label: string,
-  value: string | null,
-  plugin: MurmurationWritingCompanionPlugin,
-  file: TFile,
-  markdown = false
-): void {
+function addText(container: Element, heading: string, value: string | null): void {
   if (!value) return;
-  const row = list.createDiv("mwc-context-row");
-  row.createEl("dt", { cls: "mwc-context-label", text: label });
-  const content = row.createEl("dd", { cls: "mwc-context-value" });
-  if (markdown) {
-    void MarkdownRenderer.render(plugin.app, value, content, file.path, plugin);
-  } else {
-    content.setText(value);
+  const section = container.createDiv("mwc-story-world-inspector-section");
+  section.createEl("h3", { text: heading });
+  section.createEl("p", { cls: "mwc-story-world-inspector-prose", text: value });
+}
+
+function addValues(container: Element, heading: string, values: readonly string[], plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
+  if (!values.length) return;
+  const section = container.createDiv("mwc-story-world-inspector-section");
+  section.createEl("h3", { text: heading });
+  const list = section.createDiv("mwc-story-world-inspector-values");
+  for (const value of values) {
+    const item = list.createDiv("mwc-story-world-inspector-value");
+    void MarkdownRenderer.render(plugin.app, value, item, file.path, plugin);
   }
 }
 
-export function storyWorldBuilderItemForFile(
-  plugin: MurmurationWritingCompanionPlugin,
-  file: TFile
-): StoryWorldBuilderItem | null {
-  const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter as
-    Record<string, unknown> | undefined;
+export function storyWorldBuilderItemForFile(plugin: MurmurationWritingCompanionPlugin, file: TFile): StoryWorldBuilderItem | null {
+  const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
   return parseStoryWorldBuilderItem({ path: file.path, basename: file.basename, frontmatter });
 }
 
-export function renderStoryWorldEntityInspector(
-  container: Element,
-  plugin: MurmurationWritingCompanionPlugin,
-  file: TFile,
-  item: StoryWorldBuilderItem
-): void {
+export function renderStoryWorldEntityInspector(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, item: StoryWorldBuilderItem): void {
   container.empty();
   container.addClass("mwc-container", "mwc-story-world-inspector");
   container.createEl("h2", { text: "Story World" });
 
   const identity = container.createDiv("mwc-section mwc-story-world-inspector-identity");
-  identity.createEl("h3", { text: item.name });
-  identity.createEl("p", {
-    cls: "mwc-story-world-inspector-kind",
-    text: item.kind === "model" ? `Supporting model · ${item.type}` : item.type
-  });
-  identity.createEl("p", {
-    cls: "mwc-muted",
-    text: "Authoritative Markdown remains open in the centre pane."
-  });
+  const heading = identity.createDiv("mwc-story-world-inspector-heading");
+  heading.createEl("h3", { text: item.name });
+  if (item.status) heading.createSpan({ cls: "mwc-story-world-inspector-status", text: item.status });
+  identity.createEl("p", { cls: "mwc-story-world-inspector-kind", text: item.kind === "model" ? `Supporting model · ${item.type}` : item.type });
+  identity.createEl("p", { cls: "mwc-story-world-inspector-note", text: "Authoritative Markdown remains in the centre pane." });
 
-  const section = container.createDiv("mwc-section mwc-story-world-inspector-properties");
-  section.createEl("h3", { text: item.kind === "model" ? "Model Context" : "Entity Context" });
-  const list = section.createEl("dl", { cls: "mwc-context-list" });
-  addRow(list, "Name", item.name, plugin, file);
-  addRow(list, item.kind === "model" ? "Model kind" : "Entity type", item.type, plugin, file);
-  addRow(list, "Aliases", item.aliases.length ? listText(item.aliases) : null, plugin, file);
-  addRow(list, "Canon status", item.status, plugin, file);
-  addRow(list, "Status note", typeof item.properties.world_status_note === "string" ? item.properties.world_status_note : null, plugin, file);
-  addRow(list, "Scope", item.scope.length ? listText(item.scope) : null, plugin, file, true);
-  addRow(list, "Summary", item.summary, plugin, file);
-  addRow(list, "First appearance", item.firstAppearance, plugin, file, true);
-  addRow(list, "Sources", item.sources.length ? listText(item.sources) : null, plugin, file, true);
-  addRow(list, "Subject", item.modelSubject.length ? listText(item.modelSubject) : null, plugin, file, true);
-  addRow(list, "World time", formatTime(item.worldTime), plugin, file);
+  addText(container, "Summary", item.summary);
+  addText(container, "Status note", typeof item.properties.world_status_note === "string" ? item.properties.world_status_note : null);
+  addText(container, "World time", formatTime(item.worldTime));
+  addValues(container, "Aliases", item.aliases, plugin, file);
+  addValues(container, "Scope", item.scope, plugin, file);
+  addValues(container, "First appearance", item.firstAppearance ? [item.firstAppearance] : [], plugin, file);
+  addValues(container, "Sources", item.sources, plugin, file);
+  addValues(container, "Subject", item.modelSubject, plugin, file);
 }
