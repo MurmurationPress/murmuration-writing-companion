@@ -40,6 +40,7 @@ export const STORY_WORLD_TIMELINE_STYLES = `
 .mwc-event-scene-row[data-placement="point-year"]::before { border-radius: 2px; }
 .mwc-event-scene-row[data-placement="point-month"]::before { border-style: double; transform: rotate(45deg); }
 .mwc-event-scene-row[data-placement="point-minute"]::before { background: var(--interactive-accent); }
+.mwc-event-scene-row[data-placement="point-hour"]::before { background: var(--interactive-accent); opacity: .82; }
 .mwc-event-scene-row[data-placement="unsupported"]::before { border-style: dashed; border-color: var(--color-orange); }
 .mwc-event-scene-row[data-placement="undated"]::before { border-color: var(--text-muted); }
 .mwc-event-scene-event-node,

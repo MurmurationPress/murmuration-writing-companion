@@ -22,6 +22,16 @@ test("parses and serialises ranges with distinct endpoints", () => {
   equal(projectEventTime(value), "Thursday, 16 July 2026 – Saturday, 18 July 2026");
 });
 
+test("parses and serialises hour-precision points and ranges", () => {
+  const point = supported({ at: "2026-07-16T14+01:00", precision: "hour" });
+  equal(point.precision, "hour");
+  equal(point.from.time, "14:00");
+  deepEqual(serialiseEventTime(point), { at: "2026-07-16T14:00+01:00", precision: "hour" });
+  const range = supported({ from: "2026-07-16T14:00+01:00", until: "2026-07-16T16:00+01:00", precision: "hour" });
+  equal(range.mode, "range");
+  deepEqual(serialiseEventTime(range), { from: "2026-07-16T14:00+01:00", until: "2026-07-16T16:00+01:00", precision: "hour" });
+});
+
 test("preserves written timezone offsets without conversion", () => {
   const value = supported({ at: "2026-07-16T00:30+14:00", precision: "minute" });
   equal(value.from.offset, "+14:00");

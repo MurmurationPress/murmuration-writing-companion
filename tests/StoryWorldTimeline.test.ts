@@ -31,6 +31,33 @@ test("orders exact year, month, day and minute points oldest first with determin
   deepEqual(result.points.map((item) => item.precision), ["year", "month", "day", "day", "minute"]);
 });
 
+test("keeps every supported point and range precision out of the unsupported group", () => {
+  const supported = [
+    ["Year", "2026", { from: "2026", until: "2027", precision: "year" }],
+    ["Month", "2026-04", { from: "2026-04", until: "2026-05", precision: "month" }],
+    ["Day", "2026-04-03", { from: "2026-04-03", until: "2026-04-04", precision: "day" }],
+    ["Hour", { at: "2026-04-03T09:00+01:00", precision: "hour" }, { from: "2026-04-03T09:00+01:00", until: "2026-04-03T11:00+01:00", precision: "hour" }],
+    ["Minute", "2026-04-03T09:15+01:00", { from: "2026-04-03T09:15+01:00", until: "2026-04-03T09:45+01:00", precision: "minute" }]
+  ] as const;
+  const entities = supported.flatMap(([label, point, range]) => [event(`${label} point.md`, point), event(`${label} range.md`, range)]);
+  const result = projectStoryWorldTimeline(entities);
+  deepEqual(result.points.map((item) => item.precision).sort(), ["day", "hour", "minute", "month", "year"]);
+  deepEqual(result.ranges.map((item) => item.precision).sort(), ["day", "hour", "minute", "month", "year"]);
+  deepEqual(result.unsupported, []);
+});
+
+test("reserves unsupported grouping for approximate, uncertain, unknown or malformed values", () => {
+  const result = projectStoryWorldTimeline([
+    event("Approximate.md", { at: "about 2026", precision: "approximate" }),
+    event("Uncertain.md", { at: "2026", precision: "year", uncertain: true }),
+    event("Unknown.md", { at: "2026", precision: "season" }),
+    event("Malformed.md", { from: "2026-02-30", until: "2026-03-01", precision: "day" })
+  ]);
+  deepEqual(result.unsupported.map((item) => item.name), ["Approximate", "Malformed", "Uncertain", "Unknown"]);
+  deepEqual(result.points, []);
+  deepEqual(result.ranges, []);
+});
+
 test("scope, status and precision filters affect only the projection and preserve unknown values as options", () => {
   const entities = [
     event("A.md", "2026", { scope: ["Book One"], status: "rumoured" }),

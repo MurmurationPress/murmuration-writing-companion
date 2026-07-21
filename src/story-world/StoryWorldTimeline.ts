@@ -34,7 +34,7 @@ function sourceProjection(raw: string, eventPath: string, resolve: TimelineSourc
 function sortEvents(left: StoryWorldTimelineEvent, right: StoryWorldTimelineEvent): number {
   return (left.sortKey ?? "").localeCompare(right.sortKey ?? "") || left.path.localeCompare(right.path) || left.name.localeCompare(right.name);
 }
-function sourceValue(time: SupportedEventTime): string { return time.from.date + (time.precision === "minute" ? `T${time.from.time}${time.from.offset}` : ""); }
+function sourceValue(time: SupportedEventTime): string { return time.from.date + (["hour", "minute"].includes(time.precision) ? `T${time.from.time}${time.from.offset}` : ""); }
 
 export function projectStoryWorldTimeline(
   entities: readonly StoryWorldEntityRecord[], resolve: TimelineSourceResolver = () => null, filters: StoryWorldTimelineFilters = {}

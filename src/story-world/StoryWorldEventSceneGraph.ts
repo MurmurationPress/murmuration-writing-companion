@@ -3,7 +3,7 @@ import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { StoryWorldTimelineEvent, StoryWorldTimelineProjection, timelineReferenceLabel } from "./StoryWorldTimeline";
 import { parseEventTime } from "./EventTimeEditing";
 
-export type GraphPlacement = "point-year" | "point-month" | "point-day" | "point-minute" | "range" | "unsupported" | "undated";
+export type GraphPlacement = "point-year" | "point-month" | "point-day" | "point-hour" | "point-minute" | "range" | "unsupported" | "undated";
 export interface GraphSceneDescription { readonly path: string; readonly title: string; readonly context: string | null; }
 export interface EventSceneGraphNode { readonly id: string; readonly kind: "event" | "scene" | "unresolved"; readonly path: string | null; readonly label: string; readonly context: string | null; readonly placement: GraphPlacement | null; readonly event: StoryWorldTimelineEvent | null; }
 export interface EventSceneGraphEdge { readonly id: string; readonly eventId: string; readonly sceneId: string; readonly source: string; }
@@ -74,7 +74,7 @@ export function projectTimelineAssertions(
     const time = parseEventTime(entity.properties.world_time);
     if (time.kind === "supported" && time.value.mode === "point") {
       const endpoint = time.value.from;
-      sortByPath.set(entity.path, endpoint.date + (time.value.precision === "minute" ? `T${endpoint.time}${endpoint.offset}` : ""));
+      sortByPath.set(entity.path, endpoint.date + (["hour", "minute"].includes(time.value.precision) ? `T${endpoint.time}${endpoint.offset}` : ""));
     }
   }
   const output: TimelineAssertionProjection[] = [];

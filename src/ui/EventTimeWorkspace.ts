@@ -27,7 +27,7 @@ function renderForm(host: Element, plugin: MurmurationWritingCompanionPlugin, fi
   const mode = modeLabel.createEl("select"); mode.createEl("option", { value: "point", text: "Point" }); mode.createEl("option", { value: "range", text: "Range" });
   const precisionLabel = controls.createEl("label"); precisionLabel.createSpan({ text: "Precision" });
   const precision = precisionLabel.createEl("select");
-  for (const value of ["year", "month", "day", "minute"] as const) precision.createEl("option", { value, text: value[0].toUpperCase() + value.slice(1) });
+  for (const value of ["year", "month", "day", "hour", "minute"] as const) precision.createEl("option", { value, text: value[0].toUpperCase() + value.slice(1) });
   const from = endpointControls(controls, "Date");
   const to = endpointControls(controls, "End");
   mode.value = initial?.mode ?? "point"; precision.value = initial?.precision ?? "day";
@@ -43,14 +43,16 @@ function renderForm(host: Element, plugin: MurmurationWritingCompanionPlugin, fi
     const selected = precision.value as EventTimePrecision;
     const first = readEndpoint(from); const last = readEndpoint(to);
     const datePattern = selected === "year" ? /^\d{4}$/ : selected === "month" ? /^\d{4}-\d{2}$/ : /^\d{4}-\d{2}-\d{2}$/;
-    const endpointValid = (value: EventTimeEndpoint) => datePattern.test(value.date) && (selected !== "minute" || (/^\d{2}:\d{2}$/.test(value.time) && /^(?:Z|[+-]\d{2}:\d{2})?$/.test(value.offset)));
+    const timed = selected === "hour" || selected === "minute";
+    const endpointValid = (value: EventTimeEndpoint) => datePattern.test(value.date) && (!timed || (/^\d{2}:\d{2}$/.test(value.time) && /^(?:Z|[+-]\d{2}:\d{2})?$/.test(value.offset)));
     if (!endpointValid(first) || (mode.value === "range" && !endpointValid(last))) return null;
     return { mode: mode.value as "point" | "range", precision: selected, from: first, to: mode.value === "range" ? last : null };
   };
   const update = () => {
     const selected = precision.value as EventTimePrecision;
     const type = selected === "year" ? "number" : selected === "month" ? "month" : "date";
-    for (const endpoint of [from, to]) { endpoint.date.type = type; endpoint.date.placeholder = selected === "year" ? "YYYY" : ""; endpoint.time.hidden = selected !== "minute"; endpoint.offset.hidden = selected !== "minute"; }
+    const timed = selected === "hour" || selected === "minute";
+    for (const endpoint of [from, to]) { endpoint.date.type = type; endpoint.date.placeholder = selected === "year" ? "YYYY" : ""; endpoint.time.hidden = !timed; endpoint.offset.hidden = !timed; endpoint.time.step = selected === "hour" ? "3600" : "60"; }
     to.row.hidden = mode.value !== "range";
     from.row.querySelector("strong")!.textContent = mode.value === "range" ? "Start" : "Date";
     const value = draft(); save.disabled = !value;
