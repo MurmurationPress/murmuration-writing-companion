@@ -33,8 +33,8 @@ export const STORY_WORLD_BUILDER_STYLES = `
   appearance: none;
   display: block;
   width: 100%;
-  min-height: 28px;
-  padding: 3px 7px 4px;
+  min-height: 32px;
+  padding: var(--mwc-space-1, 4px) 7px 5px;
   border: 0;
   border-radius: var(--radius-s);
   background: transparent;
@@ -95,7 +95,7 @@ export const STORY_WORLD_BUILDER_STYLES = `
   flex-wrap: wrap;
   gap: 2px 8px;
   min-width: 0;
-  margin-top: 2px;
+  margin-top: var(--mwc-space-1, 4px);
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-variant-numeric: tabular-nums;
