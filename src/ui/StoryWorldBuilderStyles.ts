@@ -50,8 +50,7 @@ export const STORY_WORLD_BUILDER_STYLES = `
   flex-wrap: wrap;
 }
 
-.mwc-story-world-inspector-kind,
-.mwc-story-world-inspector-note {
+.mwc-story-world-inspector-kind {
   margin: 0.2rem 0 0;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);

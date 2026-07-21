@@ -47,7 +47,6 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   heading.createEl("h3", { text: item.name });
   if (item.status) heading.createSpan({ cls: "mwc-story-world-inspector-status", text: item.status });
   identity.createEl("p", { cls: "mwc-story-world-inspector-kind", text: item.kind === "model" ? `Supporting model · ${item.type}` : item.type });
-  identity.createEl("p", { cls: "mwc-story-world-inspector-note", text: "Authoritative Markdown remains in the centre pane." });
 
   addText(container, "Summary", item.summary);
   addText(container, "Status note", typeof item.properties.world_status_note === "string" ? item.properties.world_status_note : null);
