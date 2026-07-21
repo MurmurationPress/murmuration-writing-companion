@@ -1,5 +1,6 @@
 import { ItemView, MarkdownView, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
+import { StoryWorldEntityCreationHost, StoryWorldEntityCreationModal } from "../ui/StoryWorldEntityCreationModal";
 import {
   filterStoryWorldBuilderItems,
   groupStoryWorldBuilderItems,
@@ -27,7 +28,7 @@ export class StoryWorldNavigatorView extends ItemView {
   private query = "";
   private manuallySelectedPath: string | null = null;
 
-  constructor(leaf: WorkspaceLeaf, private readonly plugin: MurmurationWritingCompanionPlugin) {
+  constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldEntityCreationHost) {
     super(leaf);
   }
 
@@ -44,7 +45,14 @@ export class StoryWorldNavigatorView extends ItemView {
     const allItems = storyWorldBuilderItems(documents(this.plugin));
     const heading = container.createDiv("mwc-story-world-navigator-heading");
     heading.createEl("h2", { text: "Story World" });
-    heading.createSpan({ cls: "mwc-story-world-navigator-count", text: `· ${allItems.length}` });
+    const headingActions = heading.createDiv("mwc-story-world-navigator-actions");
+    headingActions.createSpan({ cls: "mwc-story-world-navigator-count", text: `· ${allItems.length}` });
+    const createButton = headingActions.createEl("button", {
+      cls: "clickable-icon",
+      attr: { type: "button", "aria-label": "Create Story World entity", title: "Create Story World entity" }
+    });
+    createButton.setText("+");
+    createButton.onclick = () => new StoryWorldEntityCreationModal(this.plugin).open();
 
     const search = container.createEl("input", {
       cls: "mwc-story-world-search",
