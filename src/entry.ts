@@ -16,11 +16,13 @@ import { resolvePovRelationSource } from "./companion/StoryWorldRelationAuthorin
 import { hasCurrentStoryWorldRelationForChapter } from "./companion/ObsidianStoryWorldRelationAuthoring";
 import { getChapterContextField, getEditableChapterContextValue } from "./companion/ChapterContext";
 import { explicitManuscriptKind, hasSceneMetadataSignal } from "./manuscript/ManuscriptMetadata";
+import { reconcileStoryWorldInspectorPath } from "./story-world/StoryWorldInspectorContext";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
+  private storyWorldInspectorPath: string | null = null;
   private readonly storyWorldEventAuthoringSession = new StoryWorldEventAuthoringSession();
   private readonly storyWorldRelationAuthoringSession = new StoryWorldRelationAuthoringSession();
 
@@ -70,14 +72,26 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   override refreshView() {
     const active = this.app.workspace.getActiveViewOfType(MarkdownView)?.file ?? null;
-    const item = active ? storyWorldBuilderItemForFile(this, active) : null;
-    if (active && item) {
+    const activeItem = active ? storyWorldBuilderItemForFile(this, active) : null;
+    this.storyWorldInspectorPath = reconcileStoryWorldInspectorPath(
+      this.storyWorldInspectorPath,
+      active ? { path: active.path, isStoryWorldItem: activeItem !== null } : null
+    );
+    const selected = this.storyWorldInspectorPath
+      ? this.app.vault.getAbstractFileByPath(this.storyWorldInspectorPath)
+      : null;
+    const inspectorFile = selected instanceof TFile ? selected : null;
+    const item = inspectorFile
+      ? (active?.path === inspectorFile.path ? activeItem : storyWorldBuilderItemForFile(this, inspectorFile))
+      : null;
+    if (inspectorFile && item) {
       for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
         const container = leaf.view.containerEl.children[1];
-        if (container instanceof HTMLElement) renderStoryWorldEntityInspector(container, this, active, item);
+        if (container instanceof HTMLElement) renderStoryWorldEntityInspector(container, this, inspectorFile, item);
       }
       return;
     }
+    if (this.storyWorldInspectorPath && !inspectorFile) this.storyWorldInspectorPath = null;
 
     super.refreshView();
     const chapter = this.getCurrentChapter();
