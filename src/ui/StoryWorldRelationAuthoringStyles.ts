@@ -63,6 +63,23 @@ export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
 .mwc-entity-relationship-advanced { margin: 8px 0; }
 .mwc-entity-relationship-preview { margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--interactive-accent); background: var(--background-primary-alt); }
 .mwc-entity-relationship-form > button { margin-right: 6px; }
+
+.mwc-event-time-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mwc-event-time-heading h3 { margin: 0; }
+.mwc-event-time-muted,
+.mwc-event-time-precision { color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.mwc-event-time-editor:not(:empty) { margin-top: 8px; }
+.mwc-event-time-form,
+.mwc-event-time-preserved { padding: 8px; border: 1px solid var(--interactive-accent); border-radius: var(--radius-s); }
+.mwc-event-time-form h4 { margin: 0 0 7px; }
+.mwc-event-time-controls { display: grid; gap: 7px; }
+.mwc-event-time-controls label { display: grid; grid-template-columns: minmax(70px, auto) minmax(0, 1fr); align-items: center; gap: 7px; }
+.mwc-event-time-endpoint { display: grid; grid-template-columns: minmax(70px, auto) minmax(0, 1fr); align-items: center; gap: 7px; }
+.mwc-event-time-endpoint input { grid-column: 2; min-width: 0; width: 100%; }
+.mwc-event-time-error { color: var(--text-error); font-size: var(--font-ui-smaller); }
+.mwc-event-time-preview { margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--interactive-accent); background: var(--background-primary-alt); }
+.mwc-event-time-form > button,
+.mwc-event-time-preserved > button { margin-right: 6px; }
 `;
 
 export function installStoryWorldRelationAuthoringStyles(): HTMLStyleElement {
