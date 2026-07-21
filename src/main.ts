@@ -43,6 +43,7 @@ import {
   MANUSCRIPT_NAVIGATOR_VIEW_TYPE,
   ManuscriptNavigatorView
 } from "./manuscript/ManuscriptNavigatorView";
+import { WritingCompanionActivation } from "./companion/WritingCompanionActivation";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -57,6 +58,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
   private readonly annotationLocator = new TransientAnnotationLocator();
+  private readonly writingCompanionActivation = new WritingCompanionActivation();
 
   async onload() {
     const enhancementStyles = installEditorialEnhancementStyles();
@@ -446,15 +448,13 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async activateView() {
-    const leaf = this.app.workspace.getRightLeaf(false);
-
-    if (!leaf) {
+    const activated = await this.writingCompanionActivation.activate(
+      this.app.workspace,
+      VIEW_TYPE
+    );
+    if (!activated) {
       new Notice("Could not open the writing companion sidebar.");
-      return;
     }
-
-    await leaf.setViewState({ type: VIEW_TYPE, active: true });
-    this.app.workspace.revealLeaf(leaf);
   }
 
   async activateManuscriptNavigator() {
