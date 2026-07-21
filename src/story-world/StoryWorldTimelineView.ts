@@ -5,11 +5,13 @@ import { parseWikilink } from "./StoryWorldIndex";
 import { EventSceneGraphNode, EventSceneGraphProjection, graphSelectionProjection, projectEventSceneGraph, projectTimelineAssertions, TimelineAssertionProjection } from "./StoryWorldEventSceneGraph";
 import { manuscriptDisplayTitle, manuscriptHierarchyReferences } from "../manuscript/ManuscriptMetadata";
 import { resolveOwningBook } from "../companion/ManuscriptHierarchy";
+import { navigateTimelineSelection, TimelineSelectionQueue, timelineSelectionLeaf } from "./TimelineSelectionNavigation";
 
 export const STORY_WORLD_TIMELINE_VIEW_TYPE = "murmuration-story-world-timeline";
 export interface StoryWorldTimelineHost extends MurmurationWritingCompanionPlugin { editStoryWorldEventTime(file: TFile): Promise<void>; }
 
 export class StoryWorldTimelineView extends ItemView {
+  private readonly selectionQueue = new TimelineSelectionQueue();
   private scopeFilter = ""; private statusFilter = ""; private precisionFilter = "";
   private presentation: "chronology" | "map" = "chronology";
   private selectedGraphNode: string | null = null;
@@ -68,7 +70,7 @@ export class StoryWorldTimelineView extends ItemView {
       const card = axis.createEl("article", { cls: "mwc-timeline-event" }); card.dataset.precision = event.precision;
       const marker = card.createDiv("mwc-timeline-marker"); marker.setAttr("aria-hidden", "true");
       const content = card.createDiv("mwc-timeline-event-content");
-      content.createEl("button", { cls: "mwc-timeline-event-name", text: event.name }).onclick = () => void this.openPath(event.path, true);
+      content.createEl("button", { cls: "mwc-timeline-event-name", text: event.name }).onclick = () => void this.openPath(event.path);
       content.createEl("p", { cls: "mwc-timeline-time", text: event.displayTime });
       const meta = content.createDiv("mwc-timeline-meta");
       meta.createSpan({ cls: "mwc-timeline-meta-field", text: timelineFilterLabel(event.precision) });
@@ -79,14 +81,14 @@ export class StoryWorldTimelineView extends ItemView {
         const parsed = parseWikilink(scope);
         const path = parsed ? this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, event.path)?.path ?? null : null;
         const label = timelineReferenceLabel(scope);
-        if (path) scopes.createEl("button", { cls: "mwc-timeline-scope-link", text: label }).onclick = () => void this.openPath(path, false);
+        if (path) scopes.createEl("button", { cls: "mwc-timeline-scope-link", text: label }).onclick = () => void this.openPath(path);
         else scopes.createSpan({ cls: parsed ? "mwc-timeline-scope-unresolved" : "mwc-timeline-scope-value", text: parsed ? `${label} (unresolved)` : label });
       }
       if (event.relativeToPrevious) content.createEl("p", { cls: "mwc-timeline-interval", text: event.relativeToPrevious });
       if (event.sources.length) {
         const sources = content.createDiv("mwc-timeline-sources"); sources.createSpan({ text: "Sources: " });
         for (const source of event.sources) {
-          if (source.resolvedPath) sources.createEl("button", { text: source.label }).onclick = () => void this.openPath(source.resolvedPath!, false);
+          if (source.resolvedPath) sources.createEl("button", { text: source.label }).onclick = () => void this.openPath(source.resolvedPath!);
           else sources.createSpan({ cls: "mwc-timeline-source-unresolved", text: `${source.label} (unresolved)` });
         }
       }
@@ -130,7 +132,8 @@ export class StoryWorldTimelineView extends ItemView {
     const block = container.createEl("article", { cls: "mwc-event-scene-row" }); block.dataset.placement = event.placement ?? "";
     const eventNode = block.createDiv("mwc-event-scene-event-node"); eventNode.dataset.graphNode = event.id;
     const eventButton = eventNode.createEl("button", { cls: "mwc-event-scene-event-title", text: event.label });
-    eventButton.onclick = () => event.path && void this.openPath(event.path, true);
+    eventButton.onclick = () => event.path && void this.openPath(event.path);
+    eventNode.onclick = (mouseEvent) => { if (mouseEvent.target === eventNode && event.path) void this.openPath(event.path); };
     eventNode.createEl("p", { cls: "mwc-event-scene-event-time", text: event.context ?? "" });
     if (event.event) eventNode.createEl("span", { cls: "mwc-event-scene-event-meta", text: `${timelineFilterLabel(event.event.precision)} · ${timelineFilterLabel(event.event.status)}` });
     eventNode.createEl("button", { cls: "mwc-timeline-edit", text: "Edit event time" }).onclick = () => {
@@ -146,7 +149,10 @@ export class StoryWorldTimelineView extends ItemView {
         const scene = graph.scenes.find((item) => item.id === edge.sceneId)!;
         const connection = lane.createDiv("mwc-event-scene-connection"); connection.dataset.graphEdge = edge.id;
         const sceneNode = connection.createDiv(`mwc-event-scene-scene-node ${scene.kind === "unresolved" ? "is-unresolved" : ""}`); sceneNode.dataset.graphNode = scene.id;
-        if (scene.path) sceneNode.createEl("button", { cls: "mwc-event-scene-scene-title", text: scene.label }).onclick = () => void this.openPath(scene.path!, false);
+        if (scene.path) {
+          sceneNode.createEl("button", { cls: "mwc-event-scene-scene-title", text: scene.label }).onclick = () => void this.openPath(scene.path!);
+          sceneNode.onclick = (mouseEvent) => { if (mouseEvent.target === sceneNode) void this.openPath(scene.path!); };
+        }
         else sceneNode.createEl("span", { cls: "mwc-event-scene-scene-title", text: scene.label });
         if (scene.context) sceneNode.createEl("span", { cls: "mwc-event-scene-scene-context", text: scene.context });
       }
@@ -192,12 +198,23 @@ export class StoryWorldTimelineView extends ItemView {
     }
   }
 
-  private async openPath(path: string, showCompanion: boolean): Promise<void> {
+  private async openPath(path: string): Promise<void> {
+    return this.selectionQueue.run(() => this.navigateToPath(path));
+  }
+
+  private async navigateToPath(path: string): Promise<void> {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) { new Notice("That authoritative note could not be opened."); return; }
-    const leaf = this.app.workspace.getLeaf("tab"); await leaf.openFile(file, { active: true }); await this.app.workspace.revealLeaf(leaf);
-    if (showCompanion) await this.plugin.activateView();
-    this.app.workspace.setActiveLeaf(leaf, { focus: true });
-    if (leaf.view instanceof MarkdownView) leaf.view.editor.focus();
+    let existingLeaf: WorkspaceLeaf | null = null;
+    this.app.workspace.iterateRootLeaves((candidate) => {
+      if (!existingLeaf && candidate.view instanceof MarkdownView && candidate.view.file?.path === path) existingLeaf = candidate;
+    });
+    const leaf = timelineSelectionLeaf(existingLeaf, () => this.app.workspace.getLeaf("tab"));
+    await navigateTimelineSelection({
+      openSelectedNote: async () => { await leaf.openFile(file, { active: true }); await this.app.workspace.revealLeaf(leaf); },
+      setSelectedNoteActive: () => this.app.workspace.setActiveLeaf(leaf, { focus: true }),
+      activateCompanion: () => this.plugin.activateView(),
+      focusSelectedEditor: () => { if (leaf.view instanceof MarkdownView) leaf.view.editor.focus(); }
+    });
   }
 }
