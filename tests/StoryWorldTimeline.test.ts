@@ -33,11 +33,11 @@ test("orders exact year, month, day and minute points oldest first with determin
 
 test("keeps every supported point and range precision out of the unsupported group", () => {
   const supported = [
-    ["Year", "2026", { from: "2026", until: "2027", precision: "year" }],
-    ["Month", "2026-04", { from: "2026-04", until: "2026-05", precision: "month" }],
-    ["Day", "2026-04-03", { from: "2026-04-03", until: "2026-04-04", precision: "day" }],
-    ["Hour", { at: "2026-04-03T09:00+01:00", precision: "hour" }, { from: "2026-04-03T09:00+01:00", until: "2026-04-03T11:00+01:00", precision: "hour" }],
-    ["Minute", "2026-04-03T09:15+01:00", { from: "2026-04-03T09:15+01:00", until: "2026-04-03T09:45+01:00", precision: "minute" }]
+    ["Year", { from: "2026", precision: "year" }, { from: "2026", until: "2027", precision: "year" }],
+    ["Month", { from: "2026-04", precision: "month" }, { from: "2026-04", until: "2026-05", precision: "month" }],
+    ["Day", { from: "2026-04-03T09:31:00+01:00", precision: "day" }, { from: "2026-04-03", until: "2026-04-04", precision: "day" }],
+    ["Hour", { from: "2026-04-03T09:00:00+01:00", precision: "hour" }, { from: "2026-04-03T09:00:00+01:00", until: "2026-04-03T11:00:00+01:00", precision: "hour" }],
+    ["Minute", { from: "2026-04-03T09:15:00+01:00", precision: "minute" }, { from: "2026-04-03T09:15:00+01:00", until: "2026-04-03T09:45:00+01:00", precision: "minute" }]
   ] as const;
   const entities = supported.flatMap(([label, point, range]) => [event(`${label} point.md`, point), event(`${label} range.md`, range)]);
   const result = projectStoryWorldTimeline(entities);
