@@ -6,6 +6,7 @@ import { EventSceneGraphNode, EventSceneGraphProjection, graphSelectionProjectio
 import { manuscriptDisplayTitle, manuscriptHierarchyReferences } from "../manuscript/ManuscriptMetadata";
 import { resolveOwningBook } from "../companion/ManuscriptHierarchy";
 import { navigateTimelineSelection, TimelineSelectionQueue, timelineSelectionLeaf } from "./TimelineSelectionNavigation";
+import { STORY_WORLD_TIMELINE_LABEL } from "../ui/PanelLabels";
 
 export const STORY_WORLD_TIMELINE_VIEW_TYPE = "murmuration-story-world-timeline";
 export interface StoryWorldTimelineHost extends MurmurationWritingCompanionPlugin { editStoryWorldEventTime(file: TFile): Promise<void>; }
@@ -17,13 +18,13 @@ export class StoryWorldTimelineView extends ItemView {
   private selectedGraphNode: string | null = null;
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldTimelineHost) { super(leaf); }
   getViewType() { return STORY_WORLD_TIMELINE_VIEW_TYPE; }
-  getDisplayText() { return "Story World timeline"; }
+  getDisplayText() { return STORY_WORLD_TIMELINE_LABEL; }
   getIcon() { return "milestone"; }
   async onOpen() { this.presentation = this.readPresentation(); this.render(); }
 
   render(): void {
     const container = this.containerEl.children[1]; container.empty(); container.addClass("mwc-story-world-timeline");
-    const heading = container.createDiv("mwc-timeline-heading"); heading.createEl("h2", { text: "Story World timeline" });
+    const heading = container.createDiv("mwc-timeline-heading"); heading.createEl("h2", { text: STORY_WORLD_TIMELINE_LABEL });
     heading.createEl("p", { text: "Derived from explicit event Markdown" });
     const resolve = (linkpath: string, sourcePath: string) => this.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath)?.path ?? null;
     const projection = projectStoryWorldTimeline(this.plugin.storyWorldIndex.index.getAll(), resolve, { scope: this.scopeFilter || null, status: this.statusFilter || null, precision: this.precisionFilter || null });

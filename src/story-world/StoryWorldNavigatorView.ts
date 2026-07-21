@@ -10,6 +10,7 @@ import {
   StoryWorldBuilderItem
 } from "./WorldBuilder";
 import { storyWorldNavigatorStatus } from "./StoryWorldNavigatorPresentation";
+import { STORY_WORLD_NAVIGATOR_LABEL, STORY_WORLD_TIMELINE_LABEL } from "../ui/PanelLabels";
 
 export const STORY_WORLD_NAVIGATOR_VIEW_TYPE = "murmuration-story-world-navigator";
 interface StoryWorldNavigatorHost extends StoryWorldEntityCreationHost { activateStoryWorldTimeline(): Promise<void>; }
@@ -35,7 +36,7 @@ export class StoryWorldNavigatorView extends ItemView {
   }
 
   getViewType() { return STORY_WORLD_NAVIGATOR_VIEW_TYPE; }
-  getDisplayText() { return "Story World"; }
+  getDisplayText() { return STORY_WORLD_NAVIGATOR_LABEL; }
   getIcon() { return "map"; }
   async onOpen() { this.render(); }
 
@@ -46,7 +47,7 @@ export class StoryWorldNavigatorView extends ItemView {
 
     const allItems = storyWorldBuilderItems(documents(this.plugin));
     const heading = container.createDiv("mwc-story-world-navigator-heading");
-    heading.createEl("h2", { text: "Story World" });
+    heading.createEl("h2", { text: STORY_WORLD_NAVIGATOR_LABEL });
     const headingActions = heading.createDiv("mwc-story-world-navigator-actions");
     headingActions.createSpan({ cls: "mwc-story-world-navigator-count", text: `· ${allItems.length}` });
     const createButton = headingActions.createEl("button", {
@@ -56,7 +57,7 @@ export class StoryWorldNavigatorView extends ItemView {
     createButton.setText("+");
     createButton.onclick = () => new StoryWorldEntityCreationModal(this.plugin).open();
     const timelineButton = headingActions.createEl("button", {
-      cls: "clickable-icon", attr: { type: "button", "aria-label": "Open Story World timeline", title: "Open Story World timeline" }
+      cls: "clickable-icon", attr: { type: "button", "aria-label": `Open ${STORY_WORLD_TIMELINE_LABEL}`, title: `Open ${STORY_WORLD_TIMELINE_LABEL}` }
     });
     timelineButton.setText("↕");
     timelineButton.onclick = () => void this.plugin.activateStoryWorldTimeline();
@@ -64,7 +65,7 @@ export class StoryWorldNavigatorView extends ItemView {
     const search = container.createEl("input", {
       cls: "mwc-story-world-search",
       type: "search",
-      attr: { placeholder: "Search names, aliases or files", "aria-label": "Search Story World" }
+      attr: { placeholder: "Search names, aliases or files", "aria-label": "Search Story World Navigator" }
     });
     search.value = this.query;
     search.oninput = () => {

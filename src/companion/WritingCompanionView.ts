@@ -9,6 +9,7 @@ import {
   getChapterContextSelectOptions,
   getEditableChapterContextValue
 } from "./ChapterContext";
+import { inspectorPanelLabel, InspectorPanelRole } from "../ui/PanelLabels";
 
 export const VIEW_TYPE = "murmuration-writing-companion-view";
 
@@ -16,6 +17,7 @@ export class WritingCompanionView extends ItemView {
   plugin: MurmurationWritingCompanionPlugin;
   private pendingReviewScrollNoteId: string | null = null;
   private showResolvedAnnotations = false;
+  private panelRole: InspectorPanelRole = "chapter";
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -27,7 +29,13 @@ export class WritingCompanionView extends ItemView {
   }
 
   getDisplayText() {
-    return "Writing Companion";
+    return inspectorPanelLabel(this.panelRole);
+  }
+
+  setPanelRole(role: InspectorPanelRole) {
+    if (this.panelRole === role) return;
+    this.panelRole = role;
+    (this.leaf as WorkspaceLeaf & { updateHeader?: () => void }).updateHeader?.();
   }
 
   getIcon() {

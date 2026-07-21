@@ -121,7 +121,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       (leaf) => new ManuscriptNavigatorView(leaf, this)
     );
 
-    this.addRibbonIcon("notebook-pen", "Murmuration Writing Companion", () => {
+    this.addRibbonIcon("notebook-pen", "Open Writing Companion", () => {
       const activeChapter = this.getActiveChapter();
       if (activeChapter) this.currentChapter = activeChapter;
       this.activateView();
@@ -132,7 +132,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.addCommand({
       id: "open-writing-companion",
-      name: "Open writing companion",
+      name: "Open Writing Companion",
       callback: () => {
         const activeChapter = this.getActiveChapter();
         if (activeChapter) this.currentChapter = activeChapter;

@@ -24,6 +24,13 @@ import { installStoryWorldTimelineStyles } from "./ui/StoryWorldTimelineStyles";
 import { beginEventTimeEditing } from "./ui/EventTimeWorkspace";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
+interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
+
+function setCompanionRole(view: unknown, role: "chapter" | "entity"): void {
+  if (view && typeof (view as Partial<RoleAwareCompanionView>).setPanelRole === "function") {
+    (view as RoleAwareCompanionView).setPanelRole(role);
+  }
+}
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
@@ -38,9 +45,9 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     installManuscriptReconciliationCommands(this);
     this.registerView(STORY_WORLD_NAVIGATOR_VIEW_TYPE, (leaf) => new StoryWorldNavigatorView(leaf, this));
     this.registerView(STORY_WORLD_TIMELINE_VIEW_TYPE, (leaf) => new StoryWorldTimelineView(leaf, this));
-    this.addRibbonIcon("map", "Open Story World navigator", () => void this.activateStoryWorldNavigator());
-    this.addCommand({ id: "open-story-world-navigator", name: "Open Story World navigator", callback: () => void this.activateStoryWorldNavigator() });
-    this.addCommand({ id: "open-story-world-timeline", name: "Open Story World timeline", callback: () => void this.activateStoryWorldTimeline() });
+    this.addRibbonIcon("map", "Open Story World Navigator", () => void this.activateStoryWorldNavigator());
+    this.addCommand({ id: "open-story-world-navigator", name: "Open Story World Navigator", callback: () => void this.activateStoryWorldNavigator() });
+    this.addCommand({ id: "open-story-world-timeline", name: "Open Story World Timeline", callback: () => void this.activateStoryWorldTimeline() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -98,6 +105,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       : null;
     if (inspectorFile && item) {
       for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
+        setCompanionRole(leaf.view, "entity");
         const container = leaf.view.containerEl.children[1];
         if (container instanceof HTMLElement) renderStoryWorldEntityInspector(container, this, inspectorFile, item);
       }
@@ -106,6 +114,9 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     }
     if (this.storyWorldInspectorPath && !inspectorFile) this.storyWorldInspectorPath = null;
 
+    for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
+      setCompanionRole(leaf.view, "chapter");
+    }
     super.refreshView();
     this.refreshStoryWorldTimeline();
     const chapter = this.getCurrentChapter();

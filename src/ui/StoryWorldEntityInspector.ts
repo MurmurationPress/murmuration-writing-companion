@@ -3,6 +3,7 @@ import type MurmurationWritingCompanionPlugin from "../main";
 import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-world/WorldBuilder";
 import { renderEntityRelationshipWorkspace } from "./EntityRelationshipWorkspace";
 import { renderEventTimeWorkspace } from "./EventTimeWorkspace";
+import { inspectorPanelLabel } from "./PanelLabels";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -42,7 +43,7 @@ export function storyWorldBuilderItemForFile(plugin: MurmurationWritingCompanion
 export function renderStoryWorldEntityInspector(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, item: StoryWorldBuilderItem): void {
   container.empty();
   container.addClass("mwc-container", "mwc-story-world-inspector");
-  container.createEl("h2", { text: "Story World" });
+  container.createEl("h2", { text: inspectorPanelLabel("entity") });
 
   const identity = container.createDiv("mwc-section mwc-story-world-inspector-identity");
   const heading = identity.createDiv("mwc-story-world-inspector-heading");
