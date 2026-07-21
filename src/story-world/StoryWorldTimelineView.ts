@@ -1,6 +1,7 @@
 import { ItemView, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
-import { projectStoryWorldTimeline, StoryWorldTimelineEvent, StoryWorldTimelineGroup, timelineFilterLabel } from "./StoryWorldTimeline";
+import { projectStoryWorldTimeline, StoryWorldTimelineEvent, StoryWorldTimelineGroup, timelineAllFilterLabel, timelineFilterLabel, timelineReferenceLabel } from "./StoryWorldTimeline";
+import { parseWikilink } from "./StoryWorldIndex";
 
 export const STORY_WORLD_TIMELINE_VIEW_TYPE = "murmuration-story-world-timeline";
 export interface StoryWorldTimelineHost extends MurmurationWritingCompanionPlugin { editStoryWorldEventTime(file: TFile): Promise<void>; }
@@ -29,10 +30,10 @@ export class StoryWorldTimelineView extends ItemView {
     this.renderGroup(container, "Undated events", "undated", projection.undated);
   }
 
-  private addFilter(container: Element, label: string, values: readonly string[], selected: string, change: (value: string) => void): void {
+  private addFilter(container: Element, label: "Scope" | "Status" | "Precision", values: readonly string[], selected: string, change: (value: string) => void): void {
     const row = container.createEl("label"); row.createSpan({ text: label }); const select = row.createEl("select");
-    select.createEl("option", { value: "", text: `All ${label.toLowerCase()}s` });
-    for (const value of values) select.createEl("option", { value, text: timelineFilterLabel(value) });
+    select.createEl("option", { value: "", text: timelineAllFilterLabel(label) });
+    for (const value of values) select.createEl("option", { value, text: label === "Scope" ? timelineReferenceLabel(value) : timelineFilterLabel(value) });
     select.value = selected; select.onchange = () => change(select.value);
   }
 
@@ -47,7 +48,18 @@ export class StoryWorldTimelineView extends ItemView {
       const content = card.createDiv("mwc-timeline-event-content");
       content.createEl("button", { cls: "mwc-timeline-event-name", text: event.name }).onclick = () => void this.openPath(event.path, true);
       content.createEl("p", { cls: "mwc-timeline-time", text: event.displayTime });
-      content.createEl("p", { cls: "mwc-timeline-meta", text: `${timelineFilterLabel(event.precision)} · ${timelineFilterLabel(event.status)} · ${event.scopes.length ? event.scopes.join(", ") : "Unscoped"}` });
+      const meta = content.createDiv("mwc-timeline-meta");
+      meta.createSpan({ cls: "mwc-timeline-meta-field", text: timelineFilterLabel(event.precision) });
+      meta.createSpan({ cls: "mwc-timeline-meta-field", text: timelineFilterLabel(event.status) });
+      const scopes = meta.createSpan({ cls: "mwc-timeline-meta-field mwc-timeline-scopes" });
+      if (!event.scopes.length) scopes.createSpan({ text: "Unscoped" });
+      for (const scope of event.scopes) {
+        const parsed = parseWikilink(scope);
+        const path = parsed ? this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, event.path)?.path ?? null : null;
+        const label = timelineReferenceLabel(scope);
+        if (path) scopes.createEl("button", { cls: "mwc-timeline-scope-link", text: label }).onclick = () => void this.openPath(path, false);
+        else scopes.createSpan({ cls: parsed ? "mwc-timeline-scope-unresolved" : "mwc-timeline-scope-value", text: parsed ? `${label} (unresolved)` : label });
+      }
       if (event.relativeToPrevious) content.createEl("p", { cls: "mwc-timeline-interval", text: event.relativeToPrevious });
       if (event.sources.length) {
         const sources = content.createDiv("mwc-timeline-sources"); sources.createSpan({ text: "Sources: " });

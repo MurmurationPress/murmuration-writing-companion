@@ -70,3 +70,10 @@ export function projectStoryWorldTimeline(
 }
 
 export function timelineFilterLabel(value: string): string { return readable(value); }
+export function timelineReferenceLabel(value: string): string {
+  const parsed = parseWikilink(value);
+  return parsed?.displayText ?? parsed?.linkpath.split("/").pop() ?? value;
+}
+export function timelineAllFilterLabel(label: "Scope" | "Status" | "Precision"): string {
+  return { Scope: "All scopes", Status: "All statuses", Precision: "All precisions" }[label];
+}

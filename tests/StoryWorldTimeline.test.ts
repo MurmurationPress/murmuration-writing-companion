@@ -1,6 +1,6 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { test } from "node:test";
-import { projectStoryWorldTimeline } from "../src/story-world/StoryWorldTimeline";
+import { projectStoryWorldTimeline, timelineAllFilterLabel, timelineReferenceLabel } from "../src/story-world/StoryWorldTimeline";
 import { StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
 
 function event(path: string, worldTime: unknown, options: { scope?: string[]; status?: string | null; sources?: string[]; type?: string } = {}): StoryWorldEntityRecord {
@@ -61,4 +61,12 @@ test("projects only explicit world_sources links and keeps unresolved sources vi
 test("shows calendar intervals only where exact day precision supports them", () => {
   const result = projectStoryWorldTimeline([event("A.md", "2026-01-01"), event("B.md", "2027-02-03")]);
   equal(result.points[1].relativeToPrevious, "1 year, 1 month, 2 days after A");
+});
+
+test("uses grammatical filter plurals and readable scope link labels", () => {
+  equal(timelineAllFilterLabel("Scope"), "All scopes");
+  equal(timelineAllFilterLabel("Status"), "All statuses");
+  equal(timelineAllFilterLabel("Precision"), "All precisions");
+  equal(timelineReferenceLabel("[[Books/BOOK 1 - EMERGENCE|Emergence]]"), "Emergence");
+  equal(timelineReferenceLabel("[[Books/BOOK 1 - EMERGENCE]]"), "BOOK 1 - EMERGENCE");
 });
