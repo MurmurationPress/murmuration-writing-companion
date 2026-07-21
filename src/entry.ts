@@ -17,6 +17,10 @@ import { hasCurrentStoryWorldRelationForChapter } from "./companion/ObsidianStor
 import { getChapterContextField, getEditableChapterContextValue } from "./companion/ChapterContext";
 import { explicitManuscriptKind, hasSceneMetadataSignal } from "./manuscript/ManuscriptMetadata";
 import { reconcileStoryWorldInspectorPath } from "./story-world/StoryWorldInspectorContext";
+import { STORY_WORLD_TIMELINE_VIEW_TYPE, StoryWorldTimelineView } from "./story-world/StoryWorldTimelineView";
+import { StoryWorldTimelineActivation } from "./story-world/StoryWorldTimelineActivation";
+import { installStoryWorldTimelineStyles } from "./ui/StoryWorldTimelineStyles";
+import { beginEventTimeEditing } from "./ui/EventTimeWorkspace";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 
@@ -25,14 +29,17 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   private storyWorldInspectorPath: string | null = null;
   private readonly storyWorldEventAuthoringSession = new StoryWorldEventAuthoringSession();
   private readonly storyWorldRelationAuthoringSession = new StoryWorldRelationAuthoringSession();
+  private readonly storyWorldTimelineActivation = new StoryWorldTimelineActivation();
 
   async onload() {
     await super.onload();
     installManuscriptPreparationCommands(this);
     installManuscriptReconciliationCommands(this);
     this.registerView(STORY_WORLD_NAVIGATOR_VIEW_TYPE, (leaf) => new StoryWorldNavigatorView(leaf, this));
+    this.registerView(STORY_WORLD_TIMELINE_VIEW_TYPE, (leaf) => new StoryWorldTimelineView(leaf, this));
     this.addRibbonIcon("map", "Open Story World navigator", () => void this.activateStoryWorldNavigator());
     this.addCommand({ id: "open-story-world-navigator", name: "Open Story World navigator", callback: () => void this.activateStoryWorldNavigator() });
+    this.addCommand({ id: "open-story-world-timeline", name: "Open Story World timeline", callback: () => void this.activateStoryWorldTimeline() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -40,6 +47,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => eventAuthoringStyles.remove());
     const relationAuthoringStyles = installStoryWorldRelationAuthoringStyles();
     this.register(() => relationAuthoringStyles.remove());
+    const timelineStyles = installStoryWorldTimelineStyles();
+    this.register(() => timelineStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); }));
@@ -89,11 +98,13 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         const container = leaf.view.containerEl.children[1];
         if (container instanceof HTMLElement) renderStoryWorldEntityInspector(container, this, inspectorFile, item);
       }
+      this.refreshStoryWorldTimeline();
       return;
     }
     if (this.storyWorldInspectorPath && !inspectorFile) this.storyWorldInspectorPath = null;
 
     super.refreshView();
+    this.refreshStoryWorldTimeline();
     const chapter = this.getCurrentChapter();
     if (!chapter) return;
     for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
@@ -109,6 +120,30 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         else container.appendChild(child);
       }
     }
+  }
+
+  async activateStoryWorldTimeline(): Promise<void> {
+    await this.storyWorldTimelineActivation.activate(this.app.workspace, STORY_WORLD_TIMELINE_VIEW_TYPE);
+  }
+
+  refreshStoryWorldTimeline(): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_TIMELINE_VIEW_TYPE)) {
+      if (leaf.view instanceof StoryWorldTimelineView) leaf.view.render();
+    }
+  }
+
+  async editStoryWorldEventTime(file: TFile): Promise<void> {
+    const leaf = this.app.workspace.getLeaf("tab");
+    await leaf.openFile(file, { active: true });
+    await this.app.workspace.revealLeaf(leaf);
+    this.app.workspace.setActiveLeaf(leaf, { focus: true });
+    await this.activateView();
+    for (const companion of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
+      const editor = companion.view.containerEl.querySelector(".mwc-event-time-editor");
+      if (editor) await beginEventTimeEditing(editor, this, file);
+    }
+    this.app.workspace.setActiveLeaf(leaf, { focus: true });
+    if (leaf.view instanceof MarkdownView) leaf.view.editor.focus();
   }
 
   async activateStoryWorldNavigator() {
