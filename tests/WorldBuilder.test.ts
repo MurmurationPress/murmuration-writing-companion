@@ -46,6 +46,24 @@ test("searches canonical names, aliases and filenames", () => {
   equal(filterStoryWorldBuilderItems(items, "pip").length, 0);
 });
 
+test("orders dated events oldest first and leaves undated events last", () => {
+  const items = storyWorldBuilderItems([
+    { path: "Later.md", basename: "Later", frontmatter: { world_entity: "event", world_name: "Later", world_time: { at: "2029-01-01" } } },
+    { path: "Undated.md", basename: "Undated", frontmatter: { world_entity: "event", world_name: "Undated" } },
+    { path: "Earlier.md", basename: "Earlier", frontmatter: { world_entity: "event", world_name: "Earlier", world_time: { at: "2026-04-03" } } }
+  ]);
+  const events = groupStoryWorldBuilderItems(items).find((group) => group.key === "events");
+  deepEqual(events?.items.map((item) => item.name), ["Earlier", "Later", "Undated"]);
+});
+
+test("preserves chronological ordering in filtered event results", () => {
+  const items = storyWorldBuilderItems([
+    { path: "B.md", basename: "B", frontmatter: { world_entity: "event", world_name: "Network Event B", world_time: { at: "2028-01-01" } } },
+    { path: "A.md", basename: "A", frontmatter: { world_entity: "event", world_name: "Network Event A", world_time: { at: "2026-01-01" } } }
+  ]);
+  deepEqual(filterStoryWorldBuilderItems(items, "network").map((item) => item.name), ["Network Event A", "Network Event B"]);
+});
+
 test("preserves structured inspector values", () => {
   const item = parseStoryWorldBuilderItem({
     path: "Event.md",
