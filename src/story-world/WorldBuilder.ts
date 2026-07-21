@@ -52,6 +52,39 @@ function list(value: unknown): string[] {
   return result;
 }
 
+export function storyWorldTimeSortValue(value: unknown): string | null {
+  if (typeof value === "string") return value.trim() || null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  for (const key of ["at", "from", "start"]) {
+    const candidate = text(record[key]);
+    if (candidate) return candidate;
+  }
+  return null;
+}
+
+export function compareStoryWorldBuilderItems(
+  left: StoryWorldBuilderItem,
+  right: StoryWorldBuilderItem
+): number {
+  const leftEvent = left.kind === "entity" && left.type.trim().toLowerCase() === "event";
+  const rightEvent = right.kind === "entity" && right.type.trim().toLowerCase() === "event";
+  if (leftEvent && rightEvent) {
+    const leftTime = storyWorldTimeSortValue(left.worldTime);
+    const rightTime = storyWorldTimeSortValue(right.worldTime);
+    if (leftTime && rightTime) {
+      const chronology = leftTime.localeCompare(rightTime);
+      if (chronology) return chronology;
+    } else if (leftTime) {
+      return -1;
+    } else if (rightTime) {
+      return 1;
+    }
+  }
+  return left.name.localeCompare(right.name, "en", { sensitivity: "base" })
+    || left.path.localeCompare(right.path);
+}
+
 export function parseStoryWorldBuilderItem(
   document: StoryWorldBuilderDocument
 ): StoryWorldBuilderItem | null {
@@ -86,8 +119,7 @@ export function storyWorldBuilderItems(
   return documents
     .map(parseStoryWorldBuilderItem)
     .filter((item): item is StoryWorldBuilderItem => item !== null)
-    .sort((left, right) => left.name.localeCompare(right.name, "en", { sensitivity: "base" })
-      || left.path.localeCompare(right.path));
+    .sort(compareStoryWorldBuilderItems);
 }
 
 const GROUPS: Array<{ key: string; label: string; types: readonly string[] }> = [
@@ -104,9 +136,11 @@ export function filterStoryWorldBuilderItems(
   query: string
 ): StoryWorldBuilderItem[] {
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return [...items];
-  return items.filter((item) => [item.name, item.basename, ...item.aliases]
-    .some((value) => value.toLowerCase().includes(normalized)));
+  const filtered = normalized
+    ? items.filter((item) => [item.name, item.basename, ...item.aliases]
+      .some((value) => value.toLowerCase().includes(normalized)))
+    : [...items];
+  return filtered.sort(compareStoryWorldBuilderItems);
 }
 
 export function groupStoryWorldBuilderItems(
@@ -117,17 +151,20 @@ export function groupStoryWorldBuilderItems(
 
   for (const definition of GROUPS) {
     const matches = items.filter((item) => item.kind === "entity"
-      && definition.types.includes(item.type.trim().toLowerCase()));
+      && definition.types.includes(item.type.trim().toLowerCase()))
+      .sort(compareStoryWorldBuilderItems);
     if (!matches.length) continue;
     matches.forEach((item) => remaining.delete(item));
     groups.push({ key: definition.key, label: definition.label, items: matches });
   }
 
-  const otherEntities = items.filter((item) => remaining.has(item) && item.kind === "entity");
+  const otherEntities = items.filter((item) => remaining.has(item) && item.kind === "entity")
+    .sort(compareStoryWorldBuilderItems);
   otherEntities.forEach((item) => remaining.delete(item));
   if (otherEntities.length) groups.push({ key: "other", label: "Other entities", items: otherEntities });
 
-  const models = items.filter((item) => remaining.has(item) && item.kind === "model");
+  const models = items.filter((item) => remaining.has(item) && item.kind === "model")
+    .sort(compareStoryWorldBuilderItems);
   if (models.length) groups.push({ key: "models", label: "Supporting models", items: models });
   return groups;
 }
