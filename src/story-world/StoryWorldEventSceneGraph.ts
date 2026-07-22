@@ -62,14 +62,28 @@ export function graphSelectionProjection(graph: EventSceneGraphProjection, nodeI
 function text(value: unknown): string | null { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function assertions(value: unknown): unknown[] { return Array.isArray(value) ? value : value == null ? [] : [value]; }
 function assertionLabel(value: unknown): string { const parsed = parseWikilink(value); return parsed ? timelineReferenceLabel(String(value)) : text(value) ?? "Missing reference"; }
-function chronologicalConflict(predicate: string, subjectPath: string | null, targetPath: string | null, sortByPath: ReadonlyMap<string, string>): string | null {
+interface ComparablePointTime { readonly value: string; readonly precision: string; }
+function comparablePointTimes(entities: readonly StoryWorldEntityRecord[]): Map<string, ComparablePointTime> {
+  const times = new Map<string, ComparablePointTime>();
+  for (const entity of entities) {
+    const time = parseEventTime(entity.properties.world_time);
+    if (time.kind !== "supported" || time.value.mode !== "point") continue;
+    const endpoint = time.value.from;
+    times.set(entity.path, {
+      value: endpoint.date + (["hour", "minute"].includes(time.value.precision) ? `T${endpoint.time}${endpoint.offset}` : ""),
+      precision: time.value.precision
+    });
+  }
+  return times;
+}
+function chronologicalConflict(predicate: string, subjectPath: string | null, targetPath: string | null, timesByPath: ReadonlyMap<string, ComparablePointTime>): string | null {
   if (!subjectPath || !targetPath) return null;
-  const subject = sortByPath.get(subjectPath); const target = sortByPath.get(targetPath);
-  if (!subject || !target || subject === target) return null;
+  const subject = timesByPath.get(subjectPath); const target = timesByPath.get(targetPath);
+  if (!subject || !target || subject.precision !== target.precision || subject.value === target.value) return null;
   const claimsBefore = ["precedes", "before"].includes(predicate.toLowerCase());
   const claimsAfter = ["follows", "after"].includes(predicate.toLowerCase());
-  if (claimsBefore && subject > target) return "This assertion conflicts with the current world_time ordering.";
-  if (claimsAfter && subject < target) return "This assertion conflicts with the current world_time ordering.";
+  if (claimsBefore && subject.value > target.value) return "This assertion conflicts with the current world_time ordering.";
+  if (claimsAfter && subject.value < target.value) return "This assertion conflicts with the current world_time ordering.";
   return null;
 }
 
@@ -77,14 +91,7 @@ export function projectTimelineAssertions(
   documents: readonly TimelineAssertionDocument[], entities: readonly StoryWorldEntityRecord[], resolve: (reference: string, sourcePath: string) => string | null,
   visibleEventPaths?: ReadonlySet<string>
 ): TimelineAssertionProjection[] {
-  const sortByPath = new Map<string, string>();
-  for (const entity of entities) {
-    const time = parseEventTime(entity.properties.world_time);
-    if (time.kind === "supported" && time.value.mode === "point") {
-      const endpoint = time.value.from;
-      sortByPath.set(entity.path, endpoint.date + (["hour", "minute"].includes(time.value.precision) ? `T${endpoint.time}${endpoint.offset}` : ""));
-    }
-  }
+  const timesByPath = comparablePointTimes(entities);
   const output: TimelineAssertionProjection[] = [];
   for (const document of documents) {
     const modelAssertions = text(document.frontmatter.world_model)?.toLowerCase() === "timeline"
@@ -101,7 +108,7 @@ export function projectTimelineAssertions(
       const qualifiers = Object.fromEntries(Object.entries(raw).filter(([key]) => !["subject", "predicate", "predicate_label", "target", "status"].includes(key)));
       output.push({ id: `assertion:${stable(document.path)}:${index}`, documentPath: document.path, subject: assertionLabel(subjectRaw), predicate,
         predicateLabel: readablePredicateLabel(predicate, raw.predicate_label), target: assertionLabel(targetRaw), statusLabel: readableStatusLabel(raw.status), qualifiers,
-        valid: subjectPath !== null && targetPath !== null, conflict: chronologicalConflict(predicate, subjectPath, targetPath, sortByPath) });
+        valid: subjectPath !== null && targetPath !== null, conflict: chronologicalConflict(predicate, subjectPath, targetPath, timesByPath) });
     });
   }
   return output.sort((a, b) => a.id.localeCompare(b.id));
@@ -123,17 +130,7 @@ export function observeTimelineAssertionContradictions(
   resolve: (reference: string, sourcePath: string) => string | null
 ): ContinuityObservation[] {
   const entityByPath = new Map(entities.map((entity) => [entity.path, entity]));
-  const sortByPath = new Map<string, string>();
-  for (const entity of entities) {
-    const time = parseEventTime(entity.properties.world_time);
-    if (time.kind !== "supported" || time.value.mode !== "point") continue;
-    const endpoint = time.value.from;
-    sortByPath.set(entity.path, endpoint.date + (
-      ["hour", "minute"].includes(time.value.precision)
-        ? `T${endpoint.time}${endpoint.offset}`
-        : ""
-    ));
-  }
+  const timesByPath = comparablePointTimes(entities);
 
   const observations: ContinuityObservation[] = [];
   for (const document of documents) {
@@ -160,12 +157,15 @@ export function observeTimelineAssertionContradictions(
       );
       const duplicateOrdinal = duplicateCounts.get(occurrenceKey) ?? 0;
       duplicateCounts.set(occurrenceKey, duplicateOrdinal + 1);
-      const conflict = chronologicalConflict(predicate, subjectPath, targetPath, sortByPath);
+      const conflict = chronologicalConflict(predicate, subjectPath, targetPath, timesByPath);
       if (!conflict) return;
 
       const subject = entityByPath.get(subjectPath);
       const target = entityByPath.get(targetPath);
       if (!subject || !target) return;
+      const subjectTime = timesByPath.get(subject.path);
+      const targetTime = timesByPath.get(target.path);
+      if (!subjectTime || !targetTime) return;
       const documentNote = storyWorldNote(document.path, document.name);
       const assertionPath = ["world_assertions", index] as const;
       const evidence: ObservationEvidence[] = [
@@ -182,7 +182,7 @@ export function observeTimelineAssertionContradictions(
         {
           role: "subject_time",
           source: { note: storyWorldNote(subject.path, subject.name), property: ["world_time"] },
-          value: { kind: "value", value: normalizeObservationValue(subject.properties.world_time) }
+          value: { kind: "date", value: subjectTime.value, precision: subjectTime.precision }
         },
         {
           role: "target",
@@ -192,7 +192,7 @@ export function observeTimelineAssertionContradictions(
         {
           role: "target_time",
           source: { note: storyWorldNote(target.path, target.name), property: ["world_time"] },
-          value: { kind: "value", value: normalizeObservationValue(target.properties.world_time) }
+          value: { kind: "date", value: targetTime.value, precision: targetTime.precision }
         }
       ];
 
@@ -209,5 +209,5 @@ export function observeTimelineAssertionContradictions(
       }));
     });
   }
-  return observations.sort((left, right) => left.fingerprint.localeCompare(right.fingerprint));
+  return observations.sort((left, right) => left.fingerprint < right.fingerprint ? -1 : left.fingerprint > right.fingerprint ? 1 : 0);
 }

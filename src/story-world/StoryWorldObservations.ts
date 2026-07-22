@@ -43,21 +43,37 @@ function relationshipOccurrence(
 ): DeterministicValue {
   if (index < 0) return { property, structure: "collection" };
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-    return { property, structure: "assertion", valueKind: typeof raw };
+    return {
+      property,
+      structure: "assertion",
+      raw: raw === undefined
+        ? { state: "missing" }
+        : normalizeObservationValue(raw)
+    };
   }
   const assertion = raw as Record<string, unknown>;
-  const scalar = (value: unknown) => (
-    typeof value === "string" ? value.trim()
-      : typeof value === "number" || typeof value === "boolean" ? value
-        : null
-  );
+  const field = (key: "predicate" | "target" | "value"): DeterministicValue => {
+    if (!Object.prototype.hasOwnProperty.call(assertion, key)) return { state: "missing" };
+    const value = assertion[key];
+    return typeof value === "string"
+      ? value.trim()
+      : normalizeObservationValue(value);
+  };
   return {
     property,
     structure: "assertion",
-    predicate: scalar(assertion.predicate),
-    target: scalar(assertion.target),
-    value: scalar(assertion.value)
+    predicate: field("predicate"),
+    target: field("target"),
+    value: field("value")
   };
+}
+
+function incompleteRelationshipClassification(
+  reason: string
+): "required_incomplete" | "malformed_evidence" {
+  return reason === "missing_predicate" || reason === "missing_target_or_value"
+    ? "required_incomplete"
+    : "malformed_evidence";
 }
 
 /** Produces review observations without changing or normalising Story World Markdown. */
@@ -78,11 +94,12 @@ export function observeIncompleteEntityRelationships(
       const occurrenceKey = canonicalObservationEncoding(normalizeObservationValue(occurrence));
       const duplicateOrdinal = duplicateCounts.get(occurrenceKey) ?? 0;
       duplicateCounts.set(occurrenceKey, duplicateOrdinal + 1);
+      const reason = incompleteRelationshipReason(rawValue, relationship.index);
 
       return buildContinuityObservation({
         kind: "story-world.relationship.incomplete",
         severity: "review",
-        classification: "required_incomplete",
+        classification: incompleteRelationshipClassification(reason),
         primary: note(entity),
         evidence: [{
           role: "incomplete_relationship",
@@ -90,7 +107,7 @@ export function observeIncompleteEntityRelationships(
           value: {
             kind: "malformed",
             raw: normalizeObservationValue(rawValue),
-            reason: incompleteRelationshipReason(rawValue, relationship.index)
+            reason
           }
         }],
         summary: "Incomplete Story World relationship",

@@ -43,10 +43,13 @@ Canonical values preserve scalar types and authoritative array order. Object
 keys are sorted, strings use Unicode NFC, negative zero becomes zero, dates use
 ISO text, Obsidian `position` metadata is omitted, and non-finite numbers,
 cycles, symbol properties, non-plain objects and unsupported runtime values are
-rejected. Collections are sorted and deduplicated only when a producer declares
-them set-like. The observation's supporting evidence collection is such a set;
-ordered lists inside an evidence value are not. Unknown Markdown properties
-remain valid and affect an observation only when a rule explicitly uses them.
+rejected. Sparse arrays and object keys that collide after NFC normalisation are
+also rejected rather than encoded ambiguously. Collections are sorted and
+deduplicated only when a producer declares them set-like. The observation's
+supporting evidence collection is such a set, and the builder returns it in
+canonical order; ordered lists inside an evidence value are not. Unknown
+Markdown properties remain valid and affect an observation only when a rule
+explicitly uses them.
 
 ## Identity, lineage and fingerprints
 
@@ -85,11 +88,22 @@ boundary.
 ## Initial producers
 
 - Incomplete `world_relationships` structures produce `review` /
-  `required_incomplete` observations while retaining their exact raw assertion
-  and property path.
+  `required_incomplete` observations for absent required fields and
+  `malformed_evidence` observations for invalid shapes, while retaining their
+  exact raw assertion and property path.
 - Explicit timeline assertions whose ordering contradicts supported point
   `world_time` values produce `conflict` / `contradiction` observations citing
-  the model assertion, both resolved events and both time properties.
+  the model assertion, both resolved events and both precision-aware time
+  properties. Different precisions are not treated as directly comparable, so
+  the rule does not manufacture a contradiction from overlapping partial dates.
 
 Neither producer writes Markdown or editorial storage. Disposition persistence
 and broad parser consolidation remain outside #129.
+
+## Deferred work
+
+The remaining Story World maintenance rules belong to #111. Chapter-context
+temporal evaluation belongs to #130, manuscript chronology drift to #131, the
+review interface to #132, and persisted editorial dispositions and stale-state
+matching to #134. None of those concerns changes Markdown authority or belongs
+in this foundation contract.
