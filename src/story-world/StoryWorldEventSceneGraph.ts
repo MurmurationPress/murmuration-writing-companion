@@ -2,6 +2,14 @@ import { isRecord, readablePredicateLabel, readableStatusLabel } from "./EntityR
 import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { StoryWorldTimelineEvent, StoryWorldTimelineProjection, timelineReferenceLabel } from "./StoryWorldTimeline";
 import { parseEventTime } from "./EventTimeEditing";
+import {
+  buildContinuityObservation,
+  canonicalObservationEncoding,
+  ContinuityObservation,
+  normalizeObservationValue,
+  ObservationEvidence,
+  ObservationNoteReference
+} from "../observations/ContinuityObservation";
 
 export type GraphPlacement = "point-year" | "point-month" | "point-day" | "point-hour" | "point-minute" | "range" | "unsupported" | "undated";
 export interface GraphSceneDescription { readonly path: string; readonly title: string; readonly context: string | null; }
@@ -97,4 +105,109 @@ export function projectTimelineAssertions(
     });
   }
   return output.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+const TIMELINE_CONTRADICTION_RULE = {
+  id: "mwc.temporal.explicit-sequence-contradiction",
+  version: 1
+} as const;
+
+function storyWorldNote(path: string, label?: string): ObservationNoteReference {
+  return { role: "story_world", path, label };
+}
+
+/** Observes contradictions between explicit timeline assertions and point world times. */
+export function observeTimelineAssertionContradictions(
+  documents: readonly TimelineAssertionDocument[],
+  entities: readonly StoryWorldEntityRecord[],
+  resolve: (reference: string, sourcePath: string) => string | null
+): ContinuityObservation[] {
+  const entityByPath = new Map(entities.map((entity) => [entity.path, entity]));
+  const sortByPath = new Map<string, string>();
+  for (const entity of entities) {
+    const time = parseEventTime(entity.properties.world_time);
+    if (time.kind !== "supported" || time.value.mode !== "point") continue;
+    const endpoint = time.value.from;
+    sortByPath.set(entity.path, endpoint.date + (
+      ["hour", "minute"].includes(time.value.precision)
+        ? `T${endpoint.time}${endpoint.offset}`
+        : ""
+    ));
+  }
+
+  const observations: ContinuityObservation[] = [];
+  for (const document of documents) {
+    if (text(document.frontmatter.world_model)?.toLowerCase() !== "timeline") continue;
+    const duplicateCounts = new Map<string, number>();
+    assertions(document.frontmatter.world_assertions).forEach((raw, index) => {
+      if (!isRecord(raw)) return;
+      const predicate = text(raw.predicate);
+      const subjectReference = text(raw.subject);
+      const targetReference = text(raw.target);
+      if (!predicate || !subjectReference || !targetReference) return;
+
+      const subjectPath = resolve(subjectReference, document.path);
+      const targetPath = resolve(targetReference, document.path);
+      if (!subjectPath || !targetPath) return;
+      const logicalAssertion = {
+        property: "world_assertions",
+        predicate: predicate.trim().toLowerCase(),
+        subject: subjectPath,
+        target: targetPath
+      };
+      const occurrenceKey = canonicalObservationEncoding(
+        normalizeObservationValue(logicalAssertion)
+      );
+      const duplicateOrdinal = duplicateCounts.get(occurrenceKey) ?? 0;
+      duplicateCounts.set(occurrenceKey, duplicateOrdinal + 1);
+      const conflict = chronologicalConflict(predicate, subjectPath, targetPath, sortByPath);
+      if (!conflict) return;
+
+      const subject = entityByPath.get(subjectPath);
+      const target = entityByPath.get(targetPath);
+      if (!subject || !target) return;
+      const documentNote = storyWorldNote(document.path, document.name);
+      const assertionPath = ["world_assertions", index] as const;
+      const evidence: ObservationEvidence[] = [
+        {
+          role: "sequence_assertion",
+          source: { note: documentNote, property: assertionPath },
+          value: { kind: "value", value: normalizeObservationValue({ predicate }) }
+        },
+        {
+          role: "subject",
+          source: { note: documentNote, property: [...assertionPath, "subject"] },
+          value: { kind: "resolved_note", note: storyWorldNote(subject.path, subject.name) }
+        },
+        {
+          role: "subject_time",
+          source: { note: storyWorldNote(subject.path, subject.name), property: ["world_time"] },
+          value: { kind: "value", value: normalizeObservationValue(subject.properties.world_time) }
+        },
+        {
+          role: "target",
+          source: { note: documentNote, property: [...assertionPath, "target"] },
+          value: { kind: "resolved_note", note: storyWorldNote(target.path, target.name) }
+        },
+        {
+          role: "target_time",
+          source: { note: storyWorldNote(target.path, target.name), property: ["world_time"] },
+          value: { kind: "value", value: normalizeObservationValue(target.properties.world_time) }
+        }
+      ];
+
+      observations.push(buildContinuityObservation({
+        kind: "temporal.explicit-sequence.contradiction",
+        severity: "conflict",
+        classification: "contradiction",
+        primary: documentNote,
+        evidence,
+        summary: "Explicit timeline order conflicts with event dates",
+        explanation: `${subject.name} ${readablePredicateLabel(predicate, raw.predicate_label)} ${target.name}, but their explicit world_time values have the opposite order.`,
+        rule: TIMELINE_CONTRADICTION_RULE,
+        logicalOccurrence: { ...logicalAssertion, duplicateOrdinal }
+      }));
+    });
+  }
+  return observations.sort((left, right) => left.fingerprint.localeCompare(right.fingerprint));
 }
