@@ -32,7 +32,10 @@ import {
   EditorialPassProjection
 } from "./editorial/EditorialPass";
 import { updateBookReviewStatusFrontmatter } from "./editorial/BookReview";
-import { resolveOwningBook } from "./companion/ManuscriptHierarchy";
+import {
+  resolveExplicitOwningBookWithSource,
+  resolveOwningBook
+} from "./companion/ManuscriptHierarchy";
 import {
   buildPovSuggestions,
   PovSuggestion
@@ -266,6 +269,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   getOwningBook(chapter: TFile): TFile | null {
     return resolveOwningBook(this.app, chapter);
+  }
+
+  getExplicitOwningBookResolution(chapter: TFile) {
+    return resolveExplicitOwningBookWithSource(this.app, chapter);
   }
 
   getPendingFocusNoteId(): string | null {
