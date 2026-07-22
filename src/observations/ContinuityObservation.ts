@@ -119,7 +119,12 @@ function canonicalValue(value: DeterministicValue): string {
 
   const entries = Object.entries(value as Readonly<Record<string, DeterministicValue>>)
     .map(([key, item]) => [normalizeString(key), item] as const)
-    .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+    .sort(([left], [right]) => compareText(left, right));
+  for (let index = 1; index < entries.length; index += 1) {
+    if (entries[index - 1][0] === entries[index][0]) {
+      throw new Error("Observation object keys must remain unique after NFC normalisation.");
+    }
+  }
   return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalValue(item)}`).join(",")}}`;
 }
 
@@ -144,6 +149,11 @@ export function normalizeObservationValue(
   }
   if (Array.isArray(value)) {
     if (ancestors.has(value)) throw new Error("Observation values must not contain cycles.");
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.prototype.hasOwnProperty.call(value, index)) {
+        throw new Error("Observation arrays must not contain empty slots.");
+      }
+    }
     ancestors.add(value);
     const result = value.map((item) => normalizeObservationValue(item, ancestors));
     ancestors.delete(value);
@@ -157,12 +167,25 @@ export function normalizeObservationValue(
     if (Object.getOwnPropertySymbols(value).length > 0) {
       throw new Error("Observation values must not contain symbol properties.");
     }
+    for (const property of Object.getOwnPropertyNames(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, property);
+      if (!descriptor?.enumerable || descriptor.get || descriptor.set) {
+        throw new Error("Observation values must contain only enumerable data properties.");
+      }
+    }
     if (ancestors.has(value)) throw new Error("Observation values must not contain cycles.");
     ancestors.add(value);
     const result: Record<string, DeterministicValue> = {};
     for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      if (key === "position" || item === undefined) continue;
-      result[normalizeString(key)] = normalizeObservationValue(item, ancestors);
+      if (key === "position") continue;
+      if (item === undefined) {
+        throw new Error("Observation values must not contain undefined properties.");
+      }
+      const normalizedKey = normalizeString(key);
+      if (Object.prototype.hasOwnProperty.call(result, normalizedKey)) {
+        throw new Error("Observation object keys must remain unique after NFC normalisation.");
+      }
+      result[normalizedKey] = normalizeObservationValue(item, ancestors);
     }
     ancestors.delete(value);
     return result;
@@ -196,6 +219,10 @@ export function observationHash(value: string): string {
   const first = fnv1a(value, 0x811c9dc5).toString(16).padStart(8, "0");
   const second = fnv1a(value, 0x9e3779b9).toString(16).padStart(8, "0");
   return `${first}${second}`;
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function noteValue(note: ObservationNoteReference): DeterministicValue {
@@ -255,6 +282,12 @@ function requireText(value: string, field: string): string {
   return normalized;
 }
 
+function requireUntrimmedText(value: string, field: string): string {
+  const normalized = normalizeString(value);
+  if (!normalized.trim()) throw new Error(`Continuity observation ${field} is required.`);
+  return normalized;
+}
+
 function normalizeNote(note: ObservationNoteReference): ObservationNoteReference {
   return {
     role: note.role,
@@ -275,7 +308,7 @@ function normalizeEvidence(evidence: ObservationEvidence): ObservationEvidence {
       }
       return segment;
     }
-    return requireText(segment, "property path segment");
+    return requireUntrimmedText(segment, "property path segment");
   });
   const source = { note: normalizeNote(evidence.source.note), property };
   const value = evidence.value;
@@ -287,7 +320,7 @@ function normalizeEvidence(evidence: ObservationEvidence): ObservationEvidence {
     case "date":
       return { role, source, value: {
         kind: "date",
-        value: requireText(value.value, "date value"),
+        value: requireUntrimmedText(value.value, "date value"),
         precision: requireText(value.precision, "date precision")
       } };
     case "resolved_note":
@@ -295,7 +328,7 @@ function normalizeEvidence(evidence: ObservationEvidence): ObservationEvidence {
     case "unresolved_reference":
       return { role, source, value: {
         kind: "unresolved_reference",
-        reference: requireText(value.reference, "unresolved reference"),
+        reference: requireUntrimmedText(value.reference, "unresolved reference"),
         reason: value.reason
       } };
     case "malformed":
@@ -325,7 +358,7 @@ export function buildContinuityObservation(
   if (input.evidence.length === 0) {
     throw new Error("Continuity observation evidence is required.");
   }
-  const evidence = input.evidence.map(normalizeEvidence);
+  const normalizedEvidence = input.evidence.map(normalizeEvidence);
   const lineagePayload: DeterministicValue = {
     schema: 1,
     rule: rule.id,
@@ -335,12 +368,12 @@ export function buildContinuityObservation(
   };
   // Evidence is a logical supporting set. Its own order and duplicates do not
   // change identity; array order inside an evidence value remains authoritative.
-  const evidenceByEncoding = new Map<string, DeterministicValue>();
-  for (const item of evidence.map(evidenceValue)) {
-    evidenceByEncoding.set(canonicalValue(item), item);
+  const evidenceByEncoding = new Map<string, ObservationEvidence>();
+  for (const item of normalizedEvidence) {
+    evidenceByEncoding.set(canonicalValue(evidenceValue(item)), item);
   }
   const canonicalEvidence = [...evidenceByEncoding.entries()]
-    .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
+    .sort(([left], [right]) => compareText(left, right))
     .map(([, value]) => value);
   const fingerprintPayload: DeterministicValue = {
     schema: 1,
@@ -348,7 +381,7 @@ export function buildContinuityObservation(
     kind,
     classification: input.classification,
     primary: noteValue(primary),
-    evidence: canonicalEvidence
+    evidence: canonicalEvidence.map(evidenceValue)
   };
 
   return {
@@ -356,7 +389,7 @@ export function buildContinuityObservation(
     severity: input.severity,
     classification: input.classification,
     primary,
-    evidence,
+    evidence: canonicalEvidence,
     summary,
     explanation,
     rule,
@@ -379,7 +412,7 @@ export function observationSourceNotes(
       notes.set(noteKey(evidence.value.note), evidence.value.note);
     }
   }
-  return [...notes.values()].sort((left, right) => noteKey(left).localeCompare(noteKey(right)));
+  return [...notes.values()].sort((left, right) => compareText(noteKey(left), noteKey(right)));
 }
 
 export function observationNavigationTargets(

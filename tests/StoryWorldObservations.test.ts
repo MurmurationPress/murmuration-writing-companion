@@ -40,6 +40,15 @@ test("produces deterministic evidence for incomplete Story World relationships",
   equal(changed.lineageKey, first.lineageKey);
 });
 
+test("classifies malformed relationship shapes separately from missing structure", () => {
+  const [malformed] = observeIncompleteEntityRelationships(entity("World/Pip.md", {
+    world_relationships: ["not an assertion"]
+  }));
+  equal(malformed.classification, "malformed_evidence");
+  equal(malformed.evidence[0].value.kind, "malformed");
+  equal((malformed.evidence[0].value as { reason: string }).reason, "relationship_not_object");
+});
+
 test("rebuilding unchanged indexed Markdown reproduces the Story World observation", () => {
   const index = new StoryWorldIndex();
   const documents = [{
@@ -91,6 +100,30 @@ test("unrelated insertion does not churn relationship lineage", () => {
   deepEqual(after.evidence[0].source.property, ["world_relationships", 1]);
 });
 
+test("identifying relationship structure changes lineage", () => {
+  const [before] = observeIncompleteEntityRelationships(entity("World/Pip.md", {
+    world_relationships: [{ predicate: "knows" }]
+  }));
+  const [after] = observeIncompleteEntityRelationships(entity("World/Pip.md", {
+    world_relationships: [{ predicate: "trusts" }]
+  }));
+  notEqual(after.lineageKey, before.lineageKey);
+});
+
+test("malformed primitive assertions have content identity rather than one shared ordinal group", () => {
+  const before = observeIncompleteEntityRelationships(entity("World/Pip.md", {
+    world_relationships: ["first", "second"]
+  }));
+  const after = observeIncompleteEntityRelationships(entity("World/Pip.md", {
+    world_relationships: ["unrelated", "first", "second"]
+  }));
+  equal(new Set(before.map((item) => item.lineageKey)).size, 2);
+  deepEqual(
+    after.slice(1).map((item) => item.lineageKey),
+    before.map((item) => item.lineageKey)
+  );
+});
+
 test("an evidence change affects only its corresponding relationship observation", () => {
   const before = observeIncompleteEntityRelationships(entity("World/Pip.md", {
     world_relationships: [
@@ -135,6 +168,10 @@ test("produces a conflict observation from explicit sequence and world_time evid
 
   equal(observation.severity, "conflict");
   equal(observation.classification, "contradiction");
+  equal(observation.evidence.find((item) => item.role === "subject_time")?.value.kind, "date");
+  deepEqual(observation.evidence.find((item) => item.role === "subject_time")?.value, {
+    kind: "date", value: "2027-01-01", precision: "day"
+  });
   deepEqual(observation.evidence.map((item) => item.source.property), [
     ["world_assertions", 0],
     ["world_assertions", 0, "subject"],
@@ -202,4 +239,17 @@ test("does not report matching, unresolved, imprecise or non-timeline assertions
     frontmatter: { world_model: "causal", world_assertions: [{ subject: "[[Events/A]]", predicate: "precedes", target: "[[Events/B]]" }] }
   }];
   deepEqual(observeTimelineAssertionContradictions(documents, events, () => null), []);
+
+  const mixedPrecision = [{
+    path: "Models/Sequence.md", name: "Sequence",
+    frontmatter: { world_model: "timeline", world_assertions: [{
+      subject: "[[Events/A]]", predicate: "follows", target: "[[Events/B]]"
+    }] }
+  }];
+  const resolve = (reference: string) => reference.includes("Events/A") ? "Events/A.md" : "Events/B.md";
+  const mixedPrecisionEvents = [
+    entity("Events/A.md", { world_time: "2026" }),
+    entity("Events/B.md", { world_time: "2026-01-01" })
+  ];
+  deepEqual(observeTimelineAssertionContradictions(mixedPrecision, mixedPrecisionEvents, resolve), []);
 });

@@ -5,6 +5,7 @@ import {
   canonicalObservationEncoding,
   normalizeObservationValue,
   normalizeObservationSet,
+  observationHash,
   observationNavigationTargets,
   observationSourceNotes
 } from "../src/observations/ContinuityObservation";
@@ -40,7 +41,16 @@ test("canonical encoding sorts object keys and normalises scalar values", () => 
   throws(() => normalizeObservationValue(cyclic), /cycles/);
   throws(() => normalizeObservationValue(new Map()), /plain objects/);
   throws(() => normalizeObservationValue(Symbol("unsupported")), /Unsupported/);
+  throws(() => normalizeObservationValue({ unsupported: undefined }), /undefined properties/);
+  const hidden = {};
+  Object.defineProperty(hidden, "value", { value: 1, enumerable: false });
+  throws(() => normalizeObservationValue(hidden), /enumerable data properties/);
+  throws(() => normalizeObservationValue(new Array(1)), /empty slots/);
+  throws(() => normalizeObservationValue({ "é": 1, "e\u0301": 2 }), /unique after NFC/);
+  throws(() => canonicalObservationEncoding({ "é": 1, "e\u0301": 2 }), /unique after NFC/);
   deepEqual(normalizeObservationSet(["b", "a", "b"]), ["a", "b"]);
+  equal(observationHash(""), "811c9dc59e3779b9");
+  equal(observationHash("continuity"), "ba1cb7dfea460cc3");
 });
 
 test("fingerprints ignore explanation, labels and severity but include authoritative evidence", () => {
@@ -68,6 +78,13 @@ test("fingerprints ignore explanation, labels and severity but include authorita
   const changedRule = buildContinuityObservation({ ...input, rule: { ...input.rule, version: 2 } });
   notEqual(changedRule.fingerprint, original.fingerprint);
   equal(changedRule.lineageKey, original.lineageKey);
+
+  const changedClassification = buildContinuityObservation({
+    ...input,
+    classification: "contradiction"
+  });
+  notEqual(changedClassification.fingerprint, original.fingerprint);
+  equal(changedClassification.lineageKey, original.lineageKey);
 });
 
 test("path identity makes rename stability deliberately best-effort", () => {
@@ -129,6 +146,19 @@ test("deduplicates exact evidence without collapsing equal values at separate pa
     buildContinuityObservation({ ...input, evidence: [firstPath] }).fingerprint
   );
   notEqual(twoPaths.fingerprint, onePath.fingerprint);
+  equal(onePath.evidence.length, 1);
+  equal(twoPaths.evidence.length, 2);
+});
+
+test("preserves exact source-property spelling", () => {
+  const observation = buildContinuityObservation({
+    ...input,
+    evidence: [{
+      ...input.evidence[0],
+      source: { note: primary, property: [" custom_property "] }
+    }]
+  });
+  deepEqual(observation.evidence[0].source.property, [" custom_property "]);
 });
 
 test("keeps evidence failure states and date precision distinct", () => {
