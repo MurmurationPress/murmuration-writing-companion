@@ -1,6 +1,7 @@
-# Continuity observation contract
+# Continuity observation and evidence contract
 
-**Status:** Foundation implementation  
+**Status:** Foundation implementation
+
 **Issue:** #129
 
 Continuity observations are disposable projections of authoritative manuscript
