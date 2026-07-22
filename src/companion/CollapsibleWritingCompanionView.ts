@@ -26,6 +26,15 @@ import {
   createWorldContextTimePreferenceKey,
   WorldContextTimePreferences
 } from "./WorldContextTimePreferences";
+import {
+  evaluateChapterContextContinuity
+} from "../observations/ChapterContextContinuity";
+import {
+  ContinuityObservation,
+  observationSourceNotes
+} from "../observations/ContinuityObservation";
+import { isBookFrontmatter } from "../editorial/BookReview";
+import { parseWikilink } from "../story-world/StoryWorldIndex";
 
 export { VIEW_TYPE };
 
@@ -188,6 +197,92 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         }
       }
     );
+
+    this.renderContinuityObservations(collapsible.content, file, frontmatter);
+  }
+
+  private renderContinuityObservations(
+    container: HTMLElement,
+    file: TFile,
+    frontmatter: Record<string, unknown> | undefined
+  ) {
+    const explicitBook = this.plugin.getExplicitOwningBookResolution(file);
+    const observations = evaluateChapterContextContinuity({
+      chapter: { role: "manuscript", path: file.path, label: file.basename },
+      frontmatter,
+      owningBook: explicitBook
+        ? {
+            note: {
+              role: "manuscript",
+              path: explicitBook.book.path,
+              label: explicitBook.book.basename
+            },
+            source: {
+              note: {
+                role: "manuscript",
+                path: explicitBook.source.path,
+                label: explicitBook.source.basename
+              },
+              property: explicitBook.property
+            }
+          }
+        : null,
+      resolveEntity: (reference, sourcePath) =>
+        this.plugin.storyWorldIndex.resolveWikilink(reference, sourcePath),
+      resolveScope: (reference, sourcePath) => {
+        const parsed = parseWikilink(reference);
+        if (!parsed) return null;
+        const target = this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, sourcePath);
+        if (!target) return null;
+        const targetFrontmatter = this.app.metadataCache.getFileCache(target)?.frontmatter as
+          Record<string, unknown> | undefined;
+        return {
+          note: { role: "manuscript", path: target.path, label: target.basename },
+          book: isBookFrontmatter(targetFrontmatter)
+        };
+      }
+    });
+    if (observations.length === 0) return;
+
+    const section = container.createDiv("mwc-continuity");
+    const heading = section.createDiv("mwc-continuity-heading");
+    heading.createEl("h4", { text: "Continuity" });
+    heading.createSpan({
+      cls: "mwc-continuity-count",
+      text: String(observations.length)
+    });
+    for (const observation of observations) {
+      this.renderContinuityObservation(section, file, observation);
+    }
+  }
+
+  private renderContinuityObservation(
+    container: HTMLElement,
+    chapter: TFile,
+    observation: ContinuityObservation
+  ) {
+    const card = container.createDiv(
+      `mwc-continuity-observation mwc-continuity-observation--${observation.severity}`
+    );
+    card.createEl("p", { cls: "mwc-continuity-summary", text: observation.summary });
+    card.createEl("p", { cls: "mwc-continuity-explanation", text: observation.explanation });
+    const supporting = observationSourceNotes(observation)
+      .filter((note) => note.path !== chapter.path);
+    if (supporting.length === 0) return;
+    const navigation = card.createDiv("mwc-continuity-navigation");
+    for (const note of supporting) {
+      const button = navigation.createEl("button", {
+        text: `Open ${note.label ?? note.path.replace(/\.md$/i, "").split("/").pop()}`,
+        attr: { type: "button" }
+      });
+      button.onclick = (event) => {
+        void this.app.workspace.openLinkText(
+          note.path.replace(/\.md$/i, ""),
+          chapter.path,
+          event.metaKey || event.ctrlKey
+        );
+      };
+    }
   }
 
   private renderCollapsibleEditorialPasses(container: Element, file: TFile) {
