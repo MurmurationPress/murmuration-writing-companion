@@ -47,6 +47,11 @@ import {
   ManuscriptNavigatorView
 } from "./manuscript/ManuscriptNavigatorView";
 import { WritingCompanionActivation } from "./companion/WritingCompanionActivation";
+import {
+  buildObsidianManuscriptChronology,
+  ObsidianManuscriptChronologyResult
+} from "./manuscript/ObsidianManuscriptChronology";
+import { BookReviewContinuityDisclosure } from "./companion/BookReviewContinuityDisclosure";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -62,6 +67,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   pendingFocusNoteId: string | null = null;
   private readonly annotationLocator = new TransientAnnotationLocator();
   private readonly writingCompanionActivation = new WritingCompanionActivation();
+  readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
+  private manuscriptChronologyDependencies = new Set<string>();
 
   async onload() {
     const enhancementStyles = installEditorialEnhancementStyles();
@@ -191,6 +198,18 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.registerEvent(
+      this.app.workspace.on("file-open", (file) => {
+        if (!(file instanceof TFile) || file.extension !== "md") return;
+        if (this.currentChapter?.path === file.path) return;
+
+        this.annotationLocator.clear();
+        this.currentChapter = file;
+        this.refreshView();
+        this.refreshManuscriptNavigator();
+      })
+    );
+
+    this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
         const currentChapter = this.getCurrentChapter();
@@ -198,8 +217,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         const currentBookChanged = currentChapter
           ? file.path === this.getOwningBook(currentChapter)?.path
           : false;
+        const manuscriptChronologyChanged = this.manuscriptChronologyDependencies.has(file.path);
 
-        if (worldChanged || currentChapterChanged || currentBookChanged) {
+        if (worldChanged || currentChapterChanged || currentBookChanged || manuscriptChronologyChanged) {
           this.refreshView();
         }
         this.refreshManuscriptNavigator();
@@ -210,10 +230,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.app.vault.on("create", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
 
-        const worldChanged = this.storyWorldIndex.handleCreate(file);
+        this.storyWorldIndex.handleCreate(file);
         await this.storeService.handleCreate(file);
 
-        if (worldChanged) this.refreshView();
+        // A new scene or part may not yet be in the active book's prior dependency set.
+        this.refreshView();
         this.refreshManuscriptNavigator();
       })
     );
@@ -229,7 +250,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           this.currentChapter = null;
         }
 
-        if (worldChanged || this.currentChapter === null) {
+        if (
+          worldChanged
+          || this.currentChapter === null
+          || this.manuscriptChronologyDependencies.has(file.path)
+        ) {
           this.refreshView();
         }
         this.refreshManuscriptNavigator();
@@ -247,7 +272,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           this.currentChapter = file;
         }
 
-        if (worldChanged) this.refreshView();
+        if (worldChanged || this.manuscriptChronologyDependencies.has(oldPath)) {
+          this.refreshView();
+        }
         this.refreshManuscriptNavigator();
       })
     );
@@ -273,6 +300,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   getExplicitOwningBookResolution(chapter: TFile) {
     return resolveExplicitOwningBookWithSource(this.app, chapter);
+  }
+
+  getManuscriptChronology(chapter: TFile): ObsidianManuscriptChronologyResult {
+    const result = buildObsidianManuscriptChronology(this.app, chapter);
+    this.manuscriptChronologyDependencies = new Set(result.dependencies);
+    return result;
   }
 
   getPendingFocusNoteId(): string | null {

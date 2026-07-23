@@ -3,6 +3,27 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   margin-top: 12px;
 }
 
+.mwc-book-continuity-indicator {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mwc-book-continuity-indicator::before {
+  width: 0.45em;
+  height: 0.45em;
+  flex: 0 0 auto;
+  margin-inline-end: 0.4em;
+  border-radius: 50%;
+  background: var(--text-accent);
+  content: "";
+  opacity: 0.7;
+}
+
 .mwc-book-review-title {
   display: flex;
   align-items: baseline;
