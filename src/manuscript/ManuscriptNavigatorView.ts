@@ -44,6 +44,9 @@ import { ManuscriptBookCreationModal } from "./ManuscriptBookCreationModal";
 import { ManuscriptPartCreationModal } from "./ManuscriptPartCreationModal";
 import { manuscriptPartCreationAvailability } from "./ManuscriptPartCreation";
 import { snapshotManuscriptPartCreation } from "./ObsidianManuscriptPartCreation";
+import { ManuscriptSceneCreationModal } from "./ManuscriptSceneCreationModal";
+import { defaultManuscriptSceneParent, manuscriptSceneCreationAvailability } from "./ManuscriptSceneCreation";
+import { snapshotManuscriptSceneCreation } from "./ObsidianManuscriptSceneCreation";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -304,6 +307,21 @@ export class ManuscriptNavigatorView extends ItemView {
     });
     createPart.disabled = partAvailability.length > 0;
     createPart.onclick = () => new ManuscriptPartCreationModal(this.plugin).open();
+    const sceneSnapshot = snapshotManuscriptSceneCreation(this.plugin);
+    const sceneParentPath = defaultManuscriptSceneParent(sceneSnapshot);
+    const sceneParent = sceneSnapshot.parents.find((parent) => parent.path === sceneParentPath);
+    const sceneAvailability = manuscriptSceneCreationAvailability(sceneSnapshot, sceneParentPath);
+    const createScene = reviewActions.createEl("button", {
+      cls: "mwc-manuscript-create-scene",
+      text: "Create scene",
+      attr: {
+        type: "button",
+        title: sceneAvailability[0] ?? `Create Scene in ${sceneParent?.title ?? selected.record.title}`,
+        "aria-label": sceneAvailability[0] ?? `Create Scene in ${sceneParent?.title ?? selected.record.title}`
+      }
+    });
+    createScene.disabled = sceneAvailability.length > 0;
+    createScene.onclick = () => new ManuscriptSceneCreationModal(this.plugin).open();
     const review = reviewActions.createEl("button", {
       cls: "mwc-manuscript-continuity-review",
       text: reviewPresentation.label,

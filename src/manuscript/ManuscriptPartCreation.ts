@@ -1,6 +1,12 @@
 import type { ManuscriptEntryKind, ManuscriptOrderDiagnostic, ManuscriptOrderSource } from "./ManuscriptOrder";
 import { manuscriptOrderKey, manuscriptOrderKeyBetween } from "./ManuscriptOrderKey";
 import {
+  commonManuscriptFolder,
+  ManuscriptInsertionChild,
+  manuscriptInsertionBoundaries,
+  sameInsertionNeighbour
+} from "./ManuscriptInsertion";
+import {
   manuscriptDefaultPath,
   ManuscriptVaultEntry,
   parentVaultPath,
@@ -8,13 +14,7 @@ import {
   yamlString
 } from "./ManuscriptNoteCreation";
 
-export interface ManuscriptPartChildSnapshot {
-  readonly path: string;
-  readonly title: string;
-  readonly kind: ManuscriptEntryKind;
-  readonly parentPath: string | null;
-  readonly orderKey: string | null;
-}
+export interface ManuscriptPartChildSnapshot extends ManuscriptInsertionChild { readonly kind: ManuscriptEntryKind }
 
 export interface ManuscriptPartIdentity { readonly path: string; readonly title: string; readonly bookPath: string }
 
@@ -52,34 +52,15 @@ export interface ManuscriptPartCreationPlan {
   readonly errors: readonly string[];
 }
 
-function childLabel(child: ManuscriptPartChildSnapshot): string {
-  return `${child.title} — ${child.kind === "part" ? "Part" : "Scene"}`;
-}
-
 export function manuscriptPartPlacements(children: readonly ManuscriptPartChildSnapshot[]): ManuscriptPartPlacement[] {
-  if (children.length === 0) return [{ id: "start", label: "At beginning — Book is empty", previous: null, next: null }];
-  return [
-    { id: "start", label: `At beginning — before ${childLabel(children[0])}`, previous: null, next: children[0] },
-    ...children.map((child, index) => ({
-      id: `after:${child.path}`,
-      label: index === children.length - 1 ? `At end — after ${childLabel(child)}` : `After ${childLabel(child)}`,
-      previous: child,
-      next: children[index + 1] ?? null
-    }))
-  ];
-}
-
-function commonParent(paths: readonly string[]): string | null {
-  if (paths.length === 0) return null;
-  const values = new Set(paths.map(parentVaultPath));
-  return values.size === 1 ? [...values][0] : null;
+  return manuscriptInsertionBoundaries(children, "Book is empty");
 }
 
 export function manuscriptPartDefaultFolder(snapshot: ManuscriptPartCreationSnapshot): string {
-  const partFolder = commonParent(snapshot.parts.filter((part) => part.bookPath === snapshot.book?.path).map((part) => part.path));
+  const partFolder = commonManuscriptFolder(snapshot.parts.filter((part) => part.bookPath === snapshot.book?.path).map((part) => part.path));
   if (partFolder !== null) return partFolder;
   if (snapshot.associatedBookFolder) return snapshot.associatedBookFolder;
-  const childrenFolder = commonParent(snapshot.directChildren.map((child) => child.path));
+  const childrenFolder = commonManuscriptFolder(snapshot.directChildren.map((child) => child.path));
   if (childrenFolder !== null) return childrenFolder;
   return snapshot.book ? parentVaultPath(snapshot.book.path) : "";
 }
@@ -140,13 +121,6 @@ export function planManuscriptPartCreation(
   };
 }
 
-function sameBoundaryChild(expected: ManuscriptPartChildSnapshot | null, actual: ManuscriptPartChildSnapshot | null): boolean {
-  return expected === null ? actual === null : actual !== null
-    && expected.path === actual.path && expected.kind === actual.kind
-    && expected.parentPath === actual.parentPath
-    && manuscriptOrderKey(expected.orderKey) === manuscriptOrderKey(actual.orderKey);
-}
-
 export function revalidateManuscriptPartPlan(
   preview: ManuscriptPartCreationPlan,
   snapshot: ManuscriptPartCreationSnapshot
@@ -154,7 +128,7 @@ export function revalidateManuscriptPartPlan(
   const current = planManuscriptPartCreation(snapshot, { title: preview.title, path: preview.path, placementId: preview.placementId });
   const errors = [...current.errors];
   if (snapshot.selectedBookPath !== preview.bookPath || current.bookPath !== preview.bookPath) errors.push("The explicitly selected Book changed after preview.");
-  if (!sameBoundaryChild(preview.previous, current.previous) || !sameBoundaryChild(preview.next, current.next) || current.orderKey !== preview.orderKey) {
+  if (!sameInsertionNeighbour(preview.previous, current.previous) || !sameInsertionNeighbour(preview.next, current.next) || current.orderKey !== preview.orderKey) {
     errors.push("The selected insertion boundary changed after preview. Review the updated placement.");
   }
   if (current.markdown !== preview.markdown) errors.push("The exact Part Markdown changed after preview.");
