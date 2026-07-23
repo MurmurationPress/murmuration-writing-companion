@@ -1,5 +1,6 @@
 export interface BookReviewContinuityPresentation {
   readonly count: number;
+  readonly reviewedCount: number;
   readonly indicator: string;
   readonly bookReviewExpanded: boolean;
   readonly continuityExpanded: boolean;
@@ -11,8 +12,9 @@ interface BookDisclosureState {
   continuityExpanded: boolean;
 }
 
-export function bookReviewContinuityIndicator(count: number): string {
-  return count > 0 ? `Continuity ${count}` : "";
+export function bookReviewContinuityIndicator(count: number, reviewedCount = 0): string {
+  if (count > 0) return `Continuity ${count}`;
+  return reviewedCount > 0 ? `Reviewed ${reviewedCount}` : "";
 }
 
 export function bookReviewToggleAriaLabel(
@@ -26,7 +28,11 @@ export function bookReviewToggleAriaLabel(
 export class BookReviewContinuityDisclosure {
   private readonly byBook = new Map<string, BookDisclosureState>();
 
-  present(bookPath: string, count: number): BookReviewContinuityPresentation {
+  present(
+    bookPath: string,
+    count: number,
+    reviewedCount = 0
+  ): BookReviewContinuityPresentation {
     const state = this.state(bookPath);
     if (count > 0 && !state.findingsSeen) {
       state.findingsSeen = true;
@@ -35,7 +41,8 @@ export class BookReviewContinuityDisclosure {
     }
     return {
       count,
-      indicator: bookReviewContinuityIndicator(count),
+      reviewedCount,
+      indicator: bookReviewContinuityIndicator(count, reviewedCount),
       bookReviewExpanded: state.bookReviewExpanded,
       continuityExpanded: state.continuityExpanded
     };

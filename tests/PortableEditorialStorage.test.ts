@@ -19,6 +19,24 @@ import {
 
 const NOW = "2032-04-01T12:00:00.000Z";
 const CHAPTER_PATH = "PRIME Trilogy/EMERGENCE/PART ONE/Chapter One.md";
+const LINEAGE = "obs-lineage-v1:1234567890abcdef";
+
+function dispositionRecord() {
+  return {
+    lineageKey: LINEAGE,
+    fingerprint: "obs-v1:fedcba0987654321",
+    disposition: "intentional" as const,
+    note: "Deliberate flashback.",
+    firstReviewedAt: NOW,
+    updatedAt: NOW,
+    observationKind: "manuscript.chronology.reversal",
+    ruleId: "mwc.manuscript.chronology.reversal",
+    ruleVersion: 1,
+    primaryPath: CHAPTER_PATH,
+    sourcePaths: [CHAPTER_PATH],
+    reviewSummary: "Scene chronology reverses manuscript order"
+  };
+}
 
 class MemoryFileSystem implements PortableEditorialFileSystem {
   readonly files = new Map<string, string>();
@@ -234,6 +252,61 @@ test("preserves unknown root, page, annotation and anchor fields", async () => {
     saved.pages[CHAPTER_PATH].annotations[0].anchor.futureAnchor,
     true
   );
+});
+
+test("migrates schema 2 with no continuity section to schema 3", () => {
+  const parsed = parsePortableEditorialStore(JSON.stringify({
+    schemaVersion: 2,
+    pages: editorialStore().pages
+  }), NOW);
+  equal(parsed.migrated, true);
+  equal(parsed.store.continuityDispositions, undefined);
+  equal(JSON.parse(serializePortableEditorialStore(parsed.store)).schemaVersion, 3);
+});
+
+test("round trips portable continuity dispositions and unknown record fields", async () => {
+  const { fileSystem, storage } = createStorage();
+  const store = editorialStore();
+  store.continuityDispositions = {
+    [LINEAGE]: { ...dispositionRecord(), futureDispositionField: "retained" }
+  };
+  await storage.load(undefined, NOW);
+  await storage.save(store);
+  const reloaded = await new PortableEditorialStorage(
+    new AtomicTextFileStore(fileSystem)
+  ).load(undefined, NOW);
+  deepEqual(reloaded.store.continuityDispositions?.[LINEAGE], store.continuityDispositions[LINEAGE]);
+});
+
+test("defensively removes malformed disposition records without losing other editorial data", () => {
+  const parsed = parsePortableEditorialStore(JSON.stringify({
+    schemaVersion: 3,
+    pages: editorialStore().pages,
+    continuityDispositions: {
+      [LINEAGE]: dispositionRecord(),
+      "obs-lineage-v1:bad": { ...dispositionRecord(), lineageKey: "different" },
+      "obs-lineage-v1:bad-note": {
+        ...dispositionRecord(),
+        lineageKey: "obs-lineage-v1:bad-note",
+        note: "x".repeat(501)
+      }
+    }
+  }), NOW);
+  equal(parsed.migrated, true);
+  deepEqual(Object.keys(parsed.store.continuityDispositions ?? {}), [LINEAGE]);
+  equal(parsed.store.pages[CHAPTER_PATH].annotations.length, 1);
+});
+
+test("recovers continuity dispositions through the existing backup path", async () => {
+  const { fileSystem, storage } = createStorage();
+  const paths = portableEditorialStoragePaths();
+  const store = editorialStore();
+  store.continuityDispositions = { [LINEAGE]: dispositionRecord() };
+  fileSystem.files.set(paths.primary, "{ malformed");
+  fileSystem.files.set(paths.backup, serializePortableEditorialStore(store));
+  const loaded = await storage.load(undefined, NOW);
+  equal(loaded.recovered, true);
+  equal(loaded.store.continuityDispositions?.[LINEAGE].disposition, "intentional");
 });
 
 test("moves editorial data with a renamed chapter", () => {

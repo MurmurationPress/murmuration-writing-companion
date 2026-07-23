@@ -12,6 +12,7 @@ test("collapsed Book Review with findings keeps a compact count", () => {
   disclosure.setBookReviewExpanded("Book.md", false);
   deepEqual(disclosure.present("Book.md", 2), {
     count: 2,
+    reviewedCount: 0,
     indicator: "Continuity 2",
     bookReviewExpanded: false,
     continuityExpanded: true
@@ -22,6 +23,14 @@ test("no findings has no indicator", () => {
   const disclosure = new BookReviewContinuityDisclosure();
   equal(disclosure.present("Book.md", 0).indicator, "");
   equal(bookReviewContinuityIndicator(0), "");
+});
+
+test("reviewed-only findings use a non-warning compact indicator", () => {
+  const disclosure = new BookReviewContinuityDisclosure();
+  const presentation = disclosure.present("Book.md", 0, 2);
+  equal(presentation.indicator, "Reviewed 2");
+  equal(presentation.bookReviewExpanded, false);
+  equal(bookReviewContinuityIndicator(0, 2), "Reviewed 2");
 });
 
 test("finding count updates without changing disclosure choice", () => {

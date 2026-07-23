@@ -30,11 +30,13 @@ import {
   evaluateChapterContextContinuity
 } from "../observations/ChapterContextContinuity";
 import {
-  ContinuityObservation,
-  observationSourceNotes
+  ContinuityObservation
 } from "../observations/ContinuityObservation";
 import { isBookFrontmatter } from "../editorial/BookReview";
 import { parseWikilink } from "../story-world/StoryWorldIndex";
+import type { DispositionMatch } from "../observations/ContinuityDisposition";
+import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
+import { chapterContextCardNavigationNotes } from "./ContinuityCardPresentation";
 
 export { VIEW_TYPE };
 
@@ -243,31 +245,59 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       }
     });
     if (observations.length === 0) return;
+    const queue = this.plugin.storeService.getContinuityDispositionQueue(observations);
 
     const section = container.createDiv("mwc-continuity");
     const heading = section.createDiv("mwc-continuity-heading");
     heading.createEl("h4", { text: "Continuity" });
     heading.createSpan({
       cls: "mwc-continuity-count",
-      text: String(observations.length)
+      text: String(queue.active.length)
     });
-    for (const observation of observations) {
-      this.renderContinuityObservation(section, file, observation);
+    for (const match of queue.active) {
+      this.renderContinuityObservation(section, file, match);
+    }
+    if (queue.reviewed.length > 0) {
+      const reviewed = section.createDiv("mwc-continuity-reviewed");
+      const toggle = reviewed.createEl("button", {
+        text: `Show reviewed (${queue.reviewed.length})`,
+        attr: { type: "button", "aria-expanded": "false" }
+      });
+      const list = reviewed.createDiv("mwc-continuity-reviewed-list");
+      list.hidden = true;
+      let rendered = false;
+      toggle.onclick = () => {
+        list.hidden = !list.hidden;
+        if (!list.hidden && !rendered) {
+          rendered = true;
+          for (const match of queue.reviewed) {
+            this.renderContinuityObservation(list, file, match);
+          }
+        }
+        toggle.textContent = `${list.hidden ? "Show" : "Hide"} reviewed (${queue.reviewed.length})`;
+        toggle.setAttribute("aria-expanded", String(!list.hidden));
+      };
     }
   }
 
   private renderContinuityObservation(
     container: HTMLElement,
     chapter: TFile,
-    observation: ContinuityObservation
+    match: DispositionMatch
   ) {
+    const observation = match.observation;
     const card = container.createDiv(
       `mwc-continuity-observation mwc-continuity-observation--${observation.severity}`
     );
     card.createEl("p", { cls: "mwc-continuity-summary", text: observation.summary });
     card.createEl("p", { cls: "mwc-continuity-explanation", text: observation.explanation });
-    const supporting = observationSourceNotes(observation)
-      .filter((note) => note.path !== chapter.path);
+    renderContinuityDispositionControls(
+      card,
+      observation,
+      match,
+      this.plugin.storeService
+    );
+    const supporting = chapterContextCardNavigationNotes(observation);
     if (supporting.length === 0) return;
     const navigation = card.createDiv("mwc-continuity-navigation");
     for (const note of supporting) {

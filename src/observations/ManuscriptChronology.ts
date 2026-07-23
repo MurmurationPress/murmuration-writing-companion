@@ -167,7 +167,7 @@ function observeReversals(
           ...current.input.sequenceEvidence
         ],
         summary: "Scene chronology reverses manuscript order",
-        explanation: `${current.input.scene.label ?? current.input.scene.path} is later in the manuscript but its explicit story_date is provably earlier than ${previous.input.scene.label ?? previous.input.scene.path}. This may be intentional non-linear narration and should be reviewed.`,
+        explanation: `${current.input.scene.label ?? current.input.scene.path} is later in the manuscript, but its explicit story_date (${current.interval.source}) is provably earlier than ${previous.input.scene.label ?? previous.input.scene.path} (${previous.interval.source}). This may be intentional non-linear narration and should be reviewed.`,
         rule: RULES.reversal,
         logicalOccurrence: {
           book: input.book.path,

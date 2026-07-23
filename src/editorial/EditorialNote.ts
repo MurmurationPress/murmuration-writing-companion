@@ -1,3 +1,5 @@
+import type { ContinuityDispositionRecord } from "../observations/ContinuityDisposition";
+
 export type NoteStatus = "open" | "resolved";
 
 export interface EditorialNote {
@@ -48,5 +50,6 @@ export interface OrphanedEditorialPage {
 export interface EditorialStore {
   pages: Record<string, PageEditorialNotes>;
   orphanedPages?: Record<string, OrphanedEditorialPage>;
+  continuityDispositions?: Record<string, ContinuityDispositionRecord>;
   [key: string]: unknown;
 }

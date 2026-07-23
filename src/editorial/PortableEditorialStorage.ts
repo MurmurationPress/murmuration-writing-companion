@@ -6,10 +6,15 @@ import type {
   OrphanedEditorialPage,
   PageEditorialNotes
 } from "./EditorialNote";
+import {
+  ContinuityDispositionRecord,
+  isContinuityDispositionKind,
+  normalizeContinuityDispositionNote
+} from "../observations/ContinuityDisposition";
 
 export const PORTABLE_EDITORIAL_DATA_PATH =
   ".murmuration/writing-companion/editorial-data.json";
-export const PORTABLE_EDITORIAL_SCHEMA_VERSION = 2;
+export const PORTABLE_EDITORIAL_SCHEMA_VERSION = 3;
 
 export type EditorialStorageErrorCode =
   | "empty"
@@ -345,6 +350,71 @@ function normalizeOrphanedPage(
   };
 }
 
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function validIsoTimestamp(value: unknown): value is string {
+  return nonEmptyString(value) && !Number.isNaN(Date.parse(value));
+}
+
+function normalizeContinuityDisposition(
+  lineageKey: string,
+  value: unknown
+): NormalizedResult<ContinuityDispositionRecord> | null {
+  if (!isRecord(value)) return null;
+  const rawSourcePaths = value.sourcePaths;
+  if (
+    value.lineageKey !== lineageKey
+    || !lineageKey.startsWith("obs-lineage-v1:")
+    || !nonEmptyString(value.fingerprint)
+    || !value.fingerprint.startsWith("obs-v1:")
+    || !isContinuityDispositionKind(value.disposition)
+    || !validIsoTimestamp(value.firstReviewedAt)
+    || !validIsoTimestamp(value.updatedAt)
+    || !nonEmptyString(value.observationKind)
+    || !nonEmptyString(value.ruleId)
+    || !Number.isSafeInteger(value.ruleVersion)
+    || (value.ruleVersion as number) < 1
+    || !nonEmptyString(value.primaryPath)
+    || !Array.isArray(rawSourcePaths)
+    || !rawSourcePaths.every(nonEmptyString)
+    || typeof value.reviewSummary !== "string"
+  ) return null;
+
+  let note: string | null;
+  try {
+    note = normalizeContinuityDispositionNote(
+      typeof value.note === "string" ? value.note : null
+    );
+  } catch {
+    return null;
+  }
+  const sourcePaths = [...new Set(rawSourcePaths as string[])].sort();
+  const normalized = {
+    ...value,
+    lineageKey,
+    fingerprint: value.fingerprint,
+    disposition: value.disposition,
+    note,
+    firstReviewedAt: value.firstReviewedAt,
+    updatedAt: value.updatedAt,
+    observationKind: value.observationKind,
+    ruleId: value.ruleId,
+    ruleVersion: value.ruleVersion,
+    primaryPath: value.primaryPath,
+    sourcePaths,
+    reviewSummary: value.reviewSummary
+  } as ContinuityDispositionRecord;
+  return {
+    value: normalized,
+    changed:
+      value.note !== note
+      || sourcePaths.length !== rawSourcePaths.length
+      || sourcePaths.some((path, index) => path !== rawSourcePaths[index])
+  };
+}
+
 export function normalizeEditorialStore(
   input: unknown,
   now = new Date().toISOString()
@@ -377,11 +447,30 @@ export function normalizeEditorialStore(
     }
   }
 
+  let continuityDispositions: Record<string, ContinuityDispositionRecord> | undefined;
+  if (rawStore.continuityDispositions !== undefined) {
+    if (!isRecord(rawStore.continuityDispositions)) {
+      changed = true;
+    } else {
+      continuityDispositions = {};
+      for (const [lineageKey, rawDisposition] of Object.entries(rawStore.continuityDispositions)) {
+        const normalized = normalizeContinuityDisposition(lineageKey, rawDisposition);
+        if (!normalized) {
+          changed = true;
+          continue;
+        }
+        continuityDispositions[lineageKey] = normalized.value;
+        changed = changed || normalized.changed;
+      }
+    }
+  }
+
   const extras: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rawStore)) {
     if (
       key !== "pages"
       && key !== "orphanedPages"
+      && key !== "continuityDispositions"
       && key !== "schemaVersion"
     ) {
       extras[key] = value;
@@ -395,6 +484,9 @@ export function normalizeEditorialStore(
 
   if (orphanedPages && Object.keys(orphanedPages).length > 0) {
     store.orphanedPages = orphanedPages;
+  }
+  if (continuityDispositions && Object.keys(continuityDispositions).length > 0) {
+    store.continuityDispositions = continuityDispositions;
   }
 
   return { value: store, changed };
@@ -468,6 +560,7 @@ export function serializePortableEditorialStore(store: EditorialStore): string {
     if (
       key !== "pages"
       && key !== "orphanedPages"
+      && key !== "continuityDispositions"
       && key !== "schemaVersion"
     ) {
       extras[key] = value;
@@ -482,6 +575,12 @@ export function serializePortableEditorialStore(store: EditorialStore): string {
 
   if (store.orphanedPages && Object.keys(store.orphanedPages).length > 0) {
     serialized.orphanedPages = store.orphanedPages;
+  }
+  if (
+    store.continuityDispositions
+    && Object.keys(store.continuityDispositions).length > 0
+  ) {
+    serialized.continuityDispositions = store.continuityDispositions;
   }
 
   return `${JSON.stringify(serialized, null, 2)}\n`;
