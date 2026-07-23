@@ -233,6 +233,39 @@
   max-width: 58%;
 }
 
+.mwc-manuscript-create-book {
+  order: 2;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.mwc-manuscript-heading :is(.mwc-manuscript-book-selector, .mwc-manuscript-book-title) {
+  order: 1;
+}
+
+.mwc-manuscript-book-create-preview {
+  margin-top: var(--size-4-3);
+}
+
+.mwc-manuscript-book-create-preview-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: var(--size-4-2);
+}
+
+.mwc-manuscript-book-create-preview-row dt {
+  color: var(--text-muted);
+}
+
+.mwc-manuscript-book-create-preview pre {
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.mwc-manuscript-book-create-errors {
+  color: var(--text-error);
+}
+
 .mwc-manuscript-book-title {
   min-width: 0;
   overflow: hidden;
