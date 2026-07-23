@@ -655,4 +655,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       }
     }
   }
+
+  revealManuscriptPath(path: string) {
+    const leaves = this.app.workspace.getLeavesOfType(MANUSCRIPT_NAVIGATOR_VIEW_TYPE);
+    for (const leaf of leaves) {
+      const view = leaf.view;
+      if (view instanceof ManuscriptNavigatorView) view.revealPath(path);
+    }
+  }
 }

@@ -98,7 +98,7 @@ function firstResolvedPath(
   return null;
 }
 
-function associatedFolderPath(app: App, file: TFile): string | null {
+export function associatedManuscriptFolderPath(app: App, file: TFile): string | null {
   const parent = file.parent;
   if (!parent) return null;
   if (parent.name === file.basename) return parent.path;
@@ -123,7 +123,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
       parentReferences: hierarchy.parentReferences,
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
-      associatedFolderPath: associatedFolderPath(app, file),
+      associatedFolderPath: associatedManuscriptFolderPath(app, file),
       orderKeyPresent: hasOwnProperty(frontmatter, MANUSCRIPT_ORDER_KEY_PROPERTY),
       orderKey: manuscriptOrderKey(frontmatter?.[MANUSCRIPT_ORDER_KEY_PROPERTY])
     });

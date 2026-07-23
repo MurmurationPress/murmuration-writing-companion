@@ -1,4 +1,4 @@
-import { App, TFile, TFolder } from "obsidian";
+import { App, TFile } from "obsidian";
 import {
   ManuscriptBookCreationPlan,
   ManuscriptBookIdentity,
@@ -10,6 +10,12 @@ import {
   InvalidManuscriptBookConfirmationError,
   ManuscriptBookCreationAdapter
 } from "./ManuscriptBookCreationExecution";
+import {
+  boundedManuscriptRecognition,
+  cleanupUnchangedCreatedNote,
+  ensurePreviewedManuscriptFolder,
+  snapshotManuscriptVaultEntries
+} from "./ObsidianManuscriptNoteCreation";
 
 export class StaleManuscriptBookCreationError extends Error {
   constructor(readonly errors: readonly string[]) {
@@ -29,20 +35,11 @@ export function snapshotManuscriptBookCreation(app: App): {
   const library = buildObsidianManuscriptLibrary(app);
   return {
     books: library.books.map((book) => ({ path: book.file.path, title: book.record.title })),
-    entries: app.vault.getAllLoadedFiles()
-      .filter((entry) => entry.path.length > 0)
-      .map((entry) => ({
-        path: entry.path,
-        kind: entry instanceof TFolder ? "folder" as const : "file" as const
-      }))
+    entries: snapshotManuscriptVaultEntries(app)
   };
 }
 
 const recognitionRequests = new WeakMap<App, Map<string, Promise<boolean>>>();
-
-function wait(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-}
 
 function waitForBookRecognition(app: App, path: string): Promise<boolean> {
   let appRequests = recognitionRequests.get(app);
@@ -52,13 +49,9 @@ function waitForBookRecognition(app: App, path: string): Promise<boolean> {
   }
   const existing = appRequests.get(path);
   if (existing) return existing;
-  const request = (async () => {
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      if (buildObsidianManuscriptLibrary(app).books.some((book) => book.file.path === path)) return true;
-      await wait(100);
-    }
-    return false;
-  })();
+  const request = boundedManuscriptRecognition(() => (
+    buildObsidianManuscriptLibrary(app).books.some((book) => book.file.path === path) ? "recognised" : "pending"
+  )).then((status) => status === "recognised");
   appRequests.set(path, request);
   void request.then(
     () => appRequests?.delete(path),
@@ -72,9 +65,7 @@ async function cleanupReadBackMismatch(
   created: TFile,
   createdMtime: number
 ): Promise<void> {
-  const current = app.vault.getAbstractFileByPath(created.path);
-  if (!(current instanceof TFile) || current !== created || current.stat.mtime !== createdMtime) return;
-  await app.vault.delete(created);
+  await cleanupUnchangedCreatedNote(app, created, createdMtime);
 }
 
 const adapters = new WeakMap<App, ManuscriptBookCreationAdapter<TFile>>();
@@ -86,10 +77,8 @@ function creationAdapter(app: App): ManuscriptBookCreationAdapter<TFile> {
   const adapter: ManuscriptBookCreationAdapter<TFile> = {
     snapshot: () => snapshotManuscriptBookCreation(app),
     createFolder: async (folderPath) => {
-      const current = app.vault.getAbstractFileByPath(folderPath);
-      if (current instanceof TFolder) return;
-      if (current) throw new StaleManuscriptBookCreationError([`The parent path “${current.path}” is no longer available as a folder.`]);
-      await app.vault.createFolder(folderPath);
+      try { await ensurePreviewedManuscriptFolder(app, folderPath); }
+      catch (error) { throw new StaleManuscriptBookCreationError([error instanceof Error ? error.message : String(error)]); }
     },
     createFile: async (path, markdown) => {
       const created = await app.vault.create(path, markdown);
