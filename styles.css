@@ -242,6 +242,25 @@
   white-space: nowrap;
 }
 
+.mwc-manuscript-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: calc(-1 * var(--mwc-space-2)) 2px var(--mwc-space-2);
+}
+
+.mwc-manuscript-continuity-review {
+  min-height: 1.9rem;
+  height: auto;
+  padding: 3px 8px;
+  font-size: var(--font-ui-small);
+  white-space: normal;
+}
+
+.mwc-manuscript-continuity-review:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 .mwc-manuscript-controls {
   display: flex;
   justify-content: flex-end;

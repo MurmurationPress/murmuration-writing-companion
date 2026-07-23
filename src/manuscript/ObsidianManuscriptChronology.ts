@@ -111,6 +111,13 @@ export function buildObsidianManuscriptChronology(
   const bookPath = library.owningBookPathByFile.get(activeFile.path);
   const book = library.books.find((candidate) => candidate.file.path === bookPath) ?? null;
   if (!book) return { book: null, observations: [], dependencies: new Set([activeFile.path]) };
+  return buildObsidianManuscriptChronologyForBook(app, book);
+}
+
+export function buildObsidianManuscriptChronologyForBook(
+  app: App,
+  book: ObsidianManuscriptBook
+): ObsidianManuscriptChronologyResult {
   const dependencies = new Set(book.filesByPath.keys());
   dependencies.add(book.file.path);
   if (!manuscriptChronologyOrderIsSafe(book.result)) {

@@ -2,6 +2,7 @@ import { isRecord, readablePredicateLabel, readableStatusLabel } from "./EntityR
 import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { StoryWorldTimelineEvent, StoryWorldTimelineProjection, timelineReferenceLabel } from "./StoryWorldTimeline";
 import { parseEventTime } from "./EventTimeEditing";
+import { compareTemporalIntervals, parseTemporalInterval, TemporalInterval } from "../observations/TemporalInterval";
 import {
   buildContinuityObservation,
   canonicalObservationEncoding,
@@ -62,16 +63,18 @@ export function graphSelectionProjection(graph: EventSceneGraphProjection, nodeI
 function text(value: unknown): string | null { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function assertions(value: unknown): unknown[] { return Array.isArray(value) ? value : value == null ? [] : [value]; }
 function assertionLabel(value: unknown): string { const parsed = parseWikilink(value); return parsed ? timelineReferenceLabel(String(value)) : text(value) ?? "Missing reference"; }
-interface ComparablePointTime { readonly value: string; readonly precision: string; }
+interface ComparablePointTime { readonly value: string; readonly precision: string; readonly interval: TemporalInterval; }
 function comparablePointTimes(entities: readonly StoryWorldEntityRecord[]): Map<string, ComparablePointTime> {
   const times = new Map<string, ComparablePointTime>();
   for (const entity of entities) {
+    const interpreted = parseTemporalInterval(entity.properties.world_time);
     const time = parseEventTime(entity.properties.world_time);
-    if (time.kind !== "supported" || time.value.mode !== "point") continue;
+    if (interpreted.kind !== "supported" || !interpreted.value.point || time.kind !== "supported" || time.value.mode !== "point") continue;
     const endpoint = time.value.from;
     times.set(entity.path, {
       value: endpoint.date + (["hour", "minute"].includes(time.value.precision) ? `T${endpoint.time}${endpoint.offset}` : ""),
-      precision: time.value.precision
+      precision: time.value.precision,
+      interval: interpreted.value
     });
   }
   return times;
@@ -79,11 +82,13 @@ function comparablePointTimes(entities: readonly StoryWorldEntityRecord[]): Map<
 function chronologicalConflict(predicate: string, subjectPath: string | null, targetPath: string | null, timesByPath: ReadonlyMap<string, ComparablePointTime>): string | null {
   if (!subjectPath || !targetPath) return null;
   const subject = timesByPath.get(subjectPath); const target = timesByPath.get(targetPath);
-  if (!subject || !target || subject.precision !== target.precision || subject.value === target.value) return null;
+  if (!subject || !target) return null;
+  const order = compareTemporalIntervals(subject.interval, target.interval);
+  if (order === "overlap" || order === "indeterminate") return null;
   const claimsBefore = ["precedes", "before"].includes(predicate.toLowerCase());
   const claimsAfter = ["follows", "after"].includes(predicate.toLowerCase());
-  if (claimsBefore && subject.value > target.value) return "This assertion conflicts with the current world_time ordering.";
-  if (claimsAfter && subject.value < target.value) return "This assertion conflicts with the current world_time ordering.";
+  if (claimsBefore && order === "after") return "This assertion conflicts with the current world_time ordering.";
+  if (claimsAfter && order === "before") return "This assertion conflicts with the current world_time ordering.";
   return null;
 }
 

@@ -75,3 +75,42 @@ test("separates malformed and unsupported values", () => {
   equal(parseTemporalInterval({ at: "2026-01-01", precision: "approximate" }).kind, "unsupported");
   equal(parseTemporalInterval({ at: "2026-01-01", source: "[[Note]]" }).kind, "unsupported");
 });
+
+test("interprets explicit point shapes at every supported precision without requiring an end", () => {
+  const values = [
+    ["year", "2029"],
+    ["month", "2029-04"],
+    ["day", "2029-04-19"],
+    ["hour", "2029-04-19T09:00:00+01:00"],
+    ["minute", "2029-04-19T09:17:00+01:00"]
+  ] as const;
+  for (const [precision, from] of values) {
+    const value = supported({ shape: "point", from, precision });
+    equal(value.point, true);
+    equal(value.authoredShape, "point");
+    equal(value.until?.source, from);
+  }
+});
+
+test("validates explicit ranges and reports one shape-specific failure", () => {
+  equal(parseTemporalInterval({ shape: "range", from: "2029-04-19", precision: "day" }).kind, "malformed");
+  const missing = parseTemporalInterval({ shape: "range", from: "2029-04-19", precision: "day" });
+  if (missing.kind === "malformed") equal(missing.reason, "range_missing_end");
+  const reversed = parseTemporalInterval({ shape: "range", from: "2029-04-20", to: "2029-04-19", precision: "day" });
+  if (reversed.kind === "malformed") equal(reversed.reason, "reversed_temporal_range");
+  const point = parseTemporalInterval({ shape: "point", precision: "hour" });
+  if (point.kind === "malformed") equal(point.reason, "point_missing_time");
+  const unknown = parseTemporalInterval({ shape: "window", from: "2029" });
+  if (unknown.kind === "unsupported") equal(unknown.reason, "unsupported_temporal_shape");
+});
+
+test("compares point precision envelopes without inventing conflicts", () => {
+  const april = supported({ shape: "point", from: "2029-04", precision: "month" });
+  const day = supported({ shape: "point", from: "2029-04-19", precision: "day" });
+  const may = supported({ shape: "point", from: "2029-05-01", precision: "day" });
+  const range = supported({ shape: "range", from: "2029-04-18", to: "2029-04-20", precision: "day" });
+  equal(compareTemporalIntervals(april, day), "overlap");
+  equal(compareTemporalIntervals(day, range), "overlap");
+  equal(compareTemporalIntervals(day, may), "before");
+  equal(compareTemporalIntervals(may, day), "after");
+});

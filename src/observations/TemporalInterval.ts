@@ -15,6 +15,7 @@ export interface TemporalInterval {
   readonly from: TemporalEndpoint | null;
   readonly until: TemporalEndpoint | null;
   readonly point: boolean;
+  readonly authoredShape: "point" | "range" | "legacy";
 }
 
 export type TemporalParseResult =
@@ -24,7 +25,7 @@ export type TemporalParseResult =
   | { readonly kind: "unsupported"; readonly raw: unknown; readonly reason: string };
 
 const PRECISIONS: readonly TemporalPrecision[] = ["year", "month", "day", "hour", "minute"];
-const EXACT = /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:[Tt ](\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:?\d{2})?)?)?)?$/;
+const EXACT = /^(\d{4})(?:-(\d{2})(?:-(\d{2})(?:[Tt ](\d{2})(?::(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?(Z|[+-]\d{2}:?\d{2})?)?)?)?$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -94,11 +95,13 @@ function endpoint(source: unknown, declared: TemporalPrecision | null): Temporal
   const day = match[3] === undefined ? null : Number(match[3]);
   const hour = match[4] === undefined ? null : Number(match[4]);
   const minute = match[5] === undefined ? null : Number(match[5]);
-  const offset = match[6] ?? null;
+  const second = match[6] === undefined ? null : Number(match[6]);
+  const offset = match[7] ?? null;
   if (month !== null && (month < 1 || month > 12)) return null;
   if (day !== null && (month === null || day < 1 || day > daysInMonth(year, month))) return null;
   if (hour !== null && (hour < 0 || hour > 23)) return null;
   if (minute !== null && (minute < 0 || minute > 59)) return null;
+  if (second !== null && (second < 0 || second > 59)) return null;
   if (offset && offsetMinutes(offset) === null) return null;
 
   const evident = inferredPrecision(match);
@@ -155,20 +158,20 @@ export function parseTemporalInterval(value: unknown): TemporalParseResult {
     const precision: TemporalPrecision = midnight ? "day" : "minute";
     const parsed = endpoint(authored, precision);
     return parsed
-      ? { kind: "supported", value: { source: authored, precision, from: parsed, until: parsed, point: true } }
+      ? { kind: "supported", value: { source: authored, precision, from: parsed, until: parsed, point: true, authoredShape: "legacy" } }
       : { kind: "malformed", raw: source, reason: "invalid_date" };
   }
   if (typeof value === "string") {
     const parsed = endpoint(value, null);
     return parsed
-      ? { kind: "supported", value: { source: parsed.source, precision: parsed.precision, from: parsed, until: parsed, point: true } }
+      ? { kind: "supported", value: { source: parsed.source, precision: parsed.precision, from: parsed, until: parsed, point: true, authoredShape: "legacy" } }
       : { kind: "malformed", raw: value, reason: "invalid_iso_temporal_value" };
   }
   if (typeof value === "number") {
     const source = numericYearSource(value);
     const parsed = source ? endpoint(source, "year") : null;
     return parsed
-      ? { kind: "supported", value: { source: parsed.source, precision: "year", from: parsed, until: parsed, point: true } }
+      ? { kind: "supported", value: { source: parsed.source, precision: "year", from: parsed, until: parsed, point: true, authoredShape: "legacy" } }
       : { kind: "malformed", raw: value, reason: "invalid_numeric_year" };
   }
   if (!isRecord(value)) {
@@ -176,7 +179,7 @@ export function parseTemporalInterval(value: unknown): TemporalParseResult {
   }
 
   const keys = Object.keys(value).filter((key) => key !== "position");
-  const allowed = new Set(["at", "from", "until", "precision"]);
+  const allowed = new Set(["shape", "at", "date", "from", "to", "until", "precision"]);
   if (keys.some((key) => !allowed.has(key))) {
     return { kind: "unsupported", raw: value, reason: "unsupported_temporal_qualifier" };
   }
@@ -184,19 +187,57 @@ export function parseTemporalInterval(value: unknown): TemporalParseResult {
   if (precision === "invalid") {
     return { kind: "unsupported", raw: value, reason: "unsupported_temporal_precision" };
   }
-  if (value.at !== undefined) {
+  const shape = typeof value.shape === "string" ? value.shape.trim().toLowerCase() : null;
+  if (shape !== null && shape !== "point" && shape !== "range") {
+    return { kind: "unsupported", raw: value, reason: "unsupported_temporal_shape" };
+  }
+  if (shape === "point") {
+    if (value.at !== undefined || value.to !== undefined || value.until !== undefined) {
+      return { kind: "malformed", raw: value, reason: "invalid_point_shape" };
+    }
+    if (value.from === undefined || value.from === null || value.from === "") {
+      return { kind: "malformed", raw: value, reason: "point_missing_time" };
+    }
+    if (precision === null) return { kind: "malformed", raw: value, reason: "point_missing_precision" };
+    const parsed = endpoint(value.from, precision);
+    return parsed
+      ? { kind: "supported", value: { source: parsed.source, precision: parsed.precision, from: parsed, until: parsed, point: true, authoredShape: "point" } }
+      : { kind: "malformed", raw: value, reason: "invalid_point_endpoint" };
+  }
+  if (shape === "range") {
+    if (value.at !== undefined || value.until !== undefined) {
+      return { kind: "malformed", raw: value, reason: "invalid_range_shape" };
+    }
+    if (value.from === undefined || value.from === null || value.from === "") {
+      return { kind: "malformed", raw: value, reason: "range_missing_start" };
+    }
+    if (value.to === undefined || value.to === null || value.to === "") {
+      return { kind: "malformed", raw: value, reason: "range_missing_end" };
+    }
+    if (precision === null) return { kind: "malformed", raw: value, reason: "range_missing_precision" };
+    const from = endpoint(value.from, precision);
+    const until = endpoint(value.to, precision);
+    if (!from || !until) return { kind: "malformed", raw: value, reason: "invalid_range_endpoint" };
+    if (compareEndpoints(from, until) === "after") return { kind: "malformed", raw: value, reason: "reversed_temporal_range" };
+    return { kind: "supported", value: {
+      source: `${from.source}/${until.source}`, precision, from, until, point: false, authoredShape: "range"
+    } };
+  }
+  const legacyPoint = value.at ?? value.date;
+  if (legacyPoint !== undefined) {
     if (value.from !== undefined || value.until !== undefined) {
       return { kind: "malformed", raw: value, reason: "point_and_range_combined" };
     }
-    const parsed = endpoint(value.at, precision);
+    const parsed = endpoint(legacyPoint, precision);
     return parsed
-      ? { kind: "supported", value: { source: parsed.source, precision: parsed.precision, from: parsed, until: parsed, point: true } }
+      ? { kind: "supported", value: { source: parsed.source, precision: parsed.precision, from: parsed, until: parsed, point: true, authoredShape: "legacy" } }
       : { kind: "malformed", raw: value, reason: "invalid_point_endpoint" };
   }
 
   const from = value.from === undefined ? null : endpoint(value.from, precision);
-  const until = value.until === undefined ? null : endpoint(value.until, precision);
-  if (value.from !== undefined && !from || value.until !== undefined && !until) {
+  const rawUntil = value.until ?? value.to;
+  const until = rawUntil === undefined ? null : endpoint(rawUntil, precision);
+  if (value.from !== undefined && !from || rawUntil !== undefined && !until) {
     return { kind: "malformed", raw: value, reason: "invalid_range_endpoint" };
   }
   if (!from && !until) {
@@ -216,7 +257,8 @@ export function parseTemporalInterval(value: unknown): TemporalParseResult {
       precision: effectivePrecision,
       from,
       until,
-      point: false
+      point: !until,
+      authoredShape: "legacy"
     }
   };
 }

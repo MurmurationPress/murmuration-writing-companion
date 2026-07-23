@@ -46,6 +46,17 @@ test("accepts established single-from points and safely projects finer ISO detai
   equal(minute.from.time, "19:40");
 });
 
+test("uses explicit point and range shapes without rewriting their source", () => {
+  const source = { shape: "point", from: "2029-04-19T09:00:00+01:00", precision: "hour" };
+  const point = supported(source);
+  equal(point.mode, "point");
+  equal(projectEventTime(point), "Thursday, 19 April 2029, 09:00");
+  const range = supported({ shape: "range", from: "2029-04-19", to: "2029-04-20", precision: "day" });
+  equal(range.mode, "range");
+  equal(parseEventTime({ shape: "range", from: "2029-04-19", precision: "day" }).kind, "unsupported");
+  deepEqual(source, { shape: "point", from: "2029-04-19T09:00:00+01:00", precision: "hour" });
+});
+
 test("preserves written timezone offsets without conversion", () => {
   const value = supported({ at: "2026-07-16T00:30+14:00", precision: "minute" });
   equal(value.from.offset, "+14:00");

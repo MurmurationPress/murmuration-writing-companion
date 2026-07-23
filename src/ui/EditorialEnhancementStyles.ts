@@ -127,6 +127,17 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   font-size: 0.82em;
 }
 
+.mwc-book-review-title-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.mwc-book-review-continuity-link {
+  color: var(--text-accent);
+}
+
 .mwc-book-review-link,
 .mwc-pov-edit,
 .mwc-projection-repair {

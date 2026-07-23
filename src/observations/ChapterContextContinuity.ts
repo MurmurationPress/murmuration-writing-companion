@@ -78,6 +78,17 @@ function sourceObservation(
   unsupported = false,
   logicalOccurrence: unknown = { note: sourceNote.path, property: [...path], reason }
 ): ContinuityObservation {
+  const summaryByReason: Readonly<Record<string, string>> = {
+    point_missing_time: "Event point is missing its time",
+    point_missing_precision: "Event point is missing its precision",
+    invalid_point_endpoint: "Event point has an invalid time",
+    range_missing_start: "Event range is missing a start date",
+    range_missing_end: "Event range is missing an end date",
+    range_missing_precision: "Event range is missing its precision",
+    invalid_range_endpoint: "Event range has an invalid boundary",
+    reversed_temporal_range: "Event range ends before it starts",
+    unsupported_temporal_shape: "Event time has an unsupported shape"
+  };
   return buildContinuityObservation({
     kind: unsupported
       ? "chapter-context.source-data.unsupported"
@@ -92,7 +103,7 @@ function sourceObservation(
         ? { kind: "unsupported", raw: rawEvidence(raw), reason }
         : { kind: "malformed", raw: rawEvidence(raw), reason }
     }],
-    summary: "Story World source data needs review",
+    summary: summaryByReason[reason] ?? "Story World source data needs review",
     explanation: `Continuity evaluation did not use this value because it is ${unsupported ? "unsupported" : "malformed"} (${reason}).`,
     rule: RULES.sourceData,
     logicalOccurrence: normalizeObservationValue(logicalOccurrence)
@@ -222,6 +233,7 @@ function eventTimePath(raw: unknown, endpoint: "from" | "until"): readonly Obser
   const record = raw as Record<string, unknown>;
   if (record.at !== undefined) return ["world_time", "at"];
   if (endpoint === "from" && record.from !== undefined) return ["world_time", "from"];
+  if (endpoint === "until" && record.to !== undefined) return ["world_time", "to"];
   if (endpoint === "until" && record.until !== undefined) return ["world_time", "until"];
   return ["world_time"];
 }
