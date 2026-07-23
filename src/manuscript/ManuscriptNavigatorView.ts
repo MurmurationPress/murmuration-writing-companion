@@ -41,6 +41,9 @@ import {
 } from "./NavigatorViewState";
 import { openContinuityReviewFromEntryPoint } from "../companion/ContinuityReviewEntryPoint";
 import { ManuscriptBookCreationModal } from "./ManuscriptBookCreationModal";
+import { ManuscriptPartCreationModal } from "./ManuscriptPartCreationModal";
+import { manuscriptPartCreationAvailability } from "./ManuscriptPartCreation";
+import { snapshotManuscriptPartCreation } from "./ObsidianManuscriptPartCreation";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -172,6 +175,7 @@ export class ManuscriptNavigatorView extends ItemView {
   private undoToken: ManuscriptReorderUndoToken | null = null;
   private operationMessage: string | null = null;
   private operationRunning = false;
+  private revealedContextPath: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -203,6 +207,12 @@ export class ManuscriptNavigatorView extends ItemView {
         void this.undoLastMove();
       }
     });
+    this.render();
+  }
+
+  revealPath(path: string) {
+    this.revealedContextPath = path;
+    this.collapsedParts.delete(path);
     this.render();
   }
 
@@ -269,6 +279,7 @@ export class ManuscriptNavigatorView extends ItemView {
         this.suppressedActiveRevealPath = null;
         this.undoToken = null;
         this.operationMessage = null;
+        this.revealedContextPath = null;
         this.render();
       };
     } else if (selected) {
@@ -281,6 +292,18 @@ export class ManuscriptNavigatorView extends ItemView {
     if (!selected) return;
     const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(selected.file.path);
     const reviewActions = container.createDiv("mwc-manuscript-review-actions");
+    const partAvailability = manuscriptPartCreationAvailability(snapshotManuscriptPartCreation(this.plugin));
+    const createPart = reviewActions.createEl("button", {
+      cls: "mwc-manuscript-create-part",
+      text: "Create part",
+      attr: {
+        type: "button",
+        title: partAvailability[0] ?? `Create Part in ${selected.record.title}`,
+        "aria-label": partAvailability[0] ?? `Create Part in ${selected.record.title}`
+      }
+    });
+    createPart.disabled = partAvailability.length > 0;
+    createPart.onclick = () => new ManuscriptPartCreationModal(this.plugin).open();
     const review = reviewActions.createEl("button", {
       cls: "mwc-manuscript-continuity-review",
       text: reviewPresentation.label,
@@ -436,7 +459,7 @@ export class ManuscriptNavigatorView extends ItemView {
     depth: number
   ): HTMLElement | null {
     const isPart = node.entry.kind === "part";
-    const isActive = activeFile?.path === node.entry.path;
+    const isActive = (this.revealedContextPath ?? activeFile?.path) === node.entry.path;
     const wrapper = parent.createDiv({
       cls: isPart
         ? "mwc-manuscript-node mwc-manuscript-node--part"
@@ -534,6 +557,7 @@ export class ManuscriptNavigatorView extends ItemView {
     button.onclick = (event) => {
       const file = book.filesByPath.get(entry.path);
       if (!file) return;
+      this.revealedContextPath = null;
       const leaf = this.app.workspace.getLeaf(event.metaKey || event.ctrlKey);
       void leaf.openFile(file, { active: true });
     };

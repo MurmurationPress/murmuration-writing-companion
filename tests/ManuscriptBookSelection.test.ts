@@ -33,6 +33,13 @@ test("ordinary Markdown navigation cannot retarget the explicit selection", () =
   equal(service.get().revision, 1);
 });
 
+test("a newly created Part becomes context without changing Book scope", () => {
+  const service = new ManuscriptBookSelectionService(new MemoryStorage(), "selection");
+  service.select("Books/Book 4.md", "Books/Book 4/FEVER.md", "manuscript-navigator");
+  equal(service.get().bookPath, "Books/Book 4.md");
+  equal(service.get().contextPath, "Books/Book 4/FEVER.md");
+});
+
 test("rapid explicit book changes settle on the final book and context", () => {
   const service = new ManuscriptBookSelectionService(new MemoryStorage(), "selection");
   service.select("Books/Plurality.md", "Books/Plurality/Scene.md", "manuscript-navigator");

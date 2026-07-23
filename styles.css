@@ -278,6 +278,7 @@
 .mwc-manuscript-review-actions {
   display: flex;
   justify-content: flex-end;
+  gap: var(--mwc-space-2);
   margin: calc(-1 * var(--mwc-space-2)) 2px var(--mwc-space-2);
 }
 
