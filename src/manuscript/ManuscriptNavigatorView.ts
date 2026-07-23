@@ -40,6 +40,7 @@ import {
   renderAndRetainFirst
 } from "./NavigatorViewState";
 import { openContinuityReviewFromEntryPoint } from "../companion/ContinuityReviewEntryPoint";
+import { ManuscriptBookCreationModal } from "./ManuscriptBookCreationModal";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -230,6 +231,12 @@ export class ManuscriptNavigatorView extends ItemView {
 
     const heading = container.createDiv("mwc-manuscript-heading");
     heading.createEl("h2", { text: "Manuscript" });
+    const createBook = heading.createEl("button", {
+      cls: "mwc-manuscript-create-book",
+      text: "Create book",
+      attr: { type: "button", "aria-label": "Create manuscript book" }
+    });
+    createBook.onclick = () => new ManuscriptBookCreationModal(this.plugin).open();
 
     if (library.books.length === 0) {
       container.createEl("p", {
