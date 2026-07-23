@@ -1,6 +1,6 @@
 import { App, TFile } from "obsidian";
 import { MANUSCRIPT_PARENT_ALIASES } from "../editorial/BookReview";
-import { getChapterContextField, normalizePropertyName } from "../companion/ChapterContext";
+import { findAliasedProperty, getChapterContextField } from "../companion/ChapterContext";
 import {
   ContinuityObservation,
   ObservationEvidence,
@@ -16,6 +16,7 @@ import {
   buildObsidianManuscriptLibrary,
   ObsidianManuscriptBook
 } from "./ObsidianManuscript";
+import { readableSceneLabel } from "../companion/ContinuityCardPresentation";
 
 export interface ObsidianManuscriptChronologyResult {
   readonly book: TFile | null;
@@ -31,17 +32,20 @@ function findProperty(
   frontmatter: Record<string, unknown> | undefined,
   aliases: readonly string[]
 ): { property: string; value: unknown } {
-  const normalized = new Set(aliases.map(normalizePropertyName));
-  for (const [property, value] of Object.entries(frontmatter ?? {})) {
-    if (property !== "position" && normalized.has(normalizePropertyName(property))) {
-      return { property, value };
-    }
-  }
-  return { property: aliases[0], value: undefined };
+  return findAliasedProperty(frontmatter, aliases)
+    ?? { property: aliases[0], value: undefined };
 }
 
 function note(file: TFile): ObservationNoteReference {
   return { role: "manuscript", path: file.path, label: file.basename };
+}
+
+function sceneNote(app: App, file: TFile): ObservationNoteReference {
+  return {
+    role: "manuscript",
+    path: file.path,
+    label: readableSceneLabel(frontmatterFor(app, file), file.basename)
+  };
 }
 
 function sequenceEvidence(
@@ -87,12 +91,13 @@ function sceneInput(
   if (!file || !parent) return null;
   const frontmatter = frontmatterFor(app, file);
   const storyDate = findProperty(frontmatter, getChapterContextField("story_date").aliases);
+  const scene = sceneNote(app, file);
   return {
-    scene: note(file),
+    scene,
     parent: note(parent),
     sequenceEvidence: sequenceEvidence(app, book, file, parentPath),
     storyDate: {
-      source: { note: note(file), property: [storyDate.property] },
+      source: { note: scene, property: [storyDate.property] },
       raw: storyDate.value
     }
   };

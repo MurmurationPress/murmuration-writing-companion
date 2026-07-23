@@ -31,10 +31,12 @@ import {
   VIEW_TYPE,
   WritingCompanionView as BaseWritingCompanionView
 } from "./WritingCompanionView";
-import { observationSourceNotes } from "../observations/ContinuityObservation";
 import type { ContinuityObservation } from "../observations/ContinuityObservation";
 import type { BookReviewContinuityPresentation } from "./BookReviewContinuityDisclosure";
 import { bookReviewToggleAriaLabel } from "./BookReviewContinuityDisclosure";
+import type { DispositionMatch } from "../observations/ContinuityDisposition";
+import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
+import { manuscriptChronologyCardPresentation } from "./ContinuityCardPresentation";
 
 export { VIEW_TYPE };
 
@@ -53,9 +55,13 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     if (!book) return;
 
     const chronology = this.plugin.getManuscriptChronology(chapter);
+    const continuityQueue = this.plugin.storeService.getContinuityDispositionQueue(
+      chronology.observations
+    );
     const presentation = this.plugin.bookReviewContinuityDisclosure.present(
       book.path,
-      chronology.observations.length
+      continuityQueue.active.length,
+      continuityQueue.reviewed.length
     );
 
     const frontmatter = this.app.metadataCache.getFileCache(book)?.frontmatter as
@@ -79,7 +85,9 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     });
     toggleLabel.createSpan({ cls: "mwc-section-toggle-title", text: "Book Review" });
     const indicator = toggle.createSpan({
-      cls: "mwc-section-toggle-status mwc-book-continuity-indicator",
+      cls: presentation.count > 0
+        ? "mwc-section-toggle-status mwc-book-continuity-indicator"
+        : "mwc-section-toggle-status mwc-book-continuity-indicator mwc-book-continuity-indicator--reviewed",
       text: presentation.indicator
     });
     indicator.hidden = presentation.indicator.length === 0;
@@ -167,7 +175,9 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       chapter,
       book.path,
       chronology.observations,
-      presentation
+      presentation,
+      continuityQueue.active,
+      continuityQueue.reviewed
     );
   }
 
@@ -176,7 +186,9 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     chapter: TFile,
     bookPath: string,
     observations: readonly ContinuityObservation[],
-    presentation: BookReviewContinuityPresentation
+    presentation: BookReviewContinuityPresentation,
+    active: readonly DispositionMatch[],
+    reviewed: readonly DispositionMatch[]
   ) {
     if (observations.length === 0) return;
 
@@ -192,17 +204,31 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     summary.createSpan({ text: "Continuity" });
     summary.createSpan({
       cls: "mwc-continuity-count",
-      text: String(observations.length)
+      text: String(active.length)
     });
 
-    for (const observation of observations) {
-      const card = details.createDiv(
+    const render = (host: HTMLElement, match: DispositionMatch) => {
+      const observation = match.observation;
+      const card = host.createDiv(
         `mwc-continuity-observation mwc-continuity-observation--${observation.severity}`
       );
       card.createEl("p", { cls: "mwc-continuity-summary", text: observation.summary });
       card.createEl("p", { cls: "mwc-continuity-explanation", text: observation.explanation });
+      renderContinuityDispositionControls(
+        card,
+        observation,
+        match,
+        this.plugin.storeService
+      );
+      const cardPresentation = manuscriptChronologyCardPresentation(observation);
+      if (cardPresentation.partContext.length > 0) {
+        card.createEl("p", {
+          cls: "mwc-continuity-part-context",
+          text: cardPresentation.partContext.join(" · ")
+        });
+      }
       const navigation = card.createDiv("mwc-continuity-navigation");
-      for (const target of observationSourceNotes(observation)) {
+      for (const target of cardPresentation.navigationNotes) {
         const button = navigation.createEl("button", {
           text: `Open ${target.label ?? target.path.replace(/\.md$/i, "").split("/").pop()}`,
           attr: { type: "button" }
@@ -215,6 +241,26 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           );
         };
       }
+    };
+    for (const match of active) render(details, match);
+    if (reviewed.length > 0) {
+      const reviewedSection = details.createDiv("mwc-continuity-reviewed");
+      const toggle = reviewedSection.createEl("button", {
+        text: `Show reviewed (${reviewed.length})`,
+        attr: { type: "button", "aria-expanded": "false" }
+      });
+      const reviewedList = reviewedSection.createDiv("mwc-continuity-reviewed-list");
+      reviewedList.hidden = true;
+      let rendered = false;
+      toggle.onclick = () => {
+        reviewedList.hidden = !reviewedList.hidden;
+        if (!reviewedList.hidden && !rendered) {
+          rendered = true;
+          for (const match of reviewed) render(reviewedList, match);
+        }
+        toggle.textContent = `${reviewedList.hidden ? "Show" : "Hide"} reviewed (${reviewed.length})`;
+        toggle.setAttribute("aria-expanded", String(!reviewedList.hidden));
+      };
     }
   }
 

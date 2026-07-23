@@ -24,6 +24,99 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   opacity: 0.7;
 }
 
+.mwc-book-continuity-indicator--reviewed::before {
+  display: none;
+}
+
+.mwc-continuity-disposition {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mwc-continuity-disposition-status,
+.mwc-continuity-prior-decision,
+.mwc-continuity-disposition-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.mwc-continuity-part-context {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.mwc-continuity-disposition-status--stale {
+  color: var(--text-warning);
+  font-weight: var(--font-semibold);
+}
+
+.mwc-continuity-disposition-note {
+  padding-inline-start: 0.55rem;
+  border-inline-start: 2px solid var(--background-modifier-border);
+  white-space: pre-wrap;
+}
+
+.mwc-continuity-disposition-actions,
+.mwc-continuity-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.mwc-continuity-disposition-more {
+  position: relative;
+}
+
+.mwc-continuity-disposition-more > summary {
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+}
+
+.mwc-continuity-disposition-menu {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  padding: 0.35rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-primary);
+}
+
+.mwc-continuity-disposition-menu button,
+.mwc-continuity-disposition-actions > button,
+.mwc-continuity-reviewed > button,
+.mwc-continuity-note-actions button {
+  min-height: 1.8rem;
+  height: auto;
+  white-space: normal;
+}
+
+.mwc-continuity-note-editor textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.mwc-continuity-reviewed {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.mwc-continuity-reviewed-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mwc-continuity-reviewed-list[hidden] {
+  display: none;
+}
+
 .mwc-book-review-title {
   display: flex;
   align-items: baseline;

@@ -63,7 +63,7 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
   {
     key: "story_date",
     label: "Story date",
-    aliases: ["story_date", "storydate", "story_day", "narrative_date"],
+    aliases: ["story_date", "storydate", "narrative_date"],
     placeholder: "YYYY-MM-DD",
     inputType: "date"
   },
@@ -147,9 +147,9 @@ export function formatPropertyValue(value: unknown): string | null {
   return null;
 }
 
-function findProperty(
-  frontmatter: Record<string, unknown> | undefined,
-  aliases: string[]
+export function findAliasedProperty(
+  frontmatter: Readonly<Record<string, unknown>> | undefined,
+  aliases: readonly string[]
 ): { property: string; value: unknown } | null {
   if (!frontmatter) return null;
 
@@ -176,7 +176,7 @@ export function getEditableChapterContextValue(
   frontmatter: Record<string, unknown> | undefined,
   field: EditableChapterContextField
 ): { property: string; value: string } {
-  const match = findProperty(frontmatter, field.aliases);
+  const match = findAliasedProperty(frontmatter, field.aliases);
 
   return {
     property: match?.property ?? field.key,
@@ -188,7 +188,7 @@ export function findEditableChapterContextProperty(
   frontmatter: Record<string, unknown>,
   field: EditableChapterContextField
 ): string {
-  return findProperty(frontmatter, field.aliases)?.property ?? field.key;
+  return findAliasedProperty(frontmatter, field.aliases)?.property ?? field.key;
 }
 
 export function updateEditableChapterContextFrontmatter(

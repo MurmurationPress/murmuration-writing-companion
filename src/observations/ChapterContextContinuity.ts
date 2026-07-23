@@ -13,7 +13,7 @@ import {
   TemporalInterval,
   TemporalParseResult
 } from "./TemporalInterval";
-import { getChapterContextField, normalizePropertyName } from "../companion/ChapterContext";
+import { findAliasedProperty, getChapterContextField } from "../companion/ChapterContext";
 import { projectEntityRelationships, relationshipProperty } from "../story-world/EntityRelationships";
 import { parseWikilink, StoryWorldEntityRecord } from "../story-world/StoryWorldIndex";
 import { getWorldEventRelativeTimingPresentation } from "../story-world/WorldRelativeTime";
@@ -60,13 +60,8 @@ function findProperty(
   frontmatter: Readonly<Record<string, unknown>> | undefined,
   aliases: readonly string[]
 ): { property: string; value: unknown } {
-  const normalized = new Set(aliases.map(normalizePropertyName));
-  for (const [property, value] of Object.entries(frontmatter ?? {})) {
-    if (property !== "position" && normalized.has(normalizePropertyName(property))) {
-      return { property, value };
-    }
-  }
-  return { property: aliases[0], value: undefined };
+  return findAliasedProperty(frontmatter, aliases)
+    ?? { property: aliases[0], value: undefined };
 }
 
 function rawEvidence(raw: unknown) {

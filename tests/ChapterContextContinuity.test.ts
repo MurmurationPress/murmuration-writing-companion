@@ -5,6 +5,10 @@ import {
   evaluateChapterContextContinuity
 } from "../src/observations/ChapterContextContinuity";
 import { StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
+import {
+  matchContinuityDisposition,
+  setContinuityDisposition
+} from "../src/observations/ContinuityDisposition";
 
 function entity(
   path: string,
@@ -71,6 +75,26 @@ test("supports numeric chapter and event years from YAML", () => {
   }, [numericEvent]));
   equal(sameYear.some((item) => item.classification === "contradiction"), false);
   equal(sameYear.some((item) => item.kind.startsWith("chapter-context.source-data")), false);
+});
+
+test("uses story_date and ignores the distinct story_day property", () => {
+  const later = entity("World/Later.md", "event", { world_time: "2028-05-03" });
+  const observations = evaluateChapterContextContinuity(input({
+    story_day: 1017,
+    story_date: "2028-05-02",
+    world_context: "[[Later]]"
+  }, [later]));
+  equal(observations.filter((item) => item.kind === "chapter-context.event.after-chapter").length, 1);
+  equal(observations.some((item) => item.kind.includes("source-data")), false);
+});
+
+test("story_day alone is not parsed as a chapter story_date", () => {
+  const event = entity("World/Later.md", "event", { world_time: "2028-05-07" });
+  const observations = evaluateChapterContextContinuity(input({
+    story_day: 1023,
+    world_context: "[[Later]]"
+  }, [event]));
+  equal(observations.length, 0);
 });
 
 test("handles quoted years and overlapping month-versus-year intervals", () => {
@@ -192,4 +216,47 @@ test("does not treat non-book scope as series exclusion", () => {
     })
   });
   equal(observations.some((item) => item.kind === "chapter-context.entity.out-of-scope"), false);
+});
+
+test("event evidence changes make an intentional chapter-context decision stale", () => {
+  const before = evaluateChapterContextContinuity(input(
+    { story_date: "2026", world_context: "[[Later]]" },
+    [entity("World/Later.md", "event", { world_time: "2027" })]
+  ))[0];
+  const after = evaluateChapterContextContinuity(input(
+    { story_date: "2025", world_context: "[[Later]]" },
+    [entity("World/Later.md", "event", { world_time: "2027" })]
+  ))[0];
+  const record = setContinuityDisposition(
+    before,
+    "intentional",
+    null,
+    "2032-04-01T12:00:00.000Z"
+  );
+  equal(after.lineageKey, before.lineageKey);
+  notEqual(after.fingerprint, before.fingerprint);
+  equal(matchContinuityDisposition(after, [record]).state, "stale");
+});
+
+test("relationship boundary changes make the prior decision stale", () => {
+  const observationFor = (validFrom: string) => {
+    const owner = entity("World/Owner.md", "character", {
+      world_relationships: [{ predicate: "knows", target: "[[Target]]", valid_from: validFrom }]
+    });
+    const target = entity("World/Target.md", "character");
+    return evaluateChapterContextContinuity(input({
+      story_date: "2026",
+      world_context: ["[[Owner]]", "[[Target]]"]
+    }, [owner, target])).find((item) => item.kind.includes("relationship.before"))!;
+  };
+  const before = observationFor("2027");
+  const after = observationFor("2028");
+  const record = setContinuityDisposition(
+    before,
+    "deferred",
+    null,
+    "2032-04-01T12:00:00.000Z"
+  );
+  equal(after.lineageKey, before.lineageKey);
+  equal(matchContinuityDisposition(after, [record]).state, "stale");
 });

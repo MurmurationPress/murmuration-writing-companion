@@ -29,6 +29,15 @@ import {
   reconcileEditorialPagePresence,
   restoreEditorialPage
 } from "./PortableEditorialStorage";
+import type { ContinuityObservation } from "../observations/ContinuityObservation";
+import {
+  ContinuityDispositionKind,
+  ContinuityDispositionQueue,
+  ContinuityDispositionRecord,
+  projectContinuityDispositionQueue,
+  reviseContinuityDispositionNote,
+  setContinuityDisposition
+} from "../observations/ContinuityDisposition";
 
 const CHAPTER_NOTE_SAVE_DELAY_MS = 400;
 
@@ -41,6 +50,7 @@ export class EditorialStoreService {
 
   store: EditorialStore = { pages: {} };
   onChange: () => void = () => {};
+  onContinuityChange: () => void = () => this.onChange();
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
@@ -78,6 +88,63 @@ export class EditorialStoreService {
   async save() {
     if (!this.ready) return;
     await this.portableStorage.save(this.store);
+  }
+
+  getContinuityDispositionRecords(): ContinuityDispositionRecord[] {
+    return Object.values(this.store.continuityDispositions ?? {});
+  }
+
+  getContinuityDispositionQueue(
+    observations: readonly ContinuityObservation[]
+  ): ContinuityDispositionQueue {
+    return projectContinuityDispositionQueue(
+      observations,
+      this.getContinuityDispositionRecords()
+    );
+  }
+
+  async setContinuityDisposition(
+    observation: ContinuityObservation,
+    disposition: ContinuityDispositionKind,
+    note?: string | null
+  ): Promise<void> {
+    if (!this.store.continuityDispositions) this.store.continuityDispositions = {};
+    const previous = this.store.continuityDispositions[observation.lineageKey] ?? null;
+    this.store.continuityDispositions[observation.lineageKey] = setContinuityDisposition(
+      observation,
+      disposition,
+      note === undefined ? previous?.note : note,
+      new Date().toISOString(),
+      previous
+    );
+    await this.save();
+    this.onContinuityChange();
+  }
+
+  async reviseContinuityDispositionNote(
+    lineageKey: string,
+    note: string | null
+  ): Promise<void> {
+    const previous = this.store.continuityDispositions?.[lineageKey];
+    if (!previous) return;
+    const next = reviseContinuityDispositionNote(
+      previous,
+      note,
+      new Date().toISOString()
+    );
+    if (next === previous) return;
+    this.store.continuityDispositions![lineageKey] = next;
+    await this.save();
+    this.onContinuityChange();
+  }
+
+  async clearContinuityDisposition(lineageKey: string): Promise<void> {
+    const records = this.store.continuityDispositions;
+    if (!records?.[lineageKey]) return;
+    delete records[lineageKey];
+    if (Object.keys(records).length === 0) delete this.store.continuityDispositions;
+    await this.save();
+    this.onContinuityChange();
   }
 
   getPage(file: TFile): PageEditorialNotes {
@@ -298,15 +365,37 @@ export class EditorialStoreService {
   }
 
   async handleRename(file: TFile, oldPath: string) {
+    let changed = false;
     try {
-      if (!moveEditorialPage(this.store, oldPath, file.path)) return;
+      changed = moveEditorialPage(this.store, oldPath, file.path) || changed;
     } catch (error) {
       console.error("Writing Companion could not move editorial data", error);
       new Notice(
         "Writing Companion did not move editorial data because the destination already has a record."
       );
-      return;
     }
+
+    // Paths are descriptive context only. Hashed observation identity remains
+    // path-based and is deliberately not guessed or rewritten on rename.
+    for (const [lineageKey, record] of Object.entries(
+      this.store.continuityDispositions ?? {}
+    )) {
+      const primaryPath = record.primaryPath === oldPath ? file.path : record.primaryPath;
+      const sourcePaths = record.sourcePaths.map((path) => path === oldPath ? file.path : path);
+      if (
+        primaryPath !== record.primaryPath
+        || sourcePaths.some((path, index) => path !== record.sourcePaths[index])
+      ) {
+        this.store.continuityDispositions![lineageKey] = {
+          ...record,
+          primaryPath,
+          sourcePaths
+        };
+        changed = true;
+      }
+    }
+
+    if (!changed) return;
 
     const timer = this.chapterNoteSaveTimers.get(oldPath);
     if (timer !== undefined) {
@@ -315,7 +404,8 @@ export class EditorialStoreService {
     }
 
     await this.save();
-    await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
+    const page = this.store.pages[file.path];
+    if (page) await this.syncOpenAnnotationProperty(file, page);
     this.onChange();
   }
 

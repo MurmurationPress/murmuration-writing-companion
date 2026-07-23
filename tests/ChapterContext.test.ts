@@ -4,6 +4,7 @@ import {
   CHAPTER_STATUS_OPTIONS,
   EDITABLE_CHAPTER_CONTEXT_FIELDS,
   EDITORIAL_PASS_OPTIONS,
+  findAliasedProperty,
   findEditableChapterContextProperty,
   formatPropertyValue,
   getChapterContextInputType,
@@ -68,6 +69,43 @@ test("falls back to canonical property names when aliases are absent", () => {
   equal(findEditableChapterContextProperty({}, field("title")), "title");
   equal(findEditableChapterContextProperty({}, field("chapter_status")), "chapter_status");
   equal(findEditableChapterContextProperty({}, field("editorial_pass")), "editorial_pass");
+});
+
+test("does not treat the distinct story_day property as a story_date alias", () => {
+  const frontmatter: Record<string, unknown> = {
+    story_day: 1017,
+    story_date: "2028-05-02"
+  };
+  deepEqual(getEditableChapterContextValue(frontmatter, field("story_date")), {
+    property: "story_date",
+    value: "2028-05-02"
+  });
+  updateEditableChapterContextFrontmatter(frontmatter, field("story_date"), "2028-05-03");
+  equal(frontmatter.story_day, 1017);
+  equal(frontmatter.story_date, "2028-05-03");
+});
+
+test("story_day alone does not populate or parse as story_date", () => {
+  deepEqual(getEditableChapterContextValue(
+    { story_day: 1023 },
+    field("story_date")
+  ), { property: "story_date", value: "" });
+  equal(findAliasedProperty({ story_day: 1023 }, field("story_date").aliases), null);
+});
+
+test("canonical story_date remains recognised normally", () => {
+  deepEqual(getEditableChapterContextValue(
+    { story_date: "2028-05-06" },
+    field("story_date")
+  ), { property: "story_date", value: "2028-05-06" });
+});
+
+test("legacy date aliases resolve without mapping story_day", () => {
+  deepEqual(findAliasedProperty(
+    { story_day: 1023, storydate: "2028-05-06" },
+    field("story_date").aliases
+  ), { property: "storydate", value: "2028-05-06" });
+  equal(field("story_date").aliases.includes("story_day"), false);
 });
 
 test("uses a date input only for empty or ISO date values", () => {

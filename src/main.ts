@@ -52,6 +52,10 @@ import {
   ObsidianManuscriptChronologyResult
 } from "./manuscript/ObsidianManuscriptChronology";
 import { BookReviewContinuityDisclosure } from "./companion/BookReviewContinuityDisclosure";
+import {
+  dispositionContinuityRefreshDecision,
+  metadataContinuityRefreshDecision
+} from "./companion/ContinuityRefresh";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -69,6 +73,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly writingCompanionActivation = new WritingCompanionActivation();
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
   private manuscriptChronologyDependencies = new Set<string>();
+  private manuscriptChronologyRefreshTimer: number | null = null;
 
   async onload() {
     const enhancementStyles = installEditorialEnhancementStyles();
@@ -106,6 +111,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.storeService.onChange = () => {
       this.refreshView();
       this.refreshManuscriptNavigator();
+    };
+    this.storeService.onContinuityChange = () => {
+      const decision = dispositionContinuityRefreshDecision();
+      if (decision.companion) this.refreshView();
+      if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
     };
 
     await this.storeService.load();
@@ -217,12 +227,16 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         const currentBookChanged = currentChapter
           ? file.path === this.getOwningBook(currentChapter)?.path
           : false;
-        const manuscriptChronologyChanged = this.manuscriptChronologyDependencies.has(file.path);
-
-        if (worldChanged || currentChapterChanged || currentBookChanged || manuscriptChronologyChanged) {
-          this.refreshView();
-        }
-        this.refreshManuscriptNavigator();
+        const decision = metadataContinuityRefreshDecision({
+          changedPath: file.path,
+          manuscriptDependencies: this.manuscriptChronologyDependencies,
+          worldChanged,
+          currentChapterChanged,
+          currentBookChanged
+        });
+        if (decision.companion) this.refreshView();
+        if (decision.deferredChronology) this.scheduleManuscriptChronologyRefresh();
+        if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
       })
     );
 
@@ -281,6 +295,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   onunload() {
+    if (this.manuscriptChronologyRefreshTimer !== null) {
+      window.clearTimeout(this.manuscriptChronologyRefreshTimer);
+      this.manuscriptChronologyRefreshTimer = null;
+    }
     this.annotationLocator.dispose();
     void this.storeService.flushChapterNote();
   }
@@ -306,6 +324,19 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const result = buildObsidianManuscriptChronology(this.app, chapter);
     this.manuscriptChronologyDependencies = new Set(result.dependencies);
     return result;
+  }
+
+  private scheduleManuscriptChronologyRefresh() {
+    if (this.manuscriptChronologyRefreshTimer !== null) {
+      window.clearTimeout(this.manuscriptChronologyRefreshTimer);
+    }
+    // Obsidian can emit metadata-cache changes before getFileCache exposes the
+    // same fresh frontmatter to a second reader. Coalesce a follow-up render so
+    // chronology never remains pinned to the preceding date fingerprint.
+    this.manuscriptChronologyRefreshTimer = window.setTimeout(() => {
+      this.manuscriptChronologyRefreshTimer = null;
+      this.refreshView();
+    }, 50);
   }
 
   getPendingFocusNoteId(): string | null {

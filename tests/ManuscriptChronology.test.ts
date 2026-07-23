@@ -6,6 +6,10 @@ import {
   ManuscriptChronologyInput,
   OrderedSceneChronologyInput
 } from "../src/observations/ManuscriptChronology";
+import {
+  matchContinuityDisposition,
+  setContinuityDisposition
+} from "../src/observations/ContinuityDisposition";
 
 function scene(path: string, storyDate: unknown): OrderedSceneChronologyInput {
   const note = { role: "manuscript" as const, path, label: path.replace(/\.md$/, "") };
@@ -46,6 +50,17 @@ test("keeps equal and overlapping mixed-precision intervals quiet", () => {
   equal(evaluateManuscriptChronology(input(scene("A.md", 2027), scene("B.md", "2027"))).length, 0);
   equal(evaluateManuscriptChronology(input(scene("A.md", 2027), scene("B.md", "2027-06"))).length, 0);
   equal(evaluateManuscriptChronology(input(scene("A.md", "2027-06"), scene("B.md", 2027))).length, 0);
+});
+
+test("keeps consecutive May 2028 days quiet for strings and YAML Date values", () => {
+  equal(evaluateManuscriptChronology(input(
+    scene("Domestic Distance.md", "2028-05-01"),
+    scene("Tobias in the Wilderness.md", "2028-05-02")
+  )).filter((item) => item.kind === "manuscript.chronology.reversal").length, 0);
+  equal(evaluateManuscriptChronology(input(
+    scene("Domestic Distance.md", new Date("2028-05-01T00:00:00.000Z")),
+    scene("Tobias in the Wilderness.md", new Date("2028-05-02T00:00:00.000Z"))
+  )).filter((item) => item.kind === "manuscript.chronology.reversal").length, 0);
 });
 
 test("uses one review observation for each bounded run of missing dates", () => {
@@ -134,4 +149,28 @@ test("requires structurally safe distributed manuscript order", () => {
     source: "distributed",
     diagnostics: [{ kind: "obsolete_order_array", path: "Book.md", message: "obsolete" }]
   }), true);
+});
+
+test("date and authoritative sequence evidence changes stale chronology dispositions", () => {
+  const before = evaluateManuscriptChronology(input(scene("A.md", 2028), scene("C.md", 2027)))[0];
+  const changedDate = evaluateManuscriptChronology(input(scene("A.md", 2029), scene("C.md", 2027)))[0];
+  const changedOrderScene = {
+    ...scene("C.md", 2027),
+    sequenceEvidence: [{
+      role: "scene_order_key",
+      source: { note: { role: "manuscript" as const, path: "C.md" }, property: ["manuscript_order_key"] },
+      value: { kind: "value" as const, value: "changed-order-key" }
+    }]
+  };
+  const changedOrder = evaluateManuscriptChronology(input(scene("A.md", 2028), changedOrderScene))[0];
+  const record = setContinuityDisposition(
+    before,
+    "intentional",
+    "Flashback",
+    "2032-04-01T12:00:00.000Z"
+  );
+  equal(changedDate.lineageKey, before.lineageKey);
+  equal(matchContinuityDisposition(changedDate, [record]).state, "stale");
+  equal(changedOrder.lineageKey, before.lineageKey);
+  equal(matchContinuityDisposition(changedOrder, [record]).state, "stale");
 });
