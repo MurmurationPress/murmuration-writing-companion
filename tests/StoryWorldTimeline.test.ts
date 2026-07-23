@@ -22,6 +22,16 @@ test("extracts only primary event entities and groups point, range, unsupported 
   deepEqual(result.undated.map((item) => item.name), ["Undated"]);
 });
 
+test("timeline uses the shared explicit shape interpretation", () => {
+  const result = projectStoryWorldTimeline([
+    event("World/The Article.md", { shape: "point", from: "2029-04-19T09:00:00+01:00", precision: "hour" }),
+    event("World/Range.md", { shape: "range", from: "2029-04-20", to: "2029-04-21", precision: "day" })
+  ]);
+  equal(result.points[0].displayTime, "Thursday, 19 April 2029, 09:00");
+  equal(result.ranges.length, 1);
+  equal(result.unsupported.length, 0);
+});
+
 test("orders exact year, month, day and minute points oldest first with deterministic path ties", () => {
   const result = projectStoryWorldTimeline([
     event("Z/Same.md", "2026-04-03"), event("A/Same.md", "2026-04-03"), event("World/Minute.md", "2026-04-03T09:15+01:00"),

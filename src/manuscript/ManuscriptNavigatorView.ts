@@ -37,9 +37,9 @@ import {
   ManuscriptSceneMetadata
 } from "./ManuscriptMetadata";
 import {
-  reconcileNavigatorBookSelection,
   renderAndRetainFirst
 } from "./NavigatorViewState";
+import { openContinuityReviewFromEntryPoint } from "../companion/ContinuityReviewEntryPoint";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -164,11 +164,7 @@ function confirmOrderAdoption(app: App): Promise<boolean> {
 export class ManuscriptNavigatorView extends ItemView {
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
-  private selectedBookPath: string | null = null;
-  private lastActivePath: string | null = null;
-  private bookSelectionPinned = false;
   private suppressedActiveRevealPath: string | null = null;
-  private readonly preferenceKey: string;
   private draggedPath: string | null = null;
   private dropRow: HTMLElement | null = null;
   private dropPosition: ManuscriptDropPosition | null = null;
@@ -179,17 +175,6 @@ export class ManuscriptNavigatorView extends ItemView {
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
     this.plugin = plugin;
-    this.preferenceKey = [
-      plugin.manifest.id,
-      plugin.app.vault.getName(),
-      "manuscript-navigator-book"
-    ].join(":");
-
-    try {
-      this.selectedBookPath = window.localStorage.getItem(this.preferenceKey);
-    } catch {
-      this.selectedBookPath = null;
-    }
   }
 
   getViewType() {
@@ -228,9 +213,6 @@ export class ManuscriptNavigatorView extends ItemView {
     const library = buildObsidianManuscriptLibrary(this.app);
     const activeFile = this.plugin.getCurrentChapter();
     const activePath = activeFile?.path ?? null;
-    const activeBookPath = activeFile
-      ? library.owningBookPathByFile.get(activeFile.path) ?? null
-      : null;
 
     if (
       this.suppressedActiveRevealPath
@@ -239,23 +221,12 @@ export class ManuscriptNavigatorView extends ItemView {
       this.suppressedActiveRevealPath = null;
     }
 
-    const selection = reconcileNavigatorBookSelection({
-      selectedBookPath: this.selectedBookPath,
-      lastActivePath: this.lastActivePath,
-      pinned: this.bookSelectionPinned
-    }, activePath, activeBookPath);
-    const selectedBookChanged = selection.selectedBookPath !== this.selectedBookPath;
-    this.lastActivePath = selection.lastActivePath;
-    this.bookSelectionPinned = selection.pinned;
-    if (selection.selectedBookPath && selectedBookChanged) {
-      this.setSelectedBookPath(selection.selectedBookPath);
-    } else {
-      this.selectedBookPath = selection.selectedBookPath;
-    }
-
-    const selected = library.books.find((book) => (
-      book.file.path === this.selectedBookPath
-    )) ?? library.books[0] ?? null;
+    const selectedBookPath = this.plugin.manuscriptBookSelection.reconcileBooks(
+      new Set(library.books.map((book) => book.file.path)),
+      library.books[0]?.file.path ?? null
+    ).bookPath;
+    const selected = library.books.find((book) => book.file.path === selectedBookPath)
+      ?? library.books[0] ?? null;
 
     const heading = container.createDiv("mwc-manuscript-heading");
     heading.createEl("h2", { text: "Manuscript" });
@@ -281,8 +252,13 @@ export class ManuscriptNavigatorView extends ItemView {
 
       selector.value = selected?.file.path ?? "";
       selector.onchange = () => {
-        this.bookSelectionPinned = true;
-        this.setSelectedBookPath(selector.value);
+        const next = library.books.find((book) => book.file.path === selector.value);
+        const contextPath = next?.result.scenes[0]?.path ?? selector.value;
+        this.plugin.manuscriptBookSelection.select(
+          selector.value,
+          contextPath,
+          "manuscript-navigator"
+        );
         this.suppressedActiveRevealPath = null;
         this.undoToken = null;
         this.operationMessage = null;
@@ -296,6 +272,22 @@ export class ManuscriptNavigatorView extends ItemView {
     }
 
     if (!selected) return;
+    const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(selected.file.path);
+    const reviewActions = container.createDiv("mwc-manuscript-review-actions");
+    const review = reviewActions.createEl("button", {
+      cls: "mwc-manuscript-continuity-review",
+      text: reviewPresentation.label,
+      attr: {
+        type: "button",
+        title: reviewPresentation.tooltip,
+        "aria-label": reviewPresentation.tooltip
+      }
+    });
+    review.disabled = reviewPresentation.disabled;
+    review.onclick = () => {
+      const contextPath = selected.result.scenes[0]?.path ?? selected.file.path;
+      void openContinuityReviewFromEntryPoint(this.plugin, selected.file.path, contextPath);
+    };
     this.renderSourceNotice(container, selected);
     this.renderOperationStatus(container);
 
@@ -857,12 +849,4 @@ export class ManuscriptNavigatorView extends ItemView {
     }
   }
 
-  private setSelectedBookPath(path: string) {
-    this.selectedBookPath = path;
-    try {
-      window.localStorage.setItem(this.preferenceKey, path);
-    } catch {
-      // Selection remains valid for the current view instance.
-    }
-  }
 }

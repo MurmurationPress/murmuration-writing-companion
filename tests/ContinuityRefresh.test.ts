@@ -2,7 +2,8 @@ import { deepEqual } from "node:assert/strict";
 import { test } from "node:test";
 import {
   dispositionContinuityRefreshDecision,
-  metadataContinuityRefreshDecision
+  metadataContinuityRefreshDecision,
+  shouldScheduleSettledStoryWorldRefresh
 } from "../src/companion/ContinuityRefresh";
 
 const dependencies = new Set([
@@ -45,4 +46,10 @@ test("changing a disposition refreshes the Companion immediately", () => {
     manuscriptNavigator: false,
     deferredChronology: false
   });
+});
+
+test("known Story World notes receive a settled-cache refresh when the first index read appears unchanged", () => {
+  deepEqual(shouldScheduleSettledStoryWorldRefresh(true, false), true);
+  deepEqual(shouldScheduleSettledStoryWorldRefresh(false, true), true);
+  deepEqual(shouldScheduleSettledStoryWorldRefresh(false, false), false);
 });

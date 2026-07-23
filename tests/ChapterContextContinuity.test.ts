@@ -60,6 +60,30 @@ test("reports a directly referenced event only when its interval is proven later
   ]);
 });
 
+test("accepts explicit point-shaped event time without an end boundary", () => {
+  const article = entity("World/The Article.md", "event", {
+    world_time: { shape: "point", from: "2029-04-19T09:00:00+01:00", precision: "hour" }
+  });
+  const observations = evaluateChapterContextContinuity(input({
+    story_date: "2029-04-19T10:00:00+01:00",
+    world_context: "[[The Article]]"
+  }, [article]));
+  equal(observations.some((item) => item.kind.startsWith("chapter-context.source-data")), false);
+});
+
+test("uses shape-specific source-data findings and deterministic fingerprints", () => {
+  const malformed = entity("World/Malformed.md", "event", {
+    world_time: { shape: "range", from: "2029-04-19", precision: "day" }
+  });
+  const evaluate = () => evaluateChapterContextContinuity(input({
+    story_date: "2029-04-20", world_context: "[[Malformed]]"
+  }, [malformed]));
+  const first = evaluate()[0];
+  const second = evaluate()[0];
+  equal(first.summary, "Event range is missing an end date");
+  equal(first.fingerprint, second.fingerprint);
+});
+
 test("supports numeric chapter and event years from YAML", () => {
   const numericEvent = entity("World/Numeric Event.md", "event", { world_time: 2027 });
   const conflict = evaluateChapterContextContinuity(input({
@@ -199,6 +223,30 @@ test("reports book exclusion only from complete resolved book scope", () => {
     story_date: "2026-01-01", world_context: ["[[Excluded]]", "[[Included]]"]
   }, [excluded, included], book));
   equal(observations.filter((item) => item.kind === "chapter-context.entity.out-of-scope").length, 1);
+});
+
+test("removes scope warnings after a referenced entity gains the current book", () => {
+  const plurality = { role: "manuscript" as const, path: "Books/PLURALITY.md", label: "PLURALITY" };
+  const emergence = { role: "manuscript" as const, path: "Books/EMERGENCE.md", label: "EMERGENCE" };
+  const owningBook = {
+    note: plurality,
+    source: { note: { role: "manuscript" as const, path: "Chapters/Plurality Scene.md", label: "Plurality Scene" }, property: ["book"] }
+  };
+  const evaluate = (scope: unknown) => evaluateChapterContextContinuity({
+    ...input({ story_date: "2029-04-19", world_context: "[[Scoped Entity]]" }, [
+      entity("World/Scoped Entity.md", "character", { world_scope: scope })
+    ], owningBook),
+    resolveScope: (reference) => reference === "[[Books/PLURALITY]]"
+      ? { note: plurality, book: true }
+      : reference === "[[Books/EMERGENCE]]"
+        ? { note: emergence, book: true }
+        : null
+  });
+
+  const before = evaluate("[[Books/EMERGENCE]]");
+  equal(before.filter((item) => item.kind === "chapter-context.entity.out-of-scope").length, 1);
+  const afterMetadataChange = evaluate(["[[Books/EMERGENCE]]", "[[Books/PLURALITY]]"]);
+  equal(afterMetadataChange.filter((item) => item.kind === "chapter-context.entity.out-of-scope").length, 0);
 });
 
 test("does not treat non-book scope as series exclusion", () => {

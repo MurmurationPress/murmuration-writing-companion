@@ -1,4 +1,5 @@
 import { StoryWorldEntityRecord } from "./StoryWorldIndex";
+import { parseTemporalInterval } from "../observations/TemporalInterval";
 
 export type KnownWorldTimePrecision =
   | "year"
@@ -344,24 +345,24 @@ export function getWorldEventTimePresentation(
 ): WorldEventTimePresentation | null {
   if (entity.entityType.trim().toLowerCase() !== "event") return null;
 
-  const worldTime = entity.properties.world_time;
-  const scalarSource = temporalSource(worldTime);
-  if (scalarSource) return pointPresentation(scalarSource, null);
-  if (!isRecord(worldTime)) return null;
-
-  const declaredPrecision = nonEmptyString(worldTime.precision);
-  const pointSource = temporalSource(worldTime.at)
-    ?? temporalSource(worldTime.date);
-  if (pointSource) return pointPresentation(pointSource, declaredPrecision);
-
-  const fromSource = temporalSource(worldTime.from);
-  const untilSource = temporalSource(worldTime.until);
-
-  if (fromSource && !untilSource) {
-    return pointPresentation(fromSource, declaredPrecision);
+  const interpreted = parseTemporalInterval(entity.properties.world_time);
+  if (interpreted.kind === "supported") {
+    const interval = interpreted.value;
+    const raw = entity.properties.world_time;
+    const declared = isRecord(raw) ? nonEmptyString(raw.precision) : null;
+    return interval.point
+      ? pointPresentation(interval.from!.source, declared)
+      : rangePresentation(interval.from?.source ?? null, interval.until?.source ?? null, declared);
   }
 
-  return rangePresentation(fromSource, untilSource, declaredPrecision);
+  // Unsupported authored values remain displayable without becoming valid
+  // comparison evidence or being rewritten by the editor.
+  const worldTime = entity.properties.world_time;
+  if (!isRecord(worldTime)) return null;
+  const declaredPrecision = nonEmptyString(worldTime.precision);
+  const pointSource = temporalSource(worldTime.at) ?? temporalSource(worldTime.date);
+  if (pointSource) return pointPresentation(pointSource, declaredPrecision);
+  return rangePresentation(temporalSource(worldTime.from), temporalSource(worldTime.until) ?? temporalSource(worldTime.to), declaredPrecision);
 }
 
 export function getWorldEventDisplayTime(

@@ -1,5 +1,6 @@
 import { getWorldEventTimePresentation } from "./WorldTime";
 import type { StoryWorldEntityRecord } from "./StoryWorldIndex";
+import { parseTemporalInterval } from "../observations/TemporalInterval";
 
 export type EventTimePrecision = "year" | "month" | "day" | "hour" | "minute";
 export type EventTimeMode = "point" | "range";
@@ -71,34 +72,19 @@ function unsupported(value: unknown): EventTimeEditorState {
 }
 
 export function parseEventTime(value: unknown): EventTimeEditorState {
-  if (value === undefined || value === null || value === "") return { kind: "undated" };
-  if (typeof value === "string") {
-    const parsed = endpoint(value, null);
-    return parsed ? { kind: "supported", value: { mode: "point", precision: parsed.precision, from: parsed.value, to: null } } : unsupported(value);
-  }
-  if (!record(value)) return unsupported(value);
-  const keys = Object.keys(value);
-  const allowed = new Set(["at", "from", "until", "precision"]);
-  if (keys.some((key) => !allowed.has(key))) return unsupported(value);
-  const precision = typeof value.precision === "string" && ["year", "month", "day", "hour", "minute"].includes(value.precision)
-    ? value.precision as EventTimePrecision : null;
-  if (value.precision !== undefined && !precision) return unsupported(value);
-  if (value.at !== undefined && value.from === undefined && value.until === undefined) {
-    const at = endpoint(value.at, precision);
-    return at ? { kind: "supported", value: { mode: "point", precision: at.precision, from: at.value, to: null } } : unsupported(value);
-  }
-  if (value.from !== undefined && value.until === undefined && value.at === undefined) {
-    const from = endpoint(value.from, precision);
-    return from ? { kind: "supported", value: { mode: "point", precision: from.precision, from: from.value, to: null } } : unsupported(value);
-  }
-  if (value.from !== undefined && value.until !== undefined && value.at === undefined) {
-    const from = endpoint(value.from, precision);
-    const to = endpoint(value.until, precision ?? from?.precision ?? null);
-    return from && to && from.precision === to.precision
-      ? { kind: "supported", value: { mode: "range", precision: from.precision, from: from.value, to: to.value } }
-      : unsupported(value);
-  }
-  return unsupported(value);
+  const interpreted = parseTemporalInterval(value);
+  if (interpreted.kind === "missing") return { kind: "undated" };
+  if (interpreted.kind !== "supported") return unsupported(value);
+  const interval = interpreted.value;
+  const from = interval.from ? endpoint(interval.from.source, interval.precision) : null;
+  const to = !interval.point && interval.until ? endpoint(interval.until.source, interval.precision) : null;
+  if (!from || !interval.point && !to) return unsupported(value);
+  return { kind: "supported", value: {
+    mode: interval.point ? "point" : "range",
+    precision: interval.precision,
+    from: from.value,
+    to: to?.value ?? null
+  } };
 }
 
 function serialiseEndpoint(value: EventTimeEndpoint, precision: EventTimePrecision): string {

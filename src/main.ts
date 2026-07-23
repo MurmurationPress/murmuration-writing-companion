@@ -1,9 +1,11 @@
 import {
+  App,
   Editor,
   MarkdownView,
   Menu,
   Notice,
   Plugin,
+  PluginManifest,
   TFile,
   WorkspaceLeaf
 } from "obsidian";
@@ -54,8 +56,20 @@ import {
 import { BookReviewContinuityDisclosure } from "./companion/BookReviewContinuityDisclosure";
 import {
   dispositionContinuityRefreshDecision,
-  metadataContinuityRefreshDecision
+  metadataContinuityRefreshDecision,
+  shouldScheduleSettledStoryWorldRefresh
 } from "./companion/ContinuityRefresh";
+import { ManuscriptBookSelectionService } from "./manuscript/ManuscriptBookSelection";
+import { collectObsidianContinuityReview } from "./manuscript/ObsidianContinuityReview";
+import { projectContinuityReview } from "./observations/ContinuityReview";
+import { buildObsidianManuscriptLibrary } from "./manuscript/ObsidianManuscript";
+import { manuscriptChronologyOrderIsSafe } from "./observations/ManuscriptChronology";
+import {
+  continuityReviewActionPresentation,
+  ContinuityReviewActionPresentation
+} from "./companion/ContinuityReviewEntryPoint";
+import { ContinuityDiagnosticPreference } from "./companion/ContinuityDiagnostics";
+import { ContinuitySettingsTab } from "./companion/ContinuitySettingsTab";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -64,6 +78,7 @@ export interface EditorialPassViewState {
 }
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
+  readonly manuscriptBookSelection: ManuscriptBookSelectionService;
   storeService!: EditorialStoreService;
   storyWorldIndex!: ObsidianStoryWorldIndex;
   sidebarSectionPreferences!: SidebarSectionPreferences;
@@ -72,12 +87,30 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly annotationLocator = new TransientAnnotationLocator();
   private readonly writingCompanionActivation = new WritingCompanionActivation();
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
+  readonly continuityDiagnosticPreference: ContinuityDiagnosticPreference;
   private manuscriptChronologyDependencies = new Set<string>();
   private manuscriptChronologyRefreshTimer: number | null = null;
+  private storyWorldMetadataRefreshTimer: number | null = null;
+  private readonly pendingStoryWorldMetadataPaths = new Set<string>();
+
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
+    let storage: Storage | null = null;
+    try { storage = window.localStorage; } catch { /* Selection remains in memory. */ }
+    this.manuscriptBookSelection = new ManuscriptBookSelectionService(
+      storage,
+      `${manifest.id}:${app.vault.getName()}:manuscript-navigator-book`
+    );
+    this.continuityDiagnosticPreference = new ContinuityDiagnosticPreference(
+      storage,
+      `${manifest.id}:${app.vault.getName()}:show-continuity-diagnostics`
+    );
+  }
 
   async onload() {
     const enhancementStyles = installEditorialEnhancementStyles();
     this.register(() => enhancementStyles.remove());
+    this.addSettingTab(new ContinuitySettingsTab(this.app, this));
 
     const vaultName = this.app.vault.getName();
     let resourceRoot = vaultName;
@@ -221,6 +254,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
+        const wasStoryWorld = this.storyWorldIndex.index.getByPath(file.path) !== null;
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
         const currentChapter = this.getCurrentChapter();
         const currentChapterChanged = file.path === currentChapter?.path;
@@ -235,6 +269,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           currentBookChanged
         });
         if (decision.companion) this.refreshView();
+        if (shouldScheduleSettledStoryWorldRefresh(wasStoryWorld, worldChanged)) this.scheduleStoryWorldMetadataRefresh(file.path);
         if (decision.deferredChronology) this.scheduleManuscriptChronologyRefresh();
         if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
       })
@@ -299,6 +334,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       window.clearTimeout(this.manuscriptChronologyRefreshTimer);
       this.manuscriptChronologyRefreshTimer = null;
     }
+    if (this.storyWorldMetadataRefreshTimer !== null) {
+      window.clearTimeout(this.storyWorldMetadataRefreshTimer);
+      this.storyWorldMetadataRefreshTimer = null;
+    }
     this.annotationLocator.dispose();
     void this.storeService.flushChapterNote();
   }
@@ -326,6 +365,36 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     return result;
   }
 
+  getContinuityReviewActiveCount(bookPath: string): number | null {
+    const collection = collectObsidianContinuityReview(this.app, this.storyWorldIndex, bookPath);
+    if (!collection) return null;
+    return projectContinuityReview({
+      observations: collection.observations,
+      dispositions: new Map(this.storeService.getContinuityDispositionRecords().map((record) => [record.lineageKey, record])),
+      manuscriptScope: collection.scope
+    }, { queue: "active", type: null, locationPath: null, entityPath: null }).counts.active;
+  }
+
+  getContinuityReviewActionPresentation(
+    bookPath: string | null,
+    prefix = "Continuity Review"
+  ): ContinuityReviewActionPresentation {
+    const book = bookPath
+      ? buildObsidianManuscriptLibrary(this.app).books.find((candidate) => candidate.file.path === bookPath)
+      : null;
+    const safe = Boolean(book && manuscriptChronologyOrderIsSafe(book.result));
+    return continuityReviewActionPresentation(
+      safe,
+      safe && bookPath ? this.getContinuityReviewActiveCount(bookPath) : null,
+      prefix
+    );
+  }
+
+  async activateContinuityReviewForBook(bookPath: string, contextPath: string): Promise<void> {
+    this.manuscriptBookSelection.select(bookPath, contextPath, "continuity-review-activation");
+    new Notice("Continuity Review is unavailable in this plugin entry point.");
+  }
+
   private scheduleManuscriptChronologyRefresh() {
     if (this.manuscriptChronologyRefreshTimer !== null) {
       window.clearTimeout(this.manuscriptChronologyRefreshTimer);
@@ -335,6 +404,21 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     // chronology never remains pinned to the preceding date fingerprint.
     this.manuscriptChronologyRefreshTimer = window.setTimeout(() => {
       this.manuscriptChronologyRefreshTimer = null;
+      this.refreshView();
+    }, 50);
+  }
+
+  private scheduleStoryWorldMetadataRefresh(path: string) {
+    this.pendingStoryWorldMetadataPaths.add(path);
+    if (this.storyWorldMetadataRefreshTimer !== null) window.clearTimeout(this.storyWorldMetadataRefreshTimer);
+    this.storyWorldMetadataRefreshTimer = window.setTimeout(() => {
+      this.storyWorldMetadataRefreshTimer = null;
+      const paths = [...this.pendingStoryWorldMetadataPaths];
+      this.pendingStoryWorldMetadataPaths.clear();
+      for (const changedPath of paths) {
+        const file = this.app.vault.getAbstractFileByPath(changedPath);
+        if (file instanceof TFile) this.storyWorldIndex.handleMetadataChanged(file);
+      }
       this.refreshView();
     }, 50);
   }

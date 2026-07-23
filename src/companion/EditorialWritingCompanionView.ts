@@ -37,6 +37,7 @@ import { bookReviewToggleAriaLabel } from "./BookReviewContinuityDisclosure";
 import type { DispositionMatch } from "../observations/ContinuityDisposition";
 import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
 import { manuscriptChronologyCardPresentation } from "./ContinuityCardPresentation";
+import { openContinuityReviewFromEntryPoint } from "./ContinuityReviewEntryPoint";
 
 export { VIEW_TYPE };
 
@@ -115,6 +116,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
 
     const titleRow = content.createDiv("mwc-book-review-title");
     titleRow.createSpan({ text: book.basename });
+    const titleActions = titleRow.createDiv("mwc-book-review-title-actions");
     const openBook = titleRow.createEl("button", {
       cls: "mwc-book-review-link",
       text: "Open book",
@@ -126,6 +128,24 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         chapter.path,
         false
       );
+    };
+    titleActions.appendChild(openBook);
+    const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(
+      book.path,
+      "Open Continuity Review"
+    );
+    const openContinuity = titleActions.createEl("button", {
+      cls: "mwc-book-review-link mwc-book-review-continuity-link",
+      text: reviewPresentation.label,
+      attr: {
+        type: "button",
+        title: reviewPresentation.tooltip,
+        "aria-label": reviewPresentation.tooltip
+      }
+    });
+    openContinuity.disabled = reviewPresentation.disabled;
+    openContinuity.onclick = () => {
+      void openContinuityReviewFromEntryPoint(this.plugin, book.path, chapter.path);
     };
 
     const list = content.createEl("dl", {
