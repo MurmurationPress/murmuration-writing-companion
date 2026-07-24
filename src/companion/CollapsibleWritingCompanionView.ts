@@ -37,6 +37,7 @@ import { parseWikilink } from "../story-world/StoryWorldIndex";
 import type { DispositionMatch } from "../observations/ContinuityDisposition";
 import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
 import { chapterContextCardNavigationNotes } from "./ContinuityCardPresentation";
+import { isExplicitlyDetachedScene, manuscriptDisplayTitle } from "../manuscript/ManuscriptMetadata";
 
 export { VIEW_TYPE };
 
@@ -123,10 +124,21 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     }
 
     const page = this.plugin.storeService.getPage(file);
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+    const detached = isExplicitlyDetachedScene(frontmatter);
 
-    this.renderBookReview(container, file);
+    if (detached) {
+      const title = manuscriptDisplayTitle({ path: file.path, basename: file.basename, frontmatter });
+      container.createEl("p", {
+        cls: "mwc-manuscript-notice",
+        attr: { role: "status" },
+        text: `${title} is not in the selected manuscript.`
+      });
+    } else {
+      this.renderBookReview(container, file);
+    }
     this.renderCollapsibleChapterContext(container, file);
-    this.renderCollapsibleWorldContext(container, file);
+    this.renderCollapsibleWorldContext(container, file, !detached);
     this.renderCollapsibleEditorialPasses(container, file);
     this.renderCollapsibleChapterNote(container, file, page);
     this.renderAnnotations(container, file, page, focusNoteId);
@@ -146,7 +158,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     this.flattenEmbeddedSection(collapsible.content);
   }
 
-  private renderCollapsibleWorldContext(container: Element, file: TFile) {
+  private renderCollapsibleWorldContext(container: Element, file: TFile, manuscriptContext = true) {
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const result = buildWorldContext(
       frontmatter,
@@ -200,7 +212,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       }
     );
 
-    this.renderContinuityObservations(collapsible.content, file, frontmatter);
+    if (manuscriptContext) this.renderContinuityObservations(collapsible.content, file, frontmatter);
   }
 
   private renderContinuityObservations(

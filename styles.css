@@ -262,6 +262,23 @@
   overflow: auto;
 }
 
+.mwc-manuscript-detachment-modal {
+  max-width: min(42rem, 100%);
+  overflow-wrap: anywhere;
+}
+
+.mwc-manuscript-detachment-modal .mwc-manuscript-book-create-preview {
+  max-height: 14rem;
+  overflow: auto;
+}
+
+@media (max-width: 420px) {
+  .mwc-manuscript-detachment-modal .mwc-manuscript-book-create-preview-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 .mwc-manuscript-book-create-errors {
   color: var(--text-error);
 }

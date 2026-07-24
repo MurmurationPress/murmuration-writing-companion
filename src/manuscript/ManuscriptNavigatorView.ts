@@ -47,6 +47,7 @@ import { snapshotManuscriptPartCreation } from "./ObsidianManuscriptPartCreation
 import { ManuscriptSceneCreationModal } from "./ManuscriptSceneCreationModal";
 import { defaultManuscriptSceneParent, manuscriptSceneCreationAvailability } from "./ManuscriptSceneCreation";
 import { snapshotManuscriptSceneCreation } from "./ObsidianManuscriptSceneCreation";
+import { ManuscriptSceneDetachmentModal } from "./ManuscriptSceneDetachmentModal";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -607,7 +608,7 @@ export class ManuscriptNavigatorView extends ItemView {
       text: "⋮",
       attr: {
         type: "button",
-        "aria-label": `Move ${entry.title}`
+        "aria-label": `Actions for ${entry.title}`
       }
     });
     plainButton(button);
@@ -684,6 +685,33 @@ export class ManuscriptNavigatorView extends ItemView {
               "after"
             )));
         }
+      }
+
+      const parent = currentParent === book.file.path
+        ? book.record
+        : book.result.entries.find((candidate) => candidate.path === currentParent);
+      if (
+        !this.operationRunning
+        && book.result.source === "distributed"
+        && Boolean(entry.orderKey)
+        && Boolean(parent && (parent.kind === "book" || parent.kind === "part"))
+      ) {
+        actionCount += 1;
+        menu.addSeparator();
+        menu.addItem((item) => item
+          .setTitle("Remove from manuscript")
+          .setIcon("unlink")
+          .onClick(() => new ManuscriptSceneDetachmentModal(
+            this.plugin,
+            entry.path,
+            book.file.path,
+            (fallbackPath) => {
+              this.revealedContextPath = null;
+              this.undoToken = null;
+              this.operationMessage = `“${entry.title}” removed from manuscript; its note remains in the vault.`;
+              this.revealPath(fallbackPath);
+            }
+          ).open()));
       }
     }
 
