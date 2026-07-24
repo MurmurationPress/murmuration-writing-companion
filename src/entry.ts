@@ -16,7 +16,7 @@ import { PendingStoryWorldRelationAuthoring, PendingStoryWorldRelationContextAdd
 import { resolvePovRelationSource } from "./companion/StoryWorldRelationAuthoring";
 import { hasCurrentStoryWorldRelationForChapter } from "./companion/ObsidianStoryWorldRelationAuthoring";
 import { getChapterContextField, getEditableChapterContextValue } from "./companion/ChapterContext";
-import { explicitManuscriptKind, hasSceneMetadataSignal } from "./manuscript/ManuscriptMetadata";
+import { explicitManuscriptKind, hasSceneMetadataSignal, isExplicitlyDetachedScene } from "./manuscript/ManuscriptMetadata";
 import { reconcileStoryWorldInspectorPath } from "./story-world/StoryWorldInspectorContext";
 import { STORY_WORLD_TIMELINE_VIEW_TYPE, StoryWorldTimelineView } from "./story-world/StoryWorldTimelineView";
 import { StoryWorldTimelineActivation } from "./story-world/StoryWorldTimelineActivation";
@@ -151,6 +151,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.refreshStoryWorldTimeline();
     const chapter = this.getCurrentChapter();
     if (!chapter) return;
+    const chapterFrontmatter = this.app.metadataCache.getFileCache(chapter)?.frontmatter as Record<string, unknown> | undefined;
+    if (isExplicitlyDetachedScene(chapterFrontmatter)) return;
     for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
       const container = leaf.view.containerEl.children[1];
       if (!(container instanceof HTMLElement)) continue;
@@ -210,6 +212,11 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     for (const leaf of this.app.workspace.getLeavesOfType(CONTINUITY_REVIEW_VIEW_TYPE)) {
       if (leaf.view instanceof ContinuityReviewView) leaf.view.render();
     }
+  }
+
+  override refreshManuscriptBookAfterStructuralChange(bookPath: string): void {
+    super.refreshManuscriptBookAfterStructuralChange(bookPath);
+    this.queueContinuityReviewRefresh();
   }
 
   private reloadContinuityReview(): void {
@@ -330,6 +337,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   private isManuscriptScene(file: TFile): boolean {
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+    if (isExplicitlyDetachedScene(frontmatter)) return false;
     const kind = explicitManuscriptKind(frontmatter);
     if (kind) return kind === "scene";
     return hasSceneMetadataSignal(frontmatter) && this.getOwningBook(file) !== null;

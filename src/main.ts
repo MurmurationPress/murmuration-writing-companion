@@ -51,6 +51,7 @@ import {
 import { WritingCompanionActivation } from "./companion/WritingCompanionActivation";
 import {
   buildObsidianManuscriptChronology,
+  buildObsidianManuscriptChronologyForBook,
   ObsidianManuscriptChronologyResult
 } from "./manuscript/ObsidianManuscriptChronology";
 import { BookReviewContinuityDisclosure } from "./companion/BookReviewContinuityDisclosure";
@@ -654,6 +655,18 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         view.render();
       }
     }
+  }
+
+  refreshManuscriptBookAfterStructuralChange(bookPath: string) {
+    const book = buildObsidianManuscriptLibrary(this.app).books.find((candidate) => candidate.file.path === bookPath);
+    if (book) {
+      this.manuscriptChronologyDependencies = new Set(
+        buildObsidianManuscriptChronologyForBook(this.app, book).dependencies
+      );
+    }
+    this.refreshView();
+    this.refreshManuscriptNavigator();
+    this.scheduleManuscriptChronologyRefresh();
   }
 
   revealManuscriptPath(path: string) {

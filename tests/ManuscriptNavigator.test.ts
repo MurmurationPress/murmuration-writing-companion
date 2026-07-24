@@ -7,6 +7,7 @@ import {
 import {
   explicitManuscriptKind,
   formatNavigatorStoryDate,
+  isExplicitlyDetachedScene,
   manuscriptDisplayTitle,
   manuscriptSceneMetadata
 } from "../src/manuscript/ManuscriptMetadata";
@@ -84,6 +85,11 @@ test("recognises explicit book, part and scene vocabulary", () => {
   equal(explicitManuscriptKind({ document_type: "chapter" }), "scene");
   equal(explicitManuscriptKind({ type: "scene", book: 2, Part: 1 }), "scene");
   equal(explicitManuscriptKind({ type: "research" }), null);
+  equal(explicitManuscriptKind({ type: "scene-draft", story_date: "2030-01-01" }), null);
+  equal(isExplicitlyDetachedScene({ type: "scene-draft", pov: "Robin" }), true);
+  equal(isExplicitlyDetachedScene({ manuscript_type: "scene", type: "scene-draft" }), true);
+  equal(isExplicitlyDetachedScene({ type: "scene" }), false);
+  equal(isExplicitlyDetachedScene({ type: "research", story_date: "2030-01-01" }), false);
 });
 
 test("uses title metadata and removes legacy prefixes only from fallback display", () => {

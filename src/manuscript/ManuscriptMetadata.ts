@@ -32,6 +32,21 @@ const SCENE_TYPE_VALUES = new Set([
   "manuscript_chapter"
 ]);
 
+export const DETACHED_SCENE_TYPE = "scene-draft";
+
+/** A narrow, explicit opt-out; unknown types retain the legacy inference path. */
+export function isExplicitlyDetachedScene(
+  frontmatter: Record<string, unknown> | undefined
+): boolean {
+  if (!frontmatter) return false;
+  const aliases = new Set(MANUSCRIPT_TYPE_ALIASES.map(normalizePropertyName));
+  return Object.entries(frontmatter).some(([property, value]) => (
+    property !== "position"
+    && aliases.has(normalizePropertyName(property))
+    && normalizedValues(value).includes(normalizePropertyName(DETACHED_SCENE_TYPE))
+  ));
+}
+
 export interface ManuscriptSceneMetadata {
   readonly pov: string | null;
   readonly storyDate: string | null;

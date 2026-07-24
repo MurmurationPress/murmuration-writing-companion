@@ -13,6 +13,7 @@ import {
 import {
   explicitManuscriptKind,
   hasSceneMetadataSignal,
+  isExplicitlyDetachedScene,
   manuscriptDisplayTitle,
   manuscriptHierarchyReferences,
   ManuscriptSceneMetadata,
@@ -31,6 +32,7 @@ interface RawManuscriptFile {
   readonly file: TFile;
   readonly frontmatter: Record<string, unknown> | undefined;
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
+  readonly explicitlyDetached: boolean;
   readonly parentPath: string | null;
   readonly explicitParent: boolean;
   readonly parentReferenceInvalid: boolean;
@@ -43,6 +45,7 @@ interface PreliminaryManuscriptFile {
   readonly file: TFile;
   readonly frontmatter: Record<string, unknown> | undefined;
   readonly explicitKind: ReturnType<typeof explicitManuscriptKind>;
+  readonly explicitlyDetached: boolean;
   readonly explicitParentPath: string | null;
   readonly parentReferences: readonly string[];
   readonly explicitBookPath: string | null;
@@ -120,6 +123,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       file,
       frontmatter,
       explicitKind: explicitManuscriptKind(frontmatter),
+      explicitlyDetached: isExplicitlyDetachedScene(frontmatter),
       explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
       parentReferences: hierarchy.parentReferences,
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
@@ -175,6 +179,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       file: candidate.file,
       frontmatter: candidate.frontmatter,
       explicitKind: candidate.explicitKind,
+      explicitlyDetached: candidate.explicitlyDetached,
       parentPath: candidate.explicitParentPath ?? legacyParentPath,
       explicitParent: candidate.parentReferences.length > 0,
       parentReferenceInvalid: candidate.parentReferences.length > 0
@@ -199,6 +204,10 @@ function owningBookPath(
 
   const current = files.get(path);
   if (!current) return null;
+  if (current.explicitlyDetached) {
+    memo.set(path, null);
+    return null;
+  }
   if (current.explicitKind === "book") {
     memo.set(path, path);
     return path;
@@ -224,6 +233,7 @@ function recordFor(
   bookPath: string,
   parentReferencedPaths: ReadonlySet<string>
 ): ManuscriptDocumentRecord | null {
+  if (raw.explicitlyDetached) return null;
   let kind = raw.explicitKind;
 
   if (!kind) {
