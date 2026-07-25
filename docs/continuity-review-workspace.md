@@ -135,6 +135,8 @@ portable editorial store and its established atomic backup files.
 
 The Story World **Impact Across Manuscript** projection reuses current observations when their existing evidence involves both the selected Story World note and a manuscript Scene. It presents the observation summary as continuity evidence without copying rule logic, changing disposition semantics or creating another observation cache.
 
+Story World maintenance observations from **Story World Review** enter a Book's Continuity Review only when their primary or supporting Story World note is reached through that Book's exact structured `world_context`. They retain the same #129 fingerprint and evidence identity. Global findings remain available in Story World Review without an active Book and are not forced into manuscript scope.
+
 The workspace also exposes **Generate report**. It previews either the complete current selected-Book collection or exactly the visible filtered set, then offers copy-only or create-new-note actions. Reports are derived snapshots marked `type: continuity-review-report`; they distinguish canon evidence from editorial dispositions, never overwrite an existing note and do not change disposition timestamps. See [Reusable Continuity Review report](continuity-review-report.md).
 
 ## Boundaries

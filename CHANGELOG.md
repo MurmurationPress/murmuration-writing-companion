@@ -7,6 +7,7 @@
 - Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.
 - Show a selected Story World entity or event's direct, temporal, structured and continuity impact across authoritative manuscript order in the existing Entity Inspector.
 - Preview, copy or save a read-only Markdown snapshot of an entire selected Book's Continuity Review or exactly its current filtered results.
+- Add a deterministic Story World Review for broken structured links, lookup collisions, malformed relationships, event chronology, scope, provenance and classification, sharing observation identity with Continuity Review without automatic repair.
 
 ## 0.16.0 — 2026-07-21
 

@@ -7,8 +7,7 @@ import {
   ContinuityReviewLocation,
   ContinuityReviewManuscriptScope
 } from "../observations/ContinuityReview";
-import { observeIncompleteEntityRelationships } from "../story-world/StoryWorldObservations";
-import { observeTimelineAssertionContradictions } from "../story-world/StoryWorldEventSceneGraph";
+import { collectObsidianStoryWorldReview } from "../story-world/ObsidianStoryWorldReview";
 import { parseWikilink, StoryWorldEntityRecord } from "../story-world/StoryWorldIndex";
 import { ObsidianStoryWorldIndex } from "../story-world/ObsidianStoryWorldIndex";
 import { resolveExplicitOwningBookWithSource } from "../companion/ManuscriptHierarchy";
@@ -150,21 +149,11 @@ export function collectObsidianContinuityReview(
   const chronology = buildObsidianManuscriptChronologyForBook(app, book);
   const observations: ContinuityObservation[] = [...chronology.observations];
   for (const scene of scenes) observations.push(...chapterObservations(app, storyWorldIndex, book, scene));
-  for (const entity of directEntities.values()) {
-    observations.push(...observeIncompleteEntityRelationships(entity));
-  }
-
-  const documents = app.vault.getMarkdownFiles().map((file) => ({
-    path: file.path,
-    name: file.basename,
-    frontmatter: frontmatter(app, file) ?? {}
-  }));
-  const timeline = observeTimelineAssertionContradictions(
-    documents,
-    storyWorldIndex.index.getAll(),
-    (reference, sourcePath) => resolveReference(app, reference, sourcePath)?.path ?? null
-  ).filter((observation) => scope.explicitlyReferencedStoryWorldPaths.has(observation.primary.path));
-  observations.push(...timeline);
+  const storyWorldReview = collectObsidianStoryWorldReview(app, storyWorldIndex);
+  observations.push(...storyWorldReview.observations.filter((observation) =>
+    scope.explicitlyReferencedStoryWorldPaths.has(observation.primary.path)
+    || observationSourceNotes(observation).some((source) => scope.explicitlyReferencedStoryWorldPaths.has(source.path))
+  ));
 
   const dependencies = new Set<string>(chronology.dependencies);
   for (const path of directEntities.keys()) dependencies.add(path);

@@ -100,9 +100,13 @@ boundary.
 Neither producer writes Markdown or editorial storage. Disposition persistence
 and broad parser consolidation remain outside #129.
 
+## Story World maintenance extension
+
+Issue #111 reuses this contract for deterministic Story World maintenance observations. The global Story World Review and Book-relevant Continuity Review projection share the same fingerprints rather than translating findings into a second identity model. Display grouping, filtering and navigation remain outside fingerprint authority.
+
 ## Deferred work
 
-The remaining Story World maintenance rules belong to #111. Chapter-context
+Chapter-context
 temporal evaluation belongs to #130, manuscript chronology drift to #131, the
 review interface to #132, and persisted editorial dispositions and stale-state
 matching to #134. None of those concerns changes Markdown authority or belongs
