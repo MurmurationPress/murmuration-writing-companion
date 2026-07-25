@@ -169,7 +169,7 @@ function renderWikilinkText(value: string): string {
   );
 }
 
-function formatStoryDate(
+export function formatStoryDate(
   value: string,
   locale?: string | string[]
 ): string {

@@ -38,6 +38,7 @@ import type { DispositionMatch } from "../observations/ContinuityDisposition";
 import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
 import { manuscriptChronologyCardPresentation } from "./ContinuityCardPresentation";
 import { openContinuityReviewFromEntryPoint } from "./ContinuityReviewEntryPoint";
+import { formatStoryDate } from "./SidebarSections";
 
 export { VIEW_TYPE };
 
@@ -355,6 +356,30 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           editor.blur();
         };
       }
+    }
+    const offer = this.plugin.getPrecedingStoryDateOffer(file);
+    if (offer) {
+      const suggestion = section.createDiv("mwc-preceding-story-date-offer");
+      suggestion.createEl("p", { cls: "mwc-muted", text: "Story date is empty" });
+      suggestion.createEl("p", { text: `Use ${formatStoryDate(offer.value)}` });
+      suggestion.createEl("p", { cls: "mwc-muted", text: `From: ${offer.sourceTitle}` });
+      const button = suggestion.createEl("button", {
+        text: "Use this date",
+        attr: {
+          type: "button",
+          "aria-label": `Use preceding story date ${offer.value} from ${offer.sourceTitle}`
+        }
+      });
+      button.onclick = () => {
+        button.disabled = true;
+        void this.plugin.acceptPrecedingStoryDateOffer(offer).then(
+          () => new Notice(`Story date set to ${offer.value}.`),
+          (error) => {
+            new Notice(error instanceof Error ? error.message : "The preceding story date could not be applied.");
+            this.plugin.refreshView();
+          }
+        );
+      };
     }
   }
 
