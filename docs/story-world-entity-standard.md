@@ -268,3 +268,6 @@ The stored representation may be structured. The author experience must remain l
 See [`docs/examples/story-world/`](examples/story-world/) and [`docs/examples/story-world/models/`](examples/story-world/models/) for PRIME-based examples covering entities, canon status, provenance, simple relationships and dedicated supporting models.
 
 These are schema examples only. They are not written into the PRIME Trilogy vault and do not independently establish canon.
+# Maintenance observations
+
+The read-only [Story World Review](story-world-review.md) checks explicit opted-in metadata for unresolved structured references, lookup-name collisions, malformed event time, scope, provenance and missing classification. Unknown entity types and optional omitted fields remain valid, and the review never repairs Markdown automatically.

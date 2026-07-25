@@ -69,6 +69,16 @@ export class ObsidianStoryWorldIndex {
     return aliasMatches.length === 1 ? aliasMatches[0] : null;
   }
 
+  /** Resolves explicit links while retaining whether the target belongs to Story World authority. */
+  resolveReference(reference: unknown, sourcePath: string): { path: string; indexed: boolean; excluded: boolean } | null {
+    const parsed = parseWikilink(reference);
+    if (!parsed) return null;
+    const destination = this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, sourcePath);
+    if (destination) return { path: destination.path, indexed: this.index.getByPath(destination.path) !== null, excluded: isObsidianTrashPath(destination.path) };
+    const aliasMatches = this.index.findByNameOrAlias(parsed.linkpath);
+    return aliasMatches.length === 1 ? { path: aliasMatches[0].path, indexed: true, excluded: false } : null;
+  }
+
   private documentFor(file: TFile): StoryWorldDocument {
     const cache = this.app.metadataCache.getFileCache(file);
     const frontmatter = cache?.frontmatter as Record<string, unknown> | undefined;

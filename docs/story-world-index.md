@@ -132,3 +132,6 @@ Automated tests cover:
 - ordinary, display and path-qualified wikilink parsing.
 
 The Obsidian validation pass should additionally confirm that creating, editing, renaming, deleting and recreating real entity notes updates the in-memory index without changing their Markdown.
+# Story World review
+
+The index also supplies the disposable [Story World Review](story-world-review.md). Review rules consume current indexed records and current metadata, exclude local Trash, and never write or persist findings as canon.

@@ -28,6 +28,8 @@ import { installContinuityReviewStyles } from "./ui/ContinuityReviewStyles";
 import { buildObsidianManuscriptLibrary } from "./manuscript/ObsidianManuscript";
 import type { ManuscriptBookSelection } from "./manuscript/ManuscriptBookSelection";
 import { classifyObsidianRename } from "./ObsidianTrash";
+import { STORY_WORLD_REVIEW_VIEW_TYPE, StoryWorldReviewView } from "./story-world/StoryWorldReviewView";
+import { installStoryWorldReviewStyles } from "./ui/StoryWorldReviewStyles";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -51,6 +53,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     await super.onload();
     this.register(this.manuscriptBookSelection.subscribe((selection) => {
       this.synchroniseContinuityReviewScope(selection);
+      this.refreshStoryWorldReview();
       if (this.storyWorldInspectorPath) this.refreshView();
       if (selection.source === "manuscript-navigator") {
         window.setTimeout(() => this.refreshManuscriptNavigator(), 0);
@@ -63,10 +66,12 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.registerView(STORY_WORLD_NAVIGATOR_VIEW_TYPE, (leaf) => new StoryWorldNavigatorView(leaf, this));
     this.registerView(STORY_WORLD_TIMELINE_VIEW_TYPE, (leaf) => new StoryWorldTimelineView(leaf, this));
     this.registerView(CONTINUITY_REVIEW_VIEW_TYPE, (leaf) => new ContinuityReviewView(leaf, this));
+    this.registerView(STORY_WORLD_REVIEW_VIEW_TYPE, (leaf) => new StoryWorldReviewView(leaf, this));
     this.addRibbonIcon("map", "Open Story World Navigator", () => void this.activateStoryWorldNavigator());
     this.addCommand({ id: "open-story-world-navigator", name: "Open Story World Navigator", callback: () => void this.activateStoryWorldNavigator() });
     this.addCommand({ id: "open-story-world-timeline", name: "Open Story World Timeline", callback: () => void this.activateStoryWorldTimeline() });
     this.addCommand({ id: "open-continuity-review", name: "Open Continuity Review", callback: () => void this.activateContinuityReview() });
+    this.addCommand({ id: "open-story-world-review", name: "Open Story World Review", callback: () => void this.activateStoryWorldReview() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -80,6 +85,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => timelineStyles.remove());
     const continuityReviewStyles = installContinuityReviewStyles();
     this.register(() => continuityReviewStyles.remove());
+    const storyWorldReviewStyles = installStoryWorldReviewStyles();
+    this.register(() => storyWorldReviewStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); }));
@@ -110,8 +117,9 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.queueNavigatorRefresh();
       if (this.storyWorldInspectorPath) this.refreshView();
       if (this.continuityReviewDependsOn(file.path)) this.queueContinuityReviewRefresh();
+      this.refreshStoryWorldReview();
     }));
-    this.registerEvent(this.app.vault.on("create", () => this.queueContinuityReviewRefresh()));
+    this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); }));
     this.register(() => {
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);
@@ -181,6 +189,19 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   async activateStoryWorldTimeline(): Promise<void> {
     await this.storyWorldTimelineActivation.activate(this.app.workspace, STORY_WORLD_TIMELINE_VIEW_TYPE);
+  }
+
+  async activateStoryWorldReview(): Promise<void> {
+    const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)[0];
+    const leaf = existing ?? this.app.workspace.getLeaf("tab");
+    if (!existing) await leaf.setViewState({ type: STORY_WORLD_REVIEW_VIEW_TYPE, active: true });
+    await this.app.workspace.revealLeaf(leaf);
+  }
+
+  refreshStoryWorldReview(): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)) {
+      if (leaf.view instanceof StoryWorldReviewView) leaf.view.render();
+    }
   }
 
   async activateContinuityReview(): Promise<void> {
@@ -297,6 +318,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_NAVIGATOR_VIEW_TYPE)) {
       if (leaf.view instanceof StoryWorldNavigatorView) leaf.view.render();
     }
+    this.refreshStoryWorldReview();
   }
 
   getPendingStoryWorldEventAuthoring(chapter: TFile): PendingStoryWorldEventAuthoring | null { return this.storyWorldEventAuthoringSession.getPending(chapter.path); }

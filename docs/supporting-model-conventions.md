@@ -310,3 +310,6 @@ Existing manuscript, compiler, Bases, Dataview and wikilink behaviour remains un
 See [`docs/examples/story-world/`](examples/story-world/) and [`docs/examples/story-world/models/`](examples/story-world/models/) for PRIME-based examples of a simple entity relationship, a time-bounded relationship, a timeline relationship and a point-of-view knowledge state.
 
 These examples are schema illustrations. They are not written into the PRIME Trilogy vault and do not independently establish canon.
+# Maintenance observations
+
+The read-only [Story World Review](story-world-review.md) reuses the shared continuity observation contract for incomplete relationships and explicit timeline contradictions. Unknown predicates remain valid; only malformed required assertion structure or contradictory explicit evidence is reported. A malformed assertion does not suppress valid assertions in the same note.
