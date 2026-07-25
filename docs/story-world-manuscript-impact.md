@@ -23,4 +23,6 @@ Broadly referenced entities can legitimately produce many rows because every exa
 
 Indexed entities, events and unconventional entity types share the same projection. Events use `world_time`; other items may use explicit `valid_from`/`valid_until`. Relationship validity is supported by the pure impact contract, but relationships are embedded assertions without standalone indexed identity or a settled selection surface. The initial UI therefore remains entity/event selected and does not fabricate relationship identity; a future relationship-selection entry point can feed the same contract.
 
+The [Story World Graph](story-world-graph.md) shows the selected item's current impact count and routes to this existing inspector section. It does not reproduce impact rules or render all impacted Scenes as graph nodes. Scene nodes are limited to explicitly enabled event-source provenance.
+
 Undated or malformed selected items explain why temporal evidence is unavailable while retaining direct, structured and continuity evidence. Undated Scenes can likewise appear through non-temporal evidence.

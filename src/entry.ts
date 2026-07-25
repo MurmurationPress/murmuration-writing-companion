@@ -30,6 +30,8 @@ import type { ManuscriptBookSelection } from "./manuscript/ManuscriptBookSelecti
 import { classifyObsidianRename } from "./ObsidianTrash";
 import { STORY_WORLD_REVIEW_VIEW_TYPE, StoryWorldReviewView } from "./story-world/StoryWorldReviewView";
 import { installStoryWorldReviewStyles } from "./ui/StoryWorldReviewStyles";
+import { STORY_WORLD_GRAPH_VIEW_TYPE, StoryWorldGraphView } from "./story-world/StoryWorldGraphView";
+import { installStoryWorldGraphStyles } from "./ui/StoryWorldGraphStyles";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -54,6 +56,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(this.manuscriptBookSelection.subscribe((selection) => {
       this.synchroniseContinuityReviewScope(selection);
       this.refreshStoryWorldReview();
+      this.refreshStoryWorldGraph();
       if (this.storyWorldInspectorPath) this.refreshView();
       if (selection.source === "manuscript-navigator") {
         window.setTimeout(() => this.refreshManuscriptNavigator(), 0);
@@ -67,11 +70,13 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.registerView(STORY_WORLD_TIMELINE_VIEW_TYPE, (leaf) => new StoryWorldTimelineView(leaf, this));
     this.registerView(CONTINUITY_REVIEW_VIEW_TYPE, (leaf) => new ContinuityReviewView(leaf, this));
     this.registerView(STORY_WORLD_REVIEW_VIEW_TYPE, (leaf) => new StoryWorldReviewView(leaf, this));
+    this.registerView(STORY_WORLD_GRAPH_VIEW_TYPE, (leaf) => new StoryWorldGraphView(leaf, this));
     this.addRibbonIcon("map", "Open Story World Navigator", () => void this.activateStoryWorldNavigator());
     this.addCommand({ id: "open-story-world-navigator", name: "Open Story World Navigator", callback: () => void this.activateStoryWorldNavigator() });
     this.addCommand({ id: "open-story-world-timeline", name: "Open Story World Timeline", callback: () => void this.activateStoryWorldTimeline() });
     this.addCommand({ id: "open-continuity-review", name: "Open Continuity Review", callback: () => void this.activateContinuityReview() });
     this.addCommand({ id: "open-story-world-review", name: "Open Story World Review", callback: () => void this.activateStoryWorldReview() });
+    this.addCommand({ id: "open-story-world-graph", name: "Open Story World Graph", callback: () => void this.activateStoryWorldGraph() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -87,14 +92,17 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => continuityReviewStyles.remove());
     const storyWorldReviewStyles = installStoryWorldReviewStyles();
     this.register(() => storyWorldReviewStyles.remove());
+    const storyWorldGraphStyles = installStoryWorldGraphStyles();
+    this.register(() => storyWorldGraphStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); }));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(true); }));
     this.registerEvent(this.app.vault.on("delete", (file) => {
       if (!(file instanceof TFile)) return;
       this.storyWorldEventAuthoringSession.clear(file.path);
       this.storyWorldRelationAuthoringSession.clear(file.path);
       this.refreshStoryWorldNavigator();
+      this.refreshStoryWorldGraph();
       this.queueContinuityReviewRefresh();
     }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
@@ -104,22 +112,25 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         this.storyWorldEventAuthoringSession.clear(oldPath);
         this.storyWorldRelationAuthoringSession.clear(oldPath);
         this.refreshStoryWorldNavigator();
+        this.refreshStoryWorldGraph();
         this.queueContinuityReviewRefresh();
         return;
       }
       this.storyWorldEventAuthoringSession.rename(oldPath, file.path);
       this.storyWorldRelationAuthoringSession.rename(oldPath, file.path);
       this.refreshStoryWorldNavigator();
+      this.reconcileStoryWorldGraphRename(oldPath, file.path);
       this.queueContinuityReviewRefresh();
     }));
-    this.app.workspace.onLayoutReady(() => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); });
+    this.app.workspace.onLayoutReady(() => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(true); });
     this.registerEvent(this.app.metadataCache.on("changed", (file) => {
       this.queueNavigatorRefresh();
       if (this.storyWorldInspectorPath) this.refreshView();
       if (this.continuityReviewDependsOn(file.path)) this.queueContinuityReviewRefresh();
       this.refreshStoryWorldReview();
+      this.refreshStoryWorldGraph();
     }));
-    this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); }));
+    this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(); }));
     this.register(() => {
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);
@@ -191,16 +202,41 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     await this.storyWorldTimelineActivation.activate(this.app.workspace, STORY_WORLD_TIMELINE_VIEW_TYPE);
   }
 
-  async activateStoryWorldReview(): Promise<void> {
+  async activateStoryWorldReview(fingerprint?: string): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)[0];
     const leaf = existing ?? this.app.workspace.getLeaf("tab");
     if (!existing) await leaf.setViewState({ type: STORY_WORLD_REVIEW_VIEW_TYPE, active: true });
     await this.app.workspace.revealLeaf(leaf);
+    if (fingerprint && leaf.view instanceof StoryWorldReviewView) leaf.view.showFingerprint(fingerprint);
   }
 
   refreshStoryWorldReview(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)) {
       if (leaf.view instanceof StoryWorldReviewView) leaf.view.render();
+    }
+  }
+
+  async activateStoryWorldGraph(path?: string): Promise<void> {
+    const active = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+    const selected = path ?? (active && this.storyWorldIndex.index.getByPath(active.path) ? active.path : undefined);
+    const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_GRAPH_VIEW_TYPE)[0];
+    const leaf = existing ?? this.app.workspace.getLeaf("tab");
+    if (!existing) await leaf.setViewState({ type: STORY_WORLD_GRAPH_VIEW_TYPE, active: true });
+    await this.app.workspace.revealLeaf(leaf);
+    if (leaf.view instanceof StoryWorldGraphView) {
+      if (selected) leaf.view.select(selected);
+    }
+  }
+
+  refreshStoryWorldGraph(followActive = false): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_GRAPH_VIEW_TYPE)) {
+      if (leaf.view instanceof StoryWorldGraphView) { if (followActive) leaf.view.followActiveSelection(); leaf.view.render(); }
+    }
+  }
+
+  private reconcileStoryWorldGraphRename(oldPath: string, newPath: string): void {
+    for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_GRAPH_VIEW_TYPE)) {
+      if (leaf.view instanceof StoryWorldGraphView) leaf.view.reconcileRename(oldPath, newPath);
     }
   }
 

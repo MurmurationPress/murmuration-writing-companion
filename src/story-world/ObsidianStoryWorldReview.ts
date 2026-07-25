@@ -26,6 +26,6 @@ export function collectObsidianStoryWorldReview(
   );
   return buildStoryWorldReview(documents, entities, (reference, sourcePath) => {
     const resolved = storyWorldIndex.resolveReference(reference, sourcePath);
-    return resolved ? { path: resolved.path, indexed: resolved.indexed } : null;
+    return resolved ? { path: resolved.path, indexed: resolved.indexed, excluded: resolved.excluded } : null;
   }, timeline);
 }

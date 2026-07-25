@@ -135,3 +135,5 @@ The Obsidian validation pass should additionally confirm that creating, editing,
 # Story World review
 
 The index also supplies the disposable [Story World Review](story-world-review.md). Review rules consume current indexed records and current metadata, exclude local Trash, and never write or persist findings as canon.
+
+The focused [Story World Graph](story-world-graph.md) consumes the same indexed records and link resolution. It does not add entity identity, infer backlinks or persist graph authority.
