@@ -133,9 +133,11 @@ navigation, observation generation and disposition actions never write
 manuscript or Story World Markdown. Dispositions write only the existing
 portable editorial store and its established atomic backup files.
 
+The Story World **Impact Across Manuscript** projection reuses current observations when their existing evidence involves both the selected Story World note and a manuscript Scene. It presents the observation summary as continuity evidence without copying rule logic, changing disposition semantics or creating another observation cache.
+
 ## Boundaries
 
 This implementation does not add global historical management, bulk actions,
-new disposition states, #133 impact analysis, #135 reporting, durable Markdown
+new disposition states, #135 reporting, durable Markdown
 IDs or new #111 observation rules. Path-based rename stability remains
 best-effort as defined by the observation and disposition contracts.
