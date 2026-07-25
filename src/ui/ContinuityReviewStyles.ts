@@ -51,6 +51,18 @@ export function installContinuityReviewStyles(): HTMLStyleElement {
 .mwc-continuity-review-technical-row { display: grid; grid-template-columns: minmax(110px, .35fr) minmax(0, 1fr); gap: 8px; padding: 5px 0; border-top: 1px solid var(--background-modifier-border); }
 .mwc-continuity-review-technical-row dd { margin: 0; overflow-wrap: anywhere; }
 .mwc-continuity-review-empty { padding: 24px; color: var(--text-muted); text-align: center; }
+.modal.mwc-continuity-report-modal { width: min(1080px, 92vw); max-width: 92vw; }
+.mwc-continuity-report-modal .modal-content { overflow-x: hidden; }
+.mwc-continuity-report-modal .setting-item { grid-template-columns: minmax(15rem, .8fr) minmax(18rem, 1.2fr); }
+.mwc-continuity-report-modal .setting-item-control, .mwc-continuity-report-modal .setting-item-control input, .mwc-continuity-report-modal .setting-item-control select { min-width: 0; width: 100%; }
+.mwc-continuity-report-preview { box-sizing: border-box; width: 100%; max-width: 100%; min-height: min(52vh, 620px); resize: vertical; overflow: auto; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); line-height: 1.45; white-space: pre; }
+.mwc-continuity-report-destination-status { margin-top: 4px; color: var(--text-muted); font-size: var(--font-ui-smaller); overflow-wrap: anywhere; }
+.mwc-continuity-report-destination-status.mod-warning { color: var(--text-warning); }
+@media (max-width: 700px) {
+  .modal.mwc-continuity-report-modal { width: 96vw; max-width: 96vw; }
+  .mwc-continuity-report-modal .setting-item { display: block; }
+  .mwc-continuity-report-modal .setting-item-control { margin-top: 8px; }
+}
 @media (max-width: 720px) {
   .mwc-continuity-review { padding: 10px; }
   .mwc-continuity-review-header { grid-template-columns: 1fr; }

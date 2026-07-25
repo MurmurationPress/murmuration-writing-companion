@@ -25,6 +25,10 @@ import {
   projectContinuityReviewPresentation
 } from "./ContinuityReviewPresentation";
 import { buildContinuityDiagnosticPayload, shouldShowContinuityDiagnostics } from "./ContinuityDiagnostics";
+import {
+  buildContinuityReviewReportChoices
+} from "./ContinuityReviewReport";
+import { ContinuityReviewReportModal } from "./ContinuityReviewReportModal";
 
 export const CONTINUITY_REVIEW_VIEW_TYPE = "murmuration-continuity-review";
 
@@ -149,6 +153,8 @@ export class ContinuityReviewView extends ItemView {
     const returnButton = headerActions.createEl("button", { text: "Return to manuscript", attr: { type: "button" } });
     returnButton.disabled = !this.originLeaf && !this.originPath;
     returnButton.onclick = () => void this.returnToManuscript();
+    const reportButton = headerActions.createEl("button", { text: "Generate report", attr: { type: "button" } });
+    reportButton.disabled = !collection;
 
     if (this.loading) {
       container.createEl("p", { cls: "mwc-continuity-review-empty", text: "Updating continuity scope…" }).setAttr("role", "status");
@@ -173,9 +179,25 @@ export class ContinuityReviewView extends ItemView {
       this.filters = reconciled;
       projection = projectContinuityReview(input, this.filters);
     }
+    reportButton.onclick = () => this.openReport(input, projection);
     this.renderCounts(header, projection);
     this.renderFilters(container, projection);
     this.renderWorkspace(container, projection);
+  }
+
+  private openReport(
+    input: Parameters<typeof projectContinuityReview>[0],
+    filtered: ContinuityReviewProjection
+  ): void {
+    const generatedAt = new Date().toISOString();
+    new ContinuityReviewReportModal(this.plugin, buildContinuityReviewReportChoices({
+      input,
+      filteredProjection: filtered,
+      filters: this.filters,
+      generatedAt,
+      pluginVersion: this.plugin.manifest.version,
+      existingPaths: new Set(this.app.vault.getMarkdownFiles().map((file) => file.path))
+    })).open();
   }
 
   private renderCounts(header: HTMLElement, projection: ContinuityReviewProjection) {
