@@ -2,6 +2,7 @@ export type ManuscriptBookSelectionSource =
   | "manuscript-navigator"
   | "continuity-review"
   | "continuity-review-activation"
+  | "integrity-reconciliation"
   | "restore";
 
 export interface ManuscriptBookSelection {
@@ -72,6 +73,22 @@ export class ManuscriptBookSelectionService {
       return this.selection;
     }
     return this.select(fallbackPath, fallbackPath, "manuscript-navigator");
+  }
+
+  replace(
+    bookPath: string | null,
+    contextPath: string | null,
+    source: Exclude<ManuscriptBookSelectionSource, "restore">
+  ): ManuscriptBookSelection {
+    const normalizedContext = bookPath ? contextPath?.trim() || bookPath : null;
+    if (this.selection.bookPath === bookPath && this.selection.contextPath === normalizedContext) return this.selection;
+    this.selection = { bookPath, contextPath: normalizedContext, source, revision: this.selection.revision + 1 };
+    try {
+      if (bookPath) this.storage?.setItem(this.storageKey, bookPath);
+      else this.storage?.removeItem(this.storageKey);
+    } catch { /* Selection still works in memory. */ }
+    for (const listener of this.listeners) listener(this.selection);
+    return this.selection;
   }
 
   subscribe(listener: Listener): () => void {

@@ -341,23 +341,29 @@ export class EditorialStoreService {
     await this.openAnnotationProperty.reconcile(this.store);
   }
 
-  async handleCreate(file: TFile) {
+  async handleCreate(file: TFile, options: { syncOpenAnnotationProperty?: boolean } = {}) {
     if (!restoreEditorialPage(this.store, file.path)) return;
 
     await this.save();
-    await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
+    if (options.syncOpenAnnotationProperty !== false) {
+      await this.syncOpenAnnotationProperty(file, this.store.pages[file.path]);
+    }
     this.onChange();
     new Notice("Writing Companion restored editorial data for this chapter.");
   }
 
   async handleDelete(file: TFile) {
-    const timer = this.chapterNoteSaveTimers.get(file.path);
+    await this.handleDeletePath(file.path);
+  }
+
+  async handleDeletePath(path: string) {
+    const timer = this.chapterNoteSaveTimers.get(path);
     if (timer !== undefined) {
       window.clearTimeout(timer);
-      this.chapterNoteSaveTimers.delete(file.path);
+      this.chapterNoteSaveTimers.delete(path);
     }
 
-    if (!markEditorialPageDeleted(this.store, file.path)) return;
+    if (!markEditorialPageDeleted(this.store, path)) return;
 
     await this.save();
     this.onChange();

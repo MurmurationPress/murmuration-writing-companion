@@ -220,6 +220,11 @@ export class ManuscriptNavigatorView extends ItemView {
     this.render();
   }
 
+  reconcileReveal(path: string | null) {
+    this.revealedContextPath = path;
+    this.suppressedActiveRevealPath = null;
+  }
+
   render() {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
@@ -236,10 +241,7 @@ export class ManuscriptNavigatorView extends ItemView {
       this.suppressedActiveRevealPath = null;
     }
 
-    const selectedBookPath = this.plugin.manuscriptBookSelection.reconcileBooks(
-      new Set(library.books.map((book) => book.file.path)),
-      library.books[0]?.file.path ?? null
-    ).bookPath;
+    const selectedBookPath = this.plugin.manuscriptBookSelection.get().bookPath;
     const selected = library.books.find((book) => book.file.path === selectedBookPath)
       ?? library.books[0] ?? null;
 
@@ -257,6 +259,7 @@ export class ManuscriptNavigatorView extends ItemView {
         cls: "mwc-muted",
         text: "No recognised book notes were found."
       });
+      this.renderUnresolved(container, library);
       return;
     }
 
@@ -348,6 +351,7 @@ export class ManuscriptNavigatorView extends ItemView {
           : "No recognised manuscript scenes were found."
       });
       this.renderDiagnostics(container, selected);
+      this.renderUnresolved(container, library);
       return;
     }
 
@@ -373,12 +377,25 @@ export class ManuscriptNavigatorView extends ItemView {
     }
 
     this.renderDiagnostics(container, selected);
+    this.renderUnresolved(container, library);
 
     if (activeRow) {
       window.setTimeout(() => {
         if (!activeRow?.isConnected) return;
         activeRow.scrollIntoView({ block: "nearest" });
       }, 0);
+    }
+  }
+
+  private renderUnresolved(container: HTMLElement, library: ReturnType<typeof buildObsidianManuscriptLibrary>) {
+    if (library.unresolved.length === 0) return;
+    const section = container.createDiv("mwc-manuscript-unresolved");
+    section.createEl("h3", { text: "Unresolved manuscript notes" });
+    const list = section.createEl("ul");
+    for (const unresolved of library.unresolved) {
+      const item = list.createEl("li");
+      const open = item.createEl("button", { text: unresolved.message, attr: { type: "button" } });
+      open.onclick = () => void this.app.workspace.getLeaf(false).openFile(unresolved.file, { active: true });
     }
   }
 

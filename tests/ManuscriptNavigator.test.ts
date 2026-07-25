@@ -1,6 +1,9 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { test } from "node:test";
 import {
+  authoritativeManuscriptPaths,
+} from "../src/manuscript/ManuscriptIntegrity";
+import {
   buildManuscriptOrder,
   ManuscriptDocumentRecord
 } from "../src/manuscript/ManuscriptOrder";
@@ -16,6 +19,24 @@ import {
   findLegacyParentPath,
   isTemplateManuscriptPath
 } from "../src/manuscript/LegacyManuscriptHierarchy";
+
+test("an unresolved explicit parent never falls through to folder authority", () => {
+  deepEqual(authoritativeManuscriptPaths({
+    parentReferences: ["[[Deleted Part]]"],
+    resolvedParentPath: null,
+    bookReferences: [],
+    resolvedBookPath: null,
+    legacyParentPath: "Books/Part inferred from folder.md",
+    legacyBookPath: "Books/Book inferred from folder.md"
+  }), { parentPath: null, bookPath: null });
+});
+
+test("legacy folder authority remains available only when no explicit structural reference exists", () => {
+  deepEqual(authoritativeManuscriptPaths({
+    parentReferences: [], resolvedParentPath: null, bookReferences: [], resolvedBookPath: null,
+    legacyParentPath: "Books/Part.md", legacyBookPath: "Books/Book.md"
+  }), { parentPath: "Books/Part.md", bookPath: "Books/Book.md" });
+});
 
 function record(
   path: string,

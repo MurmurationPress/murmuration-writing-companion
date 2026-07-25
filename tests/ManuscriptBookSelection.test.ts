@@ -70,3 +70,32 @@ test("a removed stored book is reconciled once to a deterministic fallback", () 
   equal(service.get().bookPath, "Books/Emergence.md");
   equal(storage.getItem("selection"), "Books/Emergence.md");
 });
+
+test("integrity reconciliation replaces Book and context in one coherent event", () => {
+  const service = new ManuscriptBookSelectionService(new MemoryStorage(), "selection");
+  service.select("Book.md", "Deleted.md", "manuscript-navigator");
+  const events: string[] = [];
+  service.subscribe((value) => events.push(`${value.bookPath}:${value.contextPath}:${value.revision}`));
+  service.replace("Book.md", "Next.md", "integrity-reconciliation");
+  deepEqual(events, ["Book.md:Next.md:2"]);
+  equal(service.get().source, "integrity-reconciliation");
+});
+
+test("integrity reconciliation can atomically clear a deleted selected Book", () => {
+  const storage = new MemoryStorage();
+  const service = new ManuscriptBookSelectionService(storage, "selection");
+  service.select("Deleted.md", "Deleted/Scene.md", "manuscript-navigator");
+  service.replace(null, null, "integrity-reconciliation");
+  equal(service.get().bookPath, null);
+  equal(service.get().contextPath, null);
+  equal(storage.getItem("selection"), null);
+});
+
+test("rename migration translates selected Book and context without deletion fallback", () => {
+  const service = new ManuscriptBookSelectionService(new MemoryStorage(), "selection");
+  service.select("Old Book.md", "Old Book.md", "manuscript-navigator");
+  service.replace("New Book.md", "New Book.md", "integrity-reconciliation");
+  equal(service.get().bookPath, "New Book.md");
+  equal(service.get().contextPath, "New Book.md");
+  equal(service.get().revision, 2);
+});

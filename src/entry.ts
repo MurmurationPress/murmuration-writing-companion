@@ -27,6 +27,7 @@ import { ContinuityReviewActivation } from "./companion/ContinuityReviewActivati
 import { installContinuityReviewStyles } from "./ui/ContinuityReviewStyles";
 import { buildObsidianManuscriptLibrary } from "./manuscript/ObsidianManuscript";
 import type { ManuscriptBookSelection } from "./manuscript/ManuscriptBookSelection";
+import { classifyObsidianRename } from "./ObsidianTrash";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -90,6 +91,14 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
       if (!(file instanceof TFile)) return;
+      const renameKind = classifyObsidianRename(oldPath, file.path);
+      if (renameKind !== "ordinary") {
+        this.storyWorldEventAuthoringSession.clear(oldPath);
+        this.storyWorldRelationAuthoringSession.clear(oldPath);
+        this.refreshStoryWorldNavigator();
+        this.queueContinuityReviewRefresh();
+        return;
+      }
       this.storyWorldEventAuthoringSession.rename(oldPath, file.path);
       this.storyWorldRelationAuthoringSession.rename(oldPath, file.path);
       this.refreshStoryWorldNavigator();
@@ -208,10 +217,14 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     }
   }
 
-  refreshContinuityReview(): void {
+  override refreshContinuityReview(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(CONTINUITY_REVIEW_VIEW_TYPE)) {
       if (leaf.view instanceof ContinuityReviewView) leaf.view.render();
     }
+  }
+
+  override recollectContinuityReview(): void {
+    this.reloadContinuityReview();
   }
 
   override refreshManuscriptBookAfterStructuralChange(bookPath: string): void {
@@ -226,7 +239,6 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   private synchroniseContinuityReviewScope(selection: ManuscriptBookSelection): void {
-    if (!selection.bookPath) return;
     let originLeaf: WorkspaceLeaf | null = null;
     if (selection.contextPath) {
       this.app.workspace.iterateRootLeaves((leaf) => {
