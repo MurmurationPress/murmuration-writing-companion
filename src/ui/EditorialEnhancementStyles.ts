@@ -466,6 +466,23 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   font-size: 0.78em;
 }
 
+.mwc-preceding-story-date-offer {
+  margin: 8px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+}
+
+.mwc-preceding-story-date-offer p {
+  margin: 2px 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.mwc-preceding-story-date-offer button {
+  max-width: 100%;
+  white-space: normal;
+}
+
 .mwc-manuscript-diagnostics summary {
   cursor: pointer;
 }

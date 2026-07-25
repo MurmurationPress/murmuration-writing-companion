@@ -73,6 +73,11 @@ import { ContinuityDiagnosticPreference } from "./companion/ContinuityDiagnostic
 import { ContinuitySettingsTab } from "./companion/ContinuitySettingsTab";
 import { ManuscriptIntegrityCoordinator } from "./manuscript/ManuscriptIntegrityCoordinator";
 import { classifyObsidianRename, isObsidianTrashPath } from "./ObsidianTrash";
+import type { ManuscriptStoryDateOffer } from "./manuscript/ManuscriptStoryDateOffer";
+import {
+  acceptObsidianManuscriptStoryDateOffer,
+  getObsidianManuscriptStoryDateOffer
+} from "./manuscript/ObsidianManuscriptStoryDateOffer";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -524,6 +529,15 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     await this.app.fileManager.processFrontMatter(chapter, (frontmatter) => {
       updateEditableChapterContextFrontmatter(frontmatter, field, value);
     });
+  }
+
+  getPrecedingStoryDateOffer(chapter: TFile): ManuscriptStoryDateOffer | null {
+    return getObsidianManuscriptStoryDateOffer(this, chapter);
+  }
+
+  async acceptPrecedingStoryDateOffer(offer: ManuscriptStoryDateOffer): Promise<void> {
+    await acceptObsidianManuscriptStoryDateOffer(this, offer);
+    this.refreshView();
   }
 
   async updateBookReviewStatus(book: TFile, value: string) {

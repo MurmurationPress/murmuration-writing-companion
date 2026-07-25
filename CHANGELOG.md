@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
 
 ## 0.16.0 — 2026-07-21
 
