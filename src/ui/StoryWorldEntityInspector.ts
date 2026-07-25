@@ -4,6 +4,8 @@ import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-worl
 import { renderEntityRelationshipWorkspace } from "./EntityRelationshipWorkspace";
 import { renderEventTimeWorkspace } from "./EventTimeWorkspace";
 import { inspectorPanelLabel } from "./PanelLabels";
+import { buildObsidianStoryWorldManuscriptImpact } from "../story-world/ObsidianStoryWorldManuscriptImpact";
+import { filterStoryWorldManuscriptImpact, ManuscriptImpactFilter } from "../story-world/StoryWorldManuscriptImpact";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -35,6 +37,53 @@ function addValues(container: Element, heading: string, values: readonly string[
   }
 }
 
+function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
+  const selected = plugin.storyWorldIndex.index.getByPath(file.path);
+  if (!selected) return;
+  const projection = buildObsidianStoryWorldManuscriptImpact(plugin.app, plugin.storyWorldIndex, selected);
+  const section = container.createDiv("mwc-story-world-inspector-section mwc-manuscript-impact");
+  section.createEl("h3", { text: "Impact Across Manuscript" });
+  const controls = section.createDiv("mwc-manuscript-impact-controls");
+  const count = controls.createSpan({ cls: "mwc-muted" });
+  const filter = controls.createEl("select", { attr: { "aria-label": "Filter manuscript impact" } });
+  const options: readonly [ManuscriptImpactFilter, string][] = [
+    ["all", "All evidence"], ["direct", "Direct references"], ["temporal", "Temporal relevance"],
+    ["structured", "Structured evidence"], ["continuity", "Continuity observations"],
+    ["before", "Before"], ["during", "During"], ["after", "After"], ["current-book", "Current Book only"]
+  ];
+  for (const [value, label] of options) { const option = filter.createEl("option", { text: label }); option.value = value; }
+  const results = section.createDiv("mwc-manuscript-impact-results");
+  const render = () => {
+    results.empty();
+    const selectedBook = plugin.manuscriptBookSelection.get().bookPath;
+    const filtered = filterStoryWorldManuscriptImpact(projection, filter.value as ManuscriptImpactFilter, selectedBook);
+    count.setText(`${filtered.length} ${filtered.length === 1 ? "Scene" : "Scenes"}`);
+    if (projection.temporalUnavailableReason) results.createEl("p", { cls: "mwc-muted", text: projection.temporalUnavailableReason });
+    if (!filtered.length) { results.createEl("p", { cls: "mwc-muted", text: "No manuscript impact matches this filter." }); return; }
+    let book = ""; let part = "";
+    for (const result of filtered) {
+      if (result.scene.bookPath !== book) {
+        book = result.scene.bookPath; part = "";
+        results.createEl("h4", { text: result.scene.bookTitle });
+      }
+      const nextPart = result.scene.partPath ?? result.scene.bookPath;
+      if (nextPart !== part) { part = nextPart; results.createEl("h5", { text: result.scene.partTitle ?? "Direct Book Scenes" }); }
+      const row = results.createDiv("mwc-manuscript-impact-row");
+      const open = row.createEl("button", { cls: "mwc-manuscript-impact-scene", text: result.scene.title, attr: { type: "button" } });
+      open.onclick = () => {
+        const target = plugin.app.vault.getAbstractFileByPath(result.scene.path);
+        if (target instanceof TFile) void plugin.app.workspace.getLeaf(false).openFile(target, { active: true });
+      };
+      const metadata = [result.scene.pov ? `POV: ${result.scene.pov}` : null, result.scene.storyDate ? `Story date: ${String(result.scene.storyDate)}` : "Undated"].filter(Boolean).join(" · ");
+      row.createDiv({ cls: "mwc-muted mwc-manuscript-impact-metadata", text: metadata });
+      const badges = row.createDiv("mwc-manuscript-impact-evidence");
+      for (const evidence of result.evidence) badges.createSpan({ cls: `mwc-manuscript-impact-badge is-${evidence.kind}`, text: evidence.label });
+    }
+  };
+  filter.onchange = render;
+  render();
+}
+
 export function storyWorldBuilderItemForFile(plugin: MurmurationWritingCompanionPlugin, file: TFile): StoryWorldBuilderItem | null {
   const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
   return parseStoryWorldBuilderItem({ path: file.path, basename: file.basename, frontmatter });
@@ -60,5 +109,6 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   addValues(container, "First appearance", item.firstAppearance ? [item.firstAppearance] : [], plugin, file);
   addValues(container, "Sources", item.sources, plugin, file);
   addValues(container, "Subject", item.modelSubject, plugin, file);
+  renderManuscriptImpact(container, plugin, file);
   if (item.kind === "entity") renderEntityRelationshipWorkspace(container, plugin, file, item);
 }
