@@ -8,6 +8,7 @@
 - Show a selected Story World entity or event's direct, temporal, structured and continuity impact across authoritative manuscript order in the existing Entity Inspector.
 - Preview, copy or save a read-only Markdown snapshot of an entire selected Book's Continuity Review or exactly its current filtered results.
 - Add a deterministic Story World Review for broken structured links, lookup collisions, malformed relationships, event chronology, scope, provenance and classification, sharing observation identity with Continuity Review without automatic repair.
+- Add a deterministic one-hop Story World Graph with explicit relationship, participant, model, timeline and optional manuscript-provenance edges, stable radial layout, deliberate Back/Forward traversal, explicit note opening, filters and review/impact routing.
 
 ## 0.16.0 — 2026-07-21
 

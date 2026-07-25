@@ -30,12 +30,23 @@ export class StoryWorldReviewView extends ItemView {
   private severity = "all";
   private kind = "all";
   private scopeFilter = "global";
+  private focusedFingerprint: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldReviewHost) { super(leaf); }
   getViewType() { return STORY_WORLD_REVIEW_VIEW_TYPE; }
   getDisplayText() { return STORY_WORLD_REVIEW_LABEL; }
   getIcon() { return "shield-alert"; }
   async onOpen() { this.render(); }
+
+  showFingerprint(fingerprint: string): void {
+    this.focusedFingerprint = fingerprint;
+    this.severity = "all"; this.kind = "all"; this.scopeFilter = "global";
+    this.render();
+    const row = this.containerEl.querySelector<HTMLElement>(`[data-observation-fingerprint="${fingerprint}"]`);
+    if (row instanceof HTMLDetailsElement) row.open = true;
+    row?.scrollIntoView({ block: "center" });
+    row?.focus();
+  }
 
   render(): void {
     const container = this.containerEl.children[1];
@@ -107,6 +118,8 @@ export class StoryWorldReviewView extends ItemView {
         container.createEl("h4", { text: readableKind(currentKind) });
       }
       const row = container.createEl("details", { cls: `mwc-story-world-review-row is-${observation.severity}` });
+      row.dataset.observationFingerprint = observation.fingerprint;
+      row.tabIndex = -1;
       const heading = row.createEl("summary");
       heading.createSpan({ cls: "mwc-story-world-review-title", text: observation.summary });
       heading.createSpan({ cls: "mwc-muted", text: observation.primary.label ?? observation.primary.path });

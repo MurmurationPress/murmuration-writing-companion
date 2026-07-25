@@ -97,6 +97,8 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   const identity = container.createDiv("mwc-section mwc-story-world-inspector-identity");
   const heading = identity.createDiv("mwc-story-world-inspector-heading");
   heading.createEl("h3", { text: item.name });
+  const graphHost = plugin as MurmurationWritingCompanionPlugin & { activateStoryWorldGraph?(path?: string): Promise<void> };
+  if (graphHost.activateStoryWorldGraph) heading.createEl("button", { text: "Open graph", attr: { type: "button" } }).onclick = () => void graphHost.activateStoryWorldGraph?.(file.path);
   if (item.status) heading.createSpan({ cls: "mwc-story-world-inspector-status", text: item.status });
   identity.createEl("p", { cls: "mwc-story-world-inspector-kind", text: item.kind === "model" ? `Supporting model · ${item.type}` : item.type });
 

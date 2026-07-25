@@ -33,3 +33,5 @@ Story World and manuscript Markdown remain authoritative. Findings are derived a
 ## Deliberate limits
 
 The initial rules remain conservative. They do not require optional provenance globally, infer mutually exclusive states, validate unknown predicate registries, analyse prose, or provide automatic repair. Path-based observation identity makes rename stability best-effort under the existing #129 contract; adopting permanent Story World identities is a separate architectural decision.
+
+The [Story World Graph](story-world-graph.md) consumes current observation fingerprints only for restrained node, edge and incomplete-connection indicators. It does not re-run or reinterpret review rules, and its **Open review** action returns to this workspace's same observation identity.

@@ -313,3 +313,5 @@ These examples are schema illustrations. They are not written into the PRIME Tri
 # Maintenance observations
 
 The read-only [Story World Review](story-world-review.md) reuses the shared continuity observation contract for incomplete relationships and explicit timeline contradictions. Unknown predicates remain valid; only malformed required assertion structure or contradictory explicit evidence is reported. A malformed assertion does not suppress valid assertions in the same note.
+
+The [Story World Graph](story-world-graph.md) presents valid entity-owned relationships, explicit model subjects and timeline assertions as derived directed edges. Editing still belongs to the relationship and timeline workspaces; the graph never writes an inverse or assertion.

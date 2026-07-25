@@ -26,3 +26,6 @@ Use representative events across PRIME Books 1 and 2: **Robin is Born**, **First
 17. Add or inspect an explicit timeline-model assertion such as `precedes`, including an assertion that conflicts with dated order and one with an unknown predicate or qualifier. Confirm assertions appear separately, conflicts remain explained, and unknown details survive unchanged.
 18. Repeat at wide and narrow centre-pane widths. Confirm the spatial lanes become a readable stacked connection layout without overlapping labels or one-word columns.
 19. Recheck the vault diff and editorial storage. Confirm the presentation choice, filtering, highlighting, layout, graph routes, and derived chronology wrote no Markdown, manuscript prose, or editorial-store data.
+# Graph handoff
+
+The focused Story World Graph may display explicit timeline assertions between selected events. Timeline and event-time editing remain in this workspace; graph interaction must not alter event dates or assertions.
