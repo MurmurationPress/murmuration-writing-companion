@@ -154,6 +154,40 @@ test("a broken parent requires explicit replacement and placement", () => {
   equal(typeof plan.files[0].mutation.set.manuscript_order_key, "string");
 });
 
+test("invalid parent kinds offer only structurally valid explicit replacements", () => {
+  const sceneParentedScene = record(secondPath, "Uninvited Contact", "scene", firstPath, "I000000000");
+  const displacedPart = record(
+    "Books/PLURALITY/EXPERIMENT.md",
+    "EXPERIMENT",
+    "part",
+    partPath,
+    "I000000000"
+  );
+  const diagnostics: ManuscriptOrderDiagnostic[] = [sceneParentedScene, displacedPart].map((entry) => ({
+    kind: "invalid_parent_kind",
+    path: entry.path,
+    message: `${entry.title} has an invalid parent kind.`
+  }));
+  const input = {
+    book,
+    result: result([part, first, sceneParentedScene, displacedPart], diagnostics),
+    frontmatterByPath: frontmatter([part, first, sceneParentedScene, displacedPart])
+  };
+
+  const sceneParents = new Set(
+    manuscriptReconciliationPlacementOptions(input, sceneParentedScene.path)
+      .map((option) => option.choice.parentPath)
+  );
+  const partParents = new Set(
+    manuscriptReconciliationPlacementOptions(input, displacedPart.path)
+      .map((option) => option.choice.parentPath)
+  );
+
+  deepEqual(sceneParents, new Set([bookPath, partPath, displacedPart.path]));
+  deepEqual(partParents, new Set([bookPath]));
+  equal(sceneParents.has(firstPath), false);
+});
+
 test("duplicate sibling keys require explicit acceptance of displayed order", () => {
   const duplicate = record(secondPath, "Uninvited Contact", "scene", partPath, "C000000000");
   const diagnostics: ManuscriptOrderDiagnostic[] = [first, duplicate].map((entry) => ({

@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
+- Handle unmanaged manuscript deletion, local-Trash restoration and startup reconciliation defensively while retaining editorial data and never rewriting surviving structure.
+- Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.
 
 ## 0.16.0 — 2026-07-21
 
