@@ -6,6 +6,7 @@
 - Handle unmanaged manuscript deletion, local-Trash restoration and startup reconciliation defensively while retaining editorial data and never rewriting surviving structure.
 - Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.
 - Show a selected Story World entity or event's direct, temporal, structured and continuity impact across authoritative manuscript order in the existing Entity Inspector.
+- Preview, copy or save a read-only Markdown snapshot of an entire selected Book's Continuity Review or exactly its current filtered results.
 
 ## 0.16.0 — 2026-07-21
 

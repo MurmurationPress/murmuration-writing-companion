@@ -54,6 +54,8 @@ protects disposition records together with chapter notes, annotations, pass
 history and book-review state. Removing disposition data makes unchanged
 observations unresolved again.
 
+Continuity Review reports read current disposition records and author notes as editorial snapshot content. Previewing, copying or saving a report never calls disposition mutation services and therefore never changes `firstReviewedAt` or `updatedAt`. Stale reports retain the prior decision as context while clearly requiring renewed review.
+
 ## Rename limitation
 
 Observation identity remains path-based. Rename handling updates descriptive
