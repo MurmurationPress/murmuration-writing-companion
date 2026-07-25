@@ -341,6 +341,18 @@ test("restores soft-deleted editorial data when the chapter returns", () => {
   equal(restoreEditorialPage(store, CHAPTER_PATH), false);
 });
 
+test("trash move retains editorial identity at the original manuscript path", () => {
+  const store = editorialStore();
+  const original = store.pages[CHAPTER_PATH];
+  const trashPath = `.trash/${CHAPTER_PATH}`;
+  equal(markEditorialPageDeleted(store, CHAPTER_PATH, NOW), true);
+  equal(store.pages[trashPath], undefined);
+  equal(store.pages[CHAPTER_PATH], original);
+  equal(restoreEditorialPage(store, CHAPTER_PATH), true);
+  equal(store.pages[CHAPTER_PATH], original);
+  equal(store.pages[trashPath], undefined);
+});
+
 test("reconciles page presence after offline deletion and restoration", () => {
   const store = editorialStore();
 

@@ -5,6 +5,7 @@ import {
   StoryWorldEntityRecord,
   StoryWorldIndex
 } from "./StoryWorldIndex";
+import { isObsidianTrashPath } from "../ObsidianTrash";
 
 export class ObsidianStoryWorldIndex {
   readonly index = new StoryWorldIndex();
@@ -13,23 +14,31 @@ export class ObsidianStoryWorldIndex {
 
   rebuild(): boolean {
     return this.index.rebuild(
-      this.app.vault.getMarkdownFiles().map((file) => this.documentFor(file))
+      this.app.vault.getMarkdownFiles()
+        .filter((file) => !isObsidianTrashPath(file.path))
+        .map((file) => this.documentFor(file))
     );
   }
 
   handleMetadataChanged(file: TFile): boolean {
     if (file.extension !== "md") return false;
+    if (isObsidianTrashPath(file.path)) return this.index.remove(file.path);
     return this.index.upsert(this.documentFor(file));
   }
 
   handleCreate(file: TFile): boolean {
     if (file.extension !== "md") return false;
+    if (isObsidianTrashPath(file.path)) return false;
     return this.index.upsert(this.documentFor(file));
   }
 
   handleDelete(file: TFile): boolean {
     if (file.extension !== "md") return false;
     return this.index.remove(file.path);
+  }
+
+  handleDeletePath(path: string): boolean {
+    return this.index.remove(path);
   }
 
   handleRename(file: TFile, oldPath: string): boolean {

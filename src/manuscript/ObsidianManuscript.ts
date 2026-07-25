@@ -27,6 +27,8 @@ import {
   normalizeVaultPath
 } from "./LegacyManuscriptHierarchy";
 import { visibleManuscriptOrder } from "./VisibleManuscriptOrder";
+import { authoritativeManuscriptPaths } from "./ManuscriptIntegrity";
+import { isObsidianTrashPath } from "../ObsidianTrash";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -36,7 +38,10 @@ interface RawManuscriptFile {
   readonly parentPath: string | null;
   readonly explicitParent: boolean;
   readonly parentReferenceInvalid: boolean;
+  readonly parentReferences: readonly string[];
   readonly explicitBookPath: string | null;
+  readonly bookReferenceInvalid: boolean;
+  readonly bookReferences: readonly string[];
   readonly orderKeyPresent: boolean;
   readonly orderKey: string | null;
 }
@@ -49,6 +54,7 @@ interface PreliminaryManuscriptFile {
   readonly explicitParentPath: string | null;
   readonly parentReferences: readonly string[];
   readonly explicitBookPath: string | null;
+  readonly bookReferences: readonly string[];
   readonly associatedFolderPath: string | null;
   readonly orderKeyPresent: boolean;
   readonly orderKey: string | null;
@@ -65,6 +71,15 @@ export interface ObsidianManuscriptBook {
 export interface ObsidianManuscriptLibrary {
   readonly books: readonly ObsidianManuscriptBook[];
   readonly owningBookPathByFile: ReadonlyMap<string, string>;
+  readonly unresolved: readonly UnresolvedManuscriptNote[];
+}
+
+export interface UnresolvedManuscriptNote {
+  readonly file: TFile;
+  readonly kind: "part" | "scene";
+  readonly reference: string;
+  readonly relationship: "parent" | "book";
+  readonly message: string;
 }
 
 function frontmatterFor(
@@ -117,6 +132,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
   const preliminary = new Map<string, PreliminaryManuscriptFile>();
 
   for (const file of app.vault.getMarkdownFiles()) {
+    if (isObsidianTrashPath(file.path)) continue;
     const frontmatter = frontmatterFor(app, file);
     const hierarchy = manuscriptHierarchyReferences(frontmatter);
     preliminary.set(file.path, {
@@ -127,6 +143,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       explicitParentPath: firstResolvedPath(app, file, hierarchy.parentReferences),
       parentReferences: hierarchy.parentReferences,
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
+      bookReferences: hierarchy.bookReferences,
       associatedFolderPath: associatedManuscriptFolderPath(app, file),
       orderKeyPresent: hasOwnProperty(frontmatter, MANUSCRIPT_ORDER_KEY_PROPERTY),
       orderKey: manuscriptOrderKey(frontmatter?.[MANUSCRIPT_ORDER_KEY_PROPERTY])
@@ -162,7 +179,17 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       candidate.file.path,
       legacyBooks
     );
-    const resolvedBookPath = candidate.explicitBookPath ?? legacyBookPath;
+    // An explicit reference is authoritative even while unresolved. Falling
+    // through to folder inference here would silently conceal a deleted parent.
+    const preliminaryAuthority = authoritativeManuscriptPaths({
+      parentReferences: candidate.parentReferences,
+      resolvedParentPath: candidate.explicitParentPath,
+      bookReferences: candidate.bookReferences,
+      resolvedBookPath: candidate.explicitBookPath,
+      legacyParentPath: null,
+      legacyBookPath
+    });
+    const resolvedBookPath = preliminaryAuthority.bookPath;
     const legacyBook = resolvedBookPath
       ? legacyBookByPath.get(resolvedBookPath) ?? null
       : null;
@@ -174,17 +201,29 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
         folderNotePathByFolder
       )
       : null;
+    const authority = authoritativeManuscriptPaths({
+      parentReferences: candidate.parentReferences,
+      resolvedParentPath: candidate.explicitParentPath,
+      bookReferences: candidate.bookReferences,
+      resolvedBookPath: candidate.explicitBookPath,
+      legacyParentPath,
+      legacyBookPath
+    });
 
     result.set(candidate.file.path, {
       file: candidate.file,
       frontmatter: candidate.frontmatter,
       explicitKind: candidate.explicitKind,
       explicitlyDetached: candidate.explicitlyDetached,
-      parentPath: candidate.explicitParentPath ?? legacyParentPath,
+      parentPath: authority.parentPath,
       explicitParent: candidate.parentReferences.length > 0,
       parentReferenceInvalid: candidate.parentReferences.length > 0
         && candidate.explicitParentPath === null,
-      explicitBookPath: candidate.explicitBookPath ?? legacyBookPath,
+      parentReferences: candidate.parentReferences,
+      explicitBookPath: authority.bookPath,
+      bookReferenceInvalid: candidate.bookReferences.length > 0
+        && candidate.explicitBookPath === null,
+      bookReferences: candidate.bookReferences,
       orderKeyPresent: candidate.orderKeyPresent,
       orderKey: candidate.orderKey
     });
@@ -215,11 +254,14 @@ function owningBookPath(
 
   visiting.add(path);
   let owner: string | null = null;
-  if (current.explicitBookPath) {
+  if (current.explicitParent) {
+    owner = current.parentPath
+      ? owningBookPath(current.parentPath, files, memo, visiting)
+      : null;
+  } else if (current.explicitBookPath) {
     const explicitBook = files.get(current.explicitBookPath);
     if (explicitBook?.explicitKind === "book") owner = explicitBook.file.path;
-  }
-  if (!owner && current.parentPath) {
+  } else if (current.parentPath) {
     owner = owningBookPath(current.parentPath, files, memo, visiting);
   }
 
@@ -361,6 +403,7 @@ export function buildObsidianManuscriptLibrary(app: App): ObsidianManuscriptLibr
       sensitivity: "base"
     }));
   const owningBookPathByFile = new Map<string, string>();
+  const unresolved: UnresolvedManuscriptNote[] = [];
 
   for (const book of books) {
     for (const path of book.filesByPath.keys()) {
@@ -368,5 +411,28 @@ export function buildObsidianManuscriptLibrary(app: App): ObsidianManuscriptLibr
     }
   }
 
-  return { books, owningBookPathByFile };
+  for (const raw of files.values()) {
+    if (ownerMemo.get(raw.file.path)) continue;
+    const kind = raw.explicitKind === "part" ? "part"
+      : raw.explicitKind === "scene" || hasSceneMetadataSignal(raw.frontmatter) ? "scene"
+      : null;
+    if (!kind) continue;
+    const relationship = raw.explicitParent ? "parent" : raw.bookReferenceInvalid ? "book" : null;
+    if (!relationship) continue;
+    const reference = (relationship === "parent" ? raw.parentReferences[0] : raw.bookReferences[0]) ?? "unknown note";
+    const expected = relationship === "book" || kind === "part" ? "Book" : "Part or Book";
+    const resolvedButOrphaned = relationship === "parent" && !raw.parentReferenceInvalid && raw.parentPath;
+    unresolved.push({
+      file: raw.file,
+      kind,
+      reference,
+      relationship,
+      message: resolvedButOrphaned
+        ? `${kind === "scene" ? "Scene" : "Part"} “${manuscriptDisplayTitle({ path: raw.file.path, basename: raw.file.basename, frontmatter: raw.frontmatter })}” cannot resolve an owning Book through “${reference}”.`
+        : `${kind === "scene" ? "Scene" : "Part"} “${manuscriptDisplayTitle({ path: raw.file.path, basename: raw.file.basename, frontmatter: raw.frontmatter })}” references missing ${expected} “${reference}”.`
+    });
+  }
+  unresolved.sort((left, right) => left.file.path.localeCompare(right.file.path, "en", { numeric: true, sensitivity: "base" }));
+
+  return { books, owningBookPathByFile, unresolved };
 }

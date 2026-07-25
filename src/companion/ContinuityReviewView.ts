@@ -74,18 +74,14 @@ export class ContinuityReviewView extends ItemView {
   getState() { return { bookPath: this.plugin.manuscriptBookSelection.get().bookPath }; }
 
   async setState(state: unknown): Promise<void> {
-    const record = typeof state === "object" && state !== null ? state as Record<string, unknown> : {};
     const restored = this.plugin.manuscriptBookSelection.get().bookPath;
-    this.bookPath = restored ?? (typeof record.bookPath === "string" ? record.bookPath : null);
-    if (!restored && this.bookPath) {
-      this.plugin.manuscriptBookSelection.select(this.bookPath, this.bookPath, "continuity-review");
-    }
+    this.bookPath = restored;
     await this.refreshCollection();
   }
 
   async onOpen() { await this.refreshCollection(); }
 
-  retarget(bookPath: string, originLeaf: WorkspaceLeaf | null, originPath: string | null) {
+  retarget(bookPath: string | null, originLeaf: WorkspaceLeaf | null, originPath: string | null) {
     const changed = this.bookPath !== bookPath;
     this.bookPath = bookPath;
     this.originLeaf = originLeaf;
@@ -129,7 +125,7 @@ export class ContinuityReviewView extends ItemView {
     container.empty();
     container.addClass("mwc-continuity-review");
     const library = buildObsidianManuscriptLibrary(this.app);
-    this.bookPath = this.plugin.manuscriptBookSelection.get().bookPath ?? this.bookPath;
+    this.bookPath = this.plugin.manuscriptBookSelection.get().bookPath;
     const collection = this.collection?.book.file.path === this.bookPath ? this.collection : null;
 
     const header = container.createEl("header", { cls: "mwc-continuity-review-header" });

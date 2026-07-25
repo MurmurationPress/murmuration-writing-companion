@@ -71,6 +71,8 @@ import {
 } from "./companion/ContinuityReviewEntryPoint";
 import { ContinuityDiagnosticPreference } from "./companion/ContinuityDiagnostics";
 import { ContinuitySettingsTab } from "./companion/ContinuitySettingsTab";
+import { ManuscriptIntegrityCoordinator } from "./manuscript/ManuscriptIntegrityCoordinator";
+import { classifyObsidianRename, isObsidianTrashPath } from "./ObsidianTrash";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -93,6 +95,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private manuscriptChronologyRefreshTimer: number | null = null;
   private storyWorldMetadataRefreshTimer: number | null = null;
   private readonly pendingStoryWorldMetadataPaths = new Set<string>();
+  private readonly pendingEditorialCreates = new Map<string, TFile>();
+  private manuscriptIntegrityCoordinator!: ManuscriptIntegrityCoordinator;
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
@@ -154,7 +158,35 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     await this.storeService.load();
 
+    this.manuscriptIntegrityCoordinator = new ManuscriptIntegrityCoordinator(
+      this.app,
+      this.manuscriptBookSelection,
+      {
+        activePath: () => this.getActiveChapter()?.path ?? null,
+        onSettled: ({ library, affectedPaths, affectedBookPaths, revealPath, clearReveal, missingSelectedBook }) => {
+          void this.settleEditorialCreates(library, affectedPaths);
+          if (this.currentChapter && !this.app.vault.getAbstractFileByPath(this.currentChapter.path)) {
+            this.currentChapter = this.getActiveChapter();
+          }
+          const dependencies = new Set<string>();
+          for (const bookPath of affectedBookPaths) {
+            const book = library.books.find((candidate) => candidate.file.path === bookPath);
+            if (!book) continue;
+            for (const path of buildObsidianManuscriptChronologyForBook(this.app, book).dependencies) dependencies.add(path);
+          }
+          if (affectedBookPaths.size > 0) this.manuscriptChronologyDependencies = dependencies;
+          if (clearReveal) this.clearManuscriptReveal(revealPath);
+          if (missingSelectedBook) new Notice("The selected manuscript Book is no longer available; manuscript scope was updated.");
+          this.refreshView();
+          this.refreshManuscriptNavigator();
+          this.recollectContinuityReview();
+          this.refreshContinuityReview();
+        }
+      }
+    );
+
     this.app.workspace.onLayoutReady(() => {
+      this.manuscriptIntegrityCoordinator.initialise();
       if (this.storyWorldIndex.rebuild()) {
         this.refreshView();
       }
@@ -244,6 +276,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
+        if (isObsidianTrashPath(file.path)) {
+          if (this.currentChapter && isObsidianTrashPath(this.currentChapter.path)) this.currentChapter = null;
+          this.refreshView();
+          this.refreshManuscriptNavigator();
+          return;
+        }
         if (this.currentChapter?.path === file.path) return;
 
         this.annotationLocator.clear();
@@ -255,6 +293,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
+        this.manuscriptIntegrityCoordinator.queue(file.path);
         const wasStoryWorld = this.storyWorldIndex.index.getByPath(file.path) !== null;
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
         const currentChapter = this.getCurrentChapter();
@@ -277,11 +316,16 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.registerEvent(
+      this.app.metadataCache.on("resolved", () => this.manuscriptIntegrityCoordinator.metadataResolved())
+    );
+
+    this.registerEvent(
       this.app.vault.on("create", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
 
         this.storyWorldIndex.handleCreate(file);
-        await this.storeService.handleCreate(file);
+        this.manuscriptIntegrityCoordinator.queue(file.path);
+        this.pendingEditorialCreates.set(file.path, file);
 
         // A new scene or part may not yet be in the active book's prior dependency set.
         this.refreshView();
@@ -293,6 +337,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.app.vault.on("delete", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
 
+        this.pendingEditorialCreates.delete(file.path);
+        this.manuscriptIntegrityCoordinator.queue(file.path);
         const worldChanged = this.storyWorldIndex.handleDelete(file);
         await this.storeService.handleDelete(file);
 
@@ -315,6 +361,36 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.app.vault.on("rename", async (file, oldPath) => {
         if (!(file instanceof TFile)) return;
 
+        const renameKind = classifyObsidianRename(oldPath, file.path);
+        if (renameKind === "trash-delete") {
+          this.manuscriptIntegrityCoordinator.queueUnmanagedMove(oldPath, file.path);
+          this.pendingEditorialCreates.delete(oldPath);
+          const worldChanged = this.storyWorldIndex.handleDeletePath(oldPath);
+          await this.storeService.handleDeletePath(oldPath);
+          if (this.currentChapter?.path === oldPath || this.currentChapter?.path === file.path) this.currentChapter = null;
+          if (worldChanged || this.manuscriptChronologyDependencies.has(oldPath)) this.refreshView();
+          this.refreshManuscriptNavigator();
+          return;
+        }
+        if (renameKind === "trash-restore") {
+          this.manuscriptIntegrityCoordinator.queueUnmanagedMove(oldPath, file.path);
+          this.storyWorldIndex.handleCreate(file);
+          this.pendingEditorialCreates.set(file.path, file);
+          this.refreshView();
+          this.refreshManuscriptNavigator();
+          return;
+        }
+        if (renameKind === "trash-internal") return;
+
+        this.manuscriptIntegrityCoordinator.queueRename(oldPath, file.path);
+        const selection = this.manuscriptBookSelection.get();
+        if (selection.bookPath === oldPath || selection.contextPath === oldPath) {
+          this.manuscriptBookSelection.replace(
+            selection.bookPath === oldPath ? file.path : selection.bookPath,
+            selection.contextPath === oldPath ? file.path : selection.contextPath,
+            "integrity-reconciliation"
+          );
+        }
         const worldChanged = this.storyWorldIndex.handleRename(file, oldPath);
         await this.storeService.handleRename(file, oldPath);
 
@@ -331,6 +407,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   onunload() {
+    this.manuscriptIntegrityCoordinator?.dispose();
     if (this.manuscriptChronologyRefreshTimer !== null) {
       window.clearTimeout(this.manuscriptChronologyRefreshTimer);
       this.manuscriptChronologyRefreshTimer = null;
@@ -345,7 +422,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   getActiveChapter(): TFile | null {
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    return view?.file ?? null;
+    const file = view?.file ?? null;
+    return file
+      && !isObsidianTrashPath(file.path)
+      && this.app.vault.getAbstractFileByPath(file.path) instanceof TFile
+      ? file
+      : null;
   }
 
   getCurrentChapter(): TFile | null {
@@ -654,6 +736,43 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       if (view instanceof ManuscriptNavigatorView) {
         view.render();
       }
+    }
+  }
+
+  refreshContinuityReview() {
+    // The full plugin entry point overrides this hook.
+  }
+
+  recollectContinuityReview() {
+    // The full plugin entry point overrides this hook.
+  }
+
+  private clearManuscriptReveal(fallbackPath: string | null) {
+    const leaves = this.app.workspace.getLeavesOfType(MANUSCRIPT_NAVIGATOR_VIEW_TYPE);
+    for (const leaf of leaves) {
+      const view = leaf.view;
+      if (view instanceof ManuscriptNavigatorView) view.reconcileReveal(fallbackPath);
+    }
+  }
+
+  private async settleEditorialCreates(
+    library: ReturnType<typeof buildObsidianManuscriptLibrary>,
+    affectedPaths: ReadonlySet<string>
+  ) {
+    const manuscriptPaths = new Set<string>(library.unresolved.map((entry) => entry.file.path));
+    for (const book of library.books) for (const path of book.filesByPath.keys()) manuscriptPaths.add(path);
+    for (const path of affectedPaths) {
+      const pending = this.pendingEditorialCreates.get(path);
+      if (!pending) continue;
+      this.pendingEditorialCreates.delete(path);
+      const current = this.app.vault.getAbstractFileByPath(path);
+      if (!(current instanceof TFile)) continue;
+      await this.storeService.handleCreate(current, {
+        // Presence is restored, but #149 must not write editorial projection
+        // properties into a manuscript note merely because it reappeared.
+        syncOpenAnnotationProperty: Boolean(this.app.metadataCache.getFileCache(current))
+          && !manuscriptPaths.has(path)
+      });
     }
   }
 
