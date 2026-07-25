@@ -99,3 +99,18 @@ Keep Obsidian's developer console open and watch for plugin errors.
 - The plugin did not create, restore, move, Trash or delete any file.
 - Editorial data was retained and reconnected; no purge or orphan cleanup ran.
 - Disposable test material was cleaned up manually after review.
+
+## Damaged-hierarchy compatibility (#97)
+
+Use disposable notes only:
+
+1. Temporarily point a disposable Scene's explicit parent at another disposable Scene.
+2. Confirm both Scenes remain visible at Book level, the invalid-parent diagnostic appears, and neither Scene row gains hidden children or a disclosure control.
+3. Confirm reconciliation offers only the Book or recognised Parts as replacement parents.
+4. Temporarily point a disposable Part at a Scene, then at another Part.
+5. Confirm the Part remains visible at Book level with a diagnostic and reconciliation offers only its Book as parent.
+6. Restore valid parent metadata and confirm ordinary Part containment, collapse and active-note reveal return unchanged.
+
+### Recorded result
+
+Passed in the disposable real vault on 25 July 2026. Scene-to-Scene, Part-to-Scene and Part-to-Part parent damage kept every affected note visible at Book level with `invalid_parent_kind` diagnostics. Scene rows remained childless and gained no disclosure state. Reconciliation offered only the Book or recognised Parts for Scenes and only the recognised Book for Parts. Restoring valid metadata returned ordinary Part containment, collapse and active-note reveal without plugin-driven structural writes.

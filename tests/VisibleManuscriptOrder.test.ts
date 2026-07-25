@@ -91,3 +91,44 @@ test("promotes a part whose parent is not the book", () => {
     true
   );
 });
+
+test("promotes a part whose parent is another part and leaves every Scene childless", () => {
+  const parentPart = record("Books/PLURALITY/ABSENCE.md", "ABSENCE", "part", bookPath);
+  const displacedPart = record(
+    "Books/PLURALITY/EXPERIMENT.md",
+    "EXPERIMENT",
+    "part",
+    parentPart.path
+  );
+  const directScene = record("Books/PLURALITY/First.md", "First", "scene", bookPath);
+  const displacedScene = record(
+    "Books/PLURALITY/Hidden.md",
+    "Hidden",
+    "scene",
+    directScene.path
+  );
+
+  const visible = visibleManuscriptOrder(
+    bookPath,
+    result([parentPart, displacedPart, directScene, displacedScene])
+  );
+
+  deepEqual(visible.roots.map((node) => node.entry.title), [
+    "ABSENCE",
+    "EXPERIMENT",
+    "First",
+    "Hidden"
+  ]);
+  equal(
+    visible.roots
+      .filter((node) => node.entry.kind === "scene")
+      .every((node) => node.children.length === 0),
+    true
+  );
+  equal(
+    visible.diagnostics.some((diagnostic) => (
+      diagnostic.kind === "invalid_parent_kind" && diagnostic.path === displacedPart.path
+    )),
+    true
+  );
+});

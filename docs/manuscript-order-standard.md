@@ -94,6 +94,14 @@ The contract reports structural problems without silently rewriting Markdown:
 
 A diagnostic does not create a second authority. It explains why the current Markdown cannot yet produce a fully trusted tree.
 
+### Navigator-safe structural projection
+
+The visible navigator projection preserves every recognised entry while enforcing structural kinds. A Part may appear only directly below its Book. A Scene may appear directly below its Book or a recognised Part. Any Part or Scene whose resolved parent has the wrong kind is promoted visibly to Book level and retains an `invalid_parent_kind` diagnostic until the author explicitly reconciles it.
+
+Scene rows are always leaves and never receive projected children or disclosure state. This prevents damaged or transient metadata from hiding recognised manuscript notes beneath a Scene. Valid Part children, Part collapse state and active-note reveal continue to use the ordinary navigator tree.
+
+Reconciliation offers only valid parent kinds: the Book for a Part, and the Book or a recognised Part for a Scene. It does not silently repair or rewrite invalid hierarchy.
+
 ## Legacy fallback and migration
 
 Before a book adopts `manuscript_order`, MWC may derive a temporary migration proposal from numeric filename prefixes.
