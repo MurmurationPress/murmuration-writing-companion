@@ -47,6 +47,13 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 - Open Story World Navigator
 - Open Story World Timeline
 - Annotate
+- Back up vault to GitHub (desktop only)
+
+## Vault backup
+
+On desktop, choose **Back up vault to GitHub** from the Command Palette or the `cloud-upload` ribbon action. The command expects an executable `Scripts/backup-vault.sh` inside the current vault and runs that vault-local script directly.
+
+The script remains the single source of truth for the repository, branch, commit and push behaviour. Writing Companion only locates and runs it, prevents overlapping plugin invocations, and reports its result. Any failure that requires pulling, merging, rebasing, resolving conflicts or other Git intervention must be handled manually; the plugin never performs those operations automatically.
 
 ## Manuscript navigation and ordering
 

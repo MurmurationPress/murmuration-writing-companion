@@ -4,6 +4,7 @@ import {
   MarkdownView,
   Menu,
   Notice,
+  Platform,
   Plugin,
   PluginManifest,
   TFile,
@@ -78,6 +79,7 @@ import {
   acceptObsidianManuscriptStoryDateOffer,
   getObsidianManuscriptStoryDateOffer
 } from "./manuscript/ObsidianManuscriptStoryDateOffer";
+import { VaultBackupResult, VaultBackupService } from "./backup/VaultBackupService";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -102,6 +104,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly pendingStoryWorldMetadataPaths = new Set<string>();
   private readonly pendingEditorialCreates = new Map<string, TFile>();
   private manuscriptIntegrityCoordinator!: ManuscriptIntegrityCoordinator;
+  private vaultBackupService: VaultBackupService | null = null;
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
@@ -220,6 +223,17 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.addRibbonIcon("list-tree", "Open Manuscript", () => {
       void this.activateManuscriptNavigator();
     });
+
+    if (Platform.isDesktopApp) {
+      this.vaultBackupService = new VaultBackupService(this.app.vault.adapter);
+      const backUpVault = () => void this.backUpVault();
+      this.addRibbonIcon("cloud-upload", "Back up vault to GitHub", backUpVault);
+      this.addCommand({
+        id: "back-up-vault-to-github",
+        name: "Back up vault to GitHub",
+        callback: backUpVault
+      });
+    }
 
     this.addCommand({
       id: "open-writing-companion",
@@ -409,6 +423,31 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         this.refreshManuscriptNavigator();
       })
     );
+  }
+
+  private async backUpVault(): Promise<void> {
+    if (!this.vaultBackupService) {
+      new Notice("Vault backup is available only in the Obsidian desktop app.");
+      return;
+    }
+
+    const progress = new Notice("Backing up vault to GitHub…", 0);
+    const result = await this.vaultBackupService.run();
+    progress.hide();
+    new Notice(this.vaultBackupNotice(result), result.kind === "failed" || result.kind === "remote_ahead" || result.kind === "diverged" ? 10000 : 5000);
+  }
+
+  private vaultBackupNotice(result: VaultBackupResult): string {
+    switch (result.kind) {
+      case "success": return result.detail ?? "Vault backup complete.";
+      case "no_changes": return "No vault changes to back up.";
+      case "busy": return "A vault backup is already running.";
+      case "unsupported": return "Vault backup requires a desktop filesystem vault.";
+      case "missing_script": return "Backup script not found at Scripts/backup-vault.sh.";
+      case "remote_ahead":
+      case "diverged":
+      case "failed": return `Backup failed: ${result.detail ?? "Check the script output and resolve the Git issue manually."}`;
+    }
   }
 
   onunload() {
