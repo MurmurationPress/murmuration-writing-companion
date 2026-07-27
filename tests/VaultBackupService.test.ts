@@ -1,4 +1,5 @@
-import { deepEqual, equal, match } from "node:assert/strict";
+import { deepEqual, equal } from "node:assert/strict";
+import * as path from "node:path";
 import { test } from "node:test";
 import {
   resolveVaultBackupScript,
@@ -6,7 +7,8 @@ import {
   VaultBackupService
 } from "../src/backup/VaultBackupService";
 
-const vaultPath = "/vaults/PRIME Trilogy";
+const vaultPath = path.resolve("vaults", "PRIME Trilogy");
+const scriptPath = path.join(vaultPath, "Scripts", "backup-vault.sh");
 const adapter = { getBasePath: () => vaultPath };
 const accessible = async () => {};
 
@@ -20,7 +22,7 @@ function service(execution: VaultBackupExecution) {
 test("resolves the backup script relative to the current vault", () => {
   deepEqual(resolveVaultBackupScript(adapter), {
     vaultPath,
-    scriptPath: "/vaults/PRIME Trilogy/Scripts/backup-vault.sh"
+    scriptPath
   });
 });
 
@@ -36,7 +38,7 @@ test("reports a missing vault-local script without executing it", async () => {
     execute: async () => { executions += 1; return { stdout: "", stderr: "", exitCode: 0 }; }
   }).run();
   equal(result.kind, "missing_script");
-  match(result.scriptPath ?? "", /Scripts\/backup-vault\.sh$/u);
+  equal(result.scriptPath, scriptPath);
   equal(executions, 0);
 });
 
@@ -51,7 +53,7 @@ test("captures successful script output and execution location", async () => {
   }).run();
   equal(result.kind, "success");
   equal(result.detail, "PRIME Trilogy vault backup complete.");
-  deepEqual(invocation, ["/vaults/PRIME Trilogy/Scripts/backup-vault.sh", vaultPath]);
+  deepEqual(invocation, [scriptPath, vaultPath]);
 });
 
 test("normalises no-change output", async () => {

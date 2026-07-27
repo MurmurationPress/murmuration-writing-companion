@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 export const VAULT_BACKUP_SCRIPT = "Scripts/backup-vault.sh";
 
 export interface VaultFileSystemAdapter {
@@ -39,7 +41,6 @@ export function resolveVaultBackupScript(
 ): { vaultPath: string; scriptPath: string } | null {
   if (!adapter || typeof (adapter as VaultFileSystemAdapter).getBasePath !== "function") return null;
   const vaultPath = (adapter as Required<VaultFileSystemAdapter>).getBasePath();
-  const path = require("node:path") as typeof import("node:path");
   if (!vaultPath || !path.isAbsolute(vaultPath)) return null;
   return { vaultPath, scriptPath: path.join(vaultPath, VAULT_BACKUP_SCRIPT) };
 }
