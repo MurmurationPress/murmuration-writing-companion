@@ -1,6 +1,6 @@
 import { deepEqual, equal, notEqual, ok } from "node:assert/strict";
 import { test } from "node:test";
-import { buildStoryWorldGraph, layoutStoryWorldGraph, storyWorldGraphValidity } from "../src/story-world/StoryWorldGraph";
+import { buildStoryWorldGraph, layoutStoryWorldGraph, STORY_WORLD_GRAPH_DENSITIES, storyWorldGraphNodeShape, storyWorldGraphStatusIsProvisional, storyWorldGraphValidity } from "../src/story-world/StoryWorldGraph";
 import { StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
 import { observeIncompleteEntityRelationships } from "../src/story-world/StoryWorldObservations";
 import { selectStoryWorldGraphNode, storyWorldGraphEdgeOpenPath, storyWorldGraphNodeOpenPath, StoryWorldGraphNavigation } from "../src/story-world/StoryWorldGraphNavigation";
@@ -38,6 +38,14 @@ test("builds a deterministic directed one-hop neighbourhood from relationship pr
   equal(first.edges.some((edge) => edge.from === `note:${a.path}` && edge.to === `note:${c.path}` && edge.label === "supports"), false);
   ok(first.availablePredicates.includes("custom_predicate"));
   equal(first.nodes.find((node) => node.path === a.path)?.entityType, "custom-person");
+});
+
+test("one hop retains focused centre edges instead of unrelated neighbour-to-neighbour assertions", () => {
+  const a = entity("World/A.md", { world_relationships: ["B", "C"].map((target) => ({ predicate: "knows", target: `[[World/${target}]]`, status: "confirmed" })) });
+  const b = entity("World/B.md", { world_relationships: [{ predicate: "knows", target: "[[World/C]]", status: "confirmed" }] });
+  const c = entity("World/C.md"); const graph = buildStoryWorldGraph({ selectedPath: a.path, entities: [a, b, c], resolve: resolver([a.path, b.path, c.path]) });
+  equal(graph.edges.length, 2);
+  equal(graph.edges.some((edge) => edge.from === `note:${b.path}` && edge.to === `note:${c.path}`), false);
 });
 
 test("projects explicit event participants and optional manuscript provenance", () => {
@@ -125,6 +133,29 @@ test("stable radial layout is local derived presentation state", () => {
   const b = entity("World/B.md"); const graph = buildStoryWorldGraph({ selectedPath: a.path, entities: [a, b], resolve: resolver([a.path, b.path]) });
   deepEqual([...layoutStoryWorldGraph(graph, 900, 560)], [...layoutStoryWorldGraph(graph, 900, 560)]);
   equal(layoutStoryWorldGraph(graph, 900, 560).get(`note:${a.path}`)?.x, 450);
+});
+
+test("all bounded density presets produce stable distinct layout", () => {
+  deepEqual(Object.keys(STORY_WORLD_GRAPH_DENSITIES), ["compact", "comfortable", "spacious"]);
+  const a = entity("World/A.md", { world_relationships: [{ predicate: "knows", target: "[[World/B]]", status: "confirmed" }] });
+  const b = entity("World/B.md"); const graph = buildStoryWorldGraph({ selectedPath: a.path, entities: [a, b], resolve: resolver([a.path, b.path]) });
+  const positions = (["compact", "comfortable", "spacious"] as const).map((density) => layoutStoryWorldGraph(graph, 900, 560, density).get(`note:${b.path}`));
+  ok(positions[0]!.y > positions[1]!.y && positions[1]!.y > positions[2]!.y);
+  deepEqual([...layoutStoryWorldGraph(graph, 900, 560, "spacious")], [...layoutStoryWorldGraph(graph, 900, 560, "spacious")]);
+});
+
+test("visual grammar separates type, status and centre emphasis", () => {
+  equal(storyWorldGraphNodeShape({ kind: "event", entityType: "event" }), "chevron");
+  equal(storyWorldGraphNodeShape({ kind: "entity", entityType: "location" }), "rectangle");
+  equal(storyWorldGraphStatusIsProvisional("confirmed"), false);
+  equal(storyWorldGraphStatusIsProvisional("planned"), true);
+  equal(storyWorldGraphStatusIsProvisional(null), false);
+});
+
+test("relationship labels omit redundant exact status while inspection retains it", () => {
+  const a = entity("World/A.md", { world_relationships: [{ predicate: "protects", target: "[[World/B]]", status: "confirmed" }] });
+  const b = entity("World/B.md"); const edge = buildStoryWorldGraph({ selectedPath: a.path, entities: [a, b], resolve: resolver([a.path, b.path]) }).edges[0];
+  equal(edge.label, "protects"); equal(edge.status, "confirmed"); equal(edge.label.includes("confirmed"), false);
 });
 
 test("entity and event activation recentre without invoking an opener, while a source Scene only selects detail", () => {

@@ -1,7 +1,7 @@
 import { ItemView, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { buildObsidianStoryWorldGraph } from "./ObsidianStoryWorldGraph";
-import { layoutStoryWorldGraph, StoryWorldGraphEdge, StoryWorldGraphNode } from "./StoryWorldGraph";
+import { layoutStoryWorldGraph, STORY_WORLD_GRAPH_DENSITIES, storyWorldGraphNodeShape, storyWorldGraphStatusIsProvisional, StoryWorldGraphDensity, StoryWorldGraphEdge, StoryWorldGraphNode } from "./StoryWorldGraph";
 import { selectStoryWorldGraphNode, storyWorldGraphEdgeOpenPath, storyWorldGraphNodeOpenPath, StoryWorldGraphNavigation } from "./StoryWorldGraphNavigation";
 
 export const STORY_WORLD_GRAPH_VIEW_TYPE = "murmuration-story-world-graph";
@@ -27,6 +27,7 @@ export class StoryWorldGraphView extends ItemView {
   private referenceDate = "";
   private scopeFilter: "all" | "book" | "unscoped" = "all";
   private includeProvenance = false;
+  private density: StoryWorldGraphDensity = "comfortable";
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldGraphHost) { super(leaf); }
   getViewType() { return STORY_WORLD_GRAPH_VIEW_TYPE; }
@@ -83,6 +84,10 @@ export class StoryWorldGraphView extends ItemView {
     heading.createEl("p", { cls: "mwc-muted", text: `Graph centre: ${centreLabel} · ${navigation.followsActiveNote ? "follows active note" : "manual graph navigation"}` });
     const controls = container.createDiv("mwc-story-world-graph-controls");
     const rerender = () => this.render();
+    const presentation = controls.createDiv("mwc-story-world-graph-presentation");
+    const density = presentation.createEl("select", { attr: { "aria-label": "Graph density" } });
+    for (const [value, label] of [["compact", "Compact"], ["comfortable", "Comfortable"], ["spacious", "Spacious"]] as const) density.createEl("option", { value, text: label });
+    density.value = this.density; density.onchange = () => { this.density = density.value as StoryWorldGraphDensity; rerender(); };
     const scope = controls.createEl("select", { attr: { "aria-label": "Filter graph by Story World scope" } });
     scope.createEl("option", { value: "all", text: "All explicit scope" }); scope.createEl("option", { value: "book", text: "Current Book" }); scope.createEl("option", { value: "unscoped", text: "Unscoped items" });
     scope.value = this.scopeFilter; scope.onchange = () => { this.scopeFilter = scope.value as "all" | "book" | "unscoped"; rerender(); };
@@ -138,8 +143,9 @@ export class StoryWorldGraphView extends ItemView {
   }
 
   private renderSvg(container: Element, detail: Element, nodes: readonly StoryWorldGraphNode[], edges: readonly StoryWorldGraphEdge[], graph: ReturnType<typeof buildObsidianStoryWorldGraph>): void {
-    const width = 900; const height = 560; const positions = layoutStoryWorldGraph(graph, width, height);
-    const image = svg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `One-hop Story World graph with ${nodes.length} nodes and ${edges.length} edges` });
+    const width = 900; const height = 560; const positions = layoutStoryWorldGraph(graph, width, height, this.density);
+    const labelOffset = STORY_WORLD_GRAPH_DENSITIES[this.density].labelOffset;
+    const image = svg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `One-hop Story World graph with ${nodes.length} nodes and ${edges.length} edges at ${this.density} density` });
     container.appendChild(image);
     const definitions = svg("defs");
     const marker = svg("marker", { id: "mwc-graph-arrow", viewBox: "0 0 10 10", refX: "8", refY: "5", markerWidth: "6", markerHeight: "6", orient: "auto-start-reverse" });
@@ -147,17 +153,23 @@ export class StoryWorldGraphView extends ItemView {
     const central = nodes.find((node) => node.central); if (central) this.showNodeDetail(detail, central);
     for (const edge of edges) {
       const from = positions.get(edge.from); const to = positions.get(edge.to); if (!from || !to) continue;
-      const group = svg("g", { class: `mwc-story-world-graph-edge is-${edge.kind}`, tabindex: "0", role: "button", "aria-label": `${edge.label}, ${edge.status ?? "no status"}, ${edge.validity}` });
+      const group = svg("g", { class: `mwc-story-world-graph-edge is-${edge.kind}${storyWorldGraphStatusIsProvisional(edge.status) ? " is-provisional" : ""}`, tabindex: "0", role: "button", "aria-label": `${edge.label}, ${edge.status ?? "no status"}, ${edge.validity}` });
       const line = svg("line", { x1: String(from.x), y1: String(from.y), x2: String(to.x), y2: String(to.y), "marker-end": "url(#mwc-graph-arrow)" }); group.appendChild(line);
-      const label = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 - 6), "text-anchor": "middle" }); label.textContent = edge.label; group.appendChild(label);
-      const metadata = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 + 9), "text-anchor": "middle", class: "mwc-story-world-graph-edge-metadata" });
-      metadata.textContent = [edge.status, edge.validityValue != null ? edge.validity : null].filter(Boolean).join(" · "); if (metadata.textContent) group.appendChild(metadata);
+      const label = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 - labelOffset), "text-anchor": "middle" }); label.textContent = edge.label; group.appendChild(label);
+      const metadata = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 + labelOffset + 3), "text-anchor": "middle", class: "mwc-story-world-graph-edge-metadata" });
+      metadata.textContent = edge.validityValue != null ? edge.validity : ""; if (metadata.textContent) group.appendChild(metadata);
       const show = () => this.showEdgeDetail(detail, edge); group.addEventListener("click", show); group.addEventListener("keydown", (event) => { if ((event as KeyboardEvent).key === "Enter" || (event as KeyboardEvent).key === " ") show(); }); image.appendChild(group);
     }
     for (const node of nodes) {
       const position = positions.get(node.id); if (!position) continue;
-      const group = svg("g", { class: `mwc-story-world-graph-node is-${node.kind}${node.central ? " is-central" : ""}`, tabindex: "0", role: "button", "aria-label": `${node.label}, ${node.entityType}${node.reviewFingerprints.length ? ", has review findings" : ""}` });
-      const shape = node.kind === "event" ? svg("rect", { x: String(position.x - 62), y: String(position.y - 25), width: "124", height: "50", rx: "8" }) : svg("ellipse", { cx: String(position.x), cy: String(position.y), rx: "66", ry: "28" }); group.appendChild(shape);
+      const group = svg("g", { class: `mwc-story-world-graph-node is-${node.kind}${node.central ? " is-central" : ""}${storyWorldGraphStatusIsProvisional(node.status) ? " is-provisional" : ""}`, tabindex: "0", role: "button", "aria-label": `${node.label}, ${node.entityType}${node.central ? ", centre" : ""}${node.reviewFingerprints.length ? ", has review findings" : ""}` });
+      const shapeKind = storyWorldGraphNodeShape(node);
+      const points = shapeKind === "chevron" ? `${position.x - 66},${position.y - 27} ${position.x + 44},${position.y - 27} ${position.x + 66},${position.y} ${position.x + 44},${position.y + 27} ${position.x - 66},${position.y + 27} ${position.x - 44},${position.y}`
+        : shapeKind === "diamond" ? `${position.x},${position.y - 34} ${position.x + 68},${position.y} ${position.x},${position.y + 34} ${position.x - 68},${position.y}`
+        : `${position.x - 52},${position.y - 28} ${position.x + 52},${position.y - 28} ${position.x + 68},${position.y} ${position.x + 52},${position.y + 28} ${position.x - 52},${position.y + 28} ${position.x - 68},${position.y}`;
+      const shape = shapeKind === "ellipse" ? svg("ellipse", { cx: String(position.x), cy: String(position.y), rx: "66", ry: "28" })
+        : shapeKind === "rectangle" ? svg("rect", { x: String(position.x - 64), y: String(position.y - 27), width: "128", height: "54", rx: "7" })
+        : svg("polygon", { points }); group.appendChild(shape);
       const label = svg("text", { x: String(position.x), y: String(position.y + 4), "text-anchor": "middle" }); label.textContent = node.label.length > 22 ? `${node.label.slice(0, 20)}…` : node.label; group.appendChild(label);
       const kind = svg("text", { x: String(position.x), y: String(position.y + 18), "text-anchor": "middle", class: "mwc-story-world-graph-node-kind" }); kind.textContent = node.entityType; group.appendChild(kind);
       if (node.central && node.manuscriptImpactCount !== null) { const impact = svg("text", { x: String(position.x), y: String(position.y + 48), "text-anchor": "middle", class: "mwc-story-world-graph-impact" }); impact.textContent = `${node.manuscriptImpactCount} manuscript impact`; group.appendChild(impact); }

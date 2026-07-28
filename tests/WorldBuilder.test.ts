@@ -22,12 +22,13 @@ test("includes only explicit entities and supporting models", () => {
 test("groups known types, unknown entities and models without changing type values", () => {
   const items = storyWorldBuilderItems([
     { path: "A.md", basename: "A", frontmatter: { world_entity: "character" } },
+    { path: "I.md", basename: "I", frontmatter: { world_entity: "intelligence" } },
     { path: "B.md", basename: "B", frontmatter: { world_entity: "weather-system" } },
     { path: "C.md", basename: "C", frontmatter: { world_model: "continuity" } }
   ]);
   const groups = groupStoryWorldBuilderItems(items);
   deepEqual(groups.map((group) => [group.label, group.items.map((item) => item.type)]), [
-    ["Characters", ["character"]],
+    ["Characters & intelligences", ["character", "intelligence"]],
     ["Other entities", ["weather-system"]],
     ["Supporting models", ["continuity"]]
   ]);

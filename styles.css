@@ -773,3 +773,8 @@
     grid-column: 2;
   }
 }
+.mwc-wikilink-unresolved {
+  color: var(--text-muted);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}

@@ -8,6 +8,7 @@ import {
   STORY_WORLD_ENTITY_KINDS,
   StoryWorldEntityKind
 } from "../story-world/StoryWorldEntityCreation";
+import { canonicalWikilink, presentWikilinkValue } from "../story-world/WikilinkPresentation";
 
 export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
   refreshStoryWorldNavigator(): void;
@@ -65,7 +66,15 @@ export class StoryWorldEntityCreationModal extends Modal {
     new Setting(this.contentEl)
       .setName("Scope")
       .setDesc("Optional explicit book or series wikilink; no scope is inferred.")
-      .addText((text) => text.setPlaceholder("[[PRIME Trilogy]]").onChange((value) => { this.scopeInput = value; this.renderPreview(); }));
+      .addText((text) => {
+        const listId = "mwc-story-world-scope-suggestions";
+        text.setPlaceholder("[[PRIME Trilogy]]").onChange((value) => { this.scopeInput = value; this.renderPreview(); });
+        text.inputEl.setAttr("list", listId);
+        const list = this.contentEl.createEl("datalist", { attr: { id: listId } });
+        for (const file of this.plugin.app.vault.getMarkdownFiles()) {
+          const option = list.createEl("option"); option.value = canonicalWikilink(file.path); option.label = file.basename;
+        }
+      });
 
     this.preview = this.contentEl.createDiv("mwc-story-world-create-preview");
     const actions = this.contentEl.createDiv("modal-button-container");
@@ -97,7 +106,8 @@ export class StoryWorldEntityCreationModal extends Modal {
       ?? findStoryWorldCreationCollision(result.plan, items);
     this.preview.createEl("h4", { text: "Creation preview" });
     const list = this.preview.createEl("dl");
-    for (const [label, value] of [["Name", result.plan.name], ["Kind", result.plan.entityType], ["Path", result.plan.path], ["Scope", result.plan.scope ?? "None"]]) {
+    const scopeLabel = result.plan.scope ? presentWikilinkValue(result.plan.scope)?.label ?? result.plan.scope : "None";
+    for (const [label, value] of [["Name", result.plan.name], ["Kind", result.plan.entityType], ["Path", result.plan.path], ["Scope", scopeLabel]]) {
       const row = list.createDiv("mwc-context-row");
       row.createEl("dt", { text: label });
       row.createEl("dd", { text: value });

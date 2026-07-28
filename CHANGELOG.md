@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Refine the focused one-hop Story World Graph with bounded density presets, type shapes, event chevrons and status line styles while retaining deterministic limits and navigate-first behaviour.
+- Share clean wikilink presentation and resolution across Chapter Context, POV, Entity Inspector impact and Scope, preserving scalar/list authored values while making only resolved targets accessible links.
+- Treat Intelligence as character-like in Story World navigation and separate POV capability through optional `pov_eligible`, with Characters eligible by default and malformed or unresolved POV references using existing continuity observations.
+- Accept ordinary, aliased, unresolved and legacy plain-text Scope values during Story World entity creation, with authoritative vault-note suggestions and wikilink-compatible writes.
 - Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
 - Handle unmanaged manuscript deletion, local-Trash restoration and startup reconciliation defensively while retaining editorial data and never rewriting surviving structure.
 - Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.

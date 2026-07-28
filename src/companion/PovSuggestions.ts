@@ -1,4 +1,5 @@
-import type { StoryWorldEntityRecord } from "../story-world/StoryWorldIndex";
+import { isPovEligible, type StoryWorldEntityRecord } from "../story-world/StoryWorldIndex";
+import { canonicalWikilink } from "../story-world/WikilinkPresentation";
 
 export interface PovSuggestion {
   readonly entity: StoryWorldEntityRecord;
@@ -22,20 +23,15 @@ function basenameWithoutExtension(path: string): string {
   return filename.replace(/\.md$/i, "");
 }
 
-function canonicalWikilink(entity: StoryWorldEntityRecord): string {
+function entityWikilink(entity: StoryWorldEntityRecord): string {
   const target = entity.path.replace(/\.md$/i, "");
   const basename = basenameWithoutExtension(entity.path);
 
   if (entity.name.trim().toLowerCase() === basename.trim().toLowerCase()) {
-    return `[[${target}]]`;
+    return canonicalWikilink(target);
   }
 
-  return `[[${target}|${entity.name}]]`;
-}
-
-function isCharacter(entity: StoryWorldEntityRecord): boolean {
-  return entity.entityType.trim().toLowerCase() === "character"
-    || entity.facets.some((facet) => facet.trim().toLowerCase() === "character");
+  return canonicalWikilink(target, entity.name);
 }
 
 function matchesScope(
@@ -58,7 +54,7 @@ export function buildPovSuggestions(
   scopeReferences: readonly string[] = []
 ): PovSuggestion[] {
   return entities
-    .filter(isCharacter)
+    .filter((entity) => isPovEligible(entity) || entity.facets.some((facet) => facet.trim().toLowerCase() === "character"))
     .map((entity) => {
       const matches = [entity.name, ...entity.aliases, entity.basename]
         .map((value) => value.trim())
@@ -71,7 +67,7 @@ export function buildPovSuggestions(
 
       return {
         entity,
-        value: canonicalWikilink(entity),
+        value: entityWikilink(entity),
         matches,
         scoped: matchesScope(entity, scopeReferences)
       };
@@ -98,7 +94,7 @@ export function resolvePovInput(
     suggestion.matches.some((candidate) => normalizeLookup(candidate) === normalized)
   ));
 
-  return matches.length === 1 ? matches[0].value : trimmed;
+  return matches.length === 1 ? matches[0].value : canonicalWikilink(trimmed);
 }
 
 export function collectPovSuggestionValues(
