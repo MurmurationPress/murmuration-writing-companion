@@ -12,6 +12,7 @@ import {
 } from "./ObsidianManuscriptPreparation";
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
 import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
+import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 
 export interface ManuscriptPreparationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
@@ -145,6 +146,23 @@ export function installManuscriptPreparationCommands(
     }
   };
 
+  const rebuildReportingSequence = async () => {
+    if (operationRunning) return;
+    operationRunning = true;
+    installActions();
+    try {
+      const library = buildObsidianManuscriptLibrary(host.app);
+      await new ManuscriptSequencePropertyService(host.app).reconcile(library);
+      new Notice("Manuscript reporting sequence rebuilt.");
+    } catch (error) {
+      console.error("Writing Companion could not rebuild manuscript reporting sequence", error);
+      new Notice("Could not rebuild the manuscript reporting sequence.", 10000);
+    } finally {
+      operationRunning = false;
+      refresh();
+    }
+  };
+
   host.addCommand({
     id: "prepare-existing-manuscript",
     name: "Prepare existing manuscript",
@@ -154,6 +172,11 @@ export function installManuscriptPreparationCommands(
     id: "undo-manuscript-preparation",
     name: "Undo manuscript preparation",
     callback: () => void undoPreparation()
+  });
+  host.addCommand({
+    id: "rebuild-manuscript-reporting-sequence",
+    name: "Rebuild manuscript reporting sequence",
+    callback: () => void rebuildReportingSequence()
   });
 
   host.registerEvent(

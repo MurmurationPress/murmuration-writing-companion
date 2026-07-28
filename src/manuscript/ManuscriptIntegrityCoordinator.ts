@@ -9,6 +9,7 @@ import {
   ManuscriptDeletionContext,
   reconcileManuscriptSelection
 } from "./ManuscriptIntegrity";
+import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 
 export interface ManuscriptIntegrityRefresh {
   readonly library: ObsidianManuscriptLibrary;
@@ -32,6 +33,7 @@ export class ManuscriptIntegrityCoordinator {
   private readonly generations = new ManuscriptEventGeneration();
   private readonly pendingPaths = new Set<string>();
   private readonly pendingRenamePaths = new Set<string>();
+  private readonly manuscriptSequenceProperties: ManuscriptSequencePropertyService;
   private pendingSelectionRevision = 0;
   private timer: number | null = null;
   private snapshot: LastKnownManuscriptSnapshot | null = null;
@@ -41,7 +43,9 @@ export class ManuscriptIntegrityCoordinator {
     private readonly app: App,
     private readonly selection: ManuscriptBookSelectionService,
     private readonly options: ManuscriptIntegrityCoordinatorOptions
-  ) {}
+  ) {
+    this.manuscriptSequenceProperties = new ManuscriptSequencePropertyService(app);
+  }
 
   initialise(): void {
     const library = buildObsidianManuscriptLibrary(this.app);
@@ -52,6 +56,7 @@ export class ManuscriptIntegrityCoordinator {
       true,
       new Set()
     );
+    void this.reconcileSequenceProperties(library);
   }
 
   queue(path: string): void {
@@ -85,6 +90,12 @@ export class ManuscriptIntegrityCoordinator {
   }
 
   getLastSettledSnapshot(): LastKnownManuscriptSnapshot | null { return this.snapshot; }
+
+  rebuildReportingSequence(): Promise<void> {
+    return this.manuscriptSequenceProperties.reconcile(
+      buildObsidianManuscriptLibrary(this.app)
+    );
+  }
 
   private schedule(generation: number, retry: number): void {
     if (this.timer !== null) window.clearTimeout(this.timer);
@@ -131,6 +142,7 @@ export class ManuscriptIntegrityCoordinator {
     this.reconcileAndPublish(library, affectedBooks, context, authorSelectionUnchanged, new Set(paths));
     this.pendingPaths.clear();
     this.pendingRenamePaths.clear();
+    void this.reconcileSequenceProperties(library);
   }
 
   private reconcileAndPublish(
@@ -167,6 +179,16 @@ export class ManuscriptIntegrityCoordinator {
       clearReveal: Boolean(context),
       missingSelectedBook: allowSelectionChange && decision.missingBook
     });
+  }
+
+  private async reconcileSequenceProperties(
+    library: ObsidianManuscriptLibrary
+  ): Promise<void> {
+    try {
+      await this.manuscriptSequenceProperties.reconcile(library);
+    } catch (error) {
+      console.error("Writing Companion could not reconcile manuscript reporting sequence", error);
+    }
   }
 }
 
