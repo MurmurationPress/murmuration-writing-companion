@@ -1,3 +1,8 @@
+import {
+  confirmManuscriptContainerRemoval,
+  executeManuscriptContainerRemoval
+} from "./ManuscriptContainerRemoval";
+
 export interface ManuscriptPartRemovalEntry {
   readonly path: string;
   readonly title: string;
@@ -93,10 +98,14 @@ export async function executeManuscriptPartRemoval(
   adapter: ManuscriptPartRemovalAdapter,
   preview: ManuscriptPartRemovalPlan
 ): Promise<void> {
-  const current = revalidateManuscriptPartRemoval(preview, await adapter.snapshot(preview.path, preview.bookPath));
-  if (current.errors.length > 0) throw new InvalidManuscriptPartRemovalError(current.errors);
-  await adapter.trashPart(current.path);
-  adapter.refreshNavigator();
+  await executeManuscriptContainerRemoval({
+    revalidate: async (candidate) => revalidateManuscriptPartRemoval(
+      candidate,
+      await adapter.snapshot(candidate.path, candidate.bookPath)
+    ),
+    trash: (path) => adapter.trashPart(path),
+    refreshNavigator: () => adapter.refreshNavigator()
+  }, preview, (errors) => new InvalidManuscriptPartRemovalError(errors));
 }
 
 export async function confirmManuscriptPartRemoval(
@@ -104,7 +113,8 @@ export async function confirmManuscriptPartRemoval(
   adapter: ManuscriptPartRemovalAdapter,
   preview: ManuscriptPartRemovalPlan
 ): Promise<boolean> {
-  if (!accepted) return false;
-  await executeManuscriptPartRemoval(adapter, preview);
-  return true;
+  return confirmManuscriptContainerRemoval(
+    accepted,
+    () => executeManuscriptPartRemoval(adapter, preview)
+  );
 }
