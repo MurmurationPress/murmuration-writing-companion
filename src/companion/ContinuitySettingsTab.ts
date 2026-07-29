@@ -1,5 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
+import { AboutMurmurationPressModal } from "../about/AboutMurmurationPressModal";
+import { ABOUT_SETTINGS_ENTRY } from "../about/AboutMurmurationPress";
 
 export class ContinuitySettingsTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: MurmurationWritingCompanionPlugin) {
@@ -18,5 +20,15 @@ export class ContinuitySettingsTab extends PluginSettingTab {
           this.plugin.continuityDiagnosticPreference.set(value);
           this.plugin.refreshView();
         }));
+    new Setting(this.containerEl)
+      .setName(ABOUT_SETTINGS_ENTRY.name)
+      .setDesc(ABOUT_SETTINGS_ENTRY.description)
+      .addButton((button) => {
+        button
+          .setButtonText(ABOUT_SETTINGS_ENTRY.buttonLabel)
+          .setTooltip(ABOUT_SETTINGS_ENTRY.accessibleLabel)
+          .onClick(() => new AboutMurmurationPressModal(this.plugin).open());
+        button.buttonEl.setAttribute("aria-label", ABOUT_SETTINGS_ENTRY.accessibleLabel);
+      });
   }
 }

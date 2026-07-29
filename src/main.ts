@@ -80,6 +80,8 @@ import {
   getObsidianManuscriptStoryDateOffer
 } from "./manuscript/ObsidianManuscriptStoryDateOffer";
 import { VaultBackupResult, VaultBackupService } from "./backup/VaultBackupService";
+import { installAboutCommand } from "./about/AboutMurmurationPress";
+import { AboutMurmurationPressModal } from "./about/AboutMurmurationPressModal";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -124,6 +126,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const enhancementStyles = installEditorialEnhancementStyles();
     this.register(() => enhancementStyles.remove());
     this.addSettingTab(new ContinuitySettingsTab(this.app, this));
+    installAboutCommand(this, () => new AboutMurmurationPressModal(this).open());
 
     const vaultName = this.app.vault.getName();
     let resourceRoot = vaultName;

@@ -42,12 +42,19 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 
 ## Commands
 
+- About Murmuration Writing Companion
 - Open Writing Companion
 - Open Manuscript
 - Open Story World Navigator
 - Open Story World Timeline
 - Annotate
 - Back up vault to GitHub (desktop only)
+
+## About and official links
+
+Use **About Murmuration Writing Companion** from the Command Palette or open **Settings → Murmuration Writing Companion → About Murmuration Writing Companion** to see the installed version and official project links. The concise About view identifies Writing Companion's authoring and editorial role without duplicating publishing-specific information owned by the companion Murmuration Press plugin.
+
+Murmuration Writing Companion is developed alongside the PRIME Trilogy. Purchasing the books supports continued development of the tools created to write and publish them. Visit the [Murmuration Press website](https://murmurationpress.co.uk/) or [purchase the PRIME Trilogy](https://murmurationpress.co.uk/purchase-prime-trilogy/).
 
 ## Vault backup
 
