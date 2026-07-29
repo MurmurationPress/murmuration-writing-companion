@@ -34,6 +34,8 @@ Annotations, chapter notes, pass state and continuity dispositions remain path-a
 
 The integrity coordinator calls no file or structural mutation API. It never creates, deletes, restores, moves or renames a file; never calls `processFrontMatter`; and never reparents, detaches, rekeys or compacts manuscript notes. `type: scene-draft` remains exclusive to the explicit #143 detachment workflow.
 
+The Manuscript Navigator's explicit **Remove Part** authoring action is outside that passive boundary but feeds the same event pipeline: after confirmation it calls Obsidian's normal trash API for the empty Part note only. It performs no frontmatter or order-key write, never deletes or reparents children, and refuses removal until every assigned Chapter or Scene has been moved or removed. The resulting deletion and any same-path restoration therefore retain the coordinator's existing editorial-data and reconciliation behaviour.
+
 ## FEVER real-vault verification
 
 Completed in the FEVER vault on 25 July 2026 using disposable Scene, Part and Book structures. All cases passed:

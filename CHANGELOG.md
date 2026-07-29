@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add a conservative **Remove Part** action to the Manuscript Navigator: only empty authoritative Parts may be moved to Obsidian trash after explicit confirmation, while contained Chapters or Scenes block removal without reparenting, rewriting or cascade deletion.
 - Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
 - Handle unmanaged manuscript deletion, local-Trash restoration and startup reconciliation defensively while retaining editorial data and never rewriting surviving structure.
 - Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.
