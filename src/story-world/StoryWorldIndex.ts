@@ -20,6 +20,13 @@ export interface StoryWorldEntityRecord {
   readonly properties: Readonly<Record<string, unknown>>;
 }
 
+export function isPovEligible(entity: StoryWorldEntityRecord): boolean {
+  const explicit = entity.properties.pov_eligible;
+  if (typeof explicit === "boolean") return explicit;
+  if (typeof explicit === "string" && /^(true|false)$/i.test(explicit.trim())) return explicit.trim().toLowerCase() === "true";
+  return entity.entityType.trim().toLowerCase() === "character";
+}
+
 export interface ParsedWikilink {
   linkpath: string;
   displayText: string | null;

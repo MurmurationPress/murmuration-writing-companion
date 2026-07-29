@@ -1,4 +1,4 @@
-import { MarkdownRenderer, TFile } from "obsidian";
+import { TFile } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-world/WorldBuilder";
 import { renderEntityRelationshipWorkspace } from "./EntityRelationshipWorkspace";
@@ -6,6 +6,7 @@ import { renderEventTimeWorkspace } from "./EventTimeWorkspace";
 import { inspectorPanelLabel } from "./PanelLabels";
 import { buildObsidianStoryWorldManuscriptImpact } from "../story-world/ObsidianStoryWorldManuscriptImpact";
 import { filterStoryWorldManuscriptImpact, ManuscriptImpactFilter } from "../story-world/StoryWorldManuscriptImpact";
+import { renderWikilinkValues } from "./WikilinkPresentation";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -33,7 +34,7 @@ function addValues(container: Element, heading: string, values: readonly string[
   const list = section.createDiv("mwc-story-world-inspector-values");
   for (const value of values) {
     const item = list.createDiv("mwc-story-world-inspector-value");
-    void MarkdownRenderer.render(plugin.app, value, item, file.path, plugin);
+    renderWikilinkValues(item, value, plugin.app, file.path, plugin);
   }
 }
 
@@ -74,8 +75,9 @@ function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCo
         const target = plugin.app.vault.getAbstractFileByPath(result.scene.path);
         if (target instanceof TFile) void plugin.app.workspace.getLeaf(false).openFile(target, { active: true });
       };
-      const metadata = [result.scene.pov ? `POV: ${result.scene.pov}` : null, result.scene.storyDate ? `Story date: ${String(result.scene.storyDate)}` : "Undated"].filter(Boolean).join(" · ");
-      row.createDiv({ cls: "mwc-muted mwc-manuscript-impact-metadata", text: metadata });
+      const metadata = row.createDiv({ cls: "mwc-muted mwc-manuscript-impact-metadata" });
+      if (result.scene.pov) { metadata.createSpan({ text: "POV: " }); renderWikilinkValues(metadata, result.scene.pov, plugin.app, result.scene.path, plugin); metadata.createSpan({ text: " · " }); }
+      metadata.createSpan({ text: result.scene.storyDate ? `Story date: ${String(result.scene.storyDate)}` : "Undated" });
       const badges = row.createDiv("mwc-manuscript-impact-evidence");
       for (const evidence of result.evidence) badges.createSpan({ cls: `mwc-manuscript-impact-badge is-${evidence.kind}`, text: evidence.label });
     }

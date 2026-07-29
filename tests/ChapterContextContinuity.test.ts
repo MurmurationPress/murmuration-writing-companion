@@ -60,6 +60,13 @@ test("reports a directly referenced event only when its interval is proven later
   ]);
 });
 
+test("surfaces malformed and unresolved POV through continuity observations", () => {
+  const malformed = evaluateChapterContextContinuity(input({ pov: "Tobias" }, []));
+  equal(malformed.some((item) => item.kind === "chapter-context.source-data.malformed" && item.evidence[0].source.property[0] === "pov"), true);
+  const unresolved = evaluateChapterContextContinuity(input({ pov: "[[Missing]]" }, []));
+  equal(unresolved.some((item) => item.kind === "chapter-context.reference.unresolved" && item.evidence[0].role === "pov_reference"), true);
+});
+
 test("accepts explicit point-shaped event time without an end boundary", () => {
   const article = entity("World/The Article.md", "event", {
     world_time: { shape: "point", from: "2029-04-19T09:00:00+01:00", precision: "hour" }

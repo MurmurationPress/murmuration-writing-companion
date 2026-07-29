@@ -79,8 +79,13 @@ Only `world_entity` is required.
 | `world_first_appearance` | wikilink string | First manuscript or published appearance |
 | `world_time` | ISO string or time mapping | Event or state time where relevant |
 | `world_relationships` | list of mappings | Simple entity-owned qualified assertions defined by the Supporting Model Conventions |
+| `pov_eligible` | boolean | Explicit capability to appear in manuscript POV selectors; Character defaults to eligible when omitted |
 
 Extra properties are permitted and preserved.
+
+### POV capability
+
+Entity type and narrative viewpoint capability are separate. `character` entities remain POV-eligible when `pov_eligible` is omitted, preserving existing vaults. Any entity type, including `intelligence`, may opt in with `pov_eligible: true`; a Character may explicitly opt out with `false`. New POV selections are stored as valid wikilinks. Malformed or unresolved authored POV targets remain in Markdown and are surfaced through the existing continuity observation model.
 
 ## Name resolution
 

@@ -26,14 +26,20 @@ function entity(overrides: Partial<StoryWorldEntityRecord>): StoryWorldEntityRec
   };
 }
 
-test("suggests characters and character facets but excludes unrelated entities", () => {
+test("suggests backward-compatible characters and explicitly eligible entities", () => {
   const suggestions = buildPovSuggestions([
     entity({}),
-    entity({ path: "Story World/PRIME.md", basename: "PRIME", entityType: "intelligence", name: "PRIME", aliases: [], facets: ["character"] }),
+    entity({ path: "Story World/PRIME.md", basename: "PRIME", entityType: "intelligence", name: "PRIME", aliases: [], properties: { pov_eligible: true } }),
+    entity({ path: "Story World/JANUS.md", basename: "JANUS", entityType: "intelligence", name: "JANUS", aliases: [], properties: {} }),
+    entity({ path: "Story World/Ship.md", basename: "Ship", entityType: "location", name: "Ship", aliases: [], properties: { pov_eligible: true } }),
     entity({ path: "Story World/Ware.md", basename: "Ware", entityType: "location", name: "Ware", aliases: [] })
   ]);
 
-  deepEqual(suggestions.map((item) => item.entity.name), ["PRIME", "Tobias Hale"]);
+  deepEqual(suggestions.map((item) => item.entity.name), ["PRIME", "Ship", "Tobias Hale"]);
+});
+
+test("explicit false overrides the Character compatibility default", () => {
+  deepEqual(buildPovSuggestions([entity({ properties: { pov_eligible: false } })]), []);
 });
 
 test("prefers characters scoped to the active book", () => {
@@ -51,7 +57,7 @@ test("turns an exact canonical name or alias into a canonical wikilink", () => {
   equal(resolvePovInput("Tobias", suggestions), "[[Story World/Tobias|Tobias Hale]]");
   equal(resolvePovInput("Tobias Hale", suggestions), "[[Story World/Tobias|Tobias Hale]]");
   equal(resolvePovInput("[[Tobias]]", suggestions), "[[Tobias]]");
-  equal(resolvePovInput("New Character", suggestions), "New Character");
+  equal(resolvePovInput("New Character", suggestions), "[[New Character]]");
 });
 
 test("provides canonical names and aliases for the native suggestion list", () => {

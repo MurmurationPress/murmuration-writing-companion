@@ -185,6 +185,19 @@ function parseContext(
   return occurrences;
 }
 
+function observePov(input: ChapterContextContinuityInput, observations: ContinuityObservation[]): void {
+  const property = findProperty(input.frontmatter, getChapterContextField("pov").aliases);
+  if (property.value === undefined || property.value === null || property.value === "") return;
+  const path = [property.property];
+  if (typeof property.value !== "string" || !parseWikilink(property.value)) {
+    observations.push(sourceObservation(input, input.chapter, path, property.value, "malformed_pov_reference", false, { field: "pov", value: rawEvidence(property.value) }));
+    return;
+  }
+  if (!input.resolveEntity(property.value, input.chapter.path)) {
+    observations.push(unresolvedObservation(input, input.chapter, path, property.value, "pov_reference", { field: "pov", reference: property.value }));
+  }
+}
+
 function temporalEvidence(
   role: string,
   note: ObservationNoteReference,
@@ -499,6 +512,7 @@ export function evaluateChapterContextContinuity(
   input: ChapterContextContinuityInput
 ): ContinuityObservation[] {
   const observations: ContinuityObservation[] = [];
+  observePov(input, observations);
   const occurrences = parseContext(input, observations);
   const storyDate = findProperty(input.frontmatter, getChapterContextField("story_date").aliases);
   const parsedStoryDate: TemporalParseResult = parseTemporalInterval(storyDate.value);

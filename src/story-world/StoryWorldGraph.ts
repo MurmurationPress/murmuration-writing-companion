@@ -6,6 +6,7 @@ import { StoryWorldEntityRecord } from "./StoryWorldIndex";
 export type StoryWorldGraphNodeKind = "entity" | "event" | "model" | "scene";
 export type StoryWorldGraphEdgeKind = "relationship" | "participation" | "provenance" | "supporting-model";
 export type StoryWorldGraphValidity = "active" | "future" | "expired" | "indeterminate" | "unfiltered";
+export type StoryWorldGraphDensity = "compact" | "comfortable" | "spacious";
 
 export interface StoryWorldGraphDocument {
   readonly path: string;
@@ -137,7 +138,7 @@ function sourceReviews(observations: readonly ContinuityObservation[], sourcePat
   )).map((observation) => observation.fingerprint).sort();
 }
 
-/** Builds a disposable, deterministic one-hop graph from explicit indexed metadata only. */
+/** Builds a disposable, deterministic bounded neighbourhood from explicit indexed metadata only. */
 export function buildStoryWorldGraph(options: StoryWorldGraphOptions): StoryWorldGraphProjection {
   const byPath = new Map(options.entities.map((entity) => [entity.path, entity]));
   const selected = byPath.get(options.selectedPath);
@@ -293,13 +294,35 @@ export function buildStoryWorldGraph(options: StoryWorldGraphOptions): StoryWorl
 
 export interface StoryWorldGraphPosition { readonly x: number; readonly y: number; }
 
+export type StoryWorldGraphNodeShape = "ellipse" | "rectangle" | "diamond" | "hexagon" | "chevron";
+
+export function storyWorldGraphNodeShape(node: Pick<StoryWorldGraphNode, "kind" | "entityType">): StoryWorldGraphNodeShape {
+  if (node.kind === "event" || node.entityType.trim().toLowerCase() === "event") return "chevron";
+  const type = node.entityType.trim().toLowerCase();
+  if (["location", "place"].includes(type)) return "rectangle";
+  if (["organisation", "organization", "institution"].includes(type)) return "diamond";
+  if (["concept", "technology", "system"].includes(type)) return "hexagon";
+  return "ellipse";
+}
+
+export function storyWorldGraphStatusIsProvisional(status: string | null): boolean {
+  return status != null && !["confirmed", "canon", "canonical", "complete"].includes(status.trim().toLowerCase());
+}
+
 /** Stable radial layout; positions are presentation output and never persisted as canon. */
-export function layoutStoryWorldGraph(graph: StoryWorldGraphProjection, width: number, height: number): ReadonlyMap<string, StoryWorldGraphPosition> {
+export const STORY_WORLD_GRAPH_DENSITIES: Readonly<Record<StoryWorldGraphDensity, { readonly radius: number; readonly labelOffset: number }>> = {
+  compact: { radius: 0.27, labelOffset: 5 },
+  comfortable: { radius: 0.34, labelOffset: 7 },
+  spacious: { radius: 0.41, labelOffset: 10 }
+};
+
+export function layoutStoryWorldGraph(graph: StoryWorldGraphProjection, width: number, height: number, density: StoryWorldGraphDensity = "comfortable"): ReadonlyMap<string, StoryWorldGraphPosition> {
   const positions = new Map<string, StoryWorldGraphPosition>();
   const centre = graph.nodes.find((node) => node.central); if (!centre) return positions;
   const x = width / 2; const y = height / 2; positions.set(centre.id, { x, y });
+  const preset = STORY_WORLD_GRAPH_DENSITIES[density];
   const neighbours = graph.nodes.filter((node) => !node.central).sort((a, b) => a.id.localeCompare(b.id));
-  const radius = Math.max(90, Math.min(width, height) * 0.34);
+  const radius = Math.max(90, Math.min(width, height) * preset.radius);
   neighbours.forEach((node, index) => {
     const angle = -Math.PI / 2 + (Math.PI * 2 * index / Math.max(1, neighbours.length));
     positions.set(node.id, { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius });

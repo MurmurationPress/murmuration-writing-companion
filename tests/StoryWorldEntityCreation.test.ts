@@ -21,6 +21,13 @@ test("plans minimal ordinary Markdown without inventing canon", () => {
   equal(plan.markdown.includes("world_summary"), false);
 });
 
+test("preserves aliased, unresolved and legacy plain-text scope values", () => {
+  const aliased = planStoryWorldEntityCreation({ kind: "character", name: "Ada", scope: "[[Books/One|Book One]]" });
+  match(aliased.markdown, /"\[\[Books\/One\|Book One\]\]"/);
+  equal(aliased.scope, "[[Books/One|Book One]]");
+  equal(planStoryWorldEntityCreation({ kind: "character", name: "Bea", scope: "Unresolved legacy scope" }).scope, "Unresolved legacy scope");
+});
+
 test("supports explicit custom entity kinds", () => {
   const plan = planStoryWorldEntityCreation({ kind: "other", customKind: "weather-system", name: "Storm Curve" });
   equal(plan.entityType, "weather-system");

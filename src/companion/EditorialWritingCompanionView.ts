@@ -27,6 +27,7 @@ import {
   PovSuggestion,
   resolvePovInput
 } from "./PovSuggestions";
+import { renderWikilinkValues } from "../ui/WikilinkPresentation";
 import {
   VIEW_TYPE,
   WritingCompanionView as BaseWritingCompanionView
@@ -418,7 +419,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const rendered = display.createDiv({ cls: "mwc-pov-value" });
 
       if (value.trim()) {
-        this.renderCompactMarkdownValue(rendered, value, file);
+        renderWikilinkValues(rendered, value, this.app, file.path, this.plugin);
       } else {
         rendered.createSpan({ cls: "mwc-pov-placeholder", text: placeholder });
       }

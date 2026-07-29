@@ -123,7 +123,7 @@ export function storyWorldBuilderItems(
 }
 
 const GROUPS: Array<{ key: string; label: string; types: readonly string[] }> = [
-  { key: "characters", label: "Characters", types: ["character"] },
+  { key: "characters", label: "Characters & intelligences", types: ["character", "intelligence"] },
   { key: "events", label: "Events", types: ["event"] },
   { key: "locations", label: "Locations", types: ["location", "place"] },
   { key: "organisations", label: "Organisations", types: ["organisation", "organization", "institution"] },
