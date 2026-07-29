@@ -1,5 +1,27 @@
 # Manuscript Order Standard
 
+## Display-name alignment
+
+For authoritative Book, Part, Chapter and Scene notes, the Markdown basename and
+authored `title` are two presentations of the same manuscript display name. The
+Manuscript Navigator reports a mismatch but never chooses an authority or writes
+either representation automatically.
+
+Comparison removes the `.md` extension from the filename, trims surrounding
+whitespace, and permits the legacy leading numeric filename prefix already
+omitted by the Navigator's fallback display title (for example, `12 Arrival.md`
+and `title: Arrival`). Capitalisation, punctuation and all other text compare
+exactly. Missing, blank or non-text titles are not repairable mismatches in this
+first implementation.
+
+The note action menu offers **Rename file from title** and **Update title from
+filename**. Both show the current and proposed values, require confirmation and
+revalidate authority and cached metadata before writing. Rename uses Obsidian's
+link-aware file manager, keeps the current folder and `.md` extension, and
+blocks unsafe or occupied destinations. Title update uses the normal
+frontmatter writer and changes only `title`. Neither action changes manuscript
+order, hierarchy, derived sequence, editorial data or prose.
+
 **Status:** Initial contract for #83  
 **Parent milestone:** #82 — Manuscript structure and scene order
 

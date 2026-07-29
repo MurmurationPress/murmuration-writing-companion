@@ -54,6 +54,14 @@ import { manuscriptPartRemovalActionVisible } from "./ManuscriptPartRemoval";
 import { ManuscriptBookRemovalModal } from "./ManuscriptBookRemovalModal";
 import { planObsidianManuscriptBookRemoval } from "./ObsidianManuscriptBookRemoval";
 import { manuscriptBookRemovalActionVisible } from "./ManuscriptBookRemoval";
+import {
+  detectManuscriptNameMismatch,
+  executeRenameFileFromTitle,
+  executeUpdateTitleFromFilename,
+  planRenameFileFromTitle,
+  planUpdateTitleFromFilename
+} from "./ManuscriptNameAlignment";
+import { ObsidianManuscriptNameAlignmentAdapter } from "./ObsidianManuscriptNameAlignment";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -173,6 +181,57 @@ function confirmOrderAdoption(app: App): Promise<boolean> {
   return new Promise((resolve) => {
     new ConfirmOrderAdoptionModal(app, resolve).open();
   });
+}
+
+class ConfirmNameAlignmentModal extends Modal {
+  private applying = false;
+
+  constructor(
+    app: App,
+    private readonly heading: string,
+    private readonly rows: readonly [string, string][],
+    private readonly confirmLabel: string,
+    private readonly apply: () => Promise<void>,
+    private readonly restoreFocus: () => void
+  ) { super(app); }
+
+  onOpen() {
+    this.titleEl.setText(this.heading);
+    this.contentEl.createEl("p", { text: "Only this manuscript note will be changed." });
+    const details = this.contentEl.createEl("dl", { cls: "mwc-manuscript-name-confirmation" });
+    for (const [label, value] of this.rows) {
+      const row = details.createDiv();
+      row.createEl("dt", { text: label });
+      row.createEl("dd", { text: value });
+    }
+    const actions = this.contentEl.createDiv("modal-button-container");
+    const cancel = actions.createEl("button", { text: "Cancel", attr: { type: "button" } });
+    const confirm = actions.createEl("button", { text: this.confirmLabel, cls: "mod-cta", attr: { type: "button" } });
+    cancel.onclick = () => { if (!this.applying) this.close(); };
+    confirm.onclick = async () => {
+      if (this.applying) return;
+      this.applying = true;
+      cancel.disabled = true;
+      confirm.disabled = true;
+      try {
+        await this.apply();
+        new Notice(`${this.heading} completed.`);
+        this.close();
+      } catch (error) {
+        new Notice(error instanceof Error ? error.message : "The manuscript name could not be updated.");
+        this.applying = false;
+        cancel.disabled = false;
+        confirm.disabled = false;
+        confirm.focus();
+      }
+    };
+    window.setTimeout(() => confirm.focus(), 0);
+  }
+
+  onClose() {
+    this.contentEl.empty();
+    window.setTimeout(this.restoreFocus, 0);
+  }
 }
 
 export class ManuscriptNavigatorView extends ItemView {
@@ -302,6 +361,8 @@ export class ManuscriptNavigatorView extends ItemView {
       });
     }
 
+    if (selected) this.renderNameMismatchIndicator(heading, selected.file.path);
+
     if (selected && manuscriptBookRemovalActionVisible(selected.record.kind, this.operationRunning)) {
       this.createBookActionsButton(heading, selected);
     }
@@ -408,6 +469,8 @@ export class ManuscriptNavigatorView extends ItemView {
       event.preventDefault();
       event.stopPropagation();
       const menu = new Menu();
+      const alignmentActions = this.addNameAlignmentMenuItems(menu, book.file.path, button);
+      if (alignmentActions > 0) menu.addSeparator();
       menu.addItem((item) => item
         .setTitle("Remove Book")
         .setIcon("trash-2")
@@ -575,6 +638,7 @@ export class ManuscriptNavigatorView extends ItemView {
       };
 
       const label = this.createOpenButton(row, node.entry, book, isActive);
+      this.renderNameMismatchIndicator(row, node.entry.path);
       this.createMoveMenuButton(row, node.entry, book);
       this.configureDrag(row, node.entry, book);
       this.renderMetadataTooltip(row, label, book, node.entry);
@@ -604,6 +668,7 @@ export class ManuscriptNavigatorView extends ItemView {
         : "mwc-manuscript-row"
     );
     const label = this.createOpenButton(row, node.entry, book, isActive);
+    this.renderNameMismatchIndicator(row, node.entry.path);
     this.createMoveMenuButton(row, node.entry, book);
     this.configureDrag(row, node.entry, book);
     this.renderMetadataTooltip(row, label, book, node.entry);
@@ -679,7 +744,8 @@ export class ManuscriptNavigatorView extends ItemView {
     book: ObsidianManuscriptBook
   ) {
     const menu = new Menu();
-    let actionCount = 0;
+    let actionCount = this.addNameAlignmentMenuItems(menu, entry.path, anchor);
+    if (actionCount > 0) menu.addSeparator();
     const addMove = (title: string, request: ReturnType<typeof siblingMoveRequest>) => {
       if (!request) return;
       actionCount += 1;
@@ -791,6 +857,67 @@ export class ManuscriptNavigatorView extends ItemView {
 
     const rect = anchor.getBoundingClientRect();
     menu.showAtPosition({ x: rect.right, y: rect.bottom });
+  }
+
+  private nameAlignmentAdapter() {
+    return new ObsidianManuscriptNameAlignmentAdapter(this.plugin);
+  }
+
+  private renderNameMismatchIndicator(container: HTMLElement, path: string) {
+    const mismatch = detectManuscriptNameMismatch(this.nameAlignmentAdapter().snapshot(path));
+    if (!mismatch) return;
+    container.createSpan({
+      cls: "mwc-manuscript-name-mismatch",
+      text: "≠",
+      attr: {
+        role: "img",
+        title: `Filename: ${mismatch.filename}\nTitle: ${mismatch.title}`,
+        "aria-label": `Filename and title differ. Filename: ${mismatch.filename}. Title: ${mismatch.title}.`
+      }
+    });
+  }
+
+  private addNameAlignmentMenuItems(menu: Menu, path: string, anchor: HTMLElement): number {
+    const adapter = this.nameAlignmentAdapter();
+    const mismatch = detectManuscriptNameMismatch(adapter.snapshot(path));
+    if (!mismatch || this.operationRunning) return 0;
+    menu.addItem((item) => item
+      .setTitle("Rename file from title")
+      .setIcon("file-pen-line")
+      .onClick(() => this.confirmRenameFileFromTitle(path, anchor)));
+    menu.addItem((item) => item
+      .setTitle("Update title from filename")
+      .setIcon("text-cursor-input")
+      .onClick(() => this.confirmUpdateTitleFromFilename(path, anchor)));
+    return 2;
+  }
+
+  private confirmRenameFileFromTitle(path: string, anchor: HTMLElement) {
+    const adapter = this.nameAlignmentAdapter();
+    const plan = planRenameFileFromTitle(adapter.snapshot(path), (target) => adapter.targetExists(target));
+    if (plan.errors.length) { new Notice(plan.errors.join(" ")); return; }
+    new ConfirmNameAlignmentModal(
+      this.app,
+      "Rename file from title",
+      [["Current filename", plan.currentFilename], ["Proposed filename", plan.proposedFilename]],
+      "Rename file",
+      () => executeRenameFileFromTitle(adapter, plan),
+      () => anchor.isConnected && anchor.focus()
+    ).open();
+  }
+
+  private confirmUpdateTitleFromFilename(path: string, anchor: HTMLElement) {
+    const adapter = this.nameAlignmentAdapter();
+    const plan = planUpdateTitleFromFilename(adapter.snapshot(path));
+    if (plan.errors.length) { new Notice(plan.errors.join(" ")); return; }
+    new ConfirmNameAlignmentModal(
+      this.app,
+      "Update title from filename",
+      [["Current title", plan.oldTitle], ["Proposed title", plan.proposedTitle]],
+      "Update title",
+      () => executeUpdateTitleFromFilename(adapter, plan),
+      () => anchor.isConnected && anchor.focus()
+    ).open();
   }
 
   private configureDrag(
@@ -957,8 +1084,9 @@ export class ManuscriptNavigatorView extends ItemView {
     entry: ManuscriptDocumentRecord
   ) {
     const metadata = book.metadataByPath.get(entry.path);
-    if (!metadata) return;
-    const rows = metadataRows(metadata);
+    const rows = metadata ? metadataRows(metadata) : [];
+    const mismatch = detectManuscriptNameMismatch(this.nameAlignmentAdapter().snapshot(entry.path));
+    if (mismatch) rows.unshift(["Filename", mismatch.filename], ["Title", mismatch.title]);
     if (rows.length === 0) return;
 
     const id = `mwc-manuscript-tooltip-${++nextTooltipId}`;
