@@ -51,6 +51,9 @@ import { ManuscriptSceneDetachmentModal } from "./ManuscriptSceneDetachmentModal
 import { ManuscriptPartRemovalModal } from "./ManuscriptPartRemovalModal";
 import { planObsidianManuscriptPartRemoval } from "./ObsidianManuscriptPartRemoval";
 import { manuscriptPartRemovalActionVisible } from "./ManuscriptPartRemoval";
+import { ManuscriptBookRemovalModal } from "./ManuscriptBookRemovalModal";
+import { planObsidianManuscriptBookRemoval } from "./ObsidianManuscriptBookRemoval";
+import { manuscriptBookRemovalActionVisible } from "./ManuscriptBookRemoval";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -299,6 +302,10 @@ export class ManuscriptNavigatorView extends ItemView {
       });
     }
 
+    if (selected && manuscriptBookRemovalActionVisible(selected.record.kind, this.operationRunning)) {
+      this.createBookActionsButton(heading, selected);
+    }
+
     if (!selected) return;
     const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(selected.file.path);
     const reviewActions = container.createDiv("mwc-manuscript-review-actions");
@@ -388,6 +395,33 @@ export class ManuscriptNavigatorView extends ItemView {
         activeRow.scrollIntoView({ block: "nearest" });
       }, 0);
     }
+  }
+
+  private createBookActionsButton(heading: HTMLElement, book: ObsidianManuscriptBook): void {
+    const button = heading.createEl("button", {
+      cls: "mwc-manuscript-book-actions",
+      text: "⋮",
+      attr: { type: "button", "aria-label": `Actions for ${book.record.title}` }
+    });
+    plainButton(button);
+    button.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const menu = new Menu();
+      menu.addItem((item) => item
+        .setTitle("Remove Book")
+        .setIcon("trash-2")
+        .onClick(() => {
+          const plan = planObsidianManuscriptBookRemoval(this.plugin, book.file.path);
+          if (plan.errors.length > 0) {
+            new Notice(plan.errors.join(" "));
+            return;
+          }
+          new ManuscriptBookRemovalModal(this.plugin, plan).open();
+        }));
+      const rect = button.getBoundingClientRect();
+      menu.showAtPosition({ x: rect.right, y: rect.bottom });
+    };
   }
 
   private renderUnresolved(container: HTMLElement, library: ReturnType<typeof buildObsidianManuscriptLibrary>) {
