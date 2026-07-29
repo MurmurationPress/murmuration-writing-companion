@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add a lightweight **About Murmuration Writing Companion** command and settings entry with authoritative version information, project context and stable Murmuration Press, PRIME Trilogy, documentation, GitHub and licence links.
 - Add a conservative **Remove Book** action to the Manuscript Navigator: only empty authoritative Books may be moved to Obsidian trash after explicit confirmation, while assigned Parts, Chapters or Scenes block removal without structural writes or cascade deletion.
 - Add a conservative **Remove Part** action to the Manuscript Navigator: only empty authoritative Parts may be moved to Obsidian trash after explicit confirmation, while contained Chapters or Scenes block removal without reparenting, rewriting or cascade deletion.
 - Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
