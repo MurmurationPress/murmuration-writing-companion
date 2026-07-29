@@ -48,6 +48,9 @@ import { ManuscriptSceneCreationModal } from "./ManuscriptSceneCreationModal";
 import { defaultManuscriptSceneParent, manuscriptSceneCreationAvailability } from "./ManuscriptSceneCreation";
 import { snapshotManuscriptSceneCreation } from "./ObsidianManuscriptSceneCreation";
 import { ManuscriptSceneDetachmentModal } from "./ManuscriptSceneDetachmentModal";
+import { ManuscriptPartRemovalModal } from "./ManuscriptPartRemovalModal";
+import { planObsidianManuscriptPartRemoval } from "./ObsidianManuscriptPartRemoval";
+import { manuscriptPartRemovalActionVisible } from "./ManuscriptPartRemoval";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
   "murmuration-manuscript-navigator-view";
@@ -730,6 +733,22 @@ export class ManuscriptNavigatorView extends ItemView {
             }
           ).open()));
       }
+    }
+
+    if (manuscriptPartRemovalActionVisible(entry.kind, this.operationRunning)) {
+      actionCount += 1;
+      menu.addSeparator();
+      menu.addItem((item) => item
+        .setTitle("Remove Part")
+        .setIcon("trash-2")
+        .onClick(() => {
+          const plan = planObsidianManuscriptPartRemoval(this.plugin, entry.path, book.file.path);
+          if (plan.errors.length > 0) {
+            new Notice(plan.errors.join(" "));
+            return;
+          }
+          new ManuscriptPartRemovalModal(this.plugin, plan).open();
+        }));
     }
 
     if (actionCount === 0) {
