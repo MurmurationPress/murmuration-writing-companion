@@ -72,6 +72,17 @@ test("includes explicit supporting models but does not infer model edges", () =>
   equal(graph.nodes.some((node) => node.path === "Models/Unrelated.md"), false);
 });
 
+test("includes a Reference as a generic node without inferring identifier or URL edges", () => {
+  const reference = entity("References/Source.md", {
+    world_entity: "reference", reference_doi: "10.xxxx/example", reference_isbn: "9780000000000",
+    link: "https://example.org/source"
+  }, { entityType: "reference", name: "Source" });
+  const graph = buildStoryWorldGraph({ selectedPath: reference.path, entities: [reference], resolve: resolver([reference.path]) });
+  equal(graph.nodes.length, 1);
+  equal(graph.nodes[0].entityType, "reference");
+  equal(graph.edges.length, 0);
+});
+
 test("filters predicate, status, node type and explicit Book scope without mutation", () => {
   const a = entity("World/A.md", { world_relationships: [
     { predicate: "knows", target: "[[World/B]]", status: "confirmed" },

@@ -1,4 +1,5 @@
 import type { StoryWorldEntityRecord } from "./StoryWorldIndex";
+import { projectStoryWorldReference } from "./StoryWorldReference";
 
 export type StoryWorldBuilderKind = "entity" | "model";
 
@@ -128,7 +129,8 @@ const GROUPS: Array<{ key: string; label: string; types: readonly string[] }> = 
   { key: "locations", label: "Locations", types: ["location", "place"] },
   { key: "organisations", label: "Organisations", types: ["organisation", "organization", "institution"] },
   { key: "technologies", label: "Technologies", types: ["technology", "system"] },
-  { key: "concepts", label: "Concepts", types: ["concept"] }
+  { key: "concepts", label: "Concepts", types: ["concept"] },
+  { key: "references", label: "References", types: ["reference"] }
 ];
 
 export function filterStoryWorldBuilderItems(
@@ -137,8 +139,14 @@ export function filterStoryWorldBuilderItems(
 ): StoryWorldBuilderItem[] {
   const normalized = query.trim().toLowerCase();
   const filtered = normalized
-    ? items.filter((item) => [item.name, item.basename, ...item.aliases]
-      .some((value) => value.toLowerCase().includes(normalized)))
+    ? items.filter((item) => {
+      const reference = item.kind === "entity" && item.type.trim().toLowerCase() === "reference"
+        ? projectStoryWorldReference(item.properties) : null;
+      return [item.name, item.basename, ...item.aliases, reference?.title, reference?.journal,
+        ...(reference?.authors ?? []), reference?.key, reference?.link]
+        .filter((value): value is string => typeof value === "string")
+        .some((value) => value.toLowerCase().includes(normalized));
+    })
     : [...items];
   return filtered.sort(compareStoryWorldBuilderItems);
 }

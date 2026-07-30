@@ -7,6 +7,7 @@ import { inspectorPanelLabel } from "./PanelLabels";
 import { buildObsidianStoryWorldManuscriptImpact } from "../story-world/ObsidianStoryWorldManuscriptImpact";
 import { filterStoryWorldManuscriptImpact, ManuscriptImpactFilter } from "../story-world/StoryWorldManuscriptImpact";
 import { renderWikilinkValues } from "./WikilinkPresentation";
+import { projectStoryWorldReference, safeReferenceExternalUrl } from "../story-world/StoryWorldReference";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -36,6 +37,37 @@ function addValues(container: Element, heading: string, values: readonly string[
     const item = list.createDiv("mwc-story-world-inspector-value");
     renderWikilinkValues(item, value, plugin.app, file.path, plugin);
   }
+}
+
+function addExternalLink(container: Element, heading: string, value: string | null): void {
+  if (!value) return;
+  const section = container.createDiv("mwc-story-world-inspector-section");
+  section.createEl("h3", { text: heading });
+  const safeUrl = safeReferenceExternalUrl(value);
+  if (!safeUrl) { section.createEl("p", { cls: "mwc-story-world-inspector-prose", text: value }); return; }
+  const link = section.createEl("a", { cls: "external-link", text: value });
+  link.setAttr("href", safeUrl);
+  link.setAttr("target", "_blank");
+  link.setAttr("rel", "noopener noreferrer");
+}
+
+function renderReference(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, item: StoryWorldBuilderItem): void {
+  const reference = projectStoryWorldReference(item.properties);
+  addValues(container, "Title", reference.title ? [reference.title] : [], plugin, file);
+  addValues(container, "Authors", reference.authors, plugin, file);
+  addValues(container, "Journal", reference.journal ? [reference.journal] : [], plugin, file);
+  addValues(container, "Published in", reference.container ? [reference.container] : [], plugin, file);
+  addValues(container, "Publisher", reference.publisher ? [reference.publisher] : [], plugin, file);
+  addText(container, "Publication date", reference.date);
+  addText(container, "Volume", reference.volume);
+  addText(container, "Issue", reference.issue);
+  addText(container, "Pages", reference.pages);
+  addText(container, "DOI", reference.doi);
+  addText(container, "ISBN", reference.isbn);
+  addExternalLink(container, "Link", reference.link);
+  addText(container, "Accessed", reference.accessed);
+  addText(container, "Reference key", reference.key);
+  addText(container, "Category", reference.category);
 }
 
 function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
@@ -106,6 +138,8 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
 
   addText(container, "Summary", item.summary);
   addText(container, "Status note", typeof item.properties.world_status_note === "string" ? item.properties.world_status_note : null);
+  const isReference = item.kind === "entity" && item.type.trim().toLowerCase() === "reference";
+  if (isReference) renderReference(container, plugin, file, item);
   if (item.kind === "entity" && item.type.trim().toLowerCase() === "event") renderEventTimeWorkspace(container, plugin, file, item.worldTime);
   else addText(container, "World time", formatTime(item.worldTime));
   addValues(container, "Aliases", item.aliases, plugin, file);

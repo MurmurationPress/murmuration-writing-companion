@@ -9,6 +9,7 @@ import { parseTemporalInterval } from "../observations/TemporalInterval";
 import { isRecord, projectEntityRelationships, relationshipProperty } from "./EntityRelationships";
 import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { observeIncompleteEntityRelationships } from "./StoryWorldObservations";
+import { safeReferenceExternalUrl } from "./StoryWorldReference";
 
 export interface StoryWorldReviewDocument {
   readonly path: string;
@@ -161,7 +162,7 @@ function relationshipObservations(entity: StoryWorldEntityRecord, resolve: Story
   return output;
 }
 
-function referenceObservations(entity: StoryWorldEntityRecord, resolve: StoryWorldReferenceResolver): ContinuityObservation[] {
+function linkedPropertyObservations(entity: StoryWorldEntityRecord, resolve: StoryWorldReferenceResolver): ContinuityObservation[] {
   const output: ContinuityObservation[] = [];
   const inspect = (property: string, role: string, rawValues: readonly unknown[], requireIndexed: boolean) => rawValues.forEach((raw, index) => {
     if (typeof raw !== "string") {
@@ -196,6 +197,90 @@ function referenceObservations(entity: StoryWorldEntityRecord, resolve: StoryWor
   inspect("world_scope", "scope", values(entity.properties.world_scope), false);
   if (entity.entityType.trim().toLowerCase() === "event") {
     inspect("world_participants", "event_participant", values(entity.properties.world_participants ?? entity.properties.participants), true);
+  }
+  return output;
+}
+
+const REFERENCE_SCALARS = [
+  "reference_title", "reference_journal", "reference_container", "reference_publisher", "reference_date", "reference_volume",
+  "reference_issue", "reference_pages", "reference_doi", "reference_isbn", "link",
+  "reference_accessed", "reference_key", "reference_category"
+] as const;
+
+function malformedReferenceValue(entity: StoryWorldEntityRecord, property: string, raw: unknown, propertyPath: readonly (string | number)[] = [property]): ContinuityObservation {
+  return buildContinuityObservation({
+    kind: "story-world.reference.malformed-property", severity: "review", classification: "malformed_evidence",
+    primary: entityNote(entity), evidence: [valueEvidence(entity, "reference_metadata", propertyPath, raw)],
+    summary: "Malformed Reference metadata",
+    explanation: `${property} has an unsupported structure. Reference metadata is preserved, but this value cannot be projected safely.`,
+    rule: rule("reference-malformed-property"),
+    logicalOccurrence: { path: entity.path, property, raw: normalizeObservationValue(raw) }
+  });
+}
+
+function bibliographicReferenceObservations(entities: readonly StoryWorldEntityRecord[]): ContinuityObservation[] {
+  const output: ContinuityObservation[] = [];
+  const keys = new Map<string, StoryWorldEntityRecord[]>();
+  for (const entity of entities.filter((item) => item.entityType.trim().toLowerCase() === "reference")) {
+    const authors = entity.properties.reference_authors;
+    if (Object.prototype.hasOwnProperty.call(entity.properties, "reference_authors")) {
+      if (!Array.isArray(authors)) output.push(malformedReferenceValue(entity, "reference_authors", authors));
+      else authors.forEach((author, index) => {
+        if (typeof author !== "string" || !author.trim()) output.push(malformedReferenceValue(entity, "reference_authors", author, ["reference_authors", index]));
+      });
+    }
+    for (const property of REFERENCE_SCALARS) {
+      if (!Object.prototype.hasOwnProperty.call(entity.properties, property)) continue;
+      const raw = entity.properties[property];
+      const permitsNumber = ["reference_date", "reference_volume", "reference_issue", "reference_pages"].includes(property);
+      if ((typeof raw !== "string" || !raw.trim()) && !(permitsNumber && typeof raw === "number" && Number.isFinite(raw))) {
+        output.push(malformedReferenceValue(entity, property, raw));
+      } else if (property === "link" && typeof raw === "string" && !safeReferenceExternalUrl(raw.trim())) {
+        output.push(malformedReferenceValue(entity, property, raw));
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(entity.properties, "reference_url")) {
+      const legacy = entity.properties.reference_url;
+      if (typeof legacy !== "string" || !legacy.trim() || !safeReferenceExternalUrl(legacy.trim())) {
+        output.push(malformedReferenceValue(entity, "reference_url", legacy));
+      }
+    }
+    const canonicalLink = text(entity.properties.link);
+    const legacyUrl = text(entity.properties.reference_url);
+    if (canonicalLink && legacyUrl) {
+      const conflict = canonicalLink !== legacyUrl;
+      output.push(buildContinuityObservation({
+        kind: "story-world.reference.legacy-link-duplicate", severity: "review", classification: "review_concern",
+        primary: entityNote(entity),
+        evidence: [
+          valueEvidence(entity, "canonical_link", ["link"], entity.properties.link),
+          valueEvidence(entity, "legacy_reference_url", ["reference_url"], entity.properties.reference_url)
+        ],
+        summary: conflict ? "Conflicting canonical and legacy Reference links" : "Duplicate canonical and legacy Reference links",
+        explanation: conflict
+          ? "Both link and legacy reference_url are present with different values. The inspector presents canonical link; review the Markdown without automatic rewriting."
+          : "Both link and legacy reference_url are present. Canonical link is used; the legacy property remains untouched for author review.",
+        rule: rule("reference-legacy-link-duplicate"),
+        logicalOccurrence: { path: entity.path, canonicalLink, legacyUrl }
+      }));
+    }
+    const key = text(entity.properties.reference_key);
+    if (key) {
+      const normalized = key.normalize("NFC").toLocaleLowerCase("en");
+      keys.set(normalized, [...(keys.get(normalized) ?? []), entity]);
+    }
+  }
+  for (const [key, matches] of keys) {
+    if (matches.length < 2) continue;
+    const ordered = [...matches].sort((a, b) => a.path.localeCompare(b.path));
+    output.push(buildContinuityObservation({
+      kind: "story-world.reference.duplicate-key", severity: "review", classification: "review_concern",
+      primary: entityNote(ordered[0]),
+      evidence: ordered.map((entity) => valueEvidence(entity, "reference_key", ["reference_key"], entity.properties.reference_key)),
+      summary: "Duplicate Reference key",
+      explanation: `Multiple Reference notes use the non-empty key “${key}”. Keys are author-controlled and were not changed automatically.`,
+      rule: rule("reference-duplicate-key"), logicalOccurrence: { key, paths: ordered.map((entity) => entity.path) }
+    }));
   }
   return output;
 }
@@ -238,7 +323,8 @@ export function buildStoryWorldReview(
   const observations = [
     ...classificationObservations(documents),
     ...collisionObservations(entities),
-    ...entities.flatMap((entity) => [...relationshipObservations(entity, resolve), ...referenceObservations(entity, resolve), ...eventObservations(entity)]),
+    ...bibliographicReferenceObservations(entities),
+    ...entities.flatMap((entity) => [...relationshipObservations(entity, resolve), ...linkedPropertyObservations(entity, resolve), ...eventObservations(entity)]),
     ...additional
   ];
   const unique = new Map(observations.map((observation) => [observation.fingerprint, observation]));

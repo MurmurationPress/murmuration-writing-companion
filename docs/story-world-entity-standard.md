@@ -226,6 +226,76 @@ Consumers of this standard must:
 
 A missing or empty `world_entity` means the note is not opted into this standard.
 
+## Reference entities
+
+A Reference is an ordinary Story World entity whose Markdown note describes a source an author may later associate with manuscript material. The note is the sole authority: there is no bibliography or citation identity in editorial data. This delivery establishes authoring, discovery, inspection and conservative maintenance review only. Manuscript associations, inline citations, reports, bibliography formatting and compiler output are deliberately deferred.
+
+The minimum valid note is:
+
+```yaml
+---
+world_entity: reference
+world_name: Companion cognition and personal AI
+---
+```
+
+All bibliographic fields are optional. Their one canonical spelling is:
+
+| Property | Authored shape | Meaning |
+| --- | --- | --- |
+| `reference_authors` | ordered list of strings | Authors in authored order, preferably `Family name, Given name` |
+| `reference_title` | scalar | Source title |
+| `reference_journal` | scalar | Journal or periodical title |
+| `reference_container` | scalar | Non-journal containing work, such as an edited book, proceedings, website, report series or collection |
+| `reference_publisher` | scalar | Publisher or issuing organisation |
+| `reference_date` | scalar | Authored publication precision; no exact date is inferred |
+| `reference_volume` | scalar | Volume identifier |
+| `reference_issue` | scalar | Issue identifier |
+| `reference_pages` | scalar | Authored page or range text |
+| `reference_doi` | string | Authored DOI identifier |
+| `reference_isbn` | string | Authored ISBN identifier |
+| `link` | string | External HTTP/HTTPS source URL; never fetched for metadata |
+| `reference_accessed` | scalar | Authored access date precision |
+| `reference_key` | string | Optional author-chosen stable key |
+| `reference_category` | scalar | Optional open category |
+
+Scalar properties are interpreted deterministically as a single authored value, never split into lists. `reference_authors` has only the ordered-list form; a scalar is preserved but reported as malformed. YAML numeric scalars in date, volume, issue and pages remain readable without being promoted to a more precise date. DOI, ISBN, link and key values are authored strings. Missing fields and unconventional categories are valid. Unknown properties and Markdown body prose for notes, quotations and commentary remain untouched.
+
+`reference_url` is a read-only compatibility alias for accidentally authored older notes; it is not canonical and new creation writes only `link`. A note containing only `reference_url` remains readable as **Link** without being rewritten. If both properties exist, `link` wins for presentation and Story World Review surfaces the duplicate—especially conflicting values—for author resolution.
+
+A fuller note is:
+
+```yaml
+---
+world_entity: reference
+world_name: Companion cognition and personal AI
+reference_authors:
+  - Hawkins, Edward
+reference_title: Companion cognition and personal AI
+reference_journal: Journal of Example Studies
+reference_container: Example research collection
+reference_publisher: Murmuration Press
+reference_date: 2026
+reference_volume: "12"
+reference_issue: "3"
+reference_pages: 45–67
+reference_doi: 10.xxxx/example
+reference_isbn: "9780000000000"
+link: https://example.org/source
+reference_accessed: 2026-07-30
+reference_key: hawkins-2026-companion
+reference_category: research-note
+---
+
+# Companion cognition and personal AI
+
+Author notes, quotations and commentary remain ordinary Markdown.
+```
+
+Use **Create Story World entity**, choose **Reference**, enter the canonical name and optionally category, title, journal, ordered authors, publication date, reference key and link. Review the exact path and Markdown before creating. Cancellation writes nothing. The created note opens in the centre editor. Later edits use the ordinary Markdown/frontmatter editor; this batch intentionally adds no separate reference editor or citation manager. New authoring uses only canonical `link`, never `reference_url`.
+
+In a later delivery, explicit manuscript-to-reference associations will point to these same Story World notes through existing identity and link resolution. They will not create a second reference record.
+
 ## Entity notes and supporting models
 
 An entity note describes a thing in the story world and remains the authority for its core identity and descriptive prose.

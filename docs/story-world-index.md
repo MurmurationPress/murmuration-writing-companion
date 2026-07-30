@@ -51,6 +51,8 @@ The display name follows the entity standard:
 
 Unknown entity types, statuses and properties remain present. Malformed optional properties are ignored individually rather than rejecting an otherwise valid entity.
 
+`world_entity: reference` uses the same path, identity, alias, scope and lifecycle rules. Its optional Reference frontmatter remains in the defensive property snapshot; navigator and inspector projections read from that snapshot without creating a bibliography store. Reference title, journal, ordered authors, key and canonical `link` are additional navigator search inputs. They do not become alternate identities, and link, DOI or ISBN values do not create links or graph edges. Legacy `reference_url` remains readable as a compatibility alias but is never written or normalised by the index.
+
 ## Lookup
 
 The in-memory index supports lookup by:

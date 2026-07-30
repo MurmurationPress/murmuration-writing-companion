@@ -11,6 +11,7 @@ import {
 } from "./WorldBuilder";
 import { storyWorldNavigatorStatus } from "./StoryWorldNavigatorPresentation";
 import { STORY_WORLD_NAVIGATOR_LABEL, STORY_WORLD_TIMELINE_LABEL } from "../ui/PanelLabels";
+import { referenceNavigatorDetail } from "./StoryWorldReference";
 
 export const STORY_WORLD_NAVIGATOR_VIEW_TYPE = "murmuration-story-world-navigator";
 interface StoryWorldNavigatorHost extends StoryWorldEntityCreationHost { activateStoryWorldTimeline(): Promise<void>; activateStoryWorldReview(): Promise<void>; activateStoryWorldGraph(path?: string): Promise<void>; }
@@ -75,7 +76,7 @@ export class StoryWorldNavigatorView extends ItemView {
     const search = container.createEl("input", {
       cls: "mwc-story-world-search",
       type: "search",
-      attr: { placeholder: "Search names, aliases or files", "aria-label": "Search Story World Navigator" }
+      attr: { placeholder: "Search names, aliases, reference details or files", "aria-label": "Search Story World Navigator" }
     });
     search.value = this.query;
     search.oninput = () => {
@@ -121,10 +122,13 @@ export class StoryWorldNavigatorView extends ItemView {
         if (status.visibleLabel) statusElement.createSpan({ cls: "mwc-story-world-item-status-label", text: status.visibleLabel });
         const modelType = item.kind === "model" ? item.type : null;
         const eventTime = compactDate(item.worldTime);
-        if (modelType || eventTime) {
+        const referenceDetail = item.kind === "entity" && item.type.trim().toLowerCase() === "reference"
+          ? referenceNavigatorDetail(item.properties) : null;
+        if (modelType || eventTime || referenceDetail) {
           const details = button.createDiv("mwc-story-world-item-details");
           if (modelType) details.createSpan({ cls: "mwc-story-world-item-type", text: modelType });
           if (eventTime) details.createSpan({ cls: "mwc-story-world-item-time", text: eventTime });
+          if (referenceDetail) details.createSpan({ cls: "mwc-story-world-item-reference", text: referenceDetail });
         }
         button.onclick = () => {
           this.manuallySelectedPath = item.path;

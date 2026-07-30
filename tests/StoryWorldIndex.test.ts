@@ -40,6 +40,28 @@ test("discovers only explicitly opted-in Story World notes", () => {
   ]);
 });
 
+test("indexes Reference identity, aliases and scope while preserving unknown metadata", () => {
+  const index = new StoryWorldIndex();
+  index.upsert(document("Story World/References/Source.md", {
+    world_entity: "reference", world_name: "Source", aliases: ["The source"], world_scope: "[[Book]]",
+    reference_authors: ["Hawkins, Edward"], reference_journal: "Journal of Example Studies",
+    link: "https://example.org/source", reference_key: "source-2026", reference_unconventional: { retained: true }
+  }));
+  const reference = index.findByType("reference")[0];
+  equal(reference.name, "Source");
+  deepEqual(reference.aliases, ["The source"]);
+  deepEqual(reference.scope, ["[[Book]]"]);
+  deepEqual(reference.properties.reference_unconventional, { retained: true });
+  equal(reference.properties.reference_journal, "Journal of Example Studies");
+  equal(reference.properties.link, "https://example.org/source");
+  equal(index.rename("Story World/References/Source.md", document("Story World/References/Source renamed.md", reference.properties as Record<string, unknown>)), true);
+  equal(index.getByPath("Story World/References/Source.md"), null);
+  equal(index.remove("Story World/References/Source renamed.md"), true);
+  equal(index.findByType("reference").length, 0);
+  index.upsert(document("Story World/References/Source.md", reference.properties as Record<string, unknown>));
+  equal(index.findByType("reference").length, 1);
+});
+
 test("indexes names, aliases, type and common permissive properties", () => {
   const aliases = ["Persistent Recurrence in Machine Ecology", " Prime ", ""];
   const frontmatter: Record<string, unknown> = {

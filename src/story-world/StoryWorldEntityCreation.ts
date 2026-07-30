@@ -1,3 +1,5 @@
+import { safeReferenceExternalUrl } from "./StoryWorldReference";
+
 export const STORY_WORLD_ENTITY_KINDS = [
   "character",
   "event",
@@ -5,6 +7,7 @@ export const STORY_WORLD_ENTITY_KINDS = [
   "organisation",
   "technology",
   "concept",
+  "reference",
   "other"
 ] as const;
 
@@ -15,6 +18,17 @@ export interface StoryWorldEntityCreationInput {
   readonly customKind?: string;
   readonly name: string;
   readonly scope?: string;
+  readonly reference?: StoryWorldReferenceCreationMetadata;
+}
+
+export interface StoryWorldReferenceCreationMetadata {
+  readonly category?: string;
+  readonly title?: string;
+  readonly journal?: string;
+  readonly authors?: readonly string[];
+  readonly date?: string;
+  readonly key?: string;
+  readonly link?: string;
 }
 
 export interface StoryWorldEntityCreationPlan {
@@ -32,7 +46,8 @@ const FOLDERS: Record<Exclude<StoryWorldEntityKind, "other">, string> = {
   location: "Locations",
   organisation: "Organisations",
   technology: "Technologies",
-  concept: "Concepts"
+  concept: "Concepts",
+  reference: "References"
 };
 
 export function safeStoryWorldFilename(name: string): string {
@@ -56,6 +71,24 @@ export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInpu
   const path = `Story World/${folder}/${filename}.md`;
   const scope = input.scope?.trim() || null;
   const lines = ["---", `world_entity: ${entityType}`, `world_name: ${yamlString(name)}`];
+  if (entityType === "reference") {
+    const metadata = input.reference;
+    const category = metadata?.category?.trim();
+    const title = metadata?.title?.trim();
+    const journal = metadata?.journal?.trim();
+    const authors = metadata?.authors?.map((author) => author.trim()).filter(Boolean) ?? [];
+    const date = metadata?.date?.trim();
+    const key = metadata?.key?.trim();
+    const link = metadata?.link?.trim();
+    if (link && !safeReferenceExternalUrl(link)) throw new Error("Reference Link must be an HTTP or HTTPS URL.");
+    if (category) lines.push(`reference_category: ${yamlString(category)}`);
+    if (title) lines.push(`reference_title: ${yamlString(title)}`);
+    if (journal) lines.push(`reference_journal: ${yamlString(journal)}`);
+    if (authors.length) lines.push("reference_authors:", ...authors.map((author) => `  - ${yamlString(author)}`));
+    if (date) lines.push(`reference_date: ${yamlString(date)}`);
+    if (key) lines.push(`reference_key: ${yamlString(key)}`);
+    if (link) lines.push(`link: ${yamlString(link)}`);
+  }
   if (scope) lines.push(`world_scope:`, `  - ${yamlString(scope)}`);
   lines.push("---", "", `# ${name}`, "");
   return { entityType, name, scope, folder, path, markdown: lines.join("\n") };
@@ -83,4 +116,31 @@ export function findStoryWorldPathCollision(
   return paths.some((path) => path.toLocaleLowerCase() === targetPath)
     ? `A file already exists at ${plan.path}.`
     : null;
+}
+
+export interface StoryWorldEntityCreationWriter<T> {
+  readonly revalidate: () => string | null;
+  readonly create: (path: string, markdown: string) => Promise<T>;
+  readonly read: (created: T) => Promise<string>;
+  readonly rollback: (created: T) => Promise<void>;
+}
+
+/** Executes only a confirmed plan, rechecking stale state and rolling back unverifiable writes. */
+export async function executeStoryWorldEntityCreation<T>(
+  plan: StoryWorldEntityCreationPlan,
+  writer: StoryWorldEntityCreationWriter<T>
+): Promise<T> {
+  const stale = writer.revalidate();
+  if (stale) throw new Error(stale);
+  let created: T | null = null;
+  try {
+    created = await writer.create(plan.path, plan.markdown);
+    if (await writer.read(created) !== plan.markdown) throw new Error("The created note could not be verified.");
+    return created;
+  } catch (error) {
+    if (created) {
+      try { await writer.rollback(created); } catch { /* Preserve the authoritative creation failure. */ }
+    }
+    throw error;
+  }
 }

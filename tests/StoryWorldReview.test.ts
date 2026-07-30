@@ -116,3 +116,48 @@ test("duplicate observations collapse by the shared fingerprint and generation p
   equal(result.observations[0].fingerprint, base.fingerprint);
   equal(Object.isFrozen(source.properties), false); // generation consumes ordinary snapshots and never mutates them
 });
+
+test("partial References are valid and duplicate non-empty keys are observed", () => {
+  const minimal = entity("References/Minimal.md", { world_entity: "reference", world_name: "Minimal" }, { entityType: "reference" });
+  const first = entity("References/One.md", { world_entity: "reference", world_name: "One", reference_key: "Shared-Key" }, { entityType: "reference" });
+  const second = entity("References/Two.md", { world_entity: "reference", world_name: "Two", reference_key: " shared-key " }, { entityType: "reference" });
+  const result = review([minimal, first, second]);
+  equal(result.observations.filter((item) => item.kind === "story-world.reference.duplicate-key").length, 1);
+  equal(result.observations.some((item) => item.primary.path === minimal.path), false);
+});
+
+test("observes malformed Reference author and scalar shapes without normalising them", () => {
+  const properties = {
+    world_entity: "reference", world_name: "Malformed", reference_authors: ["First, Author", 42, ""],
+    reference_title: ["Not", "scalar"], reference_date: { year: 2026 }, reference_category: "unconventional-is-valid"
+  };
+  const malformed = entity("References/Malformed.md", properties, { entityType: "reference" });
+  const result = review([malformed]);
+  equal(result.observations.filter((item) => item.kind === "story-world.reference.malformed-property").length, 4);
+  deepEqual(malformed.properties, properties);
+});
+
+test("canonical link wins while conflicting legacy reference_url is observed without rewriting", () => {
+  const properties = {
+    world_entity: "reference", world_name: "Both links",
+    link: "https://canonical.example/source", reference_url: "https://legacy.example/source",
+    unknown_reference_property: { retained: true }
+  };
+  const reference = entity("References/Both.md", properties, { entityType: "reference" });
+  const result = review([reference]);
+  const observation = result.observations.find((item) => item.kind === "story-world.reference.legacy-link-duplicate");
+  ok(observation);
+  equal(observation.summary, "Conflicting canonical and legacy Reference links");
+  deepEqual(reference.properties, properties);
+});
+
+test("malformed canonical and legacy external links are observed conservatively", () => {
+  const canonical = entity("References/Canonical.md", {
+    world_entity: "reference", world_name: "Canonical", link: "file:///private/source"
+  }, { entityType: "reference" });
+  const legacy = entity("References/Legacy.md", {
+    world_entity: "reference", world_name: "Legacy", reference_url: ["https://example.org/source"]
+  }, { entityType: "reference" });
+  const result = review([canonical, legacy]);
+  equal(result.observations.filter((item) => item.kind === "story-world.reference.malformed-property").length, 2);
+});
