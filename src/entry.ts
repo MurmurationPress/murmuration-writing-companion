@@ -32,6 +32,7 @@ import { STORY_WORLD_REVIEW_VIEW_TYPE, StoryWorldReviewView } from "./story-worl
 import { installStoryWorldReviewStyles } from "./ui/StoryWorldReviewStyles";
 import { STORY_WORLD_GRAPH_VIEW_TYPE, StoryWorldGraphView } from "./story-world/StoryWorldGraphView";
 import { installStoryWorldGraphStyles } from "./ui/StoryWorldGraphStyles";
+import { EntityIndexReportModal } from "./reports/EntityIndexReportModal";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -77,6 +78,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.addCommand({ id: "open-continuity-review", name: "Open Continuity Review", callback: () => void this.activateContinuityReview() });
     this.addCommand({ id: "open-story-world-review", name: "Open Story World Review", callback: () => void this.activateStoryWorldReview() });
     this.addCommand({ id: "open-story-world-graph", name: "Open Story World Graph", callback: () => void this.activateStoryWorldGraph() });
+    this.addCommand({ id: "generate-entity-index", name: "Generate entity index", callback: () => new EntityIndexReportModal(this).open() });
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());

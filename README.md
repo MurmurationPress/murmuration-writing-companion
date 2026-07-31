@@ -80,6 +80,8 @@ The [Chapter World Context Standard](docs/chapter-world-context-standard.md) def
 
 The [read-only Story World index](docs/story-world-index.md) discovers opted-in entity notes from Obsidian's metadata cache. It indexes path, canonical name, aliases, type, scope, status and common links, then updates individual records when notes change, move or disappear. The index is in-memory, disposable and never stored in the editorial data file.
 
+The [printable entity index](docs/entity-index.md) projects explicit Scene wikilinks and existing manuscript-impact evidence into a previewable selected-Book or whole-vault Markdown report. It uses canonical Story World identity, alias resolution and Navigator order; it never infers occurrences from plain text or invents page numbers.
+
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
 The **Writing Companion** presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.

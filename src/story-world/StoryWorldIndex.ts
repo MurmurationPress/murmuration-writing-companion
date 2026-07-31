@@ -4,6 +4,8 @@ export interface StoryWorldDocument {
   frontmatter?: Record<string, unknown> | null;
 }
 
+import { isGeneratedReportFrontmatter } from "../reports/GeneratedReportClassification";
+
 export interface StoryWorldEntityRecord {
   readonly path: string;
   readonly basename: string;
@@ -179,7 +181,7 @@ export function parseStoryWorldEntity(
   const path = nonEmptyString(document.path);
   const frontmatter = document.frontmatter;
 
-  if (!path || !isRecord(frontmatter)) return null;
+  if (!path || !isRecord(frontmatter) || isGeneratedReportFrontmatter(frontmatter)) return null;
 
   const entityType = nonEmptyString(frontmatter.world_entity);
   if (!entityType) return null;

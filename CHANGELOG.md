@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a previewable, category-filtered printable entity index for a selected Book or the whole vault, using canonical Story World identity, explicit wikilinks, manuscript-impact evidence and authoritative Navigator order while excluding generated reports from future indexing.
+
 - Surface authoritative Book, Part, Chapter and Scene title/filename mismatches in the Manuscript Navigator and provide confirmed, stale-safe actions to rename the file through Obsidian or update only its authored `title` property.
 - Add a lightweight **About Murmuration Writing Companion** command and settings entry with authoritative version information, project context and stable Murmuration Press, PRIME Trilogy, documentation, GitHub and licence links.
 - Add a conservative **Remove Book** action to the Manuscript Navigator: only empty authoritative Books may be moved to Obsidian trash after explicit confirmation, while assigned Parts, Chapters or Scenes block removal without structural writes or cascade deletion.

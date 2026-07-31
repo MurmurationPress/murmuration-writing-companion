@@ -58,6 +58,10 @@ The [read-only Story World index](docs/story-world-index.md) is an in-memory pro
 
 Duplicate names and aliases remain separate records ordered by path. Scope and path are retained for disambiguation. A unique indexed name or alias may provide a fallback when normal Obsidian link resolution finds no destination; ambiguous matches are never guessed.
 
+### Generated entity-index projection
+
+The printable entity index is a disposable selected-Book or whole-vault projection over this same Story World identity and the authoritative manuscript hierarchy. Explicit cached Scene wikilinks resolve through Obsidian first and the unique alias fallback second; structured source/support occurrences reuse manuscript-impact evidence. The projection deduplicates by canonical entity path and Scene path, orders Scenes by the Navigator projection, and never promotes plain-text mentions, temporal inference, or continuity inference into occurrences. Saved indexes use `type: generated-report` with `report_type: entity-index`; the shared generated-report classification excludes them from manuscript and Story World discovery and therefore from graphs, observations and subsequent reports.
+
 The index contains defensive copies of parsed frontmatter values but owns no canon. It is not serialized, does not enter `.murmuration/writing-companion/editorial-data.json`, and can be discarded and reconstructed at any time. It never modifies, creates, renames or deletes Markdown notes.
 
 ---

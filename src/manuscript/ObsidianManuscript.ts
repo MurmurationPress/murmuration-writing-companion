@@ -30,6 +30,7 @@ import { visibleManuscriptOrder } from "./VisibleManuscriptOrder";
 import { authoritativeManuscriptPaths } from "./ManuscriptIntegrity";
 import { isObsidianTrashPath } from "../ObsidianTrash";
 import { isContinuityReviewReportFrontmatter } from "../companion/ContinuityReviewReportClassification";
+import { isGeneratedReportFrontmatter } from "../reports/GeneratedReportClassification";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -135,7 +136,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
   for (const file of app.vault.getMarkdownFiles()) {
     if (isObsidianTrashPath(file.path)) continue;
     const frontmatter = frontmatterFor(app, file);
-    if (isContinuityReviewReportFrontmatter(frontmatter)) continue;
+    if (isContinuityReviewReportFrontmatter(frontmatter) || isGeneratedReportFrontmatter(frontmatter)) continue;
     const hierarchy = manuscriptHierarchyReferences(frontmatter);
     preliminary.set(file.path, {
       file,
