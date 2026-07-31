@@ -8,7 +8,8 @@ import {
   ManuscriptPreparationUndoToken,
   planObsidianManuscriptPreparation,
   StaleManuscriptPreparationUndoError,
-  undoManuscriptPreparation
+  undoManuscriptPreparation,
+  validateManuscriptPreparationPreview
 } from "./ObsidianManuscriptPreparation";
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
 import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
@@ -94,7 +95,7 @@ export function installManuscriptPreparationCommands(
       return;
     }
 
-    const plan = planObsidianManuscriptPreparation(host.app, book);
+    const plan = await validateManuscriptPreparationPreview(host.app, book, planObsidianManuscriptPreparation(host.app, book));
     if (plan.alreadyPrepared) {
       new Notice(`${book.record.title} already uses distributed manuscript order keys.`);
       return;
@@ -130,7 +131,7 @@ export function installManuscriptPreparationCommands(
     const token = undoToken;
     try {
       await undoManuscriptPreparation(host.app, token);
-      undoToken = null;
+      undoToken = token;
       new Notice("Manuscript preparation undone.");
     } catch (error) {
       undoToken = null;

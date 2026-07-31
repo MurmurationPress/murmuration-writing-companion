@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Harden existing-manuscript preparation with explicit readiness states, exact-content transactional rollback and Undo, Book-first writes, verified legacy-array removal last, clearer previews and compiler-acceptance integration boundary.
+
 - Add a previewable, category-filtered printable entity index for a selected Book or the whole vault, using canonical Story World identity, explicit wikilinks, manuscript-impact evidence and authoritative Navigator order while excluding generated reports from future indexing.
 
 - Surface authoritative Book, Part, Chapter and Scene title/filename mismatches in the Manuscript Navigator and provide confirmed, stale-safe actions to rename the file through Obsidian or update only its authored `title` property.

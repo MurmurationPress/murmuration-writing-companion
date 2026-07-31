@@ -4,6 +4,23 @@ import {
   ManuscriptPreparationPlan
 } from "./ManuscriptPreparation";
 
+const STATE_LABELS: Record<ManuscriptPreparationPlan["state"], string> = {
+  fully_prepared: "Fully prepared manuscript",
+  legacy_array: "Legacy Book-level manuscript order",
+  deterministic_folder_order: "Deterministic folder and filename order",
+  partially_distributed: "Partially prepared manuscript",
+  conflicting_distributed_metadata: "Conflicting distributed metadata",
+  malformed_or_incomplete_legacy_metadata: "Malformed or incomplete legacy metadata",
+  ambiguous_hierarchy: "Ambiguous manuscript hierarchy",
+  unsupported_or_unrecognised: "Unsupported or unrecognised manuscript"
+};
+
+function describeChange(property: string, before: unknown, after: unknown): string {
+  if (before === undefined) return `Add ${property}: ${describePreparationValue(after)}`;
+  if (after === undefined) return `Remove ${property} (currently ${describePreparationValue(before)})`;
+  return `Replace ${property}: ${describePreparationValue(before)} → ${describePreparationValue(after)}`;
+}
+
 export class ManuscriptPreparationModal extends Modal {
   private settled = false;
 
@@ -22,10 +39,11 @@ export class ManuscriptPreparationModal extends Modal {
         ? `${this.plan.bookTitle} already uses distributed manuscript order keys.`
         : `Review the proposed structural metadata for ${this.plan.bookTitle}.`
     });
+    this.contentEl.createEl("p", { text: `Detected structure: ${STATE_LABELS[this.plan.state]}. Order source: ${this.plan.source.replace(/_/g, " ")}.` });
 
     this.contentEl.createEl("p", {
       cls: "mwc-muted",
-      text: "Each part and scene will own its parent and sibling order key. Files, folders and existing reporting properties will not be renamed, moved or removed."
+      text: "Each part and scene will own its parent and sibling order key. Prose, filenames, folders and unrelated metadata will not change. A failed preparation rolls back every completed write; successful preparation can be undone immediately unless a note is edited afterwards."
     });
 
     if (this.plan.diagnostics.length > 0) {
@@ -43,7 +61,7 @@ export class ManuscriptPreparationModal extends Modal {
 
     if (this.plan.files.length > 0) {
       const summary = this.contentEl.createEl("p", {
-        text: `${this.plan.files.length} ${this.plan.files.length === 1 ? "note" : "notes"} will change.`
+        text: `${this.plan.files.filter((file) => file.kind === "book").length} Book, ${this.plan.files.filter((file) => file.kind === "part").length} Parts and ${this.plan.files.filter((file) => file.kind === "scene").length} Scenes have previewed changes.`
       });
       summary.style.fontWeight = "600";
 
@@ -65,7 +83,7 @@ export class ManuscriptPreparationModal extends Modal {
         const list = details.createEl("ul");
         for (const change of file.changes) {
           list.createEl("li", {
-            text: `${change.property}: ${describePreparationValue(change.before)} → ${describePreparationValue(change.after)}`
+            text: describeChange(change.property, change.before, change.after)
           });
         }
       }

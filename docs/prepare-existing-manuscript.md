@@ -1,0 +1,15 @@
+# Prepare an existing manuscript
+
+**Prepare existing manuscript** converts a recognised Book to the distributed manuscript authority used by the Navigator. It is available from the command palette and the Manuscript Navigator toolbar. Opening or cancelling the preview writes nothing.
+
+The analyser classifies the selected Book as fully prepared, legacy Book-array ordered, deterministic folder ordered, partially distributed, conflicting, malformed/incomplete, ambiguous, or unrecognised. It uses the existing Navigator hierarchy and sequence: valid distributed `type`, `parent`, and `manuscript_order_key` values win; otherwise a complete `manuscript_order` array is migration evidence; only when neither exists may the Navigator's deterministic folder/filename interpretation be proposed. Ambiguity blocks preparation rather than selecting a fallback.
+
+The preview lists every canonical property addition, replacement and removal. Preparation writes `type: book` on the Book; `type`, `parent`, and a sibling-local `manuscript_order_key` on Parts and Scenes. It never renames or moves files, edits prose, or deletes reporting fields such as `book`, `part`, `chapter`, or `manuscript_sequence`. Unrelated frontmatter is preserved. Numeric filename prefixes can inform an already recognised legacy order but are not required and are never changed.
+
+Preparation is one transaction. It revalidates the plan, file identity, metadata and conflict-marker state; prepares the Book; writes and reads back children; removes `manuscript_order` only after child verification; and invokes a compiler-acceptance boundary when one is supplied. Failure restores the exact original file content for every completed write and reports any rollback that cannot be verified. The in-memory rollback record is not manuscript authority.
+
+After success, **Undo manuscript preparation** restores the exact original files, including legacy arrays, property spelling, scalar/list types and formatting. Undo refuses if any prepared file changed and rolls its own completed restorations forward if a later restoration fails. The token lasts only for the current plugin session/recent operation; version control or vault backup remains the recovery route after restart.
+
+For Bases or Dataview, follow `parent` from Scene to Part and Book. Sort Book children by their own `manuscript_order_key`, then Scenes within each Part by their keys. Do not flatten the hierarchy into a global authority or hard-code a Book path. Reporting-only sequence values may coexist, but are derived and are not structural authority.
+
+This state classifier is the readiness boundary expected by #159: onboarding may report legacy, partial, prepared or conflicting status without writing anything. Full onboarding is not part of this workflow.

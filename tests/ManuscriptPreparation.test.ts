@@ -1,12 +1,14 @@
 import { deepEqual, equal, match } from "node:assert/strict";
 import { test } from "node:test";
 import {
+  manuscriptPreparationExecutionSteps,
   planManuscriptPreparation
 } from "../src/manuscript/ManuscriptPreparation";
 import type {
   ManuscriptDocumentRecord,
   ManuscriptOrderResult
 } from "../src/manuscript/ManuscriptOrder";
+import { proposeLegacyFilenameOrder } from "../src/manuscript/ManuscriptOrder";
 import {
   compareManuscriptOrderKeys,
   manuscriptOrderKey
@@ -94,6 +96,7 @@ test("migrates a valid legacy array into independent sibling keys", () => {
   });
 
   equal(plan.canApply, true);
+  equal(plan.state, "legacy_array");
   equal(plan.files.length, 5);
 
   const bookPlan = plan.files.find((file) => file.path === bookPath)!;
@@ -119,6 +122,9 @@ test("migrates a valid legacy array into independent sibling keys", () => {
   equal(compareManuscriptOrderKeys(sceneKeys[0]!, sceneKeys[1]!), -1);
   equal(rootKeys[0], sceneKeys[0]);
   equal(rootKeys[1], sceneKeys[1]);
+  deepEqual(manuscriptPreparationExecutionSteps(plan).map((step) => step.phase), [
+    "prepare_child", "prepare_child", "prepare_child", "prepare_child", "remove_legacy_order"
+  ]);
 });
 
 test("canonicalises type and parent without touching reporting fields", () => {
@@ -152,9 +158,17 @@ test("uses reviewed filename order when no central array exists", () => {
   });
 
   equal(plan.canApply, true);
+  equal(plan.state, "deterministic_folder_order");
   equal(plan.files.some((file) => (
     Object.prototype.hasOwnProperty.call(file.mutation.set, "manuscript_order_key")
   )), true);
+});
+
+test("does not call an unprefixed sole child ambiguous", () => {
+  const solePart = record(partPath, "FEVER", "part", bookPath);
+  const proposal = proposeLegacyFilenameOrder(bookPath, [book, solePart]);
+  deepEqual(proposal.entries.map((entry) => entry.path), [partPath]);
+  deepEqual(proposal.ambiguousPaths, []);
 });
 
 test("blocks ambiguous legacy filename order", () => {
@@ -169,6 +183,7 @@ test("blocks ambiguous legacy filename order", () => {
   });
 
   equal(plan.canApply, false);
+  equal(plan.state, "ambiguous_hierarchy");
   match(plan.diagnostics[0].message, /needs review/i);
 });
 
@@ -183,6 +198,7 @@ test("blocks malformed or incomplete legacy arrays", () => {
   });
 
   equal(plan.canApply, false);
+  equal(plan.state, "malformed_or_incomplete_legacy_metadata");
   match(plan.diagnostics[0].message, /correct/i);
 });
 
@@ -246,6 +262,54 @@ test("is idempotent after distributed migration", () => {
   });
 
   equal(plan.alreadyPrepared, true);
+  equal(plan.state, "fully_prepared");
   equal(plan.canApply, false);
   deepEqual(plan.files, []);
+});
+
+test("classifies partial and conflicting distributed manuscripts for readiness checks", () => {
+  const partial = planManuscriptPreparation({
+    book, result: result("distributed", [direct], [{ kind: "missing_order_key", path: directPath, message: "Prologue has no manuscript_order_key." }]),
+    frontmatterByPath: new Map([[bookPath, { type: "book" }], [directPath, { type: "scene", parent: `[[${bookPath.replace(/\.md$/, "")}]]` }]])
+  });
+  equal(partial.state, "partially_distributed"); equal(partial.canApply, true);
+  equal(manuscriptOrderKey(partial.files.find((file) => file.path === directPath)?.mutation.set.manuscript_order_key) !== null, true);
+
+  const conflicting = planManuscriptPreparation({
+    book, result: result("invalid", [direct, part], [{ kind: "duplicate_order_key", path: partPath, message: "Two siblings share one key." }]),
+    frontmatterByPath: new Map([[bookPath, { type: "book" }]])
+  });
+  equal(conflicting.state, "conflicting_distributed_metadata"); equal(conflicting.canApply, false);
+
+  const unsupported = planManuscriptPreparation({ book, result: result("none", []), frontmatterByPath: new Map([[bookPath, { type: "book" }]]) });
+  equal(unsupported.state, "unsupported_or_unrecognised"); equal(unsupported.canApply, false);
+});
+
+test("safely completes a new unprepared Part after a retained distributed sibling", () => {
+  const retainedKey = "HZZZZZZZZZ";
+  const recoveryPath = "PRIME Trilogy/BOOK 2 - PLURALITY/RECOVERY.md";
+  const badGutsPath = "PRIME Trilogy/BOOK 2 - PLURALITY/RECOVERY/1 Bad Guts.md";
+  const aspirinPath = "PRIME Trilogy/BOOK 2 - PLURALITY/RECOVERY/2 Asperin Required.md";
+  const retained = record(partPath, "FEVER", "part", bookPath, retainedKey, true);
+  const recovery = record(recoveryPath, "RECOVERY", "part", bookPath);
+  const badGuts = record(badGutsPath, "Bad Guts", "scene", recoveryPath);
+  const aspirin = record(aspirinPath, "Asperin Required", "scene", recoveryPath);
+  const diagnostics: ManuscriptOrderResult["diagnostics"] = [recovery, badGuts, aspirin].flatMap((entry) => ([
+    { kind: "missing_order_key" as const, path: entry.path, message: `${entry.title} has no manuscript_order_key.` },
+    { kind: "missing_parent" as const, path: entry.path, message: `${entry.title} needs a canonical parent property.` }
+  ]));
+  const plan = planManuscriptPreparation({
+    book, result: result("distributed", [retained, recovery, badGuts, aspirin], diagnostics),
+    frontmatterByPath: new Map([
+      [bookPath, { type: "book" }],
+      [partPath, { type: "part", parent: `[[${bookPath.replace(/\.md$/, "")}]]`, manuscript_order_key: retainedKey }],
+      [recoveryPath, {}], [badGutsPath, {}], [aspirinPath, {}]
+    ])
+  });
+  equal(plan.canApply, true); equal(plan.state, "partially_distributed");
+  equal(plan.files.some((file) => file.path === partPath), false);
+  const recoveryKey = manuscriptOrderKey(plan.files.find((file) => file.path === recoveryPath)?.mutation.set.manuscript_order_key)!;
+  equal(compareManuscriptOrderKeys(retainedKey, recoveryKey), -1);
+  const childKeys = [badGutsPath, aspirinPath].map((path) => manuscriptOrderKey(plan.files.find((file) => file.path === path)?.mutation.set.manuscript_order_key)!);
+  equal(compareManuscriptOrderKeys(childKeys[0], childKeys[1]), -1);
 });
