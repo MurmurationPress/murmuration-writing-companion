@@ -742,6 +742,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async activateView() {
+    this.onMwcUserInteraction();
     const activated = await this.writingCompanionActivation.activate(
       this.app.workspace,
       VIEW_TYPE
@@ -752,6 +753,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async activateManuscriptNavigator() {
+    this.onMwcUserInteraction();
     const existing = this.app.workspace.getLeavesOfType(
       MANUSCRIPT_NAVIGATOR_VIEW_TYPE
     )[0];
@@ -769,6 +771,19 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       });
     }
     this.app.workspace.revealLeaf(leaf);
+  }
+
+  protected onMwcUserInteraction(): void {
+    // The full plugin entry point supplies first-use readiness guidance.
+  }
+
+  openProjectReadiness(): void {
+    new Notice("Project readiness is unavailable in this plugin entry point.");
+  }
+
+  prepareExistingManuscript(_bookPath: string): Promise<void> {
+    new Notice("Manuscript preparation is unavailable in this plugin entry point.");
+    return Promise.resolve();
   }
 
   refreshView() {

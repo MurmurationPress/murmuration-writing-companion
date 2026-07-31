@@ -1,6 +1,6 @@
 import { Editor, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "./main";
-import { installManuscriptPreparationCommands } from "./manuscript/ManuscriptPreparationCommands";
+import { installManuscriptPreparationCommands, ManuscriptPreparationCommandActions } from "./manuscript/ManuscriptPreparationCommands";
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
 import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyles";
 import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAuthoringStyles";
@@ -33,6 +33,10 @@ import { installStoryWorldReviewStyles } from "./ui/StoryWorldReviewStyles";
 import { STORY_WORLD_GRAPH_VIEW_TYPE, StoryWorldGraphView } from "./story-world/StoryWorldGraphView";
 import { installStoryWorldGraphStyles } from "./ui/StoryWorldGraphStyles";
 import { EntityIndexReportModal } from "./reports/EntityIndexReportModal";
+import { ProjectReadinessModal } from "./onboarding/ProjectReadinessModal";
+import { collectObsidianProjectReadiness } from "./onboarding/ObsidianProjectReadiness";
+import type { ProjectReadinessPresentation } from "./onboarding/ProjectReadiness";
+import { FirstRunReadinessPreference, firstRunReadinessKey } from "./onboarding/FirstRunReadiness";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -51,6 +55,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   private readonly storyWorldRelationAuthoringSession = new StoryWorldRelationAuthoringSession();
   private readonly storyWorldTimelineActivation = new StoryWorldTimelineActivation();
   private readonly continuityReviewActivation = new ContinuityReviewActivation();
+  manuscriptPreparationCommands!: ManuscriptPreparationCommandActions;
+  private firstRunReadinessPreference!: FirstRunReadinessPreference;
 
   async onload() {
     await super.onload();
@@ -65,7 +71,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         this.refreshManuscriptNavigator();
       }
     }));
-    installManuscriptPreparationCommands(this);
+    this.manuscriptPreparationCommands = installManuscriptPreparationCommands(this);
     installManuscriptReconciliationCommands(this);
     this.registerView(STORY_WORLD_NAVIGATOR_VIEW_TYPE, (leaf) => new StoryWorldNavigatorView(leaf, this));
     this.registerView(STORY_WORLD_TIMELINE_VIEW_TYPE, (leaf) => new StoryWorldTimelineView(leaf, this));
@@ -79,6 +85,14 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.addCommand({ id: "open-story-world-review", name: "Open Story World Review", callback: () => void this.activateStoryWorldReview() });
     this.addCommand({ id: "open-story-world-graph", name: "Open Story World Graph", callback: () => void this.activateStoryWorldGraph() });
     this.addCommand({ id: "generate-entity-index", name: "Generate entity index", callback: () => new EntityIndexReportModal(this).open() });
+    this.addCommand({ id: "open-project-readiness", name: "Open project readiness", callback: () => this.openProjectReadiness() });
+
+    let onboardingStorage: Storage | null = null;
+    try { onboardingStorage = window.localStorage; } catch { /* Invitation remains best effort. */ }
+    this.firstRunReadinessPreference = new FirstRunReadinessPreference(
+      onboardingStorage,
+      firstRunReadinessKey(this.manifest.id, this.app.vault.getName())
+    );
 
     const povCharacterStyles = installPovCharacterCreationStyles();
     this.register(() => povCharacterStyles.remove());
@@ -124,7 +138,12 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.reconcileStoryWorldGraphRename(oldPath, file.path);
       this.queueContinuityReviewRefresh();
     }));
-    this.app.workspace.onLayoutReady(() => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(true); });
+    this.app.workspace.onLayoutReady(() => {
+      this.seedActiveEditor();
+      this.refreshStoryWorldNavigator();
+      this.refreshStoryWorldGraph(true);
+      window.setTimeout(() => void this.showFirstRunReadinessInvitation(), 500);
+    });
     this.registerEvent(this.app.metadataCache.on("changed", (file) => {
       this.queueNavigatorRefresh();
       if (this.storyWorldInspectorPath) this.refreshView();
@@ -143,6 +162,57 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         this.continuityReviewRefreshTimer = null;
       }
     });
+  }
+
+  override openProjectReadiness(): void {
+    this.firstRunReadinessPreference.markOpened();
+    new ProjectReadinessModal(this).open();
+  }
+
+  override prepareExistingManuscript(bookPath: string): Promise<void> {
+    return this.manuscriptPreparationCommands.prepareBook(bookPath);
+  }
+
+  protected override onMwcUserInteraction(): void {
+    void this.showFirstInteractionReadinessHint();
+  }
+
+  collectProjectReadiness(): Promise<ProjectReadinessPresentation> {
+    this.storyWorldIndex.rebuild();
+    return collectObsidianProjectReadiness(this.app, this.storyWorldIndex, this.storeService.store);
+  }
+
+  private async showFirstRunReadinessInvitation(): Promise<void> {
+    if (!this.firstRunReadinessPreference.shouldInvite(true)) return;
+    try {
+      const model = await this.collectProjectReadiness();
+      this.firstRunReadinessPreference.markShown();
+      const notice = new Notice("", 12000);
+      notice.noticeEl.empty();
+      notice.noticeEl.createEl("strong", { text: "Murmuration Writing Companion inspected this vault." });
+      notice.noticeEl.createEl("div", { text: `${model.bookCount} Book${model.bookCount === 1 ? "" : "s"} and ${model.sceneCount} Scene${model.sceneCount === 1 ? "" : "s"} recognised. ${model.headline}.` });
+      const open = notice.noticeEl.createEl("button", { text: "Open project readiness" });
+      open.addEventListener("click", () => { notice.hide(); this.openProjectReadiness(); });
+    } catch (error) {
+      console.error("Writing Companion could not collect first-run readiness", error);
+    }
+  }
+
+  private async showFirstInteractionReadinessHint(): Promise<void> {
+    if (!this.firstRunReadinessPreference.shouldHintOnFirstInteraction()) return;
+    this.firstRunReadinessPreference.markInteractionHintShown();
+    try {
+      const model = await this.collectProjectReadiness();
+      if (this.firstRunReadinessPreference.hasBeenOpened()) return;
+      const notice = new Notice("", 12000);
+      notice.noticeEl.empty();
+      notice.noticeEl.createEl("strong", { text: model.headline });
+      notice.noticeEl.createEl("div", { text: `${model.bookCount} Book${model.bookCount === 1 ? "" : "s"} and ${model.sceneCount} Scene${model.sceneCount === 1 ? "" : "s"} recognised. Project readiness can explain what MWC found and what to do next.` });
+      const open = notice.noticeEl.createEl("button", { text: "Open project readiness" });
+      open.addEventListener("click", () => { notice.hide(); this.openProjectReadiness(); });
+    } catch (error) {
+      console.error("Writing Companion could not collect first-interaction readiness", error);
+    }
   }
 
   override async activateView() {
@@ -201,10 +271,12 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   async activateStoryWorldTimeline(): Promise<void> {
+    this.onMwcUserInteraction();
     await this.storyWorldTimelineActivation.activate(this.app.workspace, STORY_WORLD_TIMELINE_VIEW_TYPE);
   }
 
   async activateStoryWorldReview(fingerprint?: string): Promise<void> {
+    this.onMwcUserInteraction();
     const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)[0];
     const leaf = existing ?? this.app.workspace.getLeaf("tab");
     if (!existing) await leaf.setViewState({ type: STORY_WORLD_REVIEW_VIEW_TYPE, active: true });
@@ -219,6 +291,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   async activateStoryWorldGraph(path?: string): Promise<void> {
+    this.onMwcUserInteraction();
     const active = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
     const selected = path ?? (active && this.storyWorldIndex.index.getByPath(active.path) ? active.path : undefined);
     const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_GRAPH_VIEW_TYPE)[0];
@@ -243,6 +316,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   async activateContinuityReview(): Promise<void> {
+    this.onMwcUserInteraction();
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView?.file ?? null;
     const library = buildObsidianManuscriptLibrary(this.app);
@@ -345,6 +419,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   async activateStoryWorldNavigator() {
+    this.onMwcUserInteraction();
     const existing = this.app.workspace.getLeavesOfType(STORY_WORLD_NAVIGATOR_VIEW_TYPE)[0];
     const leaf = existing ?? this.app.workspace.getLeftLeaf(false);
     if (!leaf) return;

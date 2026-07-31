@@ -1,6 +1,6 @@
 # Prepare an existing manuscript
 
-**Prepare existing manuscript** converts a recognised Book to the distributed manuscript authority used by the Navigator. It is available from the command palette and the Manuscript Navigator toolbar. Opening or cancelling the preview writes nothing.
+**Prepare existing manuscript** converts a recognised Book to the distributed manuscript authority used by the Navigator. It is available from the command palette, the Manuscript Navigator toolbar overflow, and the clearly labelled **Prepare manuscript** button shown when the Navigator detects that preparation is needed. Opening or cancelling the preview writes nothing.
 
 The analyser classifies the selected Book as fully prepared, legacy Book-array ordered, deterministic folder ordered, partially distributed, conflicting, malformed/incomplete, ambiguous, or unrecognised. It uses the existing Navigator hierarchy and sequence: valid distributed `type`, `parent`, and `manuscript_order_key` values win; otherwise a complete `manuscript_order` array is migration evidence; only when neither exists may the Navigator's deterministic folder/filename interpretation be proposed. Ambiguity blocks preparation rather than selecting a fallback.
 
@@ -12,4 +12,4 @@ After success, **Undo manuscript preparation** restores the exact original files
 
 For Bases or Dataview, follow `parent` from Scene to Part and Book. Sort Book children by their own `manuscript_order_key`, then Scenes within each Part by their keys. Do not flatten the hierarchy into a global authority or hard-code a Book path. Reporting-only sequence values may coexist, but are derived and are not structural authority.
 
-This state classifier is the readiness boundary expected by #159: onboarding may report legacy, partial, prepared or conflicting status without writing anything. Full onboarding is not part of this workflow.
+**Open project readiness** now consumes this analyser for every Book. Its Book-specific Prepare action opens this same exact preview; it cannot bypass confirmation or execute preparation itself. Completion and Undo are visible after reopening or rechecking readiness. See [Project readiness and first-run guidance](project-readiness.md).

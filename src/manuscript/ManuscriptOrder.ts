@@ -193,17 +193,19 @@ export function proposeLegacyFilenameOrder(
     const usedPrefixes = new Map<number, string>();
     for (const sibling of siblings) {
       const prefix = numericPrefix(sibling.basename);
-      if (prefix === null) {
-        // A sole child has no competing sibling position to disambiguate.
-        if (siblings.length > 1) ambiguous.add(sibling.path);
-        continue;
-      }
+      if (prefix === null) continue;
       const existing = usedPrefixes.get(prefix);
       if (existing) {
         ambiguous.add(existing);
         ambiguous.add(sibling.path);
       } else {
         usedPrefixes.set(prefix, sibling.path);
+      }
+    }
+    for (let index = 1; index < siblings.length; index += 1) {
+      if (compareLegacySiblings(siblings[index - 1], siblings[index]) === 0) {
+        ambiguous.add(siblings[index - 1].path);
+        ambiguous.add(siblings[index].path);
       }
     }
   }

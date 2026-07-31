@@ -276,7 +276,7 @@ test("proposes depth-first legacy order from numeric sibling prefixes", () => {
   deepEqual(proposal.ambiguousPaths, []);
 });
 
-test("marks missing and duplicate numeric prefixes as migration ambiguities", () => {
+test("marks duplicate numeric prefixes while retaining one unique unprefixed fallback", () => {
   const first = record(domestic.path, domestic.title, "scene", bookPath, bookPath, "1 Domestic Distance");
   const duplicate = record(wilderness.path, wilderness.title, "scene", bookPath, bookPath, "1 Tobias in the Wilderness");
   const unnumbered = record(prime.path, prime.title, "scene", bookPath, bookPath, "Prime Without Interpreter");
@@ -284,9 +284,35 @@ test("marks missing and duplicate numeric prefixes as migration ambiguities", ()
 
   deepEqual(new Set(proposal.ambiguousPaths), new Set([
     first.path,
-    duplicate.path,
-    unnumbered.path
+    duplicate.path
   ]));
+});
+
+test("accepts one unprefixed Part after a numbered direct Scene", () => {
+  const prologue = record(domestic.path, "Prologue", "scene", bookPath, bookPath, "1 Prologue");
+  const onlyPart = record(containment.path, "Part 1", "part", bookPath, bookPath, "Part 1");
+  const proposal = proposeLegacyFilenameOrder(bookPath, [onlyPart, prologue]);
+
+  deepEqual(proposal.entries.map((entry) => entry.title), ["Prologue", "Part 1"]);
+  deepEqual(proposal.ambiguousPaths, []);
+});
+
+test("accepts naturally ordered unprefixed Part filenames", () => {
+  const first = record(domestic.path, "Opening", "scene", bookPath, bookPath, "Opening");
+  const partOne = record(experiment.path, "Part 1", "part", bookPath, bookPath, "Part 1");
+  const partTwo = record(containment.path, "Part 2", "part", bookPath, bookPath, "Part 2");
+  const proposal = proposeLegacyFilenameOrder(bookPath, [partTwo, first, partOne]);
+
+  deepEqual(proposal.entries.map((entry) => entry.title), ["Opening", "Part 1", "Part 2"]);
+  deepEqual(proposal.ambiguousPaths, []);
+});
+
+test("blocks sibling filenames that compare as indistinguishable", () => {
+  const first = record(domestic.path, "Alpha", "scene", bookPath, bookPath, "Alpha");
+  const second = record(containment.path, "alpha", "part", bookPath, bookPath, "alpha");
+  const proposal = proposeLegacyFilenameOrder(bookPath, [first, second]);
+
+  deepEqual(new Set(proposal.ambiguousPaths), new Set([first.path, second.path]));
 });
 
 test("finds previous and next scenes across part boundaries", () => {

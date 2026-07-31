@@ -42,6 +42,8 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 
 ## Commands
 
+**Open project readiness** reinspects the vault and explains each recognised Book's preparation state, optional Story World presence, and separate editorial storage without writing anything. A quiet first-run invitation appears once after indexes are ready; dismissal is local, and the command and Settings entry remain available. Relevant Book-specific preparation actions open the existing previewed and reversible workflow. See [project readiness](docs/project-readiness.md).
+
 - About Murmuration Writing Companion
 - Open Writing Companion
 - Open Manuscript
