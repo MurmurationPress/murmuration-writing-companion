@@ -27,9 +27,13 @@ interface PreparationActions {
 
 function selectedBook(
   host: ManuscriptPreparationCommandHost,
-  view?: ItemView
+  view?: ItemView,
+  requestedBookPath?: string
 ): ObsidianManuscriptBook | null {
   const library = buildObsidianManuscriptLibrary(host.app);
+  if (requestedBookPath) {
+    return library.books.find((book) => book.file.path === requestedBookPath) ?? null;
+  }
   const selector = view?.containerEl.querySelector<HTMLSelectElement>(
     ".mwc-manuscript-book-selector"
   );
@@ -51,7 +55,7 @@ function selectedBook(
 
 export function installManuscriptPreparationCommands(
   host: ManuscriptPreparationCommandHost
-) {
+): ManuscriptPreparationCommandActions {
   let undoToken: ManuscriptPreparationUndoToken | null = null;
   let operationRunning = false;
   const actionsByView = new WeakMap<ItemView, PreparationActions>();
@@ -87,9 +91,9 @@ export function installManuscriptPreparationCommands(
     window.setTimeout(installActions, 0);
   };
 
-  const prepareManuscript = async (view?: ItemView) => {
+  const prepareManuscript = async (view?: ItemView, requestedBookPath?: string) => {
     if (operationRunning) return;
-    const book = selectedBook(host, view);
+    const book = selectedBook(host, view, requestedBookPath);
     if (!book) {
       new Notice("Open a chapter or select the manuscript you want to prepare.");
       return;
@@ -184,4 +188,11 @@ export function installManuscriptPreparationCommands(
     host.app.workspace.on("layout-change", installActions)
   );
   host.app.workspace.onLayoutReady(installActions);
+  return {
+    prepareBook: (bookPath) => prepareManuscript(undefined, bookPath)
+  };
+}
+
+export interface ManuscriptPreparationCommandActions {
+  prepareBook(bookPath: string): Promise<void>;
 }

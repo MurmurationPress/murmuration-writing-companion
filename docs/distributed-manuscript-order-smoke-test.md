@@ -7,7 +7,7 @@ Use a backed-up manuscript or a clean Git working tree.
 1. Install the plugin build from `agent/distributed-manuscript-order`.
 2. Open a chapter in the manuscript to be migrated.
 3. Open the Manuscript navigator and confirm the displayed legacy order is correct.
-4. Select **Prepare existing manuscript** from the navigator header or command palette.
+4. Select **Prepare manuscript** in the Navigator preparation notice, or **Prepare existing manuscript** from the command palette or navigator toolbar overflow.
 5. Review the complete preview. It should show:
    - `type: part` or `type: scene` where required;
    - canonical `parent` links;

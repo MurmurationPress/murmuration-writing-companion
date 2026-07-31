@@ -171,6 +171,40 @@ test("does not call an unprefixed sole child ambiguous", () => {
   deepEqual(proposal.ambiguousPaths, []);
 });
 
+test("prepares a mixed numbered direct Scene and one unprefixed Part", () => {
+  const mixedDirect = record(directPath, "Prologue", "scene", bookPath);
+  const mixedPart = record(partPath, "Part 1", "part", bookPath);
+  const proposal = proposeLegacyFilenameOrder(bookPath, [book, mixedPart, mixedDirect]);
+  const mixedResult = result("legacy", proposal.entries, []);
+  const frontmatter = legacyFrontmatter();
+  delete frontmatter.get(bookPath)!.manuscript_order;
+
+  const plan = planManuscriptPreparation({ book, result: mixedResult, frontmatterByPath: frontmatter });
+  equal(plan.canApply, true);
+  equal(plan.state, "deterministic_folder_order");
+});
+
+test("prepares naturally ordered Part 1 and Part 2 without numeric prefixes", () => {
+  const partOne = record(partPath, "Part 1", "part", bookPath);
+  const partTwoPath = "PRIME Trilogy/BOOK 2 - PLURALITY/Part 2.md";
+  const partTwo = record(partTwoPath, "Part 2", "part", bookPath);
+  const proposal = proposeLegacyFilenameOrder(bookPath, [book, partTwo, partOne]);
+  const frontmatter = new Map<string, Record<string, unknown>>([
+    [bookPath, { type: "book" }],
+    [partPath, {}],
+    [partTwoPath, {}]
+  ]);
+  const plan = planManuscriptPreparation({
+    book,
+    result: { source: "legacy", entries: proposal.entries, roots: proposal.entries.map((entry) => ({ entry, children: [] })), scenes: [], diagnostics: [] },
+    frontmatterByPath: frontmatter
+  });
+
+  equal(plan.canApply, true);
+  equal(plan.state, "deterministic_folder_order");
+  deepEqual(proposal.entries.map((entry) => entry.title), ["Part 1", "Part 2"]);
+});
+
 test("blocks ambiguous legacy filename order", () => {
   const plan = planManuscriptPreparation({
     book,

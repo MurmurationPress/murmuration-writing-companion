@@ -21,6 +21,10 @@ export class ContinuitySettingsTab extends PluginSettingTab {
           this.plugin.refreshView();
         }));
     new Setting(this.containerEl)
+      .setName("Project readiness")
+      .setDesc("Reinspect this vault and show recognised manuscript, optional Story World, and editorial information. This check does not modify notes.")
+      .addButton((button) => button.setButtonText("Open project readiness").onClick(() => this.plugin.openProjectReadiness()));
+    new Setting(this.containerEl)
       .setName(ABOUT_SETTINGS_ENTRY.name)
       .setDesc(ABOUT_SETTINGS_ENTRY.description)
       .addButton((button) => {

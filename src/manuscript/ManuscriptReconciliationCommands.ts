@@ -16,6 +16,7 @@ import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
 export interface ManuscriptReconciliationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
   refreshManuscriptNavigator(): void;
+  prepareExistingManuscript(bookPath: string): Promise<void>;
 }
 
 interface ReconciliationActions {
@@ -67,9 +68,19 @@ function installStatus(
   if (!content || !heading) return;
   const status = existing ?? document.createElement("div");
   status.className = "mwc-manuscript-reconciliation-status mwc-manuscript-notice mwc-manuscript-notice--warning";
-  status.textContent = preparationNeeded
-    ? "Preparation needed. Some manuscript notes do not yet own authoritative structure. Run Prepare existing manuscript from the wand button or command palette."
-    : "Reconciliation needed. Existing authoritative structure conflicts or has drifted; run Reconcile manuscript before publishing.";
+  status.empty();
+  status.createDiv({
+    text: preparationNeeded
+      ? "Preparation needed. Some manuscript notes do not yet own authoritative structure. Preview the proposed changes before making this structure authoritative."
+      : "Reconciliation needed. Existing authoritative structure conflicts or has drifted; run Reconcile manuscript before publishing."
+  });
+  if (preparationNeeded) {
+    const prepare = status.createEl("button", {
+      text: "Prepare manuscript",
+      attr: { type: "button", "aria-label": `Prepare ${book.record.title}` }
+    });
+    prepare.onclick = () => void host.prepareExistingManuscript(book.file.path);
+  }
   status.setAttribute("role", "status");
   if (!existing) heading.insertAdjacentElement("afterend", status);
 }
@@ -121,7 +132,7 @@ export function installManuscriptReconciliationCommands(
       return;
     }
     if (manuscriptNeedsPreparation(book.result)) {
-      new Notice("This manuscript needs preparation, not reconciliation. Run Prepare existing manuscript from the wand button or command palette.", 10000);
+      new Notice("This manuscript needs preparation, not reconciliation. Use Prepare manuscript in the Navigator notice or run Prepare existing manuscript from the command palette.", 10000);
       return;
     }
     if (book.result.source !== "distributed") {
