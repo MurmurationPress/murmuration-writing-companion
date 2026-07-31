@@ -194,7 +194,8 @@ export function proposeLegacyFilenameOrder(
     for (const sibling of siblings) {
       const prefix = numericPrefix(sibling.basename);
       if (prefix === null) {
-        ambiguous.add(sibling.path);
+        // A sole child has no competing sibling position to disambiguate.
+        if (siblings.length > 1) ambiguous.add(sibling.path);
         continue;
       }
       const existing = usedPrefixes.get(prefix);
@@ -548,7 +549,7 @@ export function buildManuscriptOrder(
         diagnostics.push({
           kind: "legacy_ambiguous",
           path,
-          message: `${record?.title ?? path} needs review before filename order is migrated.`
+          message: `${record?.title ?? path} has no unique sibling position. Review the sibling order, then either add a complete manuscript_order list to ${book.title} or make sibling filename prefixes unique. No files will be renamed automatically.`
         });
       }
     }

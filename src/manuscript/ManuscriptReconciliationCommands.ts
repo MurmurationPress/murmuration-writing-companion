@@ -10,7 +10,7 @@ import {
   undoManuscriptReconciliation
 } from "./ObsidianManuscriptReconciliation";
 import { chooseManuscriptReconciliation } from "./ManuscriptReconciliationModal";
-import { manuscriptNeedsReconciliation } from "./ManuscriptReconciliation";
+import { manuscriptNeedsPreparation, manuscriptNeedsReconciliation } from "./ManuscriptReconciliation";
 import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
 
 export interface ManuscriptReconciliationCommandHost extends Plugin {
@@ -55,17 +55,21 @@ function installStatus(
     ".mwc-manuscript-reconciliation-status"
   );
   const book = selectedBook(host, view);
-  if (!book || !manuscriptNeedsReconciliation(book.result)) {
+  if (!book) {
     existing?.remove();
     return;
   }
+  const preparationNeeded = manuscriptNeedsPreparation(book.result);
+  if (!preparationNeeded && !manuscriptNeedsReconciliation(book.result)) { existing?.remove(); return; }
 
   const content = view.containerEl.children[1] as HTMLElement | undefined;
   const heading = content?.querySelector<HTMLElement>(".mwc-manuscript-heading");
   if (!content || !heading) return;
   const status = existing ?? document.createElement("div");
   status.className = "mwc-manuscript-reconciliation-status mwc-manuscript-notice mwc-manuscript-notice--warning";
-  status.textContent = "Reconciliation needed. Review structural drift before publishing.";
+  status.textContent = preparationNeeded
+    ? "Preparation needed. Some manuscript notes do not yet own authoritative structure. Run Prepare existing manuscript from the wand button or command palette."
+    : "Reconciliation needed. Existing authoritative structure conflicts or has drifted; run Reconcile manuscript before publishing.";
   status.setAttribute("role", "status");
   if (!existing) heading.insertAdjacentElement("afterend", status);
 }
@@ -114,6 +118,10 @@ export function installManuscriptReconciliationCommands(
     const book = selectedBook(host, view);
     if (!book) {
       new Notice("Open a chapter or select the manuscript you want to reconcile.");
+      return;
+    }
+    if (manuscriptNeedsPreparation(book.result)) {
+      new Notice("This manuscript needs preparation, not reconciliation. Run Prepare existing manuscript from the wand button or command palette.", 10000);
       return;
     }
     if (book.result.source !== "distributed") {

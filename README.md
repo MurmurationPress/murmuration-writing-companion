@@ -82,6 +82,8 @@ The [read-only Story World index](docs/story-world-index.md) discovers opted-in 
 
 The [printable entity index](docs/entity-index.md) projects explicit Scene wikilinks and existing manuscript-impact evidence into a previewable selected-Book or whole-vault Markdown report. It uses canonical Story World identity, alias resolution and Navigator order; it never infers occurrences from plain text or invents page numbers.
 
+The [existing-manuscript preparation workflow](docs/prepare-existing-manuscript.md) previews and transactionally establishes distributed `type`, `parent`, and sibling-local `manuscript_order_key` authority. Ambiguous migrations are blocked; failures and immediate Undo restore exact prior files.
+
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
 The **Writing Companion** presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.

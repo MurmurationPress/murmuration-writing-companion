@@ -14,7 +14,8 @@ import {
 import {
   evenlySpacedManuscriptOrderKeys,
   MANUSCRIPT_ORDER_KEY_PROPERTY,
-  manuscriptOrderKey
+  manuscriptOrderKey,
+  manuscriptOrderKeyBetween
 } from "./ManuscriptOrderKey";
 
 export type ManuscriptPreparationProperty =
@@ -34,6 +35,12 @@ export interface ManuscriptPreparationMutation {
   readonly set: Readonly<Record<string, unknown>>;
 }
 
+export interface ManuscriptPreparationExecutionStep {
+  readonly file: ManuscriptPreparationFilePlan;
+  readonly phase: "prepare_book" | "prepare_child" | "remove_legacy_order";
+  readonly mutation: ManuscriptPreparationMutation;
+}
+
 export interface ManuscriptPreparationFilePlan {
   readonly path: string;
   readonly title: string;
@@ -41,6 +48,7 @@ export interface ManuscriptPreparationFilePlan {
   readonly beforeFrontmatter: Readonly<Record<string, unknown>>;
   readonly changes: readonly ManuscriptPreparationChange[];
   readonly mutation: ManuscriptPreparationMutation;
+  readonly expectedFileVersion?: { readonly mtime: number; readonly size: number };
 }
 
 export interface ManuscriptPreparationDiagnostic {
@@ -56,7 +64,18 @@ export interface ManuscriptPreparationPlan {
   readonly diagnostics: readonly ManuscriptPreparationDiagnostic[];
   readonly canApply: boolean;
   readonly alreadyPrepared: boolean;
+  readonly state: ManuscriptPreparationState;
 }
+
+export type ManuscriptPreparationState =
+  | "fully_prepared"
+  | "legacy_array"
+  | "deterministic_folder_order"
+  | "partially_distributed"
+  | "conflicting_distributed_metadata"
+  | "malformed_or_incomplete_legacy_metadata"
+  | "ambiguous_hierarchy"
+  | "unsupported_or_unrecognised";
 
 export interface ManuscriptPreparationInput {
   readonly book: ManuscriptDocumentRecord;
@@ -65,6 +84,7 @@ export interface ManuscriptPreparationInput {
     string,
     Record<string, unknown> | undefined
   >;
+  readonly fileVersionByPath?: ReadonlyMap<string, { readonly mtime: number; readonly size: number }>;
 }
 
 function cloneValue<T>(value: T): T {
@@ -110,32 +130,48 @@ function effectiveParent(
 
 function siblingKeyAssignments(
   bookPath: string,
-  entries: readonly ManuscriptDocumentRecord[]
+  entries: readonly ManuscriptDocumentRecord[],
+  preserveExisting: boolean
 ): ReadonlyMap<string, string> {
-  const pathsByParent = new Map<string, string[]>();
+  const entriesByParent = new Map<string, ManuscriptDocumentRecord[]>();
   for (const entry of entries) {
     const parent = effectiveParent(entry, bookPath);
-    const paths = pathsByParent.get(parent);
-    if (paths) paths.push(entry.path);
-    else pathsByParent.set(parent, [entry.path]);
+    const siblings = entriesByParent.get(parent);
+    if (siblings) siblings.push(entry);
+    else entriesByParent.set(parent, [entry]);
   }
 
   const assignments = new Map<string, string>();
-  for (const paths of pathsByParent.values()) {
-    const keys = evenlySpacedManuscriptOrderKeys(paths.length);
-    paths.forEach((path, index) => assignments.set(path, keys[index]));
+  for (const siblings of entriesByParent.values()) {
+    const existing = preserveExisting ? siblings.map((entry) => manuscriptOrderKey(entry.orderKey)) : siblings.map(() => null);
+    if (!existing.some(Boolean)) {
+      const keys = evenlySpacedManuscriptOrderKeys(siblings.length);
+      siblings.forEach((entry, index) => assignments.set(entry.path, keys[index]));
+      continue;
+    }
+    let previous: string | null = null;
+    for (let index = 0; index < siblings.length; index += 1) {
+      const retained = existing[index];
+      if (retained) {
+        if (previous && retained <= previous) continue;
+        assignments.set(siblings[index].path, retained);
+        previous = retained;
+        continue;
+      }
+      const next = existing.slice(index + 1).find((key): key is string => Boolean(key)) ?? null;
+      const allocated = manuscriptOrderKeyBetween(previous, next);
+      if (!allocated) continue;
+      assignments.set(siblings[index].path, allocated);
+      previous = allocated;
+    }
   }
   return assignments;
 }
 
 function expectedOrderKey(
   entry: ManuscriptDocumentRecord,
-  assignments: ReadonlyMap<string, string>,
-  source: ManuscriptOrderResult["source"]
+  assignments: ReadonlyMap<string, string>
 ): string | null {
-  if (source === "distributed") {
-    return manuscriptOrderKey(entry.orderKey);
-  }
   return assignments.get(entry.path) ?? null;
 }
 
@@ -146,7 +182,8 @@ function plannedFile(
   expectedKey: string | null,
   frontmatterValue: Record<string, unknown> | undefined,
   removeLegacyArray: boolean,
-  diagnostics: ManuscriptPreparationDiagnostic[]
+  diagnostics: ManuscriptPreparationDiagnostic[],
+  expectedFileVersion?: { readonly mtime: number; readonly size: number }
 ): ManuscriptPreparationFilePlan | null {
   const frontmatter = cloneValue(frontmatterValue ?? {});
   const changes: ManuscriptPreparationChange[] = [];
@@ -236,12 +273,14 @@ function plannedFile(
     mutation: {
       remove: [...remove],
       set
-    }
+    },
+    expectedFileVersion
   };
 }
 
 function blockingDiagnostics(
-  result: ManuscriptOrderResult
+  result: ManuscriptOrderResult,
+  assignments: ReadonlyMap<string, string>
 ): ManuscriptPreparationDiagnostic[] {
   if (result.source === "invalid") {
     return [{
@@ -266,17 +305,49 @@ function blockingDiagnostics(
     "legacy_ambiguous"
   ]);
   return result.diagnostics
-    .filter((diagnostic) => blockingKinds.has(diagnostic.kind))
+    .filter((diagnostic) => {
+      if (!blockingKinds.has(diagnostic.kind)) return false;
+      if (result.source !== "distributed" || !diagnostic.path) return true;
+      const entry = result.entries.find((candidate) => candidate.path === diagnostic.path);
+      if (diagnostic.kind === "missing_order_key" && assignments.has(diagnostic.path)) return false;
+      if (diagnostic.kind === "missing_parent" && entry?.parentPath && !entry.parentReferenceInvalid) return false;
+      return true;
+    })
     .map((diagnostic) => ({
       path: diagnostic.path,
       message: diagnostic.message
     }));
 }
 
+function preparationState(
+  result: ManuscriptOrderResult,
+  diagnostics: readonly ManuscriptPreparationDiagnostic[],
+  files: readonly ManuscriptPreparationFilePlan[]
+): ManuscriptPreparationState {
+  if (result.source === "distributed" && diagnostics.length === 0) {
+    return files.every((file) => file.changes.every((change) => change.property === MANUSCRIPT_ORDER_PROPERTY))
+      ? "fully_prepared" : "partially_distributed";
+  }
+  if (result.source === "legacy_array" && diagnostics.length === 0) return "legacy_array";
+  if (result.source === "legacy") return result.diagnostics.some((item) => item.kind === "legacy_ambiguous")
+    ? "ambiguous_hierarchy" : diagnostics.length ? "conflicting_distributed_metadata" : "deterministic_folder_order";
+  if (result.source === "none") return "unsupported_or_unrecognised";
+  const kinds = new Set(result.diagnostics.map((item) => item.kind));
+  if (kinds.has("invalid_property_shape") || kinds.has("invalid_reference") || kinds.has("unresolved_reference")
+    || kinds.has("duplicate_entry") || kinds.has("cross_book_entry") || kinds.has("unlisted_entry")) {
+    return "malformed_or_incomplete_legacy_metadata";
+  }
+  if (kinds.has("missing_order_key")) return "partially_distributed";
+  if (kinds.has("invalid_order_key") || kinds.has("duplicate_order_key")) return "conflicting_distributed_metadata";
+  if (kinds.has("missing_parent") || kinds.has("invalid_parent_kind") || kinds.has("parent_cycle") || kinds.has("legacy_ambiguous")) return "ambiguous_hierarchy";
+  return "conflicting_distributed_metadata";
+}
+
 export function planManuscriptPreparation(
   input: ManuscriptPreparationInput
 ): ManuscriptPreparationPlan {
-  const diagnostics = blockingDiagnostics(input.result);
+  const assignments = siblingKeyAssignments(input.book.path, input.result.entries, input.result.source === "distributed");
+  const diagnostics = blockingDiagnostics(input.result, assignments);
   if (input.result.source === "none") {
     diagnostics.push({
       path: input.book.path,
@@ -284,10 +355,6 @@ export function planManuscriptPreparation(
     });
   }
 
-  const assignments = siblingKeyAssignments(
-    input.book.path,
-    input.result.entries
-  );
   const files: ManuscriptPreparationFilePlan[] = [];
   const bookPlan = plannedFile(
     input.book,
@@ -296,7 +363,8 @@ export function planManuscriptPreparation(
     null,
     input.frontmatterByPath.get(input.book.path),
     true,
-    diagnostics
+    diagnostics,
+    input.fileVersionByPath?.get(input.book.path)
   );
   if (bookPlan) files.push(bookPlan);
 
@@ -307,8 +375,7 @@ export function planManuscriptPreparation(
       : effectiveParent(entry, input.book.path);
     const expectedKey = expectedOrderKey(
       entry,
-      assignments,
-      input.result.source
+      assignments
     );
     if (!expectedKey) {
       diagnostics.push({
@@ -325,7 +392,8 @@ export function planManuscriptPreparation(
       expectedKey,
       input.frontmatterByPath.get(entry.path),
       false,
-      diagnostics
+      diagnostics,
+      input.fileVersionByPath?.get(entry.path)
     );
     if (plan) files.push(plan);
   }
@@ -338,7 +406,8 @@ export function planManuscriptPreparation(
     files,
     diagnostics,
     canApply,
-    alreadyPrepared: diagnostics.length === 0 && files.length === 0
+    alreadyPrepared: diagnostics.length === 0 && files.length === 0,
+    state: preparationState(input.result, diagnostics, files)
   };
 }
 
@@ -346,6 +415,7 @@ function stablePlanValue(plan: ManuscriptPreparationPlan): unknown {
   return {
     bookPath: plan.bookPath,
     source: plan.source,
+    state: plan.state,
     diagnostics: plan.diagnostics,
     files: plan.files.map((file) => ({
       path: file.path,
@@ -357,7 +427,8 @@ function stablePlanValue(plan: ManuscriptPreparationPlan): unknown {
             left.localeCompare(right)
           ))
         )
-      }
+      },
+      expectedFileVersion: file.expectedFileVersion
     }))
   };
 }
@@ -367,6 +438,24 @@ export function sameManuscriptPreparationPlan(
   right: ManuscriptPreparationPlan
 ): boolean {
   return JSON.stringify(stablePlanValue(left)) === JSON.stringify(stablePlanValue(right));
+}
+
+export function manuscriptPreparationExecutionSteps(
+  plan: ManuscriptPreparationPlan
+): ManuscriptPreparationExecutionStep[] {
+  const steps: ManuscriptPreparationExecutionStep[] = [];
+  const book = plan.files.find((file) => file.path === plan.bookPath);
+  if (book) {
+    const mutation = { set: book.mutation.set, remove: book.mutation.remove.filter((property) => property !== MANUSCRIPT_ORDER_PROPERTY) };
+    if (Object.keys(mutation.set).length || mutation.remove.length) steps.push({ file: book, phase: "prepare_book", mutation });
+  }
+  for (const file of plan.files.filter((candidate) => candidate.path !== plan.bookPath)) {
+    steps.push({ file, phase: "prepare_child", mutation: file.mutation });
+  }
+  if (book?.mutation.remove.includes(MANUSCRIPT_ORDER_PROPERTY)) {
+    steps.push({ file: book, phase: "remove_legacy_order", mutation: { set: {}, remove: [MANUSCRIPT_ORDER_PROPERTY] } });
+  }
+  return steps;
 }
 
 export function describePreparationValue(value: unknown): string {

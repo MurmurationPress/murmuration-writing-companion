@@ -668,3 +668,12 @@ export function manuscriptNeedsReconciliation(result: ManuscriptOrderResult): bo
   return result.source === "distributed"
     && result.diagnostics.some((diagnostic) => RECONCILIATION_DIAGNOSTICS.has(diagnostic.kind));
 }
+
+export function manuscriptNeedsPreparation(result: ManuscriptOrderResult): boolean {
+  if (result.source === "legacy" || result.source === "legacy_array") return true;
+  if (result.source !== "distributed") return false;
+  const kinds = new Set(result.diagnostics.map((diagnostic) => diagnostic.kind));
+  const conflictKinds = ["invalid_order_key", "duplicate_order_key", "invalid_parent_kind", "parent_cycle"] as const;
+  return (kinds.has("missing_order_key") || kinds.has("missing_parent"))
+    && !conflictKinds.some((kind) => kinds.has(kind));
+}

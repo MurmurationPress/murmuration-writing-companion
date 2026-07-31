@@ -7,6 +7,7 @@ import type {
 } from "../../src/manuscript/ManuscriptOrder";
 import {
   manuscriptNeedsReconciliation,
+  manuscriptNeedsPreparation,
   manuscriptReconciliationPlacementOptions,
   planManuscriptReconciliation
 } from "../../src/manuscript/ManuscriptReconciliation";
@@ -87,6 +88,7 @@ test("requires an explicit placement for a newly added unranked scene", () => {
   };
 
   equal(manuscriptNeedsReconciliation(order), true);
+  equal(manuscriptNeedsPreparation(order), true);
   const incomplete = planManuscriptReconciliation(input);
   equal(incomplete.canApply, false);
   match(incomplete.unresolved[0], /needs a position/i);

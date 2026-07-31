@@ -6,6 +6,7 @@ import {
 import {
   ManuscriptPreparationMutation,
   ManuscriptPreparationPlan,
+  manuscriptPreparationExecutionSteps,
   planManuscriptPreparation,
   sameManuscriptPreparationPlan
 } from "./ManuscriptPreparation";
@@ -17,7 +18,9 @@ interface FrontmatterSnapshot {
 interface ManuscriptPreparationUndoState {
   readonly file: TFile;
   readonly before: FrontmatterSnapshot;
-  readonly after: FrontmatterSnapshot;
+  after: FrontmatterSnapshot;
+  readonly beforeContent: string;
+  afterContent: string;
 }
 
 export interface ManuscriptPreparationUndoToken {
@@ -34,8 +37,10 @@ export class StaleManuscriptPreparationError extends Error {
 }
 
 export class StaleManuscriptPreparationUndoError extends Error {
-  constructor() {
-    super("The manuscript metadata changed after preparation, so Undo is no longer safe.");
+  constructor(readonly paths: readonly string[] = []) {
+    super(paths.length
+      ? `Undo is not safe because these prepared notes changed, moved or disappeared: ${paths.join(", ")}.`
+      : "The manuscript metadata changed after preparation, so Undo is no longer safe.");
     this.name = "StaleManuscriptPreparationUndoError";
   }
 }
@@ -45,6 +50,18 @@ export class ManuscriptPreparationSyncConflictError extends Error {
     super(`Resolve sync or Git conflict markers before preparing the manuscript: ${path}`);
     this.name = "ManuscriptPreparationSyncConflictError";
   }
+}
+
+export class ManuscriptPreparationRollbackError extends Error {
+  constructor(readonly originalError: unknown, readonly failedPaths: readonly string[]) {
+    super(`Preparation failed and exact rollback could not be verified for: ${failedPaths.join(", ")}. Restore these notes from version control or backup before continuing.`);
+    this.name = "ManuscriptPreparationRollbackError";
+  }
+}
+
+/** Integration boundary for compiler-side acceptance without duplicating compiler rules. */
+export interface ManuscriptPreparationAcceptance {
+  validate(bookPath: string): Promise<void>;
 }
 
 function cloneValue<T>(value: T): T {
@@ -116,6 +133,7 @@ export function planObsidianManuscriptPreparation(
     string,
     Record<string, unknown> | undefined
   >();
+  const fileVersionByPath = new Map<string, { mtime: number; size: number }>();
   const paths = new Set([
     book.file.path,
     ...book.result.entries.map((entry) => entry.path)
@@ -124,23 +142,57 @@ export function planObsidianManuscriptPreparation(
   for (const path of paths) {
     const file = book.filesByPath.get(path)
       ?? (path === book.file.path ? book.file : null);
-    if (file) frontmatterByPath.set(path, frontmatterFor(app, file));
+    if (file) {
+      frontmatterByPath.set(path, frontmatterFor(app, file));
+      fileVersionByPath.set(path, { mtime: file.stat.mtime, size: file.stat.size });
+    }
   }
 
   return planManuscriptPreparation({
     book: book.record,
     result: book.result,
-    frontmatterByPath
+    frontmatterByPath,
+    fileVersionByPath
   });
 }
 
-function plannedWriteOrder(
+/** Adds content-level blockers that are not represented by the metadata cache. */
+export async function validateManuscriptPreparationPreview(
+  app: App,
+  book: ObsidianManuscriptBook,
   plan: ManuscriptPreparationPlan
-): ManuscriptPreparationPlan["files"] {
-  return [
-    ...plan.files.filter((file) => file.path !== plan.bookPath),
-    ...plan.files.filter((file) => file.path === plan.bookPath)
-  ];
+): Promise<ManuscriptPreparationPlan> {
+  const diagnostics = [...plan.diagnostics];
+  let malformed = false;
+  let conflict = false;
+  for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path)])) {
+    const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : null);
+    if (!file) {
+      diagnostics.push({ path, message: "This recognised manuscript note is no longer available at its previewed path." });
+      continue;
+    }
+    const content = await app.vault.read(file);
+    if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve sync or Git conflict markers before preparation." }); }
+    const match = content.match(/^---\s*\r?\n([\s\S]*?)(?:\r?\n---(?:\s*\r?\n|$))/);
+    if (!match && content.startsWith("---")) {
+      malformed = true;
+      diagnostics.push({ path, message: "Frontmatter is not closed correctly; repair it before preparation." });
+    } else if (match) {
+      try {
+        const parsed = parseYaml(match[1]);
+        if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not a mapping");
+      } catch {
+        malformed = true;
+        diagnostics.push({ path, message: "Frontmatter is malformed; repair its YAML before preparation." });
+      }
+    }
+  }
+  if (diagnostics.length === plan.diagnostics.length) return plan;
+  return {
+    ...plan, diagnostics, canApply: false, alreadyPrepared: false,
+    state: malformed ? "malformed_or_incomplete_legacy_metadata"
+      : conflict ? "conflicting_distributed_metadata" : "ambiguous_hierarchy"
+  };
 }
 
 function hasConflictMarkers(content: string): boolean {
@@ -183,26 +235,26 @@ async function verifyWrittenSnapshot(
 async function rollbackAppliedStates(
   app: App,
   states: readonly ManuscriptPreparationUndoState[]
-) {
+): Promise<string[]> {
+  const failures: string[] = [];
   for (const state of [...states].reverse()) {
     try {
-      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
-        const current = captureFrontmatter(frontmatter);
-        if (snapshotsEqual(current, state.after)) {
-          replaceFrontmatter(frontmatter, state.before);
-        }
-      });
-      await verifyWrittenSnapshot(app, state.file, state.before);
+      const current = await app.vault.read(state.file);
+      if (current !== state.afterContent) throw new Error("The note changed during rollback.");
+      await app.vault.modify(state.file, state.beforeContent);
+      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("Exact rollback verification failed.");
     } catch {
-      // Never overwrite a later edit while recovering from a failed transaction.
+      failures.push(state.file.path);
     }
   }
+  return failures;
 }
 
 export async function applyManuscriptPreparation(
   app: App,
   book: ObsidianManuscriptBook,
-  plan: ManuscriptPreparationPlan
+  plan: ManuscriptPreparationPlan,
+  acceptance?: ManuscriptPreparationAcceptance
 ): Promise<ManuscriptPreparationUndoToken> {
   if (!plan.canApply) {
     throw new Error(
@@ -222,41 +274,42 @@ export async function applyManuscriptPreparation(
   }
 
   const states: ManuscriptPreparationUndoState[] = [];
-  try {
-    for (const filePlan of plannedWriteOrder(plan)) {
-      const file = currentBook.filesByPath.get(filePlan.path)
-        ?? (filePlan.path === currentBook.file.path ? currentBook.file : null);
-      if (!file) throw new StaleManuscriptPreparationError();
-
-      await assertNoConflictMarkers(app, file);
-      const version = { mtime: file.stat.mtime, size: file.stat.size };
-      const expectedBefore: FrontmatterSnapshot = {
-        values: cloneValue(filePlan.beforeFrontmatter)
-      };
-      let before: FrontmatterSnapshot | null = null;
-      let after: FrontmatterSnapshot | null = null;
-
-      await app.fileManager.processFrontMatter(file, (frontmatter) => {
-        if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) {
-          throw new StaleManuscriptPreparationError();
-        }
-        const current = captureFrontmatter(frontmatter);
-        if (!snapshotsEqual(current, expectedBefore)) {
-          throw new StaleManuscriptPreparationError();
-        }
-        before = current;
-        applyMutation(frontmatter, filePlan.mutation);
-        after = captureFrontmatter(frontmatter);
-      });
-
-      if (!before || !after) {
-        throw new Error(`Could not capture preparation changes for ${filePlan.title}.`);
-      }
-      await verifyWrittenSnapshot(app, file, after);
-      states.push({ file, before, after });
+  const writePlan = async (filePlan: ManuscriptPreparationPlan["files"][number], mutation: ManuscriptPreparationMutation) => {
+    const file = currentBook.filesByPath.get(filePlan.path)
+      ?? (filePlan.path === currentBook.file.path ? currentBook.file : null);
+    if (!file) throw new StaleManuscriptPreparationError();
+    await assertNoConflictMarkers(app, file);
+    const beforeContent = await app.vault.read(file);
+    const existingState = states.find((state) => state.file.path === file.path);
+    const version = existingState
+      ? { mtime: file.stat.mtime, size: file.stat.size }
+      : filePlan.expectedFileVersion ?? { mtime: file.stat.mtime, size: file.stat.size };
+    if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) throw new StaleManuscriptPreparationError();
+    const expectedBefore: FrontmatterSnapshot = existingState?.after ?? { values: cloneValue(filePlan.beforeFrontmatter) };
+    let before: FrontmatterSnapshot | null = null;
+    let after: FrontmatterSnapshot | null = null;
+    await app.fileManager.processFrontMatter(file, (frontmatter) => {
+      if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) throw new StaleManuscriptPreparationError();
+      const current = captureFrontmatter(frontmatter);
+      if (!snapshotsEqual(current, expectedBefore)) throw new StaleManuscriptPreparationError();
+      before = current; applyMutation(frontmatter, mutation); after = captureFrontmatter(frontmatter);
+    });
+    if (!before || !after) throw new Error(`Could not capture preparation changes for ${filePlan.title}.`);
+    const afterContent = await app.vault.read(file);
+    if (existingState) {
+      existingState.after = after;
+      existingState.afterContent = afterContent;
+    } else {
+      states.push({ file, before, after, beforeContent, afterContent });
     }
+    await verifyWrittenSnapshot(app, file, after);
+  };
+  try {
+    for (const step of manuscriptPreparationExecutionSteps(plan)) await writePlan(step.file, step.mutation);
+    await acceptance?.validate(plan.bookPath);
   } catch (error) {
-    await rollbackAppliedStates(app, states);
+    const failedPaths = await rollbackAppliedStates(app, states);
+    if (failedPaths.length) throw new ManuscriptPreparationRollbackError(error, failedPaths);
     throw error;
   }
 
@@ -273,29 +326,29 @@ export async function undoManuscriptPreparation(
 ): Promise<void> {
   const restored: ManuscriptPreparationUndoState[] = [];
 
+  const stalePaths: string[] = [];
+  for (const state of token.states) {
+    const currentFile = app.vault.getAbstractFileByPath(state.file.path);
+    if (currentFile !== state.file) { stalePaths.push(state.file.path); continue; }
+    const content = await app.vault.read(state.file);
+    if (content !== state.afterContent || hasConflictMarkers(content)) stalePaths.push(state.file.path);
+  }
+  if (stalePaths.length) throw new StaleManuscriptPreparationUndoError(stalePaths);
+
   try {
     for (const state of [...token.states].reverse()) {
       await assertNoConflictMarkers(app, state.file);
-      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
-        const current = captureFrontmatter(frontmatter);
-        if (!snapshotsEqual(current, state.after)) {
-          throw new StaleManuscriptPreparationUndoError();
-        }
-        replaceFrontmatter(frontmatter, state.before);
-      });
-      await verifyWrittenSnapshot(app, state.file, state.before);
+      if (await app.vault.read(state.file) !== state.afterContent) throw new StaleManuscriptPreparationUndoError();
+      await app.vault.modify(state.file, state.beforeContent);
       restored.push(state);
+      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error(`Could not verify exact Undo for ${state.file.path}.`);
     }
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {
-        await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
-          const current = captureFrontmatter(frontmatter);
-          if (snapshotsEqual(current, state.before)) {
-            replaceFrontmatter(frontmatter, state.after);
-          }
-        });
-        await verifyWrittenSnapshot(app, state.file, state.after);
+        if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("The note changed during Undo rollback.");
+        await app.vault.modify(state.file, state.afterContent);
+        if (await app.vault.read(state.file) !== state.afterContent) throw new Error("Undo rollback verification failed.");
       } catch {
         // Do not overwrite a later edit while rolling back an unsafe Undo.
       }

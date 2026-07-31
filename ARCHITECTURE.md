@@ -62,6 +62,10 @@ Duplicate names and aliases remain separate records ordered by path. Scope and p
 
 The printable entity index is a disposable selected-Book or whole-vault projection over this same Story World identity and the authoritative manuscript hierarchy. Explicit cached Scene wikilinks resolve through Obsidian first and the unique alias fallback second; structured source/support occurrences reuse manuscript-impact evidence. The projection deduplicates by canonical entity path and Scene path, orders Scenes by the Navigator projection, and never promotes plain-text mentions, temporal inference, or continuity inference into occurrences. Saved indexes use `type: generated-report` with `report_type: entity-index`; the shared generated-report classification excludes them from manuscript and Story World discovery and therefore from graphs, observations and subsequent reports.
 
+### Manuscript preparation boundary
+
+Preparation is split into pure analysis/immutable planning, modal presentation, transactional execution, read-back verification and in-memory immediate Undo. It consumes `ManuscriptOrderResult`, canonical metadata aliases, wikilink resolution and `ManuscriptOrderKey` allocation rather than scanning or sorting manuscripts independently. Exact file content is retained only for the active transaction/Undo token. The Book is prepared before children, legacy `manuscript_order` removal is deferred until child verification, and any failure rolls completed files back to exact bytes. `ManuscriptPreparationAcceptance` is the integration boundary for Codex Press validation; compiler rules are not duplicated in the plugin.
+
 The index contains defensive copies of parsed frontmatter values but owns no canon. It is not serialized, does not enter `.murmuration/writing-companion/editorial-data.json`, and can be discarded and reconstructed at any time. It never modifies, creates, renames or deletes Markdown notes.
 
 ---
