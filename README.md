@@ -4,6 +4,10 @@ A focused writing companion for Obsidian.
 
 Writing a novel is difficult enough. Your tools shouldn't make it harder.
 
+## Start here
+
+New to MWC? Follow the [V2 onboarding guide](docs/v2-onboarding-guide.md). It covers installation, Project Readiness, creating or preparing a manuscript, optional Story World use, recovery and the safe [fictional example vaults](examples/v2-onboarding/README.md). Keep the first pass short: open Project Readiness, follow the one relevant action it offers, and review every proposed write before approving it.
+
 ## Author workflow
 
 Use **Manuscript** in the left sidebar to choose a book, open scenes and manage explicit manuscript order. Review the active chapter in the **Writing Companion**, including Chapter Context, book and editorial progress, Chapter Notes and annotations. Browse or create Story World material in the **Story World Navigator**; selecting an entity or supporting model opens its Markdown and changes the right sidebar to **Entity Inspector**. Use the relationship workspace there, then open **Story World Timeline** in the centre to explore chronology or the event–scene map.
@@ -20,6 +24,10 @@ Manuscript and Story World Markdown remain authoritative. The plugin derives nav
 - [Supporting Model Conventions](docs/supporting-model-conventions.md) — how relationships, chronology and knowledge are represented without duplicating canon
 - [Chapter World Context Standard](docs/chapter-world-context-standard.md) — how chapters identify explicitly relevant Story World entities
 - [Read-only Story World Index](docs/story-world-index.md) — how opted-in entity notes are discovered and refreshed without copying canon
+- [V2 onboarding guide](docs/v2-onboarding-guide.md) — author workflow, readiness states, preparation and recovery
+- [Command and UI reference](docs/v2-command-reference.md) — exact current command labels and context actions
+- [Example-vault manual validation](docs/v2-onboarding-manual-validation.md) — prepared and migration walkthroughs for #160
+- [V2 release-validation handoff](docs/v2-release-validation-handoff.md) — fixtures, expected states, archive and platform checks
 
 ## Development install
 
@@ -49,6 +57,13 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 - Open Manuscript
 - Open Story World Navigator
 - Open Story World Timeline
+- Open Story World Review
+- Open Story World Graph
+- Open Continuity Review
+- Open project readiness
+- Prepare existing manuscript
+- Undo manuscript preparation
+- Generate entity index
 - Annotate
 - Back up vault to GitHub (desktop only)
 

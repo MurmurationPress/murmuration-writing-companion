@@ -16,4 +16,6 @@ An empty vault is shown as **Ready to begin** and links to Manuscript Navigator,
 
 If structure is blocked, open the technical details and correct the named note and property. Common causes are unresolved `parent` links, duplicate or malformed `manuscript_order_key` values, conflicting `type` properties, or malformed/incomplete legacy arrays. Then choose **Recheck project readiness**. See [Prepare an existing manuscript](prepare-existing-manuscript.md) for preview, rollback, Undo, and authoritative property details.
 
-This is the readiness and presentation contract expected by #161's onboarding documentation/example vault and #160's release validation matrix. Automatic project creation, example-vault insertion, compiler setup, telemetry, and destructive repair remain deliberately outside this workflow.
+This readiness contract is explained in the #161 onboarding documentation and demonstrated by its example vaults. #160 owns the final release-validation matrix. Automatic project creation, example-vault insertion, compiler setup, telemetry, and destructive repair remain deliberately outside this workflow.
+
+For the complete author journey, use the [V2 onboarding guide](v2-onboarding-guide.md) and its separate [prepared and migration example vaults](../examples/v2-onboarding/README.md).
