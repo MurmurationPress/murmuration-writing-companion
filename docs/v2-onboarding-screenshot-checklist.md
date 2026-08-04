@@ -1,6 +1,6 @@
 # V2 onboarding screenshot checklist
 
-Final screenshots require a real Obsidian session and must not be fabricated. Capture PNG images at 1600 × 1000 or larger, crop to the relevant Obsidian workspace, retain readable text at 100% zoom and avoid personal vault names or paths. Use descriptive alt text from the table.
+These final screenshots were captured from a real Obsidian session. They use the target filenames and subjects below, retain readable interface text and avoid personal vault names or paths.
 
 | File target | Vault state and action | Required subject and suggested alt text |
 |---|---|---|
@@ -18,4 +18,4 @@ Final screenshots require a real Obsidian session and must not be fabricated. Ca
 | `docs/images/v2/references.png` | Prepared example; open Greywater Hydrophone Log and its source links. | “Reference entity associating the Greywater field log with manuscript sources.” |
 | `docs/images/v2/entity-index.png` | Run **Generate entity index**, scope Vault, include Reference. | “Vault entity index preview with canonical Story World entries and Scene links.” |
 
-All targets are explicitly pending until captured during #160 release validation. Documentation must not use broken image embeds before those files exist.
+All 13 targets have been captured and are tracked under `docs/images/v2/`.
