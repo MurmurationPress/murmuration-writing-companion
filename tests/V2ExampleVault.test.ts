@@ -1,4 +1,4 @@
-import { deepEqual, equal, match, ok } from "node:assert/strict";
+import { deepEqual, doesNotMatch, equal, match, ok } from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -201,6 +201,27 @@ test("onboarding documentation links resolve and command labels match registrati
   const commandGuide = await readFile(path.join(root, "docs/v2-command-reference.md"), "utf8");
   match(commandGuide, /no \*\*Generate references report\*\* command/);
   const screenshots = await readFile(path.join(root, "docs/v2-onboarding-screenshot-checklist.md"), "utf8");
-  equal((screenshots.match(/`docs\/images\/v2\//g) ?? []).length, 13);
-  match(screenshots, /explicitly pending/);
+  const expectedScreenshots = [
+    "readiness-invitation.png",
+    "readiness-prepared.png",
+    "readiness-preparation-available.png",
+    "prepare-action.png",
+    "preparation-preview.png",
+    "preparation-blocked.png",
+    "preparation-undo.png",
+    "manuscript-navigator.png",
+    "story-world-navigator.png",
+    "continuity-review.png",
+    "story-world-graph.png",
+    "references.png",
+    "entity-index.png"
+  ];
+  const listedScreenshots = [...screenshots.matchAll(/^\| `docs\/images\/v2\/([^`]+)` \|/gm)].map((entry) => entry[1]);
+  deepEqual(listedScreenshots, expectedScreenshots);
+  for (const filename of expectedScreenshots) {
+    equal(listedScreenshots.filter((listed) => listed === filename).length, 1, `${filename} checklist row`);
+    await stat(path.join(root, "docs/images/v2", filename));
+  }
+  const screenshotDocumentation = `${screenshots}\n${await readFile(path.join(root, "docs/v2-onboarding-manual-validation.md"), "utf8")}\n${await readFile(path.join(root, "docs/website-v2-onboarding-summary.md"), "utf8")}`;
+  doesNotMatch(screenshotDocumentation, /all (?:screenshot )?targets are explicitly pending|screenshots? (?:are|remain) (?:explicitly )?(?:pending|missing|placeholders?)|(?:pending|missing|placeholder) screenshot(?:s| assets)?/i);
 });

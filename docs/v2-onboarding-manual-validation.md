@@ -29,6 +29,6 @@ Use copies extracted from the deterministic example archive. Record checksums or
 
 18. Confirm no file outside the opened example vault changed.
 19. Reset by deleting the disposable copy and extracting a fresh archive. Never reset by bulk-removing structural metadata.
-20. Follow the [screenshot checklist](v2-onboarding-screenshot-checklist.md) during #160 on supported Obsidian versions and the required Windows/Linux matrix.
+20. Use the completed [screenshot checklist](v2-onboarding-screenshot-checklist.md) as the visual reference on supported Obsidian versions and the required Windows/Linux matrix.
 
 Also ask a technically capable Obsidian user without repository knowledge to follow the [onboarding guide](v2-onboarding-guide.md) from the release package. Record any step that requires source-code or GitHub knowledge as a documentation defect.
