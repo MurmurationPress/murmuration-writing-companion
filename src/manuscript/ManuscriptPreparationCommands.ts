@@ -14,6 +14,10 @@ import {
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
 import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
 import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
+import {
+  manuscriptPreparationActionsNeedInstallation,
+  manuscriptPreparationUndoNoticeVisible
+} from "./ManuscriptPreparationActions";
 
 export interface ManuscriptPreparationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
@@ -60,14 +64,41 @@ export function installManuscriptPreparationCommands(
   let operationRunning = false;
   const actionsByView = new WeakMap<ItemView, PreparationActions>();
 
+  const installUndoStatus = (view: ItemView) => {
+    const existing = view.containerEl.querySelector<HTMLElement>(
+      ".mwc-manuscript-preparation-undo-status"
+    );
+    if (!manuscriptPreparationUndoNoticeVisible(Boolean(undoToken), operationRunning)) {
+      existing?.remove();
+      return;
+    }
+    const content = view.containerEl.children[1] as HTMLElement | undefined;
+    const heading = content?.querySelector<HTMLElement>(".mwc-manuscript-heading");
+    if (!content || !heading) return;
+    const status = existing ?? document.createElement("div");
+    status.className = "mwc-manuscript-preparation-undo-status mwc-manuscript-notice";
+    status.empty();
+    status.createDiv({ text: "Manuscript preparation completed. The original files can be restored until a prepared note changes." });
+    const undo = status.createEl("button", {
+      text: "Undo manuscript preparation",
+      attr: { type: "button", "aria-label": "Undo manuscript preparation" }
+    });
+    undo.disabled = operationRunning || !undoToken;
+    undo.onclick = () => void undoPreparation();
+    status.setAttribute("role", "status");
+    if (!existing) heading.insertAdjacentElement("afterend", status);
+  };
+
   const installActions = () => {
     const leaves = host.app.workspace.getLeavesOfType(
       MANUSCRIPT_NAVIGATOR_VIEW_TYPE
     );
     for (const leaf of leaves) {
       const view = leaf.view as ItemView;
+      (view as ItemView & { setPreparationActionsRenderer?: (renderer: () => void) => void })
+        .setPreparationActionsRenderer?.(installActions);
       let actions = actionsByView.get(view);
-      if (!actions) {
+      if (manuscriptPreparationActionsNeedInstallation(actions)) {
         const prepare = view.addAction(
           "wand-sparkles",
           "Prepare existing manuscript",
@@ -78,11 +109,14 @@ export function installManuscriptPreparationCommands(
           "Undo manuscript preparation",
           () => void undoPreparation()
         );
-        actions = { prepare, undo };
-        actionsByView.set(view, actions);
+        const installed = { prepare, undo };
+        actionsByView.set(view, installed);
+        actions = installed;
       }
+      if (!actions) continue;
       actions.prepare.style.display = operationRunning ? "none" : "";
       actions.undo.style.display = undoToken && !operationRunning ? "" : "none";
+      installUndoStatus(view);
     }
   };
 
@@ -135,10 +169,9 @@ export function installManuscriptPreparationCommands(
     const token = undoToken;
     try {
       await undoManuscriptPreparation(host.app, token);
-      undoToken = token;
+      undoToken = null;
       new Notice("Manuscript preparation undone.");
     } catch (error) {
-      undoToken = null;
       new Notice(
         error instanceof StaleManuscriptPreparationUndoError
           ? error.message
