@@ -1,0 +1,211 @@
+{
+  "main": {
+    "id": "072e3796ba646c48",
+    "type": "split",
+    "children": [
+      {
+        "id": "191e43f6c458d0a8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fff15d722064f9fa",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a20c6b3e28d87cf4",
+    "type": "split",
+    "children": [
+      {
+        "id": "a91a9e92c22569c0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c027c60c19dc5063",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "76d528dedef30714",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "d8ccd11aac5bcf1b",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          },
+          {
+            "id": "ab68910c29f7df6b",
+            "type": "leaf",
+            "state": {
+              "type": "murmuration-manuscript-navigator-view",
+              "state": {},
+              "icon": "list-tree",
+              "title": "Manuscript"
+            }
+          },
+          {
+            "id": "6711764c99b75fa8",
+            "type": "leaf",
+            "state": {
+              "type": "murmuration-story-world-navigator",
+              "state": {},
+              "icon": "map",
+              "title": "Story World Navigator"
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "293b7bfa23adf2c8",
+    "type": "split",
+    "children": [
+      {
+        "id": "1384235ac8ae96a0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f09d85f3d399ddc9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "2f4f04f698794c15",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "9bfe5d5da7f7d800",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "0e7a617fba11ea82",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "f4c9417c54b6d415",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "murmuration-writing-companion:Open Writing Companion": false,
+      "murmuration-writing-companion:Open Manuscript": false,
+      "murmuration-writing-companion:Back up vault to GitHub": false,
+      "murmuration-writing-companion:Open Story World Navigator": false
+    }
+  },
+  "active": "fff15d722064f9fa",
+  "lastOpenFiles": []
+}

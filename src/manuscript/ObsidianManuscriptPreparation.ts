@@ -10,6 +10,12 @@ import {
   planManuscriptPreparation,
   sameManuscriptPreparationPlan
 } from "./ManuscriptPreparation";
+import {
+  beginExactManuscriptContentRestoration,
+  cancelExactManuscriptContentRestoration,
+  completeExactManuscriptContentRestoration
+} from "./ManuscriptSequenceProperty";
+import { manuscriptPreparationContentMatchesUndoState } from "./ManuscriptPreparationUndoComparison";
 
 interface FrontmatterSnapshot {
   readonly values: Readonly<Record<string, unknown>>;
@@ -237,6 +243,9 @@ async function rollbackAppliedStates(
   states: readonly ManuscriptPreparationUndoState[]
 ): Promise<string[]> {
   const failures: string[] = [];
+  beginExactManuscriptContentRestoration(app, new Map(
+    states.map((state) => [state.file.path, state.beforeContent])
+  ));
   for (const state of [...states].reverse()) {
     try {
       const current = await app.vault.read(state.file);
@@ -247,7 +256,47 @@ async function rollbackAppliedStates(
       failures.push(state.file.path);
     }
   }
+  const failed = new Set(failures);
+  completeExactManuscriptContentRestoration(
+    app,
+    states.filter((state) => !failed.has(state.file.path)).map((state) => state.file.path)
+  );
+  cancelExactManuscriptContentRestoration(app, failures);
   return failures;
+}
+
+const DERIVED_REPORTING_PROPERTIES = new Set([
+  "manuscript_sequence",
+  "book_scene_number",
+  "series_scene_number"
+]);
+
+function withoutDerivedReporting(snapshot: FrontmatterSnapshot): FrontmatterSnapshot {
+  return {
+    values: Object.fromEntries(Object.entries(snapshot.values).filter(
+      ([property]) => !DERIVED_REPORTING_PROPERTIES.has(property)
+    ))
+  };
+}
+
+function markdownBody(content: string): string | null {
+  const match = content.match(/^---\s*\r?\n[\s\S]*?\r?\n---(?:\s*\r?\n|$)/);
+  return match ? content.slice(match[0].length) : null;
+}
+
+function contentMatchesPreparationUndoState(
+  content: string,
+  state: ManuscriptPreparationUndoState
+): boolean {
+  if (manuscriptPreparationContentMatchesUndoState(content, state.afterContent)) return true;
+  const currentBody = markdownBody(content);
+  const preparedBody = markdownBody(state.afterContent);
+  if (currentBody === null || preparedBody === null || currentBody !== preparedBody) return false;
+  const current = captureFrontmatter(frontmatterFromMarkdown(content));
+  return snapshotsEqual(
+    withoutDerivedReporting(current),
+    withoutDerivedReporting(state.after)
+  );
 }
 
 export async function applyManuscriptPreparation(
@@ -325,34 +374,50 @@ export async function undoManuscriptPreparation(
   token: ManuscriptPreparationUndoToken
 ): Promise<void> {
   const restored: ManuscriptPreparationUndoState[] = [];
+  const paths = token.states.map((state) => state.file.path);
+  const preparedContentByPath = new Map<string, string>();
+  const filesByPath = new Map<string, TFile>();
 
   const stalePaths: string[] = [];
   for (const state of token.states) {
     const currentFile = app.vault.getAbstractFileByPath(state.file.path);
-    if (currentFile !== state.file) { stalePaths.push(state.file.path); continue; }
-    const content = await app.vault.read(state.file);
-    if (content !== state.afterContent || hasConflictMarkers(content)) stalePaths.push(state.file.path);
+    if (!(currentFile instanceof TFile)) { stalePaths.push(state.file.path); continue; }
+    filesByPath.set(state.file.path, currentFile);
+    const content = await app.vault.read(currentFile);
+    preparedContentByPath.set(state.file.path, content);
+    if (!contentMatchesPreparationUndoState(content, state) || hasConflictMarkers(content)) {
+      stalePaths.push(state.file.path);
+    }
   }
   if (stalePaths.length) throw new StaleManuscriptPreparationUndoError(stalePaths);
 
+  beginExactManuscriptContentRestoration(app, new Map(
+    token.states.map((state) => [state.file.path, state.beforeContent])
+  ));
   try {
     for (const state of [...token.states].reverse()) {
-      await assertNoConflictMarkers(app, state.file);
-      if (await app.vault.read(state.file) !== state.afterContent) throw new StaleManuscriptPreparationUndoError();
-      await app.vault.modify(state.file, state.beforeContent);
+      const file = filesByPath.get(state.file.path) ?? state.file;
+      await assertNoConflictMarkers(app, file);
+      const preparedContent = preparedContentByPath.get(state.file.path) ?? state.afterContent;
+      if (await app.vault.read(file) !== preparedContent) throw new StaleManuscriptPreparationUndoError();
+      await app.vault.modify(file, state.beforeContent);
       restored.push(state);
-      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error(`Could not verify exact Undo for ${state.file.path}.`);
+      if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify exact Undo for ${state.file.path}.`);
     }
+    completeExactManuscriptContentRestoration(app, paths);
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {
-        if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("The note changed during Undo rollback.");
-        await app.vault.modify(state.file, state.afterContent);
-        if (await app.vault.read(state.file) !== state.afterContent) throw new Error("Undo rollback verification failed.");
+        const file = filesByPath.get(state.file.path) ?? state.file;
+        if (await app.vault.read(file) !== state.beforeContent) throw new Error("The note changed during Undo rollback.");
+        const preparedContent = preparedContentByPath.get(state.file.path) ?? state.afterContent;
+        await app.vault.modify(file, preparedContent);
+        if (await app.vault.read(file) !== preparedContent) throw new Error("Undo rollback verification failed.");
       } catch {
         // Do not overwrite a later edit while rolling back an unsafe Undo.
       }
     }
+    cancelExactManuscriptContentRestoration(app, paths);
     throw error;
   }
 }

@@ -245,6 +245,7 @@ export class ManuscriptNavigatorView extends ItemView {
   private operationMessage: string | null = null;
   private operationRunning = false;
   private revealedContextPath: string | null = null;
+  private preparationActionsRenderer: (() => void) | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -290,6 +291,14 @@ export class ManuscriptNavigatorView extends ItemView {
     this.suppressedActiveRevealPath = null;
   }
 
+  setPreparationActionsRenderer(renderer: () => void): void {
+    this.preparationActionsRenderer = renderer;
+  }
+
+  private finishRender(): void {
+    this.preparationActionsRenderer?.();
+  }
+
   render() {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
@@ -325,6 +334,7 @@ export class ManuscriptNavigatorView extends ItemView {
         text: "No recognised book notes were found."
       });
       this.renderUnresolved(container, library);
+      this.finishRender();
       return;
     }
 
@@ -367,7 +377,7 @@ export class ManuscriptNavigatorView extends ItemView {
       this.createBookActionsButton(heading, selected);
     }
 
-    if (!selected) return;
+    if (!selected) { this.finishRender(); return; }
     const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(selected.file.path);
     const reviewActions = container.createDiv("mwc-manuscript-review-actions");
     const partAvailability = manuscriptPartCreationAvailability(snapshotManuscriptPartCreation(this.plugin));
@@ -423,6 +433,7 @@ export class ManuscriptNavigatorView extends ItemView {
       });
       this.renderDiagnostics(container, selected);
       this.renderUnresolved(container, library);
+      this.finishRender();
       return;
     }
 
@@ -456,6 +467,7 @@ export class ManuscriptNavigatorView extends ItemView {
         activeRow.scrollIntoView({ block: "nearest" });
       }, 0);
     }
+    this.finishRender();
   }
 
   private createBookActionsButton(heading: HTMLElement, book: ObsidianManuscriptBook): void {

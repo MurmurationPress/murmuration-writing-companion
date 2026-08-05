@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 3,
+  "pages": {
+    "Manuscript/The Greywater Signal/Opening at Greywater.md": {
+      "chapterNote": {
+        "body": "Just general notes",
+        "created": "2026-08-05T13:30:09.092Z",
+        "updated": "2026-08-05T14:17:29.228Z"
+      },
+      "annotations": [
+        {
+          "id": "129e293b-1a10-4356-963e-f5cd521bccac",
+          "body": "At what time?",
+          "category": "Editorial",
+          "status": "open",
+          "created": "2026-08-05T14:17:39.693Z",
+          "updated": "2026-08-05T14:18:08.346Z",
+          "anchor": {
+            "text": "tide",
+            "line": 15
+          }
+        }
+      ],
+      "editorialPassHistory": [
+        {
+          "id": "88c5d88d-2a54-4b08-a71c-b8a14c27b2d0",
+          "pass": "proof",
+          "action": "completed",
+          "at": "2026-08-05T14:18:18.202Z"
+        },
+        {
+          "id": "4a60f52c-290c-4ff7-9fd6-20b00865dad5",
+          "pass": "proof",
+          "action": "reopened",
+          "at": "2026-08-05T14:18:26.463Z"
+        }
+      ],
+      "editorialPassFrontier": "style"
+    },
+    "Manuscript/The Greywater Signal.md": {
+      "chapterNote": {
+        "body": "",
+        "created": "2026-08-05T13:30:09.095Z",
+        "updated": "2026-08-05T13:30:09.095Z"
+      },
+      "annotations": [],
+      "editorialPassHistory": []
+    }
+  }
+}
