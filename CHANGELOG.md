@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.1 — 2026-08-06
+
+- Fix read-only plugin startup creating an empty `.murmuration/writing-companion/editorial-data.json`.
+- Preserve the no-write clean-start contract until the first genuine editorial mutation.
+- Preserve existing editorial storage loading, legacy migration, recovery and first-write behaviour.
+
 ## 0.17.0 — 2026-08-05
 
 ### V2 release
