@@ -15,8 +15,15 @@ import {
 import { confirmStoryWorldEventCreation } from "../companion/StoryWorldEventCreationModal";
 import {
   addStoryWorldEventToWorldContext,
+  addStoryWorldSource,
+  assertSourceLinkStillPresent,
   createStoryWorldEventFromProposal
 } from "../companion/ObsidianStoryWorldEventCreation";
+import { chooseStoryWorldEntityType } from "../companion/StoryWorldEntityTypeChooserModal";
+import { confirmStoryWorldSource } from "../companion/StoryWorldSourceOfferModal";
+import { StoryWorldEntityCreationModal } from "./StoryWorldEntityCreationModal";
+import { shortestUnambiguousWikilink } from "../companion/StoryWorldEventCreation";
+import { explicitManuscriptKind } from "../manuscript/ManuscriptMetadata";
 
 function addStringValues(output: Set<string>, value: unknown): void {
   const values = Array.isArray(value) ? value : [value];
@@ -112,7 +119,7 @@ export function renderStoryWorldEventAuthoring(
   if (pending.kind === "create-event") {
     card.createEl("p", {
       cls: "mwc-story-world-event-offer-title",
-      text: `“${pending.name}” does not exist yet.`
+      text: `“${pending.name}” is unresolved in the vault.`
     });
     card.createEl("p", {
       cls: "mwc-story-world-event-offer-source",
@@ -125,7 +132,7 @@ export function renderStoryWorldEventAuthoring(
     });
     const create = actions.createEl("button", {
       cls: "mwc-story-world-event-create",
-      text: "Create as event",
+      text: "Choose Story World action",
       attr: { type: "button" }
     });
 
@@ -136,16 +143,63 @@ export function renderStoryWorldEventAuthoring(
     };
 
     create.onclick = async () => {
-      const proposal = buildProposal(plugin, chapter, pending);
-      if (!proposal) {
-        new Notice("The link can no longer be created as a new event. Check whether it now resolves or conflicts with another note.");
-        return;
-      }
-      const decision = await confirmStoryWorldEventCreation(plugin.app, proposal);
-      if (!decision) {
+      const existing = plugin.storyWorldIndex.resolveWikilink(pending.occurrence.raw, chapter.path);
+      const choice = await chooseStoryWorldEntityType(plugin.app, pending.name, existing?.name ?? null);
+      if (!choice) {
         focusChapter(plugin, chapter);
         return;
       }
+      if (choice.action === "unresolved") {
+        host.dismissPendingStoryWorldEventAuthoring(chapter);
+        plugin.refreshView(); focusChapter(plugin, chapter); return;
+      }
+
+      const paths = plugin.app.vault.getAllLoadedFiles().map((file) => file.path);
+      const sourceReference = shortestUnambiguousWikilink(chapter.path, chapter.basename, paths);
+      const manuscriptKind = explicitManuscriptKind(plugin.app.metadataCache.getFileCache(chapter)?.frontmatter as Record<string, unknown> | undefined);
+      const sourceLabel = `Add this ${manuscriptKind === "part" ? "Part" : "Scene"} as a source`;
+      if (choice.action === "existing") {
+        if (!existing) { new Notice("The matching Story World entity is no longer available."); return; }
+        const accepted = await confirmStoryWorldSource(plugin.app, sourceLabel, sourceReference);
+        if (accepted === null) { focusChapter(plugin, chapter); return; }
+        if (accepted) {
+          const entityFile = plugin.app.vault.getAbstractFileByPath(existing.path);
+          if (!(entityFile instanceof TFile)) { new Notice("The matching entity note can no longer be found."); return; }
+          try {
+            const changed = await addStoryWorldSource(plugin.app, entityFile, chapter, sourceReference);
+            new Notice(changed ? `Added ${chapter.basename} as a source for ${existing.name}.` : `${chapter.basename} is already a source for ${existing.name}.`);
+          } catch (error) { new Notice(message(error, "Could not add the source.")); return; }
+        }
+        host.dismissPendingStoryWorldEventAuthoring(chapter); plugin.refreshView(); focusChapter(plugin, chapter); return;
+      }
+
+      if (choice.kind !== "event") {
+        const book = plugin.getOwningBook(chapter);
+        const scope = book ? shortestUnambiguousWikilink(book.path, book.basename, paths) : "";
+        new StoryWorldEntityCreationModal(plugin, {
+          initialKind: choice.kind,
+          initialName: pending.name,
+          initialScope: scope,
+          sourceReference,
+          sourceLabel,
+          targetPath: pending.occurrence.linkpath.includes("/") ? pending.occurrence.linkpath : undefined,
+          validateBeforeCreate: async () => {
+            const current = host.getPendingStoryWorldEventAuthoring(chapter);
+            if (current?.kind !== "create-event" || current.key !== pending.key) throw new Error("The pending prose link changed. Reopen the preview.");
+            await assertSourceLinkStillPresent(plugin.app, chapter, {
+              sourceRawLink: pending.occurrence.raw,
+              sourceLinkpath: pending.occurrence.linkpath
+            });
+          },
+          onCreated: () => { host.dismissPendingStoryWorldEventAuthoring(chapter); plugin.refreshView(); focusChapter(plugin, chapter); }
+        }).open();
+        return;
+      }
+
+      const proposal = buildProposal(plugin, chapter, pending);
+      if (!proposal) { new Notice("The link can no longer be created as an event. Check whether it now resolves or conflicts with another note."); return; }
+      const decision = await confirmStoryWorldEventCreation(plugin.app, proposal, sourceLabel);
+      if (!decision) { focusChapter(plugin, chapter); return; }
 
       create.disabled = true;
       leave.disabled = true;

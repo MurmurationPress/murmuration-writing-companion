@@ -7,6 +7,7 @@ import {
   StoryWorldEventDateDecision
 } from "./StoryWorldEventCreation";
 import { parseWikilink } from "../story-world/StoryWorldIndex";
+import { planWorldSourceAddition } from "./StoryWorldSourceAuthoring";
 
 export class StaleStoryWorldEventCreationError extends Error {
   constructor() {
@@ -65,7 +66,7 @@ async function currentChapterText(app: App, chapter: TFile): Promise<string> {
   return openChapterText(app, chapter) ?? await app.vault.cachedRead(chapter);
 }
 
-async function assertSourceLinkStillPresent(
+export async function assertSourceLinkStillPresent(
   app: App,
   chapter: TFile,
   proposal: Pick<StoryWorldEventCreationProposal, "sourceRawLink" | "sourceLinkpath">
@@ -113,6 +114,13 @@ function worldContextProperty(frontmatter: Record<string, unknown>): string {
   return Object.keys(frontmatter).find((property) => (
     property !== "position" && normalizePropertyName(property) === expected
   )) ?? "world_context";
+}
+
+function worldSourcesProperty(frontmatter: Record<string, unknown>): string {
+  const expected = normalizePropertyName("world_sources");
+  return Object.keys(frontmatter).find((property) => (
+    property !== "position" && normalizePropertyName(property) === expected
+  )) ?? "world_sources";
 }
 
 function basenameWithoutExtension(path: string): string {
@@ -171,6 +179,26 @@ export async function addStoryWorldEventToWorldContext(
     if (values.some((value) => referencesEvent(app, chapter, value, eventFile))) return;
     values.push(reference);
     frontmatter[property] = values;
+    changed = true;
+  });
+  return changed;
+}
+
+/** Adds one canonical manuscript source without replacing authored provenance. */
+export async function addStoryWorldSource(
+  app: App,
+  entityFile: TFile,
+  sourceFile: TFile,
+  reference: string
+): Promise<boolean> {
+  let changed = false;
+  await app.fileManager.processFrontMatter(entityFile, (frontmatter) => {
+    const property = worldSourcesProperty(frontmatter);
+    const plan = planWorldSourceAddition(frontmatter[property], sourceFile.path, reference, (linkpath) => (
+      app.metadataCache.getFirstLinkpathDest(linkpath, entityFile.path)?.path ?? null
+    ));
+    if (!plan.changed) return;
+    frontmatter[property] = [...plan.values];
     changed = true;
   });
   return changed;

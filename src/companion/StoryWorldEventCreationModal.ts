@@ -1,4 +1,4 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, Setting } from "obsidian";
 import {
   isExactStoryDate,
   StoryWorldEventCreationProposal,
@@ -10,10 +10,12 @@ let nextEventDateGroupId = 0;
 class StoryWorldEventCreationModal extends Modal {
   private settled = false;
   private decision: StoryWorldEventDateDecision | null = null;
+  private addSource = false;
 
   constructor(
     app: App,
     private readonly proposal: StoryWorldEventCreationProposal,
+    private readonly sourceLabel: string,
     private readonly resolve: (decision: StoryWorldEventDateDecision | null) => void
   ) {
     super(app);
@@ -40,6 +42,10 @@ class StoryWorldEventCreationModal extends Modal {
       "Scope",
       this.proposal.scope.length > 0 ? this.proposal.scope.join(" · ") : "Unscoped"
     );
+    new Setting(this.contentEl)
+      .setName(this.sourceLabel)
+      .setDesc(`Write exactly ${this.proposal.sources.join(" · ")}`)
+      .addToggle((toggle) => toggle.setValue(false).onChange((value) => { this.addSource = value; }));
 
     const fieldset = this.contentEl.createEl("fieldset", {
       cls: "mwc-event-date-choice"
@@ -128,7 +134,7 @@ class StoryWorldEventCreationModal extends Modal {
     actions.appendChild(create);
     cancel.onclick = () => this.finish(null);
     create.onclick = () => {
-      if (this.decision) this.finish(this.decision);
+      if (this.decision) this.finish({ ...this.decision, addSource: this.addSource });
     };
     window.setTimeout(() => fieldset.querySelector<HTMLInputElement>("input")?.focus(), 0);
   }
@@ -148,9 +154,10 @@ class StoryWorldEventCreationModal extends Modal {
 
 export function confirmStoryWorldEventCreation(
   app: App,
-  proposal: StoryWorldEventCreationProposal
+  proposal: StoryWorldEventCreationProposal,
+  sourceLabel = "Add this manuscript note as a source"
 ): Promise<StoryWorldEventDateDecision | null> {
   return new Promise((resolve) => {
-    new StoryWorldEventCreationModal(app, proposal, resolve).open();
+    new StoryWorldEventCreationModal(app, proposal, sourceLabel, resolve).open();
   });
 }

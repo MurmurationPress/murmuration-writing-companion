@@ -457,18 +457,18 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     const cursorOffset = editor.posToOffset(editor.getCursor());
     const eventOccurrence = this.storyWorldEventAuthoringSession.updateText(file.path, text, cursorOffset);
     const relationOccurrence = this.storyWorldRelationAuthoringSession.updateText(file.path, text, cursorOffset);
-    if (!this.isManuscriptScene(file)) return;
+    if (!this.isAuthoritativeManuscriptSource(file)) return;
 
     let changed = false;
     if (eventOccurrence) {
       const resolved = this.app.metadataCache.getFirstLinkpathDest(eventOccurrence.linkpath, file.path);
-      if (!resolved && !this.storyWorldIndex.resolveWikilink(eventOccurrence.raw, file.path)) {
+      if (!resolved) {
         const name = extractProseEventName(eventOccurrence);
         if (name) changed = this.storyWorldEventAuthoringSession.enqueueCandidate(file.path, eventOccurrence, name) || changed;
       }
     }
 
-    if (relationOccurrence) {
+    if (relationOccurrence && this.isManuscriptScene(file)) {
       const targetFile = this.app.metadataCache.getFirstLinkpathDest(relationOccurrence.linkpath, file.path);
       const targetEntity = targetFile ? this.storyWorldIndex.index.getByPath(targetFile.path) : null;
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
@@ -490,6 +490,13 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     const kind = explicitManuscriptKind(frontmatter);
     if (kind) return kind === "scene";
     return hasSceneMetadataSignal(frontmatter) && this.getOwningBook(file) !== null;
+  }
+
+  private isAuthoritativeManuscriptSource(file: TFile): boolean {
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+    if (isExplicitlyDetachedScene(frontmatter)) return false;
+    const kind = explicitManuscriptKind(frontmatter);
+    return kind === "part" || this.isManuscriptScene(file);
   }
 
   private queueNavigatorRefresh() {

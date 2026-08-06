@@ -255,6 +255,12 @@ An Obsidian Base may filter for records where `world_entity` is present. Folder 
 
 ## Author-facing principle
 
+### Creating entities from manuscript wikilinks
+
+A newly authored unresolved wikilink in an authoritative Scene or Part may open the Story World authoring flow. The author can keep it unresolved, cancel without a write, reuse a uniquely matching canonical name or alias, or create any entity type exposed by the Story World Navigator `+` action. Event is available but is not assumed or preselected. Creation uses the same type registry, planning, validation, filenames, folders and collision checks as Navigator creation; an explicitly path-qualified authored target remains path-qualified so the original prose wikilink resolves without rewriting its text.
+
+The creation preview can explicitly add the initiating Scene or Part to `world_sources`. The exact canonical wikilink is shown before confirmation and the option is off until chosen. Existing provenance is preserved and a source already resolving to the same manuscript note is not duplicated. Declining, cancelling, stale input and blocked collisions do not change manuscript or Story World Markdown. The initiating manuscript note remains authoritative prose; no prose is copied and no editorial-store record is created.
+
 The stored representation may be structured. The author experience must remain literary and readable.
 
 > Store relationships, designations, status and provenance precisely. Present them as ordinary language, guided choices and understandable statements.

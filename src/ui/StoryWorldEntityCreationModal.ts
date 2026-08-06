@@ -11,7 +11,18 @@ import {
 import { canonicalWikilink, presentWikilinkValue } from "../story-world/WikilinkPresentation";
 
 export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
-  refreshStoryWorldNavigator(): void;
+  refreshStoryWorldNavigator?(): void;
+}
+
+export interface StoryWorldEntityCreationModalOptions {
+  readonly initialKind?: StoryWorldEntityKind;
+  readonly initialName?: string;
+  readonly initialScope?: string;
+  readonly sourceReference?: string;
+  readonly sourceLabel?: string;
+  readonly targetPath?: string;
+  readonly validateBeforeCreate?: () => Promise<void>;
+  readonly onCreated?: (file: TFile, sourceIncluded: boolean) => void;
 }
 
 function documents(plugin: MurmurationWritingCompanionPlugin): StoryWorldBuilderDocument[] {
@@ -38,9 +49,13 @@ export class StoryWorldEntityCreationModal extends Modal {
   private scopeInput = "";
   private preview!: HTMLElement;
   private createButton!: HTMLButtonElement;
+  private includeSource = false;
 
-  constructor(private readonly plugin: StoryWorldEntityCreationHost) {
+  constructor(private readonly plugin: StoryWorldEntityCreationHost, private readonly options: StoryWorldEntityCreationModalOptions = {}) {
     super(plugin.app);
+    this.kind = options.initialKind ?? "character";
+    this.name = options.initialName ?? "";
+    this.scopeInput = options.initialScope ?? "";
   }
 
   onOpen(): void {
@@ -51,6 +66,7 @@ export class StoryWorldEntityCreationModal extends Modal {
       .setName("Entity kind")
       .addDropdown((dropdown) => {
         for (const kind of STORY_WORLD_ENTITY_KINDS) dropdown.addOption(kind, kind[0].toUpperCase() + kind.slice(1));
+        dropdown.setValue(this.kind);
         dropdown.onChange((value) => { this.kind = value as StoryWorldEntityKind; this.renderPreview(); });
       });
 
@@ -61,20 +77,25 @@ export class StoryWorldEntityCreationModal extends Modal {
 
     new Setting(this.contentEl)
       .setName("Canonical name")
-      .addText((text) => text.setPlaceholder("Entity name").onChange((value) => { this.name = value; this.renderPreview(); }));
+      .addText((text) => text.setPlaceholder("Entity name").setValue(this.name).onChange((value) => { this.name = value; this.renderPreview(); }));
 
     new Setting(this.contentEl)
       .setName("Scope")
       .setDesc("Optional explicit book or series wikilink; no scope is inferred.")
       .addText((text) => {
         const listId = "mwc-story-world-scope-suggestions";
-        text.setPlaceholder("[[PRIME Trilogy]]").onChange((value) => { this.scopeInput = value; this.renderPreview(); });
+        text.setPlaceholder("[[PRIME Trilogy]]").setValue(this.scopeInput).onChange((value) => { this.scopeInput = value; this.renderPreview(); });
         text.inputEl.setAttr("list", listId);
         const list = this.contentEl.createEl("datalist", { attr: { id: listId } });
         for (const file of this.plugin.app.vault.getMarkdownFiles()) {
           const option = list.createEl("option"); option.value = canonicalWikilink(file.path); option.label = file.basename;
         }
       });
+
+    if (this.options.sourceReference) new Setting(this.contentEl)
+      .setName(this.options.sourceLabel ?? "Add this manuscript note as a source")
+      .setDesc(`Write exactly ${this.options.sourceReference}`)
+      .addToggle((toggle) => toggle.setValue(false).onChange((value) => { this.includeSource = value; this.renderPreview(); }));
 
     this.preview = this.contentEl.createDiv("mwc-story-world-create-preview");
     const actions = this.contentEl.createDiv("modal-button-container");
@@ -86,7 +107,7 @@ export class StoryWorldEntityCreationModal extends Modal {
 
   private currentPlan() {
     try {
-      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput }), error: null };
+      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath }), error: null };
     } catch (error) {
       return { plan: null, error: error instanceof Error ? error.message : String(error) };
     }
@@ -126,6 +147,7 @@ export class StoryWorldEntityCreationModal extends Modal {
 
     let created: TFile | null = null;
     try {
+      await this.options.validateBeforeCreate?.();
       await ensureFolder(this.plugin, result.plan.path.slice(0, result.plan.path.lastIndexOf("/")));
       created = await this.plugin.app.vault.create(result.plan.path, result.plan.markdown);
       this.close();
@@ -133,7 +155,8 @@ export class StoryWorldEntityCreationModal extends Modal {
       await leaf.openFile(created, { active: true });
       await this.plugin.app.workspace.revealLeaf(leaf);
       await this.plugin.activateView();
-      this.plugin.refreshStoryWorldNavigator();
+      this.plugin.refreshStoryWorldNavigator?.();
+      this.options.onCreated?.(created, this.includeSource);
     } catch (error) {
       if (created) {
         try { await this.plugin.app.vault.delete(created); } catch { /* preserve original failure */ }
