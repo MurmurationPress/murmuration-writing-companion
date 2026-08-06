@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.17.0 — 2026-08-05
+
+### V2 release
+
+- Add V2 manuscript onboarding and preparation.
+- Add immediate, exact manuscript-preparation Undo.
+- Add Project Readiness and release-validation safeguards.
+- Add expanded Story World, continuity, chronology, graph and reference workflows.
+- Add validated Linux and Windows support.
+
 ## Unreleased
 
 - Add the V2 author onboarding guide, exact command reference, screenshot and manual-validation checklists, and separate fictional prepared/migration example vaults with deterministic release packaging.
