@@ -16,4 +16,4 @@ Use Obsidian's Command Palette unless a context action is noted.
 | **Generate entity index** | Preview and optionally save a selected-Book or vault-wide Markdown entity index. |
 | **About Murmuration Writing Companion** | Show installed version and official documentation/support links. |
 
-The current implementation has no **Generate references report** command. Reference entities and `world_sources` are available as authoritative provenance, but a standalone references-report command must not be documented as present.
+The current implementation has no **Generate references report** command. Reference entities, citation import, `world_sources`, and documented Bases/Dataview projections are available, but a standalone generated or printable references-report command must not be documented as present.

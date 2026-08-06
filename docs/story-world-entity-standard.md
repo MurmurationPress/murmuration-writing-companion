@@ -83,6 +83,25 @@ Only `world_entity` is required.
 
 Extra properties are permitted and preserved.
 
+### Reference metadata
+
+`Reference` entities remain ordinary Story World notes. The following optional properties are the canonical structured citation contract:
+
+| Property | Accepted form | Meaning |
+|---|---|---|
+| `reference_authors` | string or list of strings | Authors in authored display order |
+| `reference_title` | string | Work title |
+| `reference_date` | string or number | Publication year or authored date |
+| `reference_publication` | string | Journal, periodical or publication |
+| `reference_publisher` | string | Publisher |
+| `reference_volume` | string or number | Volume |
+| `reference_issue` | string or number | Issue |
+| `reference_pages` | string | Page or article range |
+| `reference_doi` | string | Normalised lowercase DOI without a URL prefix |
+| `reference_link` | HTTP/HTTPS URL | Canonical link, including the normalised DOI URL when a DOI is imported |
+
+Readers accept common existing property spellings such as `authors`, `author`, `journal`, `year`, `doi` and `url`; guided creation writes only the canonical `reference_*` names. Missing values stay missing. Reference Markdown is the only authority: projections, Bases and Dataview tables are read-only presentations and must not be indexed as entities.
+
 ### POV capability
 
 Entity type and narrative viewpoint capability are separate. `character` entities remain POV-eligible when `pov_eligible` is omitted, preserving existing vaults. Any entity type, including `intelligence`, may opt in with `pov_eligible: true`; a Character may explicitly opt out with `false`. New POV selections are stored as valid wikilinks. Malformed or unresolved authored POV targets remain in Markdown and are surfaced through the existing continuity observation model.

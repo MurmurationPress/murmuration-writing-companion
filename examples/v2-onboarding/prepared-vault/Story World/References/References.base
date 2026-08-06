@@ -1,0 +1,100 @@
+filters:
+  and:
+    - world_entity.lower() == "reference"
+formulas:
+  Author: list(reference_authors).join("; ")
+  Year: if(reference_date, reference_date.toString(), "")
+  Work: if(reference_title, reference_title, if(world_name, world_name, file.name))
+  Publication: reference_publication
+  Volume: reference_volume
+  Issue: reference_issue
+  Pages: reference_pages
+  Identifier: if(reference_doi, link("https://doi.org/" + reference_doi, reference_doi), reference_link)
+  UsedIn: list(world_sources).join("; ")
+  AuthorSort: if(reference_authors, list(reference_authors).join("; ").lower(), "￿")
+  DateSort: if(reference_date, reference_date.toString(), "￿")
+  TitleSort: if(reference_title, reference_title.lower(), if(world_name, world_name.lower(), file.name.lower()))
+properties:
+  file.name:
+    displayName: Reference note
+  formula.Author:
+    displayName: Author
+  formula.Year:
+    displayName: Year
+  formula.Work:
+    displayName: Title
+  formula.Publication:
+    displayName: Journal / Publication
+  formula.Volume:
+    displayName: Volume
+  formula.Issue:
+    displayName: Issue
+  formula.Pages:
+    displayName: Pages
+  formula.Identifier:
+    displayName: DOI / Link
+  formula.UsedIn:
+    displayName: Used in
+views:
+  - type: table
+    name: All References
+    order:
+      - file.name
+      - formula.Author
+      - formula.Year
+      - formula.Work
+      - formula.Publication
+      - formula.Volume
+      - formula.Issue
+      - formula.Pages
+      - formula.Identifier
+      - formula.UsedIn
+    sort:
+      - property: formula.AuthorSort
+        direction: ASC
+      - property: formula.DateSort
+        direction: ASC
+      - property: formula.TitleSort
+        direction: ASC
+      - property: file.path
+        direction: ASC
+  - type: table
+    name: References used by The Greywater Signal
+    filters:
+      or:
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Opening at Greywater.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Listening.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Listening/First Survey.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Listening/Signal at Low Tide.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Returning.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Returning/Return to the Observatory.md"))
+        - file.backlinks.contains(link("Manuscript/The Greywater Signal/Returning/The Recorded Pattern.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Opening at Greywater.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Listening.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Listening/First Survey.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Listening/Signal at Low Tide.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Returning.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Returning/Return to the Observatory.md"))
+        - world_sources && world_sources.contains(link("Manuscript/The Greywater Signal/Returning/The Recorded Pattern.md"))
+    order:
+      - file.name
+      - formula.Author
+      - formula.Year
+      - formula.Work
+      - formula.Publication
+      - formula.Volume
+      - formula.Issue
+      - formula.Pages
+      - formula.Identifier
+      - formula.UsedIn
+    sort:
+      - property: formula.AuthorSort
+        direction: ASC
+      - property: formula.DateSort
+        direction: ASC
+      - property: formula.TitleSort
+        direction: ASC
+      - property: file.path
+        direction: ASC

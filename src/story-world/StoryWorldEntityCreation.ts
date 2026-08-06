@@ -1,3 +1,5 @@
+import { hasReferenceMetadata, REFERENCE_PROPERTY_NAMES, ReferenceMetadata } from "../references/ReferenceMetadata";
+
 export const STORY_WORLD_ENTITY_KINDS = [
   "character",
   "event",
@@ -19,6 +21,7 @@ export interface StoryWorldEntityCreationInput {
   readonly sources?: readonly string[];
   /** An explicitly authored unresolved wikilink target; ordinary Navigator creation omits this. */
   readonly targetPath?: string;
+  readonly reference?: ReferenceMetadata;
 }
 
 export interface StoryWorldEntityCreationPlan {
@@ -69,6 +72,17 @@ export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInpu
   if (input.sources?.length) {
     lines.push("world_sources:");
     for (const source of input.sources) lines.push(`  - ${yamlString(source)}`);
+  }
+  if (entityType === "reference" && input.reference && hasReferenceMetadata(input.reference)) {
+    const reference = input.reference;
+    if (reference.authors.length) {
+      lines.push(`${REFERENCE_PROPERTY_NAMES.authors}:`);
+      for (const author of reference.authors) lines.push(`  - ${yamlString(author)}`);
+    }
+    for (const field of ["title", "date", "publication", "publisher", "volume", "issue", "pages", "doi", "link"] as const) {
+      const value = reference[field];
+      if (value) lines.push(`${REFERENCE_PROPERTY_NAMES[field]}: ${yamlString(value)}`);
+    }
   }
   lines.push("---", "", `# ${name}`, "");
   return { entityType, name, scope, folder, path, markdown: lines.join("\n") };

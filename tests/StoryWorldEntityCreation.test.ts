@@ -51,6 +51,21 @@ test("adds an optional canonical source and leaves declined creation source-free
   equal(planStoryWorldEntityCreation({ kind: "location", name: "Elsewhere", sources: [] }).markdown.includes("world_sources"), false);
 });
 
+test("writes Reference details through the canonical schema only", () => {
+  const plan = planStoryWorldEntityCreation({
+    kind: "reference",
+    name: "A Study",
+    reference: {
+      authors: ["Vale, A.", "Fenwick, P."], title: "A study", date: "2024", publication: "A Journal",
+      publisher: null, volume: "12", issue: "3", pages: "41–59", doi: "10.1000/study", link: "https://doi.org/10.1000/study"
+    }
+  });
+  match(plan.markdown, /reference_authors:\n  - "Vale, A\."\n  - "Fenwick, P\."/);
+  match(plan.markdown, /reference_title: "A study"/);
+  match(plan.markdown, /reference_doi: "10\.1000\/study"/);
+  equal(/\nauthors:|\njournal:|\ndoi:/.test(plan.markdown), false);
+});
+
 test("sanitises filename-only characters without changing canonical name", () => {
   const plan = planStoryWorldEntityCreation({ kind: "event", name: "Signal: First/Contact" });
   equal(safeStoryWorldFilename("Signal: First/Contact"), "Signal- First-Contact");

@@ -128,7 +128,8 @@ const GROUPS: Array<{ key: string; label: string; types: readonly string[] }> = 
   { key: "locations", label: "Locations", types: ["location", "place"] },
   { key: "organisations", label: "Organisations", types: ["organisation", "organization", "institution"] },
   { key: "technologies", label: "Technologies", types: ["technology", "system"] },
-  { key: "concepts", label: "Concepts", types: ["concept"] }
+  { key: "concepts", label: "Concepts", types: ["concept"] },
+  { key: "references", label: "References", types: ["reference"] }
 ];
 
 export function filterStoryWorldBuilderItems(

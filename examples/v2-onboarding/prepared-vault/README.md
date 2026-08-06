@@ -13,7 +13,7 @@ The direct Scene **Opening at Greywater** appears before the two Parts. Filename
 
 The Story World contains two Characters, a Location, an Organisation, a Technology, two dated Events and one Reference. **Tideglass Array** deliberately cites a missing `Uncatalogued Calibration Sheet`; Story World Review should report that explicit unresolved source, and the finding can appear in Continuity Review because Scenes reference Tideglass Array through `world_context`. This is a diagnostic demonstration, not accidental damage.
 
-Generate a vault entity index from **Generate entity index** and choose **Vault**. The plugin currently has no **Generate references report** command; provenance is demonstrated through the Reference entity and `world_sources` links until that separate capability exists.
+Generate a vault entity index from **Generate entity index** and choose **Vault**. Reference citation metadata remains on the authoritative Reference note. Open `Story World/References/References.base` or `Reference Projections/References Dataview.md` for native, read-only Obsidian projections. The Base definition is not Markdown, and the Dataview support note deliberately lives outside Story World and Manuscript authority.
 
 ## Reset
 

@@ -108,6 +108,28 @@ test("prepared Story World recognises identity, aliases, chronology, relationshi
   match(mara, /predicate:\s*works_for[\s\S]*target:\s*"\[\[Story World\/Organisations\/Pelagic Field Unit\]\]"/);
   const returnSurvey = await readFile(path.join(prepared, "Story World/Events/Return Survey.md"), "utf8");
   match(returnSurvey, /predicate:\s*follows[\s\S]*target:\s*"\[\[Story World\/Events\/Signal Emerges\]\]"/);
+  const reference = entities.find((entity) => entity.entityType.toLowerCase() === "reference");
+  deepEqual(reference?.properties.reference_authors, ["Venn, Mara", "Saye, Ivo"]);
+  equal(reference?.properties.reference_title, "Greywater hydrophone field log");
+});
+
+test("prepared Reference Base and Dataview examples use canonical read-only properties", async () => {
+  const base = await readFile(path.join(prepared, "Story World/References/References.base"), "utf8");
+  const dataview = await readFile(path.join(prepared, "Reference Projections/References Dataview.md"), "utf8");
+  for (const property of ["world_entity", "reference_authors", "reference_date", "reference_title", "reference_publication", "reference_doi", "reference_link", "world_sources"]) {
+    match(`${base}\n${dataview}`, new RegExp(property));
+  }
+  match(base, /name: All References/);
+  match(base, /name: References used by The Greywater Signal/);
+  match(base, /file\.backlinks\.contains\(link\("Manuscript\/The Greywater Signal\/Listening\/First Survey\.md"\)\)/);
+  match(base, /world_sources\.contains\(link\("Manuscript\/The Greywater Signal\/Returning\/The Recorded Pattern\.md"\)\)/);
+  match(dataview, /file\.link AS Title/);
+  match(dataview, /file\.path ASC/);
+  match(dataview, /contains\(file\.inlinks, link\("Manuscript\/The Greywater Signal\/Listening\/First Survey\.md"\)\)/);
+  match(dataview, /contains\(world_sources, link\("Manuscript\/The Greywater Signal\/Listening\.md"\)\)/);
+  doesNotMatch(`${base}\n${dataview}`, /startsWith\("Manuscript\/The Greywater Signal/);
+  doesNotMatch(`${base}\n${dataview}`, /(?:fuzzy|prose|filename similarity)/i);
+  doesNotMatch(`${base}\n${dataview}`, /(?:create|modify|write|save)\s*\(/i);
 });
 
 test("World Context and provenance references resolve except the documented review fixture", async () => {
