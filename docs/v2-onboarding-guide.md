@@ -177,7 +177,7 @@ Generated reports are disposable, reviewable Markdown projections over authorita
 - **Generate entity index** previews a selected-Book or vault-wide index using canonical entity identity, aliases, explicit occurrence evidence and Navigator order. It uses Scene references, not invented page numbers. See [Entity index](entity-index.md).
 - Continuity Review can save a current Book review snapshot. See [Continuity Review reports](continuity-review-report.md).
 - Story World Review is a live derived review surface; it does not currently save a dedicated report.
-- Reference entities and `world_sources` provide current provenance and manuscript citation associations. The current plugin does **not** register a **Generate references report** command; do not expect that action in the Command Palette.
+- Reference entities and `world_sources` provide current provenance and manuscript citation associations. Reference creation can locally parse a formatted citation or DOI into an editable proposal, and documented Bases/Dataview examples provide read-only tables. The plugin does **not** register a **Generate references report** or printing command.
 
 ## Recovery and troubleshooting
 
