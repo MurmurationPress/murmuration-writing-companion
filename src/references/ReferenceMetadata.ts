@@ -97,3 +97,8 @@ export function referenceMetadataFromText(values: Readonly<Record<ReferenceField
 export function hasReferenceMetadata(metadata: ReferenceMetadata): boolean {
   return metadata.authors.length > 0 || Object.entries(metadata).some(([key, value]) => key !== "authors" && value != null);
 }
+
+export function referenceCanonicalNameDefault(currentName: string, title: string | null, explicitlyEdited: boolean): string {
+  if (explicitlyEdited || !title?.trim()) return currentName;
+  return title.trim();
+}

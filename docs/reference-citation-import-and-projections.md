@@ -6,7 +6,7 @@ Reference notes are authoritative Story World Markdown. Murmuration Writing Comp
 
 Choose **Create Story World entity**, select **Reference**, then use **Citation or DOI import**. Paste a common formatted citation, a bare DOI, `doi:10.…`, or a `doi.org` URL and select **Parse citation**.
 
-Parsing is local and deterministic. It does not make a network request and does not write a note. The preview shows recognised fields, warnings and any unparsed remainder. Every proposed value is editable. Select **Apply to Reference form** to transfer the proposal into the still-unsaved creation form.
+Parsing is local and deterministic. It does not make a network request and does not write a note. The preview shows recognised fields, warnings and any unparsed remainder. Every proposed value is editable. Select **Apply to Reference form** to transfer the proposal into the still-unsaved creation form. An untouched canonical name defaults to the Reference title; an explicitly supplied or edited canonical name is preserved.
 
 Existing populated fields are never silently replaced. Every differing field requires one explicit choice:
 

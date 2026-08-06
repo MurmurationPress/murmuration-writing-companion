@@ -1,7 +1,7 @@
 import { deepEqual, equal, throws } from "node:assert/strict";
 import { test } from "node:test";
 import { applyReferenceImport, normalizeDoi, parseCitation, referenceImportConflicts } from "../src/references/CitationParser";
-import { EMPTY_REFERENCE_METADATA } from "../src/references/ReferenceMetadata";
+import { EMPTY_REFERENCE_METADATA, referenceCanonicalNameDefault } from "../src/references/ReferenceMetadata";
 
 test("parses the Banks citation into canonical Reference fields", () => {
   const result = parseCitation("Banks, J. (2024). Deletion, departure, death: Experiences of AI companion loss. Journal of Social and Personal Relationships. https://doi.org/10.1177/02654075241269688");
@@ -87,4 +87,11 @@ test("requires an explicit choice for populated-field conflicts and preserves ca
   equal(applied.title, "Corrected title");
   equal(applied.publication, "Parsed Journal");
   equal(JSON.stringify(existing), snapshot);
+});
+
+test("defaults an untouched Reference canonical name to its title without overwriting an explicit name", () => {
+  equal(referenceCanonicalNameDefault("", "  A parsed title  ", false), "A parsed title");
+  equal(referenceCanonicalNameDefault("Earlier automatic title", "Updated title", false), "Updated title");
+  equal(referenceCanonicalNameDefault("Authored entity name", "Parsed title", true), "Authored entity name");
+  equal(referenceCanonicalNameDefault("", null, false), "");
 });

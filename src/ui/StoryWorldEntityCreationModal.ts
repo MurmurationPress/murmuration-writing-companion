@@ -9,7 +9,7 @@ import {
   StoryWorldEntityKind
 } from "../story-world/StoryWorldEntityCreation";
 import { canonicalWikilink, presentWikilinkValue } from "../story-world/WikilinkPresentation";
-import { EMPTY_REFERENCE_METADATA, ReferenceField, ReferenceMetadata, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
+import { EMPTY_REFERENCE_METADATA, ReferenceField, ReferenceMetadata, referenceCanonicalNameDefault, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
 import { ReferenceCitationImportModal } from "./ReferenceCitationImportModal";
 
 export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
@@ -56,11 +56,14 @@ export class StoryWorldEntityCreationModal extends Modal {
   private referenceSection!: HTMLElement;
   private citationInput = "";
   private readonly referenceInputs: Partial<Record<ReferenceField, HTMLInputElement>> = {};
+  private canonicalNameInput: HTMLInputElement | null = null;
+  private canonicalNameExplicitlyEdited = false;
 
   constructor(private readonly plugin: StoryWorldEntityCreationHost, private readonly options: StoryWorldEntityCreationModalOptions = {}) {
     super(plugin.app);
     this.kind = options.initialKind ?? "character";
     this.name = options.initialName ?? "";
+    this.canonicalNameExplicitlyEdited = Boolean(options.initialName?.trim());
     this.scopeInput = options.initialScope ?? "";
   }
 
@@ -86,7 +89,16 @@ export class StoryWorldEntityCreationModal extends Modal {
 
     new Setting(this.contentEl)
       .setName("Canonical name")
-      .addText((text) => text.setPlaceholder("Entity name").setValue(this.name).onChange((value) => { this.name = value; this.renderPreview(); }));
+      .addText((text) => {
+        const input = text.inputEl;
+        this.canonicalNameInput = input;
+        text.setPlaceholder("Entity name").setValue(this.name).onChange((value) => {
+          this.canonicalNameExplicitlyEdited = Boolean(value.trim());
+          this.name = referenceCanonicalNameDefault(value, this.kind === "reference" ? this.referenceMetadata.title : null, this.canonicalNameExplicitlyEdited);
+          if (input.value !== this.name) input.value = this.name;
+          this.renderPreview();
+        });
+      });
 
     new Setting(this.contentEl)
       .setName("Scope")
@@ -170,7 +182,9 @@ export class StoryWorldEntityCreationModal extends Modal {
         text.setValue(referenceFieldText(this.referenceMetadata, field)).onChange((value) => {
           const values = {} as Record<ReferenceField, string>;
           for (const key of Object.keys(EMPTY_REFERENCE_METADATA) as ReferenceField[]) values[key] = key === field ? value : this.referenceInputs[key]?.value ?? referenceFieldText(this.referenceMetadata, key);
-          this.referenceMetadata = referenceMetadataFromText(values); this.renderPreview();
+          this.referenceMetadata = referenceMetadataFromText(values);
+          if (field === "title") this.applyReferenceTitleDefault();
+          this.renderPreview();
         });
         this.referenceInputs[field] = text.inputEl;
       });
@@ -186,9 +200,15 @@ export class StoryWorldEntityCreationModal extends Modal {
           for (const field of Object.keys(EMPTY_REFERENCE_METADATA) as ReferenceField[]) {
             const input = this.referenceInputs[field]; if (input) input.value = referenceFieldText(metadata, field);
           }
+          this.applyReferenceTitleDefault();
           this.renderPreview();
         }).open();
       }));
+  }
+
+  private applyReferenceTitleDefault(): void {
+    this.name = referenceCanonicalNameDefault(this.name, this.referenceMetadata.title, this.canonicalNameExplicitlyEdited);
+    if (this.canonicalNameInput && this.canonicalNameInput.value !== this.name) this.canonicalNameInput.value = this.name;
   }
 
   private async createEntity(): Promise<void> {
