@@ -801,10 +801,14 @@ export class PortableEditorialStorage {
 
     const legacy = normalizeEditorialStore(legacyData ?? { pages: {} }, now);
     const source = hasLegacyEditorialData(legacyData) ? "legacy" : "empty";
-    await this.files.writeAtomic(
-      this.paths.primary,
-      serializePortableEditorialStore(legacy.value)
-    );
+    // A genuinely empty first load is read-only. Portable storage begins only
+    // with a real editorial mutation; legacy migration still publishes here.
+    if (source === "legacy") {
+      await this.files.writeAtomic(
+        this.paths.primary,
+        serializePortableEditorialStore(legacy.value)
+      );
+    }
 
     return {
       store: legacy.value,

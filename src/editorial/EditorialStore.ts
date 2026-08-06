@@ -263,20 +263,23 @@ export class EditorialStoreService {
   }
 
   async flushChapterNote(file?: TFile) {
+    let pendingWrite = false;
     if (file) {
       const timer = this.chapterNoteSaveTimers.get(file.path);
       if (timer !== undefined) {
         window.clearTimeout(timer);
         this.chapterNoteSaveTimers.delete(file.path);
+        pendingWrite = true;
       }
     } else {
+      pendingWrite = this.chapterNoteSaveTimers.size > 0;
       for (const timer of this.chapterNoteSaveTimers.values()) {
         window.clearTimeout(timer);
       }
       this.chapterNoteSaveTimers.clear();
     }
 
-    if (this.ready) await this.save();
+    if (this.ready && pendingWrite) await this.save();
   }
 
   async addAnnotation(
