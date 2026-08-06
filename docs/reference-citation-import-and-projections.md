@@ -16,7 +16,7 @@ Existing populated fields are never silently replaced. Every differing field req
 
 Cancelling the import preview leaves the parent form unchanged. Cancelling the creation form or final creation confirmation leaves the vault unchanged. The existing exact-note preview, collision checks and stale-input checks remain the only route to a write.
 
-The first parser recognises common author–date citations, publication, volume/issue/pages and DOI data. It preserves title and publication capitalization and punctuation where classification is safe. Incomplete or ambiguous components remain visibly unparsed; the parser does not invent absent metadata. RIS and BibTeX are deferred. Crossref or other DOI metadata lookup is also deferred: this version makes no external request and supports DOI extraction locally.
+The first parser recognises common author–date citations, publication, volume/issue/pages and DOI data. It preserves title and publication capitalization and punctuation where classification is safe. Incomplete or ambiguous components remain visibly unparsed; the parser does not invent absent metadata. A narrow compatibility rule repairs `10.<registrant>_<suffix>` to the required slash form because the SAGE citation widget emits that malformed separator; the preview warns when this repair occurs. Other malformed DOI input remains blocked. RIS and BibTeX are deferred. Crossref or other DOI metadata lookup is also deferred: this version makes no external request and supports DOI extraction locally.
 
 ## Canonical projection
 

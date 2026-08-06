@@ -18,7 +18,7 @@
 
 ## Unreleased — 0.18.0
 
-- Add a dedicated Story World Navigator References category, explicit local citation and DOI import to Reference creation, canonical Reference metadata projections for vault and selected-Book scopes, and read-only Obsidian Bases and Dataview examples without introducing a bibliography store or network lookup.
+- Add a dedicated Story World Navigator References category, explicit local citation and DOI import to Reference creation—including a warned repair for SAGE's malformed underscore DOI separator—canonical Reference metadata projections for vault and selected-Book scopes, and read-only Obsidian Bases and Dataview examples without introducing a bibliography store or network lookup.
 
 - Offer every canonical Story World Navigator entity type for newly authored unresolved Scene and Part wikilinks instead of assuming Event, with explicit optional `world_sources` provenance, alias reuse, collision checks, stale-input protection and write-free cancellation.
 

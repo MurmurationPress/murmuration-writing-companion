@@ -18,6 +18,13 @@ export interface ReferenceImportConflict {
 
 export const DOI_PATTERN = /10\.\d{4,9}\/[-._;()/:a-z0-9]+/i;
 
+interface ExtractedDoi {
+  readonly doi: string;
+  readonly link: string;
+  readonly token: string;
+  readonly repairedSeparator: boolean;
+}
+
 function stripTrailingDoiPunctuation(value: string): string {
   let output = value.replace(/[.,;:]+$/g, "");
   while (output.endsWith(")") && (output.match(/\(/g)?.length ?? 0) < (output.match(/\)/g)?.length ?? 0)) output = output.slice(0, -1);
@@ -25,19 +32,26 @@ function stripTrailingDoiPunctuation(value: string): string {
   return output;
 }
 
-export function normalizeDoi(input: string): { doi: string; link: string } | null {
+function extractDoi(input: string): ExtractedDoi | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed) && !/^https?:\/\/(?:dx\.)?doi\.org\//i.test(trimmed)) return null;
-  const withoutPrefix = trimmed
-    .replace(/^doi\s*:\s*/i, "")
-    .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "");
-  const match = withoutPrefix.match(DOI_PATTERN) ?? trimmed.match(DOI_PATTERN);
+  const token = trimmed.match(/(?:doi\s*:\s*|https?:\/\/(?:dx\.)?doi\.org\/)?10\.\d{4,9}[\/_][-._;()/:a-z0-9]+/i)?.[0];
+  if (!token) return null;
+  const withoutPrefix = token.replace(/^doi\s*:\s*/i, "").replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "");
+  const repairedSeparator = /^10\.\d{4,9}_/i.test(withoutPrefix);
+  const candidate = repairedSeparator ? withoutPrefix.replace(/^(10\.\d{4,9})_/, "$1/") : withoutPrefix;
+  const match = candidate.match(DOI_PATTERN);
   if (!match) return null;
   const doi = stripTrailingDoiPunctuation(match[0]);
   if (!/^10\.\d{4,9}\/[!-~]+$/i.test(doi) || /\s/.test(doi)) return null;
   const canonical = doi.toLowerCase();
-  return { doi: canonical, link: `https://doi.org/${canonical}` };
+  return { doi: canonical, link: `https://doi.org/${canonical}`, token, repairedSeparator };
+}
+
+export function normalizeDoi(input: string): { doi: string; link: string } | null {
+  const extracted = extractDoi(input);
+  return extracted ? { doi: extracted.doi, link: extracted.link } : null;
 }
 
 function splitAuthors(value: string): string[] {
@@ -81,9 +95,12 @@ export function parseCitation(input: string): CitationParseResult {
   const unparsed: string[] = [];
   if (!trimmed) return { input: original, metadata: EMPTY_REFERENCE_METADATA, recognisedFields: [], warnings: ["No citation was provided."], unparsed: [] };
 
-  const doi = normalizeDoi(trimmed);
+  const doi = extractDoi(trimmed);
   let remaining = trimmed;
-  if (doi) remaining = remaining.replace(new RegExp(`(?:doi\\s*:\\s*|https?:\\/\\/(?:dx\\.)?doi\\.org\\/)?${doi.doi.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[.,;:]?`, "i"), "").trim();
+  if (doi) {
+    remaining = remaining.replace(doi.token, "").trim();
+    if (doi.repairedSeparator) warnings.push("The DOI used an underscore where its required slash separator should be; the preview repaired it.");
+  }
   remaining = remaining.replace(/[.\s]+$/, "").trim();
 
   let authors: readonly string[] = [];

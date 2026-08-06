@@ -56,6 +56,19 @@ test("normalises DOI-only, prefixed and URL input without accepting malformed va
   equal(normalizeDoi("https://doi.org/not-a-doi"), null);
 });
 
+test("repairs the malformed DOI separator emitted by the SAGE citation widget", () => {
+  const input = "Banks, J. (2024). Deletion, departure, death: Experiences of AI companion loss. Journal of Social and Personal Relationships. https://doi.org/10.1177_02654075241269688";
+  const result = parseCitation(input);
+  equal(result.metadata.doi, "10.1177/02654075241269688");
+  equal(result.metadata.link, "https://doi.org/10.1177/02654075241269688");
+  equal(result.warnings.some((warning) => warning.includes("underscore") && warning.includes("repaired")), true);
+  deepEqual(result.unparsed, []);
+  deepEqual(normalizeDoi("10.1177_02654075241269688"), {
+    doi: "10.1177/02654075241269688",
+    link: "https://doi.org/10.1177/02654075241269688"
+  });
+});
+
 test("does not replace a non-DOI canonical link", () => {
   const existing = { ...EMPTY_REFERENCE_METADATA, link: "https://example.org/source" };
   const parsed = parseCitation("10.1177/ABC.Def").metadata;
