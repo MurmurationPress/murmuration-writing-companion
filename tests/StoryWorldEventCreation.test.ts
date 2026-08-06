@@ -145,7 +145,8 @@ test("writes minimal dated and undated event Markdown", () => {
 
   const dated = buildStoryWorldEventMarkdown(proposal, {
     mode: "custom",
-    date: "2029-06-28"
+    date: "2029-06-28",
+    addSource: true
   });
   match(dated, /^---\nworld_entity: event\nworld_name: "The Failure"\n/);
   match(dated, /world_sources:\n  - "\[\[Current Scene\]\]"/);
@@ -154,9 +155,11 @@ test("writes minimal dated and undated event Markdown", () => {
 
   const undated = buildStoryWorldEventMarkdown(proposal, {
     mode: "undated",
-    date: null
+    date: null,
+    addSource: false
   });
   equal(undated.includes("world_time"), false);
+  equal(undated.includes("world_sources"), false);
 });
 
 test("accepts only exact valid civil dates", () => {

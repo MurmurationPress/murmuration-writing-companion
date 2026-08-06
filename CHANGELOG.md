@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+- Offer every canonical Story World Navigator entity type for newly authored unresolved Scene and Part wikilinks instead of assuming Event, with explicit optional `world_sources` provenance, alias reuse, collision checks, stale-input protection and write-free cancellation.
+
 - Add the V2 author onboarding guide, exact command reference, screenshot and manual-validation checklists, and separate fictional prepared/migration example vaults with deterministic release packaging.
 
 - Add quiet first-run project readiness guidance with a one-time first-MWC-interaction hint, a reopenable command and Settings entry, per-Book #91 preparation states and diagnostics, optional Story World/editorial summaries, local dismissal, and Book-targeted routing into the existing previewed migration workflow.

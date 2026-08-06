@@ -6,6 +6,7 @@ export type StoryWorldEventDateMode = "chapter" | "custom" | "undated";
 export interface StoryWorldEventDateDecision {
   readonly mode: StoryWorldEventDateMode;
   readonly date: string | null;
+  readonly addSource?: boolean;
 }
 
 export interface StoryWorldEventCreationProposal {
@@ -272,7 +273,7 @@ export function buildStoryWorldEventMarkdown(
     lines.push("world_scope:");
     for (const scope of proposal.scope) lines.push(`  - ${yamlString(scope)}`);
   }
-  if (proposal.sources.length > 0) {
+  if (decision.addSource && proposal.sources.length > 0) {
     lines.push("world_sources:");
     for (const source of proposal.sources) lines.push(`  - ${yamlString(source)}`);
   }

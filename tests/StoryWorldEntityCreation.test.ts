@@ -1,10 +1,11 @@
-import { equal, match } from "node:assert/strict";
+import { equal, match, throws } from "node:assert/strict";
 import { test } from "node:test";
 import {
   findStoryWorldCreationCollision,
   findStoryWorldPathCollision,
   planStoryWorldEntityCreation,
-  safeStoryWorldFilename
+  safeStoryWorldFilename,
+  STORY_WORLD_ENTITY_KINDS
 } from "../src/story-world/StoryWorldEntityCreation";
 
 test("plans minimal ordinary Markdown without inventing canon", () => {
@@ -34,10 +35,32 @@ test("supports explicit custom entity kinds", () => {
   equal(plan.path, "Story World/Other/Storm Curve.md");
 });
 
+test("canonical Navigator kinds plan every unresolved-link entity exactly once", () => {
+  equal(new Set(STORY_WORLD_ENTITY_KINDS).size, STORY_WORLD_ENTITY_KINDS.length);
+  for (const kind of STORY_WORLD_ENTITY_KINDS) {
+    const plan = planStoryWorldEntityCreation({ kind, customKind: kind === "other" ? "custom-kind" : undefined, name: `Entity ${kind}` });
+    equal(plan.entityType, kind === "other" ? "custom-kind" : kind);
+  }
+  equal(STORY_WORLD_ENTITY_KINDS.includes("event"), true);
+  equal(STORY_WORLD_ENTITY_KINDS.includes("reference"), true);
+});
+
+test("adds an optional canonical source and leaves declined creation source-free", () => {
+  const accepted = planStoryWorldEntityCreation({ kind: "location", name: "Greywater", sources: ["[[Book 4/Part 1/Scene 2|Scene 2]]"] });
+  match(accepted.markdown, /world_sources:\n  - "\[\[Book 4\/Part 1\/Scene 2\|Scene 2\]\]"/);
+  equal(planStoryWorldEntityCreation({ kind: "location", name: "Elsewhere", sources: [] }).markdown.includes("world_sources"), false);
+});
+
 test("sanitises filename-only characters without changing canonical name", () => {
   const plan = planStoryWorldEntityCreation({ kind: "event", name: "Signal: First/Contact" });
   equal(safeStoryWorldFilename("Signal: First/Contact"), "Signal- First-Contact");
   equal(plan.name, "Signal: First/Contact");
+});
+
+test("preserves an explicitly path-qualified authored target", () => {
+  const plan = planStoryWorldEntityCreation({ kind: "character", name: "Robin Vale", targetPath: "Story World/People/RV" });
+  equal(plan.path, "Story World/People/RV.md");
+  throws(() => planStoryWorldEntityCreation({ kind: "character", name: "Robin", targetPath: "../Outside" }), /safe vault path/);
 });
 
 test("blocks path, canonical-name and alias collisions case-insensitively", () => {

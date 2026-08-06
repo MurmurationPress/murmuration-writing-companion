@@ -5,6 +5,7 @@ export const STORY_WORLD_ENTITY_KINDS = [
   "organisation",
   "technology",
   "concept",
+  "reference",
   "other"
 ] as const;
 
@@ -15,6 +16,9 @@ export interface StoryWorldEntityCreationInput {
   readonly customKind?: string;
   readonly name: string;
   readonly scope?: string;
+  readonly sources?: readonly string[];
+  /** An explicitly authored unresolved wikilink target; ordinary Navigator creation omits this. */
+  readonly targetPath?: string;
 }
 
 export interface StoryWorldEntityCreationPlan {
@@ -32,7 +36,8 @@ const FOLDERS: Record<Exclude<StoryWorldEntityKind, "other">, string> = {
   location: "Locations",
   organisation: "Organisations",
   technology: "Technologies",
-  concept: "Concepts"
+  concept: "Concepts",
+  reference: "References"
 };
 
 export function safeStoryWorldFilename(name: string): string {
@@ -53,10 +58,18 @@ export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInpu
   const filename = safeStoryWorldFilename(name);
   if (!filename) throw new Error("The canonical name does not produce a valid filename.");
   const folder = input.kind === "other" ? "Other" : FOLDERS[input.kind];
-  const path = `Story World/${folder}/${filename}.md`;
+  const explicitTarget = input.targetPath?.trim().replace(/\\/g, "/").replace(/\.md$/i, "") ?? "";
+  if (explicitTarget && (!explicitTarget.includes("/") || explicitTarget.startsWith("/") || explicitTarget.split("/").some((part) => !part || part === "." || part === ".." || /[\\:*?"<>|#^[\]]/.test(part) || /[. ]$/.test(part)))) {
+    throw new Error("The authored wikilink target is not a safe vault path.");
+  }
+  const path = explicitTarget ? `${explicitTarget}.md` : `Story World/${folder}/${filename}.md`;
   const scope = input.scope?.trim() || null;
   const lines = ["---", `world_entity: ${entityType}`, `world_name: ${yamlString(name)}`];
   if (scope) lines.push(`world_scope:`, `  - ${yamlString(scope)}`);
+  if (input.sources?.length) {
+    lines.push("world_sources:");
+    for (const source of input.sources) lines.push(`  - ${yamlString(source)}`);
+  }
   lines.push("---", "", `# ${name}`, "");
   return { entityType, name, scope, folder, path, markdown: lines.join("\n") };
 }
