@@ -145,6 +145,19 @@ test("round trips chapter notes and annotations through the portable store", asy
   equal(reloaded.recovered, false);
 });
 
+test("an empty first load is read-only until the first editorial save", async () => {
+  const { fileSystem, storage } = createStorage();
+  const loaded = await storage.load(undefined, NOW);
+
+  equal(loaded.source, "empty");
+  equal(fileSystem.files.has(PORTABLE_EDITORIAL_DATA_PATH), false);
+  equal(fileSystem.operations.some((operation) => operation.startsWith("mkdir:") || operation.startsWith("write:")), false);
+
+  await storage.save(editorialStore());
+  equal(fileSystem.files.has(PORTABLE_EDITORIAL_DATA_PATH), true);
+  equal(JSON.parse(fileSystem.files.get(PORTABLE_EDITORIAL_DATA_PATH) ?? "{}").schemaVersion, 3);
+});
+
 test("migrates legacy plugin data once without duplicating records", async () => {
   const { fileSystem, storage } = createStorage();
   const legacy = {
