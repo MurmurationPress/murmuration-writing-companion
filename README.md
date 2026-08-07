@@ -125,7 +125,7 @@ Entity-owned relationships are rendered as readable statements in Entity Inspect
 
 Event time editing supports exact points, ranges, approximate values and partial precision without manufacturing missing detail or converting authored wall-clock values through the system timezone. Readable British-English presentation and relative chapter context are derived from the stored values.
 
-**Story World Timeline** is a centre workspace with chronology and event–scene map presentations. Chronology groups dated points, ranges, approximate or unsupported values and undated events. The map derives scene connections from explicit event source links. Both presentations navigate back to authoritative event, source and scene Markdown and do not provide an independent timeline data store.
+**Story World Timeline** is a centre workspace with chronology and event–scene map presentations. Chronology groups dated points, ranges, approximate or unsupported values and undated events. The map derives scene connections from explicit event source links. The existing **Story World Graph** also offers a read-only Temporal mode with evidence change points, World time, conservative Entity knowledge and manuscript-order Reader knowledge perspectives, plus exact, cumulative and change-only displays. These projections navigate back to authoritative Markdown and do not provide an independent timeline data store.
 
 ## Chapter Notes
 

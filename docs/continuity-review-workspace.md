@@ -137,6 +137,8 @@ The Story World **Impact Across Manuscript** projection reuses current observati
 
 Story World maintenance observations from **Story World Review** enter a Book's Continuity Review only when their primary or supporting Story World note is reached through that Book's exact structured `world_context`. They retain the same #129 fingerprint and evidence identity. Global findings remain available in Story World Review without an active Book and are not forced into manuscript scope.
 
+The Story World Graph's temporal projection reuses these observation fingerprints and routes review markers back to the existing review workspaces. Temporal date conflicts or malformed evidence are displayed as read-only graph diagnostics; changing a temporal perspective or slider point does not create, resolve or dispose a Continuity Review observation and never writes an editorial disposition.
+
 The workspace also exposes **Generate report**. It previews either the complete current selected-Book collection or exactly the visible filtered set, then offers copy-only or create-new-note actions. Reports are derived snapshots marked `type: continuity-review-report`; they distinguish canon evidence from editorial dispositions, never overwrite an existing note and do not change disposition timestamps. See [Reusable Continuity Review report](continuity-review-report.md).
 
 ## Boundaries

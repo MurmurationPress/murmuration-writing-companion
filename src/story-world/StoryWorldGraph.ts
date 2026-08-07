@@ -43,6 +43,11 @@ export interface StoryWorldGraphEdge {
   readonly provenance: "authored-assertion" | "explicit-participant" | "explicit-source" | "explicit-model";
   readonly evidenceIdentity: string;
   readonly reviewFingerprints: readonly string[];
+  readonly temporal?: {
+    readonly change: "introduction" | "ending" | "contradiction" | "supersession" | "unchanged";
+    readonly subdued: boolean;
+    readonly evidence: readonly import("./TemporalStoryWorldGraph").TemporalGraphEvidence[];
+  };
 }
 
 export interface StoryWorldGraphDiagnostic {
@@ -104,10 +109,10 @@ function observationMap(observations: readonly ContinuityObservation[]): Map<str
 function validityValue(raw: Readonly<Record<string, unknown>>): unknown {
   if (raw.validity != null) return raw.validity;
   if (raw.world_time != null) return raw.world_time;
-  if (raw.valid_from != null || raw.valid_until != null) {
+  if (raw.valid_from != null || raw.valid_to != null || raw.valid_until != null) {
     return Object.fromEntries([
       ...(raw.valid_from != null ? [["from", raw.valid_from]] : []),
-      ...(raw.valid_until != null ? [["until", raw.valid_until]] : [])
+      ...(raw.valid_to != null || raw.valid_until != null ? [["until", raw.valid_to ?? raw.valid_until]] : [])
     ]);
   }
   return undefined;

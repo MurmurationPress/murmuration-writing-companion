@@ -11,7 +11,7 @@ Use Obsidian's Command Palette unless a context action is noted.
 | **Open Story World Navigator** | Browse canonical Story World entities and supporting models. |
 | **Open Story World Timeline** | Open chronology and event–Scene mapping. |
 | **Open Story World Review** | Inspect structured Story World diagnostics. |
-| **Open Story World Graph** | Open the derived relationship and provenance graph. |
+| **Open Story World Graph** | Open the derived relationship/provenance graph; its in-view Temporal mode provides change-point, perspective and display controls. |
 | **Open Continuity Review** | Review the active Book. A recognised Book or Scene context is required. |
 | **Generate entity index** | Preview and optionally save a selected-Book or vault-wide Markdown entity index. |
 | **About Murmuration Writing Companion** | Show installed version and official documentation/support links. |
