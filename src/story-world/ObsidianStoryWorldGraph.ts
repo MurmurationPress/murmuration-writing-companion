@@ -6,6 +6,8 @@ import { buildObsidianStoryWorldManuscriptImpact } from "./ObsidianStoryWorldMan
 import { collectObsidianStoryWorldReview } from "./ObsidianStoryWorldReview";
 import { ObsidianStoryWorldIndex } from "./ObsidianStoryWorldIndex";
 import { buildStoryWorldGraph, StoryWorldGraphOptions, StoryWorldGraphProjection } from "./StoryWorldGraph";
+import { extractTemporalGraphEvidence, TemporalEvidenceDocument } from "./TemporalGraphEvidence";
+import { buildTemporalGraphModel, TemporalGraphModel } from "./TemporalStoryWorldGraph";
 
 export interface ObsidianStoryWorldGraphOptions extends Omit<StoryWorldGraphOptions, "entities" | "documents" | "observations" | "resolve" | "scene" | "impactCount" | "allowedPaths"> {
   readonly currentBookOnly?: boolean;
@@ -70,4 +72,39 @@ export function buildObsidianStoryWorldGraph(
     },
     scene: (path) => scenes.has(path) ? { label: scenes.get(path)! } : null
   });
+}
+
+export interface ObsidianTemporalStoryWorldGraph {
+  readonly graph: StoryWorldGraphProjection;
+  readonly temporal: TemporalGraphModel;
+}
+
+/** Builds the read-only temporal layer from the same index, graph, source notes and distributed manuscript order. */
+export function buildObsidianTemporalStoryWorldGraph(
+  app: App,
+  index: ObsidianStoryWorldIndex,
+  selectedBookPath: string | null,
+  options: ObsidianStoryWorldGraphOptions
+): ObsidianTemporalStoryWorldGraph {
+  const graph = buildObsidianStoryWorldGraph(app, index, selectedBookPath, options);
+  const library = buildObsidianManuscriptLibrary(app);
+  const sequence = new Map<string, number>();
+  let cursor = 0;
+  for (const book of library.books) for (const scene of book.result.scenes) sequence.set(scene.path, cursor++);
+  const documents: TemporalEvidenceDocument[] = app.vault.getMarkdownFiles().filter((file) => !isObsidianTrashPath(file.path)).map((file) => ({
+    path: file.path,
+    label: manuscriptDisplayTitle({ path: file.path, basename: file.basename, frontmatter: frontmatter(app, file) }),
+    frontmatter: frontmatter(app, file),
+    manuscriptSequence: sequence.get(file.path) ?? null
+  }));
+  const evidence = extractTemporalGraphEvidence({
+    graph,
+    entities: index.index.getAll(),
+    documents,
+    resolve: (reference, sourcePath) => {
+      const resolved = index.resolveReference(reference, sourcePath);
+      return resolved && !resolved.excluded ? resolved.path : null;
+    }
+  });
+  return { graph, temporal: buildTemporalGraphModel(evidence) };
 }

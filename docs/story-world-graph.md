@@ -54,12 +54,28 @@ Graph centre and Obsidian active note are distinct:
 
 Tab reaches controls, graph nodes and detail actions. Enter on a graph node selects or recentres it; Enter on **Open note** or **Open source assertion** performs the explicit Markdown navigation. Alt+Left and Alt+Right mirror Back and Forward. Escape clears transient node or edge detail. No double-click or hover is required.
 
+## Temporal inspection
+
+**Temporal mode** adds a read-only change-point slider to the same focused graph. Slider positions are meaningful dated evidence points, not calendar days. They are sorted by effective story date, authoritative distributed manuscript sequence where present, source path and stable assertion identity. The label shows the effective date, a supporting Scene or Event when available and the number of changes. Previous and Next move one evidence point; with zero or one point the irrelevant controls are disabled and explained. Changing perspective, display mode, density or ordinary filters retains the selected point when it still exists.
+
+The disposable evidence normalizer uses explicit relationship bounds, Event `world_time`, dated `world_sources` Scenes and explicit relationship provenance. An unambiguous first dated source may supply an in-memory effective `valid_from`; it is labelled as derived and is never written back. `valid_to` and the established `valid_until` spelling are optional. A relationship persists after its introduction until an explicit end, contradiction, supersession or supported non-current status: silence and a lack of recent mentions never imply expiry. Event effective time and source-Scene reveal time remain separate: their dates may legitimately differ and do not constitute a contradiction. A genuinely malformed effective date is excluded with its exact source and parser reason in an expandable graph diagnostic; it is not described as a Continuity Review finding unless an existing continuity rule reports it.
+
+The perspectives answer distinct questions:
+
+- **World time** shows relationships supported as existing at the selected story date, independent of manuscript reveal order.
+- **Entity knowledge** shows only evidence explicitly associated with the centred entity through participation, explicit knowledge metadata or explicit `world_context`; missing evidence stays unknown and graph proximity never supplies mental state.
+- **Reader knowledge** accumulates by authoritative Book/Part/Scene order and resolved source evidence. It never falls back to filename order, so a later manuscript Scene can reveal an earlier-world fact.
+
+The display modes are **Evidence at this date** for the exact point, **Known by this date** for cumulative still-current state and **Changes at this date** for additions, endings, contradictions and supersessions. Older cumulative edges are subdued but remain current. Strong introduction strokes, text markers (`+ introduced`, `⊣ ended`, `× contradicted`, `⇢ superseded`) and distinct line patterns keep temporal meaning available without colour alone; provisional dashed styling remains independent.
+
+Selecting a temporal edge extends the existing graph detail surface with source note, supporting Scene/Event, effective date, manuscript sequence, change kind and explicit-versus-derived time. Ended, contradicted and superseded evidence remains inspectable at its change point even though it is absent from later current state. Undated evidence is excluded from the slider, counted explicitly and never assigned an arbitrary date.
+
 ## Refresh and authority
 
 The graph follows the active indexed Story World note only before manual graph traversal or after **Follow active note**. It refreshes through existing metadata, create, rename, deletion, local-Trash restoration, index and selected-Book routes. Trash notes remain excluded by the existing index and resolver. Centre history is memory-only presentation state.
 
-Story World and manuscript Markdown remain authoritative. Graph content, filters and layout are presentation state only. Opening, filtering, selecting and navigating call no Story World write service and never create, repair, merge, rename or delete notes. Relationship editing remains in the relationship workspace; event editing remains in the event and timeline workspaces.
+Story World and manuscript Markdown remain authoritative. Graph content, filters, temporal evidence, slider position and layout are presentation state only. Opening, filtering, selecting, temporal-mode activation, slider movement, perspective/display changes, provenance inspection and index rebuild call no Story World, manuscript or editorial-store write service. Relationship editing remains in the relationship workspace; event editing remains in the event and timeline workspaces.
 
 ## Deliberate exclusions
 
-The graph has no direct graph editing, unrestricted whole-world mode, second-hop traversal, persistent/collaborative layout, graph history beyond local in-memory centre navigation, semantic clustering, knowledge inference, co-occurrence edges, prose/backlink analysis, AI summaries or export. Selective branch expansion may be considered as a future enhancement, but it is not part of this focused implementation. Series-specific filtering is represented through current explicit scope values and the unscoped/current-Book choices; an arbitrary visual query language is out of scope.
+The first temporal version has no autoplay, animation, direct graph editing, automatic relationship expiry, mandatory temporal bounds, inferred mental state, unrestricted whole-world mode, automatic second-hop traversal, persistent temporal database, publication rendering, prose/backlink inference, AI summaries or export. Selective branch expansion may be considered later. Publication remains outside MWC and no Codex Press contract is involved.

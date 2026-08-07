@@ -18,6 +18,8 @@
 
 ## Unreleased — 0.18.0
 
+- Add a read-only temporal mode to the focused Story World Graph with evidence-derived change points, previous/next and manual slider controls, World/Entity/Reader perspectives, exact/cumulative/change displays, explicit provenance, separate effective/reveal dates, actionable malformed-date exclusions, undated handling, and non-colour-only introduction, ending, contradiction and supersession semantics without automatic expiry or stored temporal authority.
+
 - Add a dedicated Story World Navigator References category, explicit local citation and DOI import to Reference creation—including a warned repair for SAGE's malformed underscore DOI separator—canonical Reference metadata projections for vault and selected-Book scopes, and read-only Obsidian Bases and Dataview examples without introducing a bibliography store or network lookup.
 
 - Offer every canonical Story World Navigator entity type for newly authored unresolved Scene and Part wikilinks instead of assuming Event, with explicit optional `world_sources` provenance, alias reuse, collision checks, stale-input protection and write-free cancellation.

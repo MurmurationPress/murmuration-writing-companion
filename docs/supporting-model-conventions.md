@@ -166,7 +166,7 @@ The [Canon Status and Provenance Standard](canon-status-and-provenance.md) appli
 
 A source records evidence or decision history; it does not make a claim objectively true.
 
-`as_of`, `valid_from` and `valid_until` describe story time and do not replace status. Omit unknown bounds rather than inventing precision. Intrinsic event time belongs on the event entity through `world_time`; a supporting model should not copy that date merely to sort a timeline.
+`as_of`, `valid_from`, optional `valid_to` and the established `valid_until` spelling describe story time and do not replace status. Omit unknown bounds rather than inventing precision. Absence of later evidence never closes an assertion. Only an explicit end, contradiction, supersession or supported non-current status does so. Intrinsic event time belongs on the event entity through `world_time`; a supporting model should not copy that date merely to sort a timeline. Temporal views may derive an unambiguous first-evidence `valid_from` in memory but never write it back automatically.
 
 ## Perspective, belief and knowledge
 

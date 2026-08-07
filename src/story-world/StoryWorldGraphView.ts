@@ -1,8 +1,9 @@
 import { ItemView, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
-import { buildObsidianStoryWorldGraph } from "./ObsidianStoryWorldGraph";
+import { buildObsidianStoryWorldGraph, buildObsidianTemporalStoryWorldGraph } from "./ObsidianStoryWorldGraph";
 import { layoutStoryWorldGraph, STORY_WORLD_GRAPH_DENSITIES, storyWorldGraphNodeShape, storyWorldGraphStatusIsProvisional, StoryWorldGraphDensity, StoryWorldGraphEdge, StoryWorldGraphNode } from "./StoryWorldGraph";
 import { selectStoryWorldGraphNode, storyWorldGraphEdgeOpenPath, storyWorldGraphNodeOpenPath, StoryWorldGraphNavigation } from "./StoryWorldGraphNavigation";
+import { moveTemporalPoint, projectTemporalGraph, TemporalDisplayMode, TemporalPerspective } from "./TemporalStoryWorldGraph";
 
 export const STORY_WORLD_GRAPH_VIEW_TYPE = "murmuration-story-world-graph";
 export const STORY_WORLD_GRAPH_LABEL = "Story World Graph";
@@ -28,6 +29,10 @@ export class StoryWorldGraphView extends ItemView {
   private scopeFilter: "all" | "book" | "unscoped" = "all";
   private includeProvenance = false;
   private density: StoryWorldGraphDensity = "comfortable";
+  private temporalMode = false;
+  private temporalPoint = 0;
+  private temporalPerspective: TemporalPerspective = "world";
+  private temporalDisplay: TemporalDisplayMode = "known";
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldGraphHost) { super(leaf); }
   getViewType() { return STORY_WORLD_GRAPH_VIEW_TYPE; }
@@ -98,11 +103,53 @@ export class StoryWorldGraphView extends ItemView {
     const date = reference.createEl("input", { type: "date", attr: { "aria-label": "Reference date for relationship validity" } }); date.value = this.referenceDate;
     date.onchange = () => { this.referenceDate = date.value; rerender(); };
 
-    let graph = buildObsidianStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, {
+    const graphOptions = {
       selectedPath: navigation.centrePath, predicate: this.predicate || null, status: this.status || null, nodeType: this.nodeType || null,
       validity: this.validity ? this.validity as "active" | "future" | "expired" | "indeterminate" : null,
       referenceDate: this.referenceDate || undefined, currentBookOnly: this.scopeFilter === "book", unscopedOnly: this.scopeFilter === "unscoped", includeProvenance: this.includeProvenance, nodeLimit: 36
-    });
+    };
+    const temporalProjection = this.temporalMode
+      ? buildObsidianTemporalStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions)
+      : null;
+    let graph = temporalProjection?.graph ?? buildObsidianStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions);
+    const temporalToggle = controls.createEl("label", { cls: "mwc-story-world-graph-temporal-toggle" });
+    const temporalInput = temporalToggle.createEl("input", { type: "checkbox" }); temporalInput.checked = this.temporalMode;
+    temporalToggle.createSpan({ text: "Temporal mode" });
+    temporalInput.onchange = () => { this.temporalMode = temporalInput.checked; rerender(); };
+    if (temporalProjection) {
+      const model = temporalProjection.temporal;
+      this.temporalPoint = Math.min(this.temporalPoint, Math.max(0, model.changePoints.length - 1));
+      const temporalControls = container.createDiv("mwc-story-world-graph-temporal");
+      const perspective = temporalControls.createEl("select", { attr: { "aria-label": "Temporal perspective" } });
+      for (const [value, label] of [["world", "World time"], ["entity", "Entity knowledge"], ["reader", "Reader knowledge"]] as const) perspective.createEl("option", { value, text: label });
+      perspective.value = this.temporalPerspective; perspective.onchange = () => { this.temporalPerspective = perspective.value as TemporalPerspective; rerender(); };
+      const display = temporalControls.createEl("select", { attr: { "aria-label": "Temporal display mode" } });
+      for (const [value, label] of [["evidence", "Evidence at this date"], ["known", "Known by this date"], ["changes", "Changes at this date"]] as const) display.createEl("option", { value, text: label });
+      display.value = this.temporalDisplay; display.onchange = () => { this.temporalDisplay = display.value as TemporalDisplayMode; rerender(); };
+      const previous = temporalControls.createEl("button", { text: "Previous change", attr: { type: "button" } });
+      previous.disabled = this.temporalPoint <= 0; previous.onclick = () => { this.temporalPoint = moveTemporalPoint(this.temporalPoint, -1, model.changePoints.length); rerender(); };
+      const slider = temporalControls.createEl("input", { type: "range", attr: { min: "0", max: String(Math.max(0, model.changePoints.length - 1)), step: "1", "aria-label": "Story World change point" } });
+      slider.value = String(this.temporalPoint); slider.disabled = model.changePoints.length <= 1;
+      slider.oninput = () => { this.temporalPoint = Number.parseInt(slider.value, 10); rerender(); };
+      const next = temporalControls.createEl("button", { text: "Next change", attr: { type: "button" } });
+      next.disabled = this.temporalPoint >= model.changePoints.length - 1; next.onclick = () => { this.temporalPoint = moveTemporalPoint(this.temporalPoint, 1, model.changePoints.length); rerender(); };
+      const point = model.changePoints[this.temporalPoint];
+      temporalControls.createEl("strong", { text: point ? `${point.date}${point.supportingLabel ? ` · ${point.supportingLabel}` : ""} · ${point.evidence.length} ${point.evidence.length === 1 ? "change" : "changes"}` : "No dated change points" });
+      if (model.changePoints.length <= 1) temporalControls.createEl("p", { cls: "mwc-muted", text: model.changePoints.length ? "Only one dated change point is available." : "No valid dated evidence is available; slider navigation is disabled." });
+      if (model.undated.length) temporalControls.createEl("p", { cls: "mwc-story-world-graph-undated", text: `${model.undated.length} undated evidence ${model.undated.length === 1 ? "item is" : "items are"} excluded from the slider.` });
+      if (model.diagnostics.length) {
+        const diagnostics = temporalControls.createEl("details", { cls: "mwc-story-world-graph-temporal-diagnostics" });
+        diagnostics.createEl("summary", { text: `${model.diagnostics.length} temporal evidence ${model.diagnostics.length === 1 ? "item is" : "items are"} excluded because its effective date is invalid.` });
+        diagnostics.createEl("p", { cls: "mwc-muted", text: "These are graph projection exclusions, not Continuity Review findings unless an existing continuity rule reports the same source." });
+        for (const item of model.diagnostics) {
+          const row = diagnostics.createDiv("mwc-story-world-graph-temporal-diagnostic");
+          row.createSpan({ text: `${item.sourcePath} · ${item.diagnosticDetail ?? item.diagnostic}` });
+          const open = row.createEl("button", { text: "Open source", attr: { type: "button" } });
+          open.onclick = () => this.openNodeNote(item.sourcePath);
+        }
+      }
+      graph = projectTemporalGraph(graph, model, { perspective: this.temporalPerspective, displayMode: this.temporalDisplay, pointIndex: this.temporalPoint, centrePath: navigation.centrePath });
+    }
     const select = (label: string, value: string, options: readonly [string, string][], set: (next: string) => void) => {
       const control = controls.createEl("select", { attr: { "aria-label": label } });
       for (const [key, text] of options) control.createEl("option", { value: key, text });
@@ -115,7 +162,9 @@ export class StoryWorldGraphView extends ItemView {
     // Rebuild after dynamic controls only when their stored values already apply; this keeps available choices derived from the unmutated source projection.
     if (graph.dateFilterUnavailable) container.createEl("p", { cls: "mwc-muted", text: "Choose an explicit validity date before filtering active, future or expired relationships." });
     if (graph.truncated) container.createEl("p", { cls: "mwc-story-world-graph-warning", text: `Showing the first 36 deterministic nodes; ${graph.omittedNodeCount} more were omitted. Use filters to reduce this neighbourhood.` });
-    if (graph.nodes.length === 1) container.createEl("p", { cls: "mwc-muted", text: "This item has no explicit neighbours matching the current filters." });
+    if (graph.nodes.length === 1) container.createEl("p", { cls: "mwc-muted", text: this.temporalMode
+      ? "The centred item has no visible relationship state for this change point, perspective and display mode. The graph centre has not moved."
+      : "This item has no explicit neighbours matching the current filters." });
     const impact = container.createEl("button", { text: `Open Impact Across Manuscript (${graph.nodes.find((node) => node.central)?.manuscriptImpactCount ?? 0})`, attr: { type: "button" } });
     impact.onclick = async () => {
       const file = this.app.vault.getAbstractFileByPath(navigation.centrePath!);
@@ -153,11 +202,13 @@ export class StoryWorldGraphView extends ItemView {
     const central = nodes.find((node) => node.central); if (central) this.showNodeDetail(detail, central);
     for (const edge of edges) {
       const from = positions.get(edge.from); const to = positions.get(edge.to); if (!from || !to) continue;
-      const group = svg("g", { class: `mwc-story-world-graph-edge is-${edge.kind}${storyWorldGraphStatusIsProvisional(edge.status) ? " is-provisional" : ""}`, tabindex: "0", role: "button", "aria-label": `${edge.label}, ${edge.status ?? "no status"}, ${edge.validity}` });
+      const temporalClass = edge.temporal ? ` is-temporal-${edge.temporal.change}${edge.temporal.subdued ? " is-temporal-subdued" : ""}` : "";
+      const group = svg("g", { class: `mwc-story-world-graph-edge is-${edge.kind}${storyWorldGraphStatusIsProvisional(edge.status) ? " is-provisional" : ""}${temporalClass}`, tabindex: "0", role: "button", "aria-label": `${edge.label}, ${edge.status ?? "no status"}, ${edge.validity}${edge.temporal ? `, ${edge.temporal.change}` : ""}` });
       const line = svg("line", { x1: String(from.x), y1: String(from.y), x2: String(to.x), y2: String(to.y), "marker-end": "url(#mwc-graph-arrow)" }); group.appendChild(line);
       const label = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 - labelOffset), "text-anchor": "middle" }); label.textContent = edge.label; group.appendChild(label);
       const metadata = svg("text", { x: String((from.x + to.x) / 2), y: String((from.y + to.y) / 2 + labelOffset + 3), "text-anchor": "middle", class: "mwc-story-world-graph-edge-metadata" });
-      metadata.textContent = edge.validityValue != null ? edge.validity : ""; if (metadata.textContent) group.appendChild(metadata);
+      const temporalMarker = edge.temporal ? ({ introduction: "+ introduced", ending: "⊣ ended", contradiction: "× contradicted", supersession: "⇢ superseded", unchanged: "earlier evidence" } as const)[edge.temporal.change] : "";
+      metadata.textContent = temporalMarker || (edge.validityValue != null ? edge.validity : ""); if (metadata.textContent) group.appendChild(metadata);
       const show = () => this.showEdgeDetail(detail, edge); group.addEventListener("click", show); group.addEventListener("keydown", (event) => { if ((event as KeyboardEvent).key === "Enter" || (event as KeyboardEvent).key === " ") show(); }); image.appendChild(group);
     }
     for (const node of nodes) {
@@ -202,6 +253,10 @@ export class StoryWorldGraphView extends ItemView {
     container.empty(); container.createEl("h3", { text: edge.label });
     container.createEl("p", { text: `${edge.kind} · ${edge.status ?? "No status"} · ${edge.validity}` });
     if (edge.validityValue != null) container.createEl("p", { text: `Validity evidence: ${JSON.stringify(edge.validityValue)}` });
+    if (edge.temporal) for (const evidence of edge.temporal.evidence) {
+      container.createEl("p", { text: `${evidence.change} · ${evidence.effectiveDate ?? "Undated"} · ${evidence.explicitTime ? "explicit time" : "derived effective time"}` });
+      container.createEl("p", { cls: "mwc-muted", text: `${evidence.supportingPath ?? evidence.sourcePath}${evidence.manuscriptSequence !== null ? ` · manuscript sequence ${evidence.manuscriptSequence}` : ""}` });
+    }
     container.createEl("p", { cls: "mwc-muted", text: `${edge.sourcePath} · ${edge.sourceProperty.join(".")}` });
     const open = container.createEl("button", { text: "Open source assertion", attr: { type: "button" } });
     open.onclick = () => { const file = this.app.vault.getAbstractFileByPath(storyWorldGraphEdgeOpenPath(edge)); if (file instanceof TFile) { void this.app.workspace.getLeaf(false).openFile(file, { active: true }); new Notice(`Source property: ${edge.sourceProperty.join(".")}`); } };
