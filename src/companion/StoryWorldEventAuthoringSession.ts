@@ -79,6 +79,15 @@ export class StoryWorldEventAuthoringSession {
     return changed;
   }
 
+  reconcileLinks(path: string, links: readonly ProseWikilinkOccurrence[]): void {
+    const queue = this.queues.get(path);
+    if (!queue) return;
+    const raws = new Set(links.map((link) => link.raw));
+    const next = queue.filter((item) => item.kind === "add-world-context" || raws.has(item.occurrence.raw));
+    if (next.length > 0) this.queues.set(path, next);
+    else this.queues.delete(path);
+  }
+
   enqueueCandidate(
     chapterPath: string,
     occurrence: ProseWikilinkOccurrence,
@@ -105,6 +114,10 @@ export class StoryWorldEventAuthoringSession {
 
   getPending(chapterPath: string): PendingStoryWorldEventAuthoring | null {
     return this.queues.get(chapterPath)?.[0] ?? null;
+  }
+
+  needsLinkReconciliation(chapterPath: string): boolean {
+    return this.queues.get(chapterPath)?.some((item) => item.kind === "create-event") ?? false;
   }
 
   dismiss(chapterPath: string): boolean {
@@ -173,13 +186,6 @@ export class StoryWorldEventAuthoringSession {
   }
 
   private pruneRemovedLinks(path: string, text: string): void {
-    const queue = this.queues.get(path);
-    if (!queue) return;
-    const raws = new Set(findProseWikilinks(text).map((link) => link.raw));
-    const next = queue.filter((item) => (
-      item.kind === "add-world-context" || raws.has(item.occurrence.raw)
-    ));
-    if (next.length > 0) this.queues.set(path, next);
-    else this.queues.delete(path);
+    this.reconcileLinks(path, findProseWikilinks(text));
   }
 }
