@@ -37,6 +37,7 @@ import { ProjectReadinessModal } from "./onboarding/ProjectReadinessModal";
 import { collectObsidianProjectReadiness } from "./onboarding/ObsidianProjectReadiness";
 import type { ProjectReadinessPresentation } from "./onboarding/ProjectReadiness";
 import { FirstRunReadinessPreference, firstRunReadinessKey } from "./onboarding/FirstRunReadiness";
+import { findProseWikilinks, ProseWikilinkEditorChangeTracker } from "./companion/ProseWikilinkChanges";
 
 const WRITING_COMPANION_VIEW_TYPE = "murmuration-writing-companion-view";
 interface RoleAwareCompanionView { setPanelRole(role: "chapter" | "entity"): void; }
@@ -49,10 +50,13 @@ function setCompanionRole(view: unknown, role: "chapter" | "entity"): void {
 
 export default class MurmurationWritingCompanionEntry extends MurmurationWritingCompanionPlugin {
   private navigatorRefreshTimer: number | null = null;
+  private storyWorldInspectorRefreshPending = false;
   private continuityReviewRefreshTimer: number | null = null;
+  private readonly authoringReconcileTimers = new Map<string, number>();
   private storyWorldInspectorPath: string | null = null;
   private readonly storyWorldEventAuthoringSession = new StoryWorldEventAuthoringSession();
   private readonly storyWorldRelationAuthoringSession = new StoryWorldRelationAuthoringSession();
+  private readonly proseWikilinkChanges = new ProseWikilinkEditorChangeTracker();
   private readonly storyWorldTimelineActivation = new StoryWorldTimelineActivation();
   private readonly continuityReviewActivation = new ContinuityReviewActivation();
   manuscriptPreparationCommands!: ManuscriptPreparationCommandActions;
@@ -117,6 +121,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       if (!(file instanceof TFile)) return;
       this.storyWorldEventAuthoringSession.clear(file.path);
       this.storyWorldRelationAuthoringSession.clear(file.path);
+      this.proseWikilinkChanges.clear(file.path);
+      this.cancelAuthoringReconciliation(file.path);
       this.refreshStoryWorldNavigator();
       this.refreshStoryWorldGraph();
       this.queueContinuityReviewRefresh();
@@ -127,6 +133,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       if (renameKind !== "ordinary") {
         this.storyWorldEventAuthoringSession.clear(oldPath);
         this.storyWorldRelationAuthoringSession.clear(oldPath);
+        this.proseWikilinkChanges.clear(oldPath);
+        this.cancelAuthoringReconciliation(oldPath);
         this.refreshStoryWorldNavigator();
         this.refreshStoryWorldGraph();
         this.queueContinuityReviewRefresh();
@@ -134,6 +142,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       }
       this.storyWorldEventAuthoringSession.rename(oldPath, file.path);
       this.storyWorldRelationAuthoringSession.rename(oldPath, file.path);
+      this.proseWikilinkChanges.rename(oldPath, file.path);
+      this.cancelAuthoringReconciliation(oldPath);
       this.refreshStoryWorldNavigator();
       this.reconcileStoryWorldGraphRename(oldPath, file.path);
       this.queueContinuityReviewRefresh();
@@ -146,10 +156,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     });
     this.registerEvent(this.app.metadataCache.on("changed", (file) => {
       this.queueNavigatorRefresh();
-      if (this.storyWorldInspectorPath) this.refreshView();
+      if (this.storyWorldInspectorPath) this.storyWorldInspectorRefreshPending = true;
       if (this.continuityReviewDependsOn(file.path)) this.queueContinuityReviewRefresh();
-      this.refreshStoryWorldReview();
-      this.refreshStoryWorldGraph();
     }));
     this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(); }));
     this.register(() => {
@@ -161,6 +169,8 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
         window.clearTimeout(this.continuityReviewRefreshTimer);
         this.continuityReviewRefreshTimer = null;
       }
+      for (const timer of this.authoringReconcileTimers.values()) window.clearTimeout(timer);
+      this.authoringReconcileTimers.clear();
     });
   }
 
@@ -447,41 +457,82 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view?.file) return;
     const text = view.editor.getValue();
-    this.storyWorldEventAuthoringSession.seed(view.file.path, text);
-    this.storyWorldRelationAuthoringSession.seed(view.file.path, text);
+    this.proseWikilinkChanges.seed(view.file.path, text);
   }
 
   private handleStoryWorldAuthoringEditorChange(editor: Editor, file: TFile | null): void {
     if (!file) return;
-    const text = editor.getValue();
-    const cursorOffset = editor.posToOffset(editor.getCursor());
-    const eventOccurrence = this.storyWorldEventAuthoringSession.updateText(file.path, text, cursorOffset);
-    const relationOccurrence = this.storyWorldRelationAuthoringSession.updateText(file.path, text, cursorOffset);
-    if (!this.isAuthoritativeManuscriptSource(file)) return;
+    const cursor = editor.getCursor();
+    const occurrence = this.proseWikilinkChanges.update(file.path, editor, cursor);
+    if (!this.isAuthoritativeManuscriptSource(file)) {
+      this.queueAuthoringReconciliation(editor, file);
+      return;
+    }
 
     let changed = false;
-    if (eventOccurrence) {
-      const resolved = this.app.metadataCache.getFirstLinkpathDest(eventOccurrence.linkpath, file.path);
+    if (occurrence) {
+      const resolved = this.app.metadataCache.getFirstLinkpathDest(occurrence.linkpath, file.path);
       if (!resolved) {
-        const name = extractProseEventName(eventOccurrence);
-        if (name) changed = this.storyWorldEventAuthoringSession.enqueueCandidate(file.path, eventOccurrence, name) || changed;
+        const name = extractProseEventName(occurrence);
+        if (name) changed = this.storyWorldEventAuthoringSession.enqueueCandidate(file.path, occurrence, name) || changed;
       }
     }
 
-    if (relationOccurrence && this.isManuscriptScene(file)) {
-      const targetFile = this.app.metadataCache.getFirstLinkpathDest(relationOccurrence.linkpath, file.path);
+    if (occurrence && this.isManuscriptScene(file)) {
+      const targetFile = this.app.metadataCache.getFirstLinkpathDest(occurrence.linkpath, file.path);
       const targetEntity = targetFile ? this.storyWorldIndex.index.getByPath(targetFile.path) : null;
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
       const pov = getEditableChapterContextValue(frontmatter, getChapterContextField("pov")).value;
       const sourceEntity = resolvePovRelationSource(pov, this.getPovSuggestions(file));
       const sourceFile = sourceEntity ? this.app.vault.getAbstractFileByPath(sourceEntity.path) : null;
 
-      if (targetFile && targetEntity && sourceEntity && sourceEntity.path !== targetEntity.path && sourceFile instanceof TFile && !hasCurrentStoryWorldRelationForChapter(this.app, sourceFile, targetFile, file, relationOccurrence.raw)) {
-        const sourceLine = text.slice(0, relationOccurrence.start).split(/\r?\n/).length;
-        changed = this.storyWorldRelationAuthoringSession.enqueueCandidate(file.path, relationOccurrence, sourceLine, sourceEntity.path, sourceEntity.name, targetEntity.path, targetEntity.name, targetEntity.entityType) || changed;
+      if (targetFile && targetEntity && sourceEntity && sourceEntity.path !== targetEntity.path && sourceFile instanceof TFile && !hasCurrentStoryWorldRelationForChapter(this.app, sourceFile, targetFile, file, occurrence.raw)) {
+        changed = this.storyWorldRelationAuthoringSession.enqueueCandidate(file.path, occurrence, cursor.line + 1, sourceEntity.path, sourceEntity.name, targetEntity.path, targetEntity.name, targetEntity.entityType) || changed;
       }
     }
     if (changed) this.refreshView();
+    this.queueAuthoringReconciliation(editor, file);
+  }
+
+  private queueAuthoringReconciliation(editor: Editor, file: TFile): void {
+    const path = file.path;
+    const needsReconciliation = this.storyWorldEventAuthoringSession.needsLinkReconciliation(path)
+      || this.storyWorldRelationAuthoringSession.needsLinkReconciliation(path);
+    const pending = this.authoringReconcileTimers.get(path);
+    if (!needsReconciliation) {
+      if (pending !== undefined) window.clearTimeout(pending);
+      this.authoringReconcileTimers.delete(path);
+      return;
+    }
+    if (pending !== undefined) window.clearTimeout(pending);
+    const timer = window.setTimeout(() => {
+      this.authoringReconcileTimers.delete(path);
+      const active = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (active?.file?.path === path && active.editor === editor) {
+        this.reconcileAuthoringLinks(path, editor.getValue());
+        return;
+      }
+      const currentFile = this.app.vault.getAbstractFileByPath(path);
+      if (currentFile instanceof TFile) {
+        void this.app.vault.cachedRead(currentFile).then(
+          (text) => this.reconcileAuthoringLinks(path, text),
+          () => { /* A later edit or file event will reconcile transient read failures. */ }
+        );
+      }
+    }, 150);
+    this.authoringReconcileTimers.set(path, timer);
+  }
+
+  private cancelAuthoringReconciliation(path: string): void {
+    const timer = this.authoringReconcileTimers.get(path);
+    if (timer !== undefined) window.clearTimeout(timer);
+    this.authoringReconcileTimers.delete(path);
+  }
+
+  private reconcileAuthoringLinks(path: string, text: string): void {
+    const links = findProseWikilinks(text);
+    this.storyWorldEventAuthoringSession.reconcileLinks(path, links);
+    this.storyWorldRelationAuthoringSession.reconcileLinks(path, links);
   }
 
   private isManuscriptScene(file: TFile): boolean {
@@ -505,6 +556,11 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.navigatorRefreshTimer = null;
       this.refreshManuscriptNavigator();
       this.refreshStoryWorldNavigator();
+      this.refreshStoryWorldGraph();
+      if (this.storyWorldInspectorRefreshPending) {
+        this.storyWorldInspectorRefreshPending = false;
+        this.refreshView();
+      }
     }, 100);
   }
 }

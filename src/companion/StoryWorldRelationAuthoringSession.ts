@@ -94,6 +94,16 @@ export class StoryWorldRelationAuthoringSession {
     return changed;
   }
 
+  reconcileLinks(path: string, links: readonly ProseWikilinkOccurrence[]): void {
+    const queue = this.queues.get(path);
+    if (!queue) return;
+    const next = queue.filter((item) => (
+      item.kind === "add-world-context"
+      || links.some((link) => link.raw === item.occurrence.raw && link.linkpath === item.occurrence.linkpath)
+    ));
+    this.retainQueue(path, next);
+  }
+
   enqueueCandidate(
     chapterPath: string,
     occurrence: ProseWikilinkOccurrence,
@@ -135,6 +145,10 @@ export class StoryWorldRelationAuthoringSession {
 
   getPending(chapterPath: string): PendingStoryWorldRelationAuthoring | null {
     return this.queues.get(chapterPath)?.[0] ?? null;
+  }
+
+  needsLinkReconciliation(chapterPath: string): boolean {
+    return this.queues.get(chapterPath)?.some((item) => item.kind === "author-relation") ?? false;
   }
 
   dismiss(chapterPath: string): boolean {
@@ -233,16 +247,6 @@ export class StoryWorldRelationAuthoringSession {
   }
 
   private pruneRemovedLinks(path: string, text: string): void {
-    const queue = this.queues.get(path);
-    if (!queue) return;
-    const links = findProseWikilinks(text);
-    const next = queue.filter((item) => (
-      item.kind === "add-world-context"
-      || links.some((link) => (
-        link.raw === item.occurrence.raw
-        && link.linkpath === item.occurrence.linkpath
-      ))
-    ));
-    this.retainQueue(path, next);
+    this.reconcileLinks(path, findProseWikilinks(text));
   }
 }
