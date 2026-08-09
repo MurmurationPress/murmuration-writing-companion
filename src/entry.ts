@@ -6,6 +6,7 @@ import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyl
 import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAuthoringStyles";
 import { installStoryWorldBuilderStyles } from "./ui/StoryWorldBuilderStyles";
 import { installStoryWorldRelationAuthoringStyles } from "./ui/StoryWorldRelationAuthoringStyles";
+import { installManuscriptChatRendering } from "./chat/ManuscriptChatPlugin";
 import { renderStoryWorldEventAuthoring } from "./ui/StoryWorldEventAuthoring";
 import { renderStoryWorldRelationAuthoring } from "./ui/StoryWorldRelationAuthoring";
 import { renderStoryWorldEntityInspector, storyWorldBuilderItemForFile } from "./ui/StoryWorldEntityInspector";
@@ -64,6 +65,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   async onload() {
     await super.onload();
+    installManuscriptChatRendering(this);
     this.register(this.manuscriptBookSelection.subscribe((selection) => {
       this.synchroniseContinuityReviewScope(selection);
       this.refreshStoryWorldReview();
