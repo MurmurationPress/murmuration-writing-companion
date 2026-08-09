@@ -73,6 +73,9 @@ import {
 import { ContinuityDiagnosticPreference } from "./companion/ContinuityDiagnostics";
 import { ContinuitySettingsTab } from "./companion/ContinuitySettingsTab";
 import { ManuscriptIntegrityCoordinator } from "./manuscript/ManuscriptIntegrityCoordinator";
+import { ManuscriptProjectionService } from "./manuscript/ManuscriptProjection";
+import { StoryWorldReviewProjectionService } from "./story-world/StoryWorldReviewProjection";
+import { StoryWorldStartup } from "./story-world/StoryWorldStartup";
 import { classifyObsidianRename, isObsidianTrashPath } from "./ObsidianTrash";
 import type { ManuscriptStoryDateOffer } from "./manuscript/ManuscriptStoryDateOffer";
 import {
@@ -93,6 +96,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   readonly manuscriptBookSelection: ManuscriptBookSelectionService;
   storeService!: EditorialStoreService;
   storyWorldIndex!: ObsidianStoryWorldIndex;
+  manuscriptProjection!: ManuscriptProjectionService;
+  storyWorldReviewProjection!: StoryWorldReviewProjectionService;
   sidebarSectionPreferences!: SidebarSectionPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
@@ -106,6 +111,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly pendingStoryWorldMetadataPaths = new Set<string>();
   private readonly pendingEditorialCreates = new Map<string, TFile>();
   private manuscriptIntegrityCoordinator!: ManuscriptIntegrityCoordinator;
+  private storyWorldStartup!: StoryWorldStartup<boolean>;
   private vaultBackupService: VaultBackupService | null = null;
 
   constructor(app: App, manifest: PluginManifest) {
@@ -154,7 +160,13 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
 
     this.storyWorldIndex = new ObsidianStoryWorldIndex(this.app);
-    this.storyWorldIndex.rebuild();
+    this.storyWorldStartup = new StoryWorldStartup(
+      () => this.storyWorldIndex.rebuild(),
+      () => this.app.vault.getMarkdownFiles().every((file) => Boolean(this.app.metadataCache.getFileCache(file)))
+    );
+    this.storyWorldStartup.initialise();
+    this.manuscriptProjection = new ManuscriptProjectionService(this.app);
+    this.storyWorldReviewProjection = new StoryWorldReviewProjectionService(this.app, this.storyWorldIndex);
 
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => {
@@ -193,12 +205,14 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           this.recollectContinuityReview();
           this.refreshContinuityReview();
         }
-      }
+      },
+      this.manuscriptProjection
     );
 
     this.app.workspace.onLayoutReady(() => {
       this.manuscriptIntegrityCoordinator.initialise();
-      if (this.storyWorldIndex.rebuild()) {
+      if (this.storyWorldStartup.settle() !== null) {
+        this.storyWorldReviewProjection.invalidate();
         this.refreshView();
       }
       this.refreshManuscriptNavigator();
@@ -315,9 +329,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
-        this.manuscriptIntegrityCoordinator.queue(file.path);
+        if (this.manuscriptProjection.affectsMetadata(file)) this.manuscriptIntegrityCoordinator.queue(file.path);
         const wasStoryWorld = this.storyWorldIndex.index.getByPath(file.path) !== null;
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
+        this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         const currentChapter = this.getCurrentChapter();
         const currentChapterChanged = file.path === currentChapter?.path;
         const currentBookChanged = currentChapter
@@ -345,7 +360,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.app.vault.on("create", async (file) => {
         if (!(file instanceof TFile) || file.extension !== "md") return;
 
-        this.storyWorldIndex.handleCreate(file);
+        const worldChanged = this.storyWorldIndex.handleCreate(file);
+        this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         this.manuscriptIntegrityCoordinator.queue(file.path);
         this.pendingEditorialCreates.set(file.path, file);
 
@@ -362,6 +378,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         this.pendingEditorialCreates.delete(file.path);
         this.manuscriptIntegrityCoordinator.queue(file.path);
         const worldChanged = this.storyWorldIndex.handleDelete(file);
+        this.storyWorldReviewProjection.invalidatePath(file.path);
         await this.storeService.handleDelete(file);
 
         if (this.currentChapter?.path === file.path) {
@@ -388,6 +405,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           this.manuscriptIntegrityCoordinator.queueUnmanagedMove(oldPath, file.path);
           this.pendingEditorialCreates.delete(oldPath);
           const worldChanged = this.storyWorldIndex.handleDeletePath(oldPath);
+          this.storyWorldReviewProjection.invalidatePath(oldPath);
           await this.storeService.handleDeletePath(oldPath);
           if (this.currentChapter?.path === oldPath || this.currentChapter?.path === file.path) this.currentChapter = null;
           if (worldChanged || this.manuscriptChronologyDependencies.has(oldPath)) this.refreshView();
@@ -396,7 +414,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         }
         if (renameKind === "trash-restore") {
           this.manuscriptIntegrityCoordinator.queueUnmanagedMove(oldPath, file.path);
-          this.storyWorldIndex.handleCreate(file);
+          const worldChanged = this.storyWorldIndex.handleCreate(file);
+          this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
           this.pendingEditorialCreates.set(file.path, file);
           this.refreshView();
           this.refreshManuscriptNavigator();
@@ -414,6 +433,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           );
         }
         const worldChanged = this.storyWorldIndex.handleRename(file, oldPath);
+        this.storyWorldReviewProjection.invalidatePath(oldPath);
+        this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         await this.storeService.handleRename(file, oldPath);
 
         if (this.currentChapter?.path === oldPath) {
@@ -496,7 +517,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   getContinuityReviewActiveCount(bookPath: string): number | null {
-    const collection = collectObsidianContinuityReview(this.app, this.storyWorldIndex, bookPath);
+    const collection = collectObsidianContinuityReview(this.app, this.storyWorldIndex, bookPath, this.manuscriptProjection.get(), this.storyWorldReviewProjection.get());
     if (!collection) return null;
     return projectContinuityReview({
       observations: collection.observations,
@@ -510,7 +531,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     prefix = "Continuity Review"
   ): ContinuityReviewActionPresentation {
     const book = bookPath
-      ? buildObsidianManuscriptLibrary(this.app).books.find((candidate) => candidate.file.path === bookPath)
+      ? this.manuscriptProjection.get().books.find((candidate) => candidate.file.path === bookPath)
       : null;
     const safe = Boolean(book && manuscriptChronologyOrderIsSafe(book.result));
     return continuityReviewActionPresentation(

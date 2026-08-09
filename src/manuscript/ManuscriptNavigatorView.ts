@@ -304,7 +304,7 @@ export class ManuscriptNavigatorView extends ItemView {
     container.empty();
     container.addClass("mwc-manuscript-navigator");
 
-    const library = buildObsidianManuscriptLibrary(this.app);
+    const library = this.plugin.manuscriptProjection.get();
     const activeFile = this.plugin.getCurrentChapter();
     const activePath = activeFile?.path ?? null;
 

@@ -136,9 +136,11 @@ function chapterObservations(
 export function collectObsidianContinuityReview(
   app: App,
   storyWorldIndex: ObsidianStoryWorldIndex,
-  bookPath: string
+  bookPath: string,
+  settledLibrary = buildObsidianManuscriptLibrary(app),
+  settledStoryWorldReview = collectObsidianStoryWorldReview(app, storyWorldIndex)
 ): ObsidianContinuityReviewCollection | null {
-  const library = buildObsidianManuscriptLibrary(app);
+  const library = settledLibrary;
   const book = library.books.find((candidate) => candidate.file.path === bookPath);
   if (!book) return null;
   const scenes = book.result.scenes
@@ -149,7 +151,7 @@ export function collectObsidianContinuityReview(
   const chronology = buildObsidianManuscriptChronologyForBook(app, book);
   const observations: ContinuityObservation[] = [...chronology.observations];
   for (const scene of scenes) observations.push(...chapterObservations(app, storyWorldIndex, book, scene));
-  const storyWorldReview = collectObsidianStoryWorldReview(app, storyWorldIndex);
+  const storyWorldReview = settledStoryWorldReview;
   observations.push(...storyWorldReview.observations.filter((observation) =>
     scope.explicitlyReferencedStoryWorldPaths.has(observation.primary.path)
     || observationSourceNotes(observation).some((source) => scope.explicitlyReferencedStoryWorldPaths.has(source.path))

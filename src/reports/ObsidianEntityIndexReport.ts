@@ -9,9 +9,9 @@ export interface ObsidianEntityIndexChoices {
   readonly entityTypes: readonly string[];
 }
 
-export function entityIndexChoices(app: App, index: ObsidianStoryWorldIndex): ObsidianEntityIndexChoices {
+export function entityIndexChoices(app: App, index: ObsidianStoryWorldIndex, library = buildObsidianManuscriptLibrary(app)): ObsidianEntityIndexChoices {
   return {
-    books: buildObsidianManuscriptLibrary(app).books,
+    books: library.books,
     entityTypes: [...new Set(index.index.getAll().map((entity) => entity.entityType.trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }))
   };
@@ -24,9 +24,11 @@ export function buildObsidianEntityIndexReport(options: {
   readonly book?: ObsidianManuscriptBook;
   readonly includedTypes: ReadonlySet<string>;
   readonly generatedAt: string;
+  readonly library?: ReturnType<typeof buildObsidianManuscriptLibrary>;
+  readonly storyWorldReview?: import("../story-world/StoryWorldReview").StoryWorldReviewProjection;
 }): EntityIndexReportDraft {
   const { app, index } = options;
-  const library = buildObsidianManuscriptLibrary(app);
+  const library = options.library ?? buildObsidianManuscriptLibrary(app);
   const books = options.scope === "vault" ? library.books : options.book ? [options.book] : [];
   const occurrences: EntityIndexOccurrence[] = [];
   let unresolvedLinks = 0;
@@ -66,7 +68,7 @@ export function buildObsidianEntityIndexReport(options: {
   // Structured source/support evidence remains defined by the existing impact
   // projection. Temporal and continuity inferences are deliberately not occurrences.
   for (const entity of index.index.getAll()) {
-    const impact = buildObsidianStoryWorldManuscriptImpact(app, index, entity);
+    const impact = buildObsidianStoryWorldManuscriptImpact(app, index, entity, library, options.storyWorldReview);
     for (const result of impact.results) {
       if (!books.some((book) => book.file.path === result.scene.bookPath) || !result.evidence.some((evidence) => evidence.kind === "direct" || evidence.kind === "structured")) continue;
       const scene = scenes.get(result.scene.path);

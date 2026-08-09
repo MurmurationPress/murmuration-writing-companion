@@ -170,6 +170,7 @@ async function writeMutation(
 ): Promise<void> {
   await writeObsidianEntityRelationship(plugin.app, file, snapshot, mutation);
   plugin.storyWorldIndex.rebuild();
+  plugin.storyWorldReviewProjection.invalidate();
   plugin.refreshView();
 }
 

@@ -6,7 +6,8 @@
     "dev": "esbuild src/entry.ts --bundle --external:obsidian --external:node:* --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",
     "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs",
     "test:watch": "node scripts/run-tests.mjs --watch",
-    "build": "tsc -noEmit -skipLibCheck && esbuild src/entry.ts --bundle --external:obsidian --external:node:* --format=cjs --target=es2018 --outfile=main.js",
+    "build": "tsc -noEmit -skipLibCheck && node scripts/build-plugin.mjs",
+    "bundle:analyze": "tsc -noEmit -skipLibCheck && node scripts/build-plugin.mjs --analyze",
     "example:archive": "node scripts/build-example-vault.mjs",
     "release:check": "node scripts/verify-release.mjs"
   },

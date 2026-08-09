@@ -109,9 +109,9 @@ export class StoryWorldGraphView extends ItemView {
       referenceDate: this.referenceDate || undefined, currentBookOnly: this.scopeFilter === "book", unscopedOnly: this.scopeFilter === "unscoped", includeProvenance: this.includeProvenance, nodeLimit: 36
     };
     const temporalProjection = this.temporalMode
-      ? buildObsidianTemporalStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions)
+      ? buildObsidianTemporalStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions, this.plugin.manuscriptProjection.get(), this.plugin.storyWorldReviewProjection.get())
       : null;
-    let graph = temporalProjection?.graph ?? buildObsidianStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions);
+    let graph = temporalProjection?.graph ?? buildObsidianStoryWorldGraph(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptBookSelection.get().bookPath, graphOptions, this.plugin.manuscriptProjection.get(), this.plugin.storyWorldReviewProjection.get());
     const temporalToggle = controls.createEl("label", { cls: "mwc-story-world-graph-temporal-toggle" });
     const temporalInput = temporalToggle.createEl("input", { type: "checkbox" }); temporalInput.checked = this.temporalMode;
     temporalToggle.createSpan({ text: "Temporal mode" });
