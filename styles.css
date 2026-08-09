@@ -778,3 +778,43 @@
   text-decoration: underline dotted;
   text-underline-offset: 2px;
 }
+.mwc-manuscript-chat {
+  display: flow-root;
+  max-width: 100%;
+  margin-block: 1em;
+  overflow-wrap: anywhere;
+}
+
+.mwc-manuscript-chat-message {
+  box-sizing: border-box;
+  width: min(82%, 42rem);
+  margin-block: 0.65em;
+  padding: 0.7em 0.85em;
+  border: 1px solid var(--background-modifier-border);
+  border-inline-start-width: 0.3em;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  white-space: pre-wrap;
+}
+
+.mwc-manuscript-chat-left { margin-inline: 0 auto; }
+.mwc-manuscript-chat-right { margin-inline: auto 0; border-inline-start-width: 1px; border-inline-end-width: 0.3em; }
+.mwc-manuscript-chat-center { margin-inline: auto; text-align: center; border-inline: 0.2em solid var(--background-modifier-border); }
+.mwc-manuscript-chat-speaker { margin-block-end: 0.35em; font-weight: var(--font-semibold, 600); letter-spacing: 0.02em; }
+.mwc-manuscript-chat-body { line-height: var(--line-height-normal, 1.5); }
+.mwc-manuscript-chat-body > :first-child { margin-block-start: 0; }
+.mwc-manuscript-chat-body > :last-child { margin-block-end: 0; }
+.mwc-manuscript-chat-body img,
+.mwc-manuscript-chat-body .internal-embed img,
+.mwc-manuscript-chat-body .image-embed img { display: block; max-width: 100%; height: auto; object-fit: contain; }
+.mwc-manuscript-chat-body .internal-embed,
+.mwc-manuscript-chat-body .image-embed { max-width: 100%; }
+.mwc-manuscript-chat-subtext { margin-block-start: 0.45em; font-size: var(--font-smallest); font-style: italic; color: var(--text-muted); }
+.mwc-manuscript-chat-comment { margin: 0.8em auto; text-align: center; font-size: var(--font-smaller); font-weight: var(--font-medium, 500); color: var(--text-muted); }
+.mwc-manuscript-chat-divider { width: min(10rem, 45%); margin: 1em auto; border: 0; border-block-start: 1px solid var(--background-modifier-border); }
+.mwc-manuscript-chat-malformed,
+.mwc-manuscript-chat-source { max-width: 100%; overflow-x: auto; padding: 0.65em; border: 1px dashed var(--text-warning); background: var(--background-primary-alt); white-space: pre-wrap; }
+@media (max-width: 480px) {
+  .mwc-manuscript-chat-message { width: 94%; }
+}
