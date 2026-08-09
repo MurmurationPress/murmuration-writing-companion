@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
+import { presentWikilinkValues } from "../story-world/WikilinkPresentation";
 import {
   isExactStoryDate,
   StoryWorldEventCreationProposal,
@@ -44,7 +45,7 @@ class StoryWorldEventCreationModal extends Modal {
     );
     new Setting(this.contentEl)
       .setName(this.sourceLabel)
-      .setDesc(`Write exactly ${this.proposal.sources.join(" · ")}`)
+      .setDesc(`Store ${presentWikilinkValues(this.proposal.sources).map((source) => source.label).join(" · ")} as provenance`)
       .addToggle((toggle) => toggle.setValue(false).onChange((value) => { this.addSource = value; }));
 
     const fieldset = this.contentEl.createEl("fieldset", {

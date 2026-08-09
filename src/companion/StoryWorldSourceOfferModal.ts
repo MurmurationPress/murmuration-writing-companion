@@ -1,4 +1,5 @@
 import { App, Modal } from "obsidian";
+import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 
 class StoryWorldSourceOfferModal extends Modal {
   private settled = false;
@@ -6,7 +7,7 @@ class StoryWorldSourceOfferModal extends Modal {
   onOpen(): void {
     this.titleEl.setText("Add Story World source");
     this.contentEl.createEl("p", { text: this.label });
-    this.contentEl.createEl("p", { text: `Write exactly ${this.reference}` });
+    this.contentEl.createEl("p", { text: `Add ${presentWikilinkValue(this.reference)?.label ?? "this note"} as provenance.` });
     const actions = this.contentEl.createDiv("modal-button-container");
     actions.createEl("button", { text: "Cancel" }).onclick = () => this.finish(null);
     actions.createEl("button", { text: "Decline" }).onclick = () => this.finish(false);

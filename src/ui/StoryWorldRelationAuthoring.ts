@@ -16,6 +16,7 @@ import {
   StoryWorldRelationDecision,
   StoryWorldRelationProposal
 } from "../companion/StoryWorldRelationAuthoring";
+import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 import {
   addStoryWorldEntityToWorldContext,
   appendStoryWorldRelation,
@@ -118,7 +119,7 @@ function renderMeaningPrompt(
   });
   card.createEl("p", {
     cls: "mwc-story-world-relation-source",
-    text: `From prose link ${proposal.sourceRawLink} · line ${proposal.sourceLine}`
+    text: `From prose link ${presentWikilinkValue(proposal.sourceRawLink)?.label ?? proposal.targetEntityName} · line ${proposal.sourceLine}`
   });
 
   const controls = card.createDiv("mwc-story-world-relation-controls");

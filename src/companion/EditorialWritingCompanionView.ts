@@ -28,6 +28,7 @@ import {
   resolvePovInput
 } from "./PovSuggestions";
 import { renderWikilinkValues } from "../ui/WikilinkPresentation";
+import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 import {
   VIEW_TYPE,
   WritingCompanionView as BaseWritingCompanionView
@@ -454,12 +455,13 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     const renderEditor = (value: string) => {
       container.empty();
       const suggestions = this.plugin.getPovSuggestions(file);
+      const presentedValue = presentWikilinkValue(value)?.label ?? value;
       const listId = `mwc-pov-suggestions-${++nextPovSuggestionListId}`;
       const editor = container.createEl("input", {
         cls: "mwc-context-input mwc-pov-input",
         attr: { placeholder, "aria-label": "POV character", list: listId }
       });
-      editor.value = value;
+      editor.value = presentedValue;
 
       const list = container.createEl("datalist", { attr: { id: listId } });
       this.renderPovSuggestionOptions(list, suggestions);
@@ -468,7 +470,9 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const commit = async () => {
         if (closed) return;
         closed = true;
-        const nextValue = resolvePovInput(editor.value, suggestions);
+        const nextValue = editor.value.trim() === presentedValue.trim()
+          ? value
+          : resolvePovInput(editor.value, suggestions);
         await save(nextValue);
         renderResting(nextValue);
       };
