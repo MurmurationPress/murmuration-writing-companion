@@ -115,7 +115,7 @@ export class ContinuityReviewView extends ItemView {
     this.loading = true;
     this.render();
     const result = await this.collectionCoordinator.request(() => Promise.resolve().then(() => (
-      collectObsidianContinuityReview(this.app, this.plugin.storyWorldIndex, requestedBook)
+      collectObsidianContinuityReview(this.app, this.plugin.storyWorldIndex, requestedBook, this.plugin.manuscriptProjection.get(), this.plugin.storyWorldReviewProjection.get())
     )));
     if (!result.current || this.bookPath !== requestedBook) return;
     this.collection = result.value;
@@ -128,7 +128,7 @@ export class ContinuityReviewView extends ItemView {
     const container = this.containerEl.children[1] as HTMLElement;
     container.empty();
     container.addClass("mwc-continuity-review");
-    const library = buildObsidianManuscriptLibrary(this.app);
+    const library = this.plugin.manuscriptProjection.get();
     this.bookPath = this.plugin.manuscriptBookSelection.get().bookPath;
     const collection = this.collection?.book.file.path === this.bookPath ? this.collection : null;
 

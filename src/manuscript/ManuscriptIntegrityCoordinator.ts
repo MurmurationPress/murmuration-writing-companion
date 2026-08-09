@@ -10,6 +10,7 @@ import {
   reconcileManuscriptSelection
 } from "./ManuscriptIntegrity";
 import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
+import { ManuscriptProjectionService } from "./ManuscriptProjection";
 
 export interface ManuscriptIntegrityRefresh {
   readonly library: ObsidianManuscriptLibrary;
@@ -42,13 +43,14 @@ export class ManuscriptIntegrityCoordinator {
   constructor(
     private readonly app: App,
     private readonly selection: ManuscriptBookSelectionService,
-    private readonly options: ManuscriptIntegrityCoordinatorOptions
+    private readonly options: ManuscriptIntegrityCoordinatorOptions,
+    private readonly projection = new ManuscriptProjectionService(app)
   ) {
     this.manuscriptSequenceProperties = new ManuscriptSequencePropertyService(app);
   }
 
   initialise(): void {
-    const library = buildObsidianManuscriptLibrary(this.app);
+    const library = this.projection.rebuild();
     this.reconcileAndPublish(
       library,
       new Set(library.books.map((book) => book.file.path)),
@@ -122,7 +124,7 @@ export class ManuscriptIntegrityCoordinator {
     if (this.disposed || generation !== this.generations.currentBatch()) return;
     if (paths.some((path) => this.generations.currentPath(path) !== pathGenerations.get(path))) return;
 
-    const library = buildObsidianManuscriptLibrary(this.app);
+    const library = this.projection.rebuild();
     const survivingPaths = manuscriptPaths(library);
     const contexts = paths
       .filter((path) => !this.pendingRenamePaths.has(path) && !this.app.vault.getAbstractFileByPath(path))
@@ -171,6 +173,7 @@ export class ManuscriptIntegrityCoordinator {
       this.options.activePath(),
       this.generations.currentBatch()
     );
+    this.projection.publish(library);
     this.options.onSettled({
       library,
       affectedPaths,

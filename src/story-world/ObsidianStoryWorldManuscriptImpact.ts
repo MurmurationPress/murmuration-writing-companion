@@ -9,6 +9,8 @@ import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { projectEntityRelationships, relationshipProperty } from "./EntityRelationships";
 import { buildStoryWorldManuscriptImpact, ManuscriptImpactProjection, ManuscriptImpactSceneInput } from "./StoryWorldManuscriptImpact";
 import { getWorldEventRelativeTimingPresentation } from "./WorldRelativeTime";
+import type { ObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
+import type { StoryWorldReviewProjection } from "./StoryWorldReview";
 
 function frontmatter(app: App, file: TFile): Record<string, unknown> | undefined {
   return app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
@@ -32,9 +34,11 @@ function temporalValue(entity: StoryWorldEntityRecord): { value: unknown; reason
 export function buildObsidianStoryWorldManuscriptImpact(
   app: App,
   storyWorldIndex: ObsidianStoryWorldIndex,
-  selected: StoryWorldEntityRecord
+  selected: StoryWorldEntityRecord,
+  settledLibrary = buildObsidianManuscriptLibrary(app),
+  settledReview?: StoryWorldReviewProjection
 ): ManuscriptImpactProjection {
-  const library = buildObsidianManuscriptLibrary(app);
+  const library: ObsidianManuscriptLibrary = settledLibrary;
   const structuredByScene = new Map<string, Set<string>>();
   const addStructured = (path: string | null, label: string) => {
     if (!path) return;
@@ -54,7 +58,7 @@ export function buildObsidianStoryWorldManuscriptImpact(
   const participantPaths = new Set(participantProperties.flatMap(values).map((reference) => resolvePath(app, reference, selected.path)).filter((path): path is string => Boolean(path)));
   const scenes: ManuscriptImpactSceneInput[] = [];
   for (const book of library.books) {
-    const collection = collectObsidianContinuityReview(app, storyWorldIndex, book.file.path);
+    const collection = collectObsidianContinuityReview(app, storyWorldIndex, book.file.path, library, settledReview);
     const observations = collection?.observations ?? [];
     for (const [order, entry] of book.result.scenes.entries()) {
       const file = book.filesByPath.get(entry.path);

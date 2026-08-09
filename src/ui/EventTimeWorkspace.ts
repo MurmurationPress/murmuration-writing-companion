@@ -64,11 +64,11 @@ function renderForm(host: Element, plugin: MurmurationWritingCompanionPlugin, fi
   clear.onclick = () => {
     if (!confirm("Remove world_time and mark this event as explicitly undated?")) return;
     clear.disabled = true;
-    void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "clear" }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.refreshView(); new Notice("Event is now undated."); }).catch((error) => { new Notice(`Could not clear event time: ${message(error)}`); clear.disabled = false; });
+    void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "clear" }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.storyWorldReviewProjection.invalidate(); plugin.refreshView(); new Notice("Event is now undated."); }).catch((error) => { new Notice(`Could not clear event time: ${message(error)}`); clear.disabled = false; });
   };
   save.onclick = () => {
     const value = draft(); if (!value) return; save.disabled = true;
-    void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "set", value }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.refreshView(); new Notice("Event time updated."); }).catch((error) => { new Notice(`Could not save event time: ${message(error)}`); save.disabled = false; });
+    void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "set", value }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.storyWorldReviewProjection.invalidate(); plugin.refreshView(); new Notice("Event time updated."); }).catch((error) => { new Notice(`Could not save event time: ${message(error)}`); save.disabled = false; });
   };
   update();
 }
@@ -85,7 +85,7 @@ export async function beginEventTimeEditing(host: Element, plugin: MurmurationWr
       clear.onclick = () => {
         if (!confirm("Remove the preserved world_time and mark this event as explicitly undated?")) return;
         clear.disabled = true;
-        void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "clear" }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.refreshView(); new Notice("Event is now undated."); }).catch((error) => { new Notice(`Could not clear event time: ${message(error)}`); clear.disabled = false; });
+        void writeObsidianEventTime(plugin.app, file, snapshot, { kind: "clear" }).then(() => { plugin.storyWorldIndex.rebuild(); plugin.storyWorldReviewProjection.invalidate(); plugin.refreshView(); new Notice("Event is now undated."); }).catch((error) => { new Notice(`Could not clear event time: ${message(error)}`); clear.disabled = false; });
       };
       warning.createEl("button", { text: "Cancel" }).onclick = () => host.empty();
       return;

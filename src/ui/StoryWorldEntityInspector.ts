@@ -41,7 +41,7 @@ function addValues(container: Element, heading: string, values: readonly string[
 function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
   const selected = plugin.storyWorldIndex.index.getByPath(file.path);
   if (!selected) return;
-  const projection = buildObsidianStoryWorldManuscriptImpact(plugin.app, plugin.storyWorldIndex, selected);
+  const projection = buildObsidianStoryWorldManuscriptImpact(plugin.app, plugin.storyWorldIndex, selected, plugin.manuscriptProjection.get(), plugin.storyWorldReviewProjection.get());
   const section = container.createDiv("mwc-story-world-inspector-section mwc-manuscript-impact");
   section.createEl("h3", { text: "Impact Across Manuscript" });
   const controls = section.createDiv("mwc-manuscript-impact-controls");

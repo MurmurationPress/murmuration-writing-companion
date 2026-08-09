@@ -16,14 +16,14 @@ export class EntityIndexReportModal extends Modal {
 
   constructor(private readonly plugin: MurmurationWritingCompanionEntry) {
     super(plugin.app);
-    const choices = entityIndexChoices(plugin.app, plugin.storyWorldIndex);
+    const choices = entityIndexChoices(plugin.app, plugin.storyWorldIndex, plugin.manuscriptProjection.get());
     this.bookPath = plugin.manuscriptBookSelection.get().bookPath ?? choices.books[0]?.file.path ?? "";
     for (const type of choices.entityTypes) this.types.add(type.toLowerCase());
   }
 
   onOpen(): void {
     this.titleEl.setText("Generate entity index");
-    const choices = entityIndexChoices(this.app, this.plugin.storyWorldIndex);
+    const choices = entityIndexChoices(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptProjection.get());
     new Setting(this.contentEl).setName("Scope").setDesc("Index the selected Book or every recognised Book in the vault.").addDropdown((dropdown) => {
       dropdown.addOption("book", "Book"); dropdown.addOption("vault", "Vault");
       dropdown.onChange((value) => { this.reportScope = value === "vault" ? "vault" : "book"; this.pathEdited = false; this.render(); });
@@ -49,9 +49,9 @@ export class EntityIndexReportModal extends Modal {
   }
 
   private draft() {
-    const choices = entityIndexChoices(this.app, this.plugin.storyWorldIndex);
+    const choices = entityIndexChoices(this.app, this.plugin.storyWorldIndex, this.plugin.manuscriptProjection.get());
     const book = choices.books.find((candidate) => candidate.file.path === this.bookPath);
-    return this.reportScope === "vault" || book ? buildObsidianEntityIndexReport({ app: this.app, index: this.plugin.storyWorldIndex, scope: this.reportScope, book, includedTypes: this.types, generatedAt: this.generatedAt }) : null;
+    return this.reportScope === "vault" || book ? buildObsidianEntityIndexReport({ app: this.app, index: this.plugin.storyWorldIndex, scope: this.reportScope, book, includedTypes: this.types, generatedAt: this.generatedAt, library: this.plugin.manuscriptProjection.get(), storyWorldReview: this.plugin.storyWorldReviewProjection.get() }) : null;
   }
 
   private render(): void {

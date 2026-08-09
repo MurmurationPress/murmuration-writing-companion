@@ -8,6 +8,8 @@ import { ObsidianStoryWorldIndex } from "./ObsidianStoryWorldIndex";
 import { buildStoryWorldGraph, StoryWorldGraphOptions, StoryWorldGraphProjection } from "./StoryWorldGraph";
 import { extractTemporalGraphEvidence, TemporalEvidenceDocument } from "./TemporalGraphEvidence";
 import { buildTemporalGraphModel, TemporalGraphModel } from "./TemporalStoryWorldGraph";
+import type { ObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
+import type { StoryWorldReviewProjection } from "./StoryWorldReview";
 
 export interface ObsidianStoryWorldGraphOptions extends Omit<StoryWorldGraphOptions, "entities" | "documents" | "observations" | "resolve" | "scene" | "impactCount" | "allowedPaths"> {
   readonly currentBookOnly?: boolean;
@@ -18,10 +20,10 @@ function frontmatter(app: App, file: TFile): Record<string, unknown> {
   return (app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined) ?? {};
 }
 
-function currentBookPaths(app: App, index: ObsidianStoryWorldIndex, bookPath: string | null, selectedPath: string): ReadonlySet<string> | null {
+function currentBookPaths(app: App, index: ObsidianStoryWorldIndex, bookPath: string | null, selectedPath: string, library: ObsidianManuscriptLibrary): ReadonlySet<string> | null {
   if (!bookPath) return null;
   const paths = new Set<string>([selectedPath]);
-  const book = buildObsidianManuscriptLibrary(app).books.find((candidate) => candidate.file.path === bookPath);
+  const book = library.books.find((candidate) => candidate.file.path === bookPath);
   for (const scene of book?.result.scenes ?? []) {
     const file = book?.filesByPath.get(scene.path); if (!file) continue;
     paths.add(file.path);
@@ -41,20 +43,22 @@ export function buildObsidianStoryWorldGraph(
   app: App,
   index: ObsidianStoryWorldIndex,
   selectedBookPath: string | null,
-  options: ObsidianStoryWorldGraphOptions
+  options: ObsidianStoryWorldGraphOptions,
+  settledLibrary = buildObsidianManuscriptLibrary(app),
+  settledReview = collectObsidianStoryWorldReview(app, index)
 ): StoryWorldGraphProjection {
   const entities = index.index.getAll();
   const selected = index.index.getByPath(options.selectedPath);
   const files = app.vault.getMarkdownFiles().filter((file) => !isObsidianTrashPath(file.path));
   const documents = files.map((file) => ({ path: file.path, basename: file.basename, frontmatter: frontmatter(app, file) }));
-  const review = collectObsidianStoryWorldReview(app, index);
-  const library = buildObsidianManuscriptLibrary(app);
+  const review: StoryWorldReviewProjection = settledReview;
+  const library: ObsidianManuscriptLibrary = settledLibrary;
   const scenes = new Map<string, string>();
   for (const book of library.books) for (const scene of book.result.scenes) {
     const file = book.filesByPath.get(scene.path); if (!file) continue;
     scenes.set(file.path, manuscriptDisplayTitle({ path: file.path, basename: file.basename, frontmatter: frontmatter(app, file) }));
   }
-  const impactCount = selected ? buildObsidianStoryWorldManuscriptImpact(app, index, selected).results.length : 0;
+  const impactCount = selected ? buildObsidianStoryWorldManuscriptImpact(app, index, selected, library, review).results.length : 0;
   return buildStoryWorldGraph({
     ...options,
     entities,
@@ -62,7 +66,7 @@ export function buildObsidianStoryWorldGraph(
     observations: review.observations,
     impactCount,
     allowedPaths: options.currentBookOnly
-      ? currentBookPaths(app, index, selectedBookPath, options.selectedPath)
+      ? currentBookPaths(app, index, selectedBookPath, options.selectedPath, library)
       : options.unscopedOnly
         ? new Set([options.selectedPath, ...entities.filter((entity) => entity.scope.length === 0).map((entity) => entity.path)])
         : null,
@@ -84,10 +88,12 @@ export function buildObsidianTemporalStoryWorldGraph(
   app: App,
   index: ObsidianStoryWorldIndex,
   selectedBookPath: string | null,
-  options: ObsidianStoryWorldGraphOptions
+  options: ObsidianStoryWorldGraphOptions,
+  settledLibrary = buildObsidianManuscriptLibrary(app),
+  settledReview = collectObsidianStoryWorldReview(app, index)
 ): ObsidianTemporalStoryWorldGraph {
-  const graph = buildObsidianStoryWorldGraph(app, index, selectedBookPath, options);
-  const library = buildObsidianManuscriptLibrary(app);
+  const graph = buildObsidianStoryWorldGraph(app, index, selectedBookPath, options, settledLibrary, settledReview);
+  const library = settledLibrary;
   const sequence = new Map<string, number>();
   let cursor = 0;
   for (const book of library.books) for (const scene of book.result.scenes) sequence.set(scene.path, cursor++);

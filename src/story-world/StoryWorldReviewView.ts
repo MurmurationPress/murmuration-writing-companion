@@ -52,7 +52,7 @@ export class StoryWorldReviewView extends ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("mwc-story-world-review");
-    const projection = collectObsidianStoryWorldReview(this.app, this.plugin.storyWorldIndex);
+    const projection = this.plugin.storyWorldReviewProjection.get();
     container.createEl("h2", { text: STORY_WORLD_REVIEW_LABEL });
     container.createEl("p", { cls: "mwc-muted", text: "Deterministic maintenance findings from explicit Story World Markdown." });
     const summary = container.createDiv("mwc-story-world-review-summary");
@@ -78,7 +78,7 @@ export class StoryWorldReviewView extends ItemView {
     const bookPath = this.plugin.manuscriptBookSelection.get().bookPath;
     const relevantPaths = new Set<string>();
     if (bookPath) {
-      const book = buildObsidianManuscriptLibrary(this.app).books.find((candidate) => candidate.file.path === bookPath);
+      const book = this.plugin.manuscriptProjection.get().books.find((candidate) => candidate.file.path === bookPath);
       for (const scene of book?.result.scenes ?? []) {
         const file = book?.filesByPath.get(scene.path);
         if (!file) continue;

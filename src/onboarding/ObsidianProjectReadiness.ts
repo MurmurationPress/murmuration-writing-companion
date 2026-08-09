@@ -8,6 +8,8 @@ import {
 import type { ObsidianStoryWorldIndex } from "../story-world/ObsidianStoryWorldIndex";
 import { collectObsidianStoryWorldReview } from "../story-world/ObsidianStoryWorldReview";
 import { projectReadiness, ProjectReadinessPresentation } from "./ProjectReadiness";
+import type { ObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
+import type { StoryWorldReviewProjection } from "../story-world/StoryWorldReview";
 
 function editorialStoragePresent(store: EditorialStore): boolean {
   return Object.keys(store.pages).length > 0
@@ -18,9 +20,11 @@ function editorialStoragePresent(store: EditorialStore): boolean {
 export async function collectObsidianProjectReadiness(
   app: App,
   storyWorldIndex: ObsidianStoryWorldIndex,
-  editorialStore: EditorialStore
+  editorialStore: EditorialStore,
+  settledLibrary = buildObsidianManuscriptLibrary(app),
+  settledReview?: StoryWorldReviewProjection
 ): Promise<ProjectReadinessPresentation> {
-  const library = buildObsidianManuscriptLibrary(app);
+  const library: ObsidianManuscriptLibrary = settledLibrary;
   const manuscripts = await Promise.all(library.books.map(async (book) => {
     const plan = await validateManuscriptPreparationPreview(app, book, planObsidianManuscriptPreparation(app, book));
     return {
@@ -30,7 +34,7 @@ export async function collectObsidianProjectReadiness(
     };
   }));
   const entities = storyWorldIndex.index.getAll();
-  const review = entities.length ? collectObsidianStoryWorldReview(app, storyWorldIndex) : null;
+  const review = entities.length ? settledReview ?? collectObsidianStoryWorldReview(app, storyWorldIndex) : null;
   const significantObservationCount = review
     ? review.counts.review + review.counts.conflict
     : 0;

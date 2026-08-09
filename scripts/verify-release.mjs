@@ -39,4 +39,13 @@ for (const asset of ["main.js", "manifest.json", "styles.css"]) {
   assert(details.isFile() && details.size > 0, `${asset} is missing or empty`);
 }
 
+const main = await readFile(path.join(projectRoot, "main.js"), "utf8");
+const bundleBudgetBytes = 720_896;
+assert(Buffer.byteLength(main) <= bundleBudgetBytes, `main.js exceeds the ${bundleBudgetBytes}-byte production bundle budget`);
+assert(!main.includes("//# sourceMappingURL="), "release main.js must not reference a sourcemap");
+for (const unwanted of ["main.js.map", "meta.json", "metafile.json"]) {
+  try { await access(path.join(projectRoot, unwanted)); throw new Error(`${unwanted} must not be a release artefact`); }
+  catch (error) { if ((error)?.code !== "ENOENT") throw error; }
+}
+
 console.log(`Release ${version} metadata and assets are consistent.`);

@@ -188,8 +188,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   collectProjectReadiness(): Promise<ProjectReadinessPresentation> {
-    this.storyWorldIndex.rebuild();
-    return collectObsidianProjectReadiness(this.app, this.storyWorldIndex, this.storeService.store);
+    return collectObsidianProjectReadiness(this.app, this.storyWorldIndex, this.storeService.store, this.manuscriptProjection.get(), this.storyWorldReviewProjection.get());
   }
 
   private async showFirstRunReadinessInvitation(): Promise<void> {
@@ -329,7 +328,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.onMwcUserInteraction();
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView?.file ?? null;
-    const library = buildObsidianManuscriptLibrary(this.app);
+    const library = this.manuscriptProjection.get();
     const bookPath = activeFile ? library.owningBookPathByFile.get(activeFile.path) ?? null : null;
     if (!bookPath) {
       new Notice("Open a manuscript chapter or book before opening Continuity Review.");
