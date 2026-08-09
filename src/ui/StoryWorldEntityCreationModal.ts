@@ -8,7 +8,8 @@ import {
   STORY_WORLD_ENTITY_KINDS,
   StoryWorldEntityKind
 } from "../story-world/StoryWorldEntityCreation";
-import { canonicalWikilink, presentWikilinkValue } from "../story-world/WikilinkPresentation";
+import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
+import { buildStoryWorldScopeCandidates } from "../story-world/StoryWorldScopeCandidates";
 import { EMPTY_REFERENCE_METADATA, ReferenceField, ReferenceMetadata, referenceCanonicalNameDefault, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
 import { ReferenceCitationImportModal } from "./ReferenceCitationImportModal";
 
@@ -102,20 +103,26 @@ export class StoryWorldEntityCreationModal extends Modal {
 
     new Setting(this.contentEl)
       .setName("Scope")
-      .setDesc("Optional explicit book or series wikilink; no scope is inferred.")
-      .addText((text) => {
-        const listId = "mwc-story-world-scope-suggestions";
-        text.setPlaceholder("[[PRIME Trilogy]]").setValue(this.scopeInput).onChange((value) => { this.scopeInput = value; this.renderPreview(); });
-        text.inputEl.setAttr("list", listId);
-        const list = this.contentEl.createEl("datalist", { attr: { id: listId } });
-        for (const file of this.plugin.app.vault.getMarkdownFiles()) {
-          const option = list.createEl("option"); option.value = canonicalWikilink(file.path); option.label = file.basename;
+      .setDesc("Optional explicit Book or Series scope; leave unset to retain normal scope inference.")
+      .addDropdown((dropdown) => {
+        dropdown.addOption("", "None (infer scope)");
+        const candidates = buildStoryWorldScopeCandidates(documents(this.plugin), (linkpath, sourcePath) => (
+          this.plugin.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath)?.path ?? null
+        ));
+        const known = new Set(candidates.map((candidate) => candidate.storedValue));
+        if (this.scopeInput && !known.has(this.scopeInput)) {
+          const label = presentWikilinkValue(this.scopeInput)?.label ?? this.scopeInput;
+          dropdown.addOption(this.scopeInput, `${label} (existing value)`);
         }
+        for (const candidate of candidates) {
+          dropdown.addOption(candidate.storedValue, candidate.secondary ? `${candidate.label} — ${candidate.secondary}` : candidate.label);
+        }
+        dropdown.setValue(this.scopeInput).onChange((value) => { this.scopeInput = value; this.renderPreview(); });
       });
 
     if (this.options.sourceReference) new Setting(this.contentEl)
       .setName(this.options.sourceLabel ?? "Add this manuscript note as a source")
-      .setDesc(`Write exactly ${this.options.sourceReference}`)
+      .setDesc(`Store ${presentWikilinkValue(this.options.sourceReference)?.label ?? "the manuscript note"} as provenance`)
       .addToggle((toggle) => toggle.setValue(false).onChange((value) => { this.includeSource = value; this.renderPreview(); }));
 
     this.preview = this.contentEl.createDiv("mwc-story-world-create-preview");

@@ -57,7 +57,7 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     key: "pov",
     label: "POV",
     aliases: ["pov", "point_of_view", "viewpoint"],
-    placeholder: "Character or [[link]]…",
+    placeholder: "Character name…",
     renderMarkdownPreview: true
   },
   {
