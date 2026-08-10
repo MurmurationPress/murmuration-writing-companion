@@ -86,10 +86,19 @@ import {
   acceptObsidianManuscriptStoryDateOffer,
   getObsidianManuscriptStoryDateOffer
 } from "./manuscript/ObsidianManuscriptStoryDateOffer";
-import { VaultBackupResult, VaultBackupService } from "./backup/VaultBackupService";
+import {
+  VaultBackupInspection,
+  VaultBackupReadiness,
+  VaultBackupResult,
+  VaultBackupService
+} from "./backup/VaultBackupService";
 import { installAboutCommand } from "./about/AboutMurmurationPress";
 import { AboutMurmurationPressModal } from "./about/AboutMurmurationPressModal";
 import { installHelpCommand, openHelp } from "./help/Help";
+import {
+  createVaultBackupRemotePreferenceKey,
+  VaultBackupRemotePreference
+} from "./backup/VaultBackupRemotePreference";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -110,6 +119,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly writingCompanionActivation = new WritingCompanionActivation();
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
   readonly continuityDiagnosticPreference: ContinuityDiagnosticPreference;
+  readonly vaultBackupRemotePreference: VaultBackupRemotePreference;
   private manuscriptChronologyDependencies = new Set<string>();
   private manuscriptChronologyRefreshTimer: number | null = null;
   private storyWorldMetadataRefreshTimer: number | null = null;
@@ -130,6 +140,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.continuityDiagnosticPreference = new ContinuityDiagnosticPreference(
       storage,
       `${manifest.id}:${app.vault.getName()}:show-continuity-diagnostics`
+    );
+    this.vaultBackupRemotePreference = new VaultBackupRemotePreference(
+      storage,
+      createVaultBackupRemotePreferenceKey(manifest.id, app.vault.getName())
     );
   }
 
@@ -248,7 +262,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     });
 
     if (Platform.isDesktopApp) {
-      this.vaultBackupService = new VaultBackupService(this.app.vault.adapter);
+      this.vaultBackupService = new VaultBackupService(this.app.vault.adapter, {
+        remoteOverride: () => this.vaultBackupRemotePreference.get()
+      });
       const backUpVault = () => void this.backUpVault();
       this.addRibbonIcon("cloud-upload", "Back up vault to GitHub", backUpVault);
       this.addCommand({
@@ -464,19 +480,64 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const progress = new Notice("Backing up vault to GitHub…", 0);
     const result = await this.vaultBackupService.run();
     progress.hide();
-    new Notice(this.vaultBackupNotice(result), result.kind === "failed" || result.kind === "remote_ahead" || result.kind === "diverged" ? 10000 : 5000);
+    new Notice(this.vaultBackupNotice(result), this.vaultBackupIsProblem(result.kind) ? 10000 : 5000);
+  }
+
+  async inspectVaultBackup(): Promise<VaultBackupInspection> {
+    return this.vaultBackupService?.inspect() ?? { kind: "unsupported" };
+  }
+
+  async checkVaultBackup(): Promise<void> {
+    if (!this.vaultBackupService) {
+      new Notice("Vault backup is available only in the Obsidian desktop app.");
+      return;
+    }
+    const progress = new Notice("Checking vault backup configuration…", 0);
+    const result = await this.vaultBackupService.check();
+    progress.hide();
+    new Notice(this.vaultBackupReadinessNotice(result), this.vaultBackupIsProblem(result.kind) ? 10000 : 5000);
+  }
+
+  private vaultBackupIsProblem(kind: VaultBackupResult["kind"] | VaultBackupReadiness["kind"]): boolean {
+    return !["success", "no_changes", "busy", "ready_clean", "ready_local_changes", "ready_local_ahead", "ready_initial_push"].includes(kind);
+  }
+
+  private vaultBackupProblemNotice(result: Exclude<VaultBackupInspection, { kind: "ready" }>): string {
+    switch (result.kind) {
+      case "unsupported": return "Vault backup requires the Obsidian desktop app and a filesystem vault.";
+      case "git_unavailable": return "Git is not installed or is not available on PATH.";
+      case "not_repository": return "This vault is not a Git repository.";
+      case "unsafe_repository_scope": return "This vault is inside a larger Git repository. MWC vault backup requires the vault itself to be the repository root.";
+      case "detached_head": return "The repository is in detached HEAD state. Check out a branch manually before backing up.";
+      case "no_remote": return "This repository has no Git remote. Configure one before backing up.";
+      case "ambiguous_remote": return "This repository has multiple remotes and no origin. Remove the ambiguity or rename the intended remote to origin.";
+      case "remote_not_found": return "The selected Git remote is no longer available.";
+      case "fetch_failed": return `Git could not fetch the remote: ${result.detail ?? "check authentication and network access."}`;
+      case "remote_ahead": return "Remote has newer commits. Pull the changes manually before backing up.";
+      case "diverged": return "Local and remote histories have diverged. Resolve this manually before backing up.";
+      case "commit_failed": return `Git could not create the backup commit: ${result.detail ?? "check Git identity and repository state."}`;
+      case "push_failed": return `Git could not push the backup: ${result.detail ?? "check authentication and remote access."}`;
+      case "failed": return `Vault backup failed: ${result.detail ?? "inspect the repository manually."}`;
+    }
+  }
+
+  private vaultBackupReadinessNotice(result: VaultBackupReadiness): string {
+    switch (result.kind) {
+      case "busy": return "A vault backup or configuration check is already running.";
+      case "ready_clean": return "Vault backup is ready. The repository is clean and synchronized.";
+      case "ready_local_changes": return "Vault backup is ready. Local vault changes will be committed and pushed.";
+      case "ready_local_ahead": return "Vault backup is ready. Local commits are waiting to be pushed.";
+      case "ready_initial_push": return "Vault backup is ready. The current branch will be pushed to this remote for the first time.";
+      default: return this.vaultBackupProblemNotice(result);
+    }
   }
 
   private vaultBackupNotice(result: VaultBackupResult): string {
     switch (result.kind) {
-      case "success": return result.detail ?? "Vault backup complete.";
+      case "success": return result.committed ? "Vault changes committed and pushed." : "Local commits pushed; there were no new vault changes.";
       case "no_changes": return "No vault changes to back up.";
       case "busy": return "A vault backup is already running.";
-      case "unsupported": return "Vault backup requires a desktop filesystem vault.";
-      case "missing_script": return "Backup script not found at Scripts/backup-vault.sh.";
-      case "remote_ahead":
-      case "diverged":
-      case "failed": return `Backup failed: ${result.detail ?? "Check the script output and resolve the Git issue manually."}`;
+      default: return this.vaultBackupProblemNotice(result);
     }
   }
 
