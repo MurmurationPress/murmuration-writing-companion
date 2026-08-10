@@ -85,9 +85,9 @@ Murmuration Writing Companion is developed alongside the PRIME Trilogy. Purchasi
 
 ## Vault backup
 
-On desktop, choose **Back up vault to GitHub** from the Command Palette or the `cloud-upload` ribbon action. The command expects an executable `Scripts/backup-vault.sh` inside the current vault and runs that vault-local script directly.
+On desktop, make the vault itself a Git repository with a configured remote and normal Git authentication. **Settings → Murmuration Writing Companion → Vault backup** shows the automatically detected repository, current branch, remote and remote URL; when several non-`origin` remotes exist, select the intended remote there. **Check backup configuration** verifies readiness deliberately.
 
-The script remains the single source of truth for the repository, branch, commit and push behaviour. Writing Companion only locates and runs it, prevents overlapping plugin invocations, and reports its result. Any failure that requires pulling, merging, rebasing, resolving conflicts or other Git intervention must be handled manually; the plugin never performs those operations automatically.
+Choose **Back up vault to GitHub** from the Command Palette or the `cloud-upload` ribbon action. Writing Companion uses argument-safe direct Git commands to fetch, stage, commit and push the current vault. It never stores credentials and never pulls, merges, rebases, switches branches, force-pushes or resolves conflicts. Existing `Scripts/backup-vault.sh` files are no longer required and remain untouched. See [Backup, Preparation, and Recovery](Help/Backup_Preparation_and_Recovery.md).
 
 ## Manuscript navigation and ordering
 
