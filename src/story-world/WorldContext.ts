@@ -7,7 +7,7 @@ import {
   StoryWorldEntityRecord
 } from "./StoryWorldIndex";
 
-export type WorldContextReason = "pov" | "explicit";
+export type WorldContextReason = "pov" | "location" | "explicit";
 
 export interface WorldContextEntry {
   readonly entity: StoryWorldEntityRecord;
@@ -99,6 +99,15 @@ function getPovValue(
   return findPropertyValue(frontmatter, field.aliases);
 }
 
+function getLocationValue(
+  frontmatter: Record<string, unknown> | undefined
+): unknown {
+  const field = EDITABLE_CHAPTER_CONTEXT_FIELDS.find(
+    (candidate) => candidate.key === "location"
+  );
+  return field ? findPropertyValue(frontmatter, field.aliases) : undefined;
+}
+
 function getWorldContextValue(
   frontmatter: Record<string, unknown> | undefined
 ): unknown {
@@ -120,6 +129,15 @@ function povCandidates(
   return stringValues(getPovValue(frontmatter)).map((reference) => ({
     reference,
     reason: "pov" as const
+  }));
+}
+
+function locationCandidates(
+  frontmatter: Record<string, unknown> | undefined
+): ReferenceCandidate[] {
+  return stringValues(getLocationValue(frontmatter)).map((reference) => ({
+    reference,
+    reason: "location" as const
   }));
 }
 
@@ -166,17 +184,22 @@ export function buildWorldContext(
     });
   }
 
-  // POV belongs in Chapter Context. It is only retained here as an additional
-  // relevance reason when the author has explicitly referenced the same entity.
-  for (const candidate of povCandidates(frontmatter)) {
+  // Explicit semantic manuscript fields contribute derived context without
+  // being copied into world_context. Invalid or unresolved values remain authored
+  // metadata and do not become World Context diagnostics.
+  for (const candidate of [...povCandidates(frontmatter), ...locationCandidates(frontmatter)]) {
     if (!parseWikilink(candidate.reference)) continue;
     const entity = resolve(candidate.reference);
     if (!entity) continue;
+    if (candidate.reason === "location"
+      && entity.entityType.trim().toLocaleLowerCase() !== "location") continue;
 
     const existing = entriesByPath.get(entity.path);
-    if (existing && !existing.reasons.includes(candidate.reason)) {
-      existing.reasons.push(candidate.reason);
+    if (existing) {
+      if (!existing.reasons.includes(candidate.reason)) existing.reasons.push(candidate.reason);
+      continue;
     }
+    entriesByPath.set(entity.path, { entity, reasons: [candidate.reason] });
   }
 
   return {

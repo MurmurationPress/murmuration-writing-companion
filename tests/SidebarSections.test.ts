@@ -159,6 +159,7 @@ test("builds a concise Chapter Context summary from authoritative properties", (
       {
         title: "Convergence",
         POV: "[[Pip Hale|Pip]]",
+        location: "[[Story World/Locations/Reserve|Coastal Reserve]]",
         story_date: "2029-04-22",
         chapter_status: "complete",
         editorial_pass: "proof",
@@ -166,7 +167,7 @@ test("builds a concise Chapter Context summary from authoritative properties", (
       },
       "en-GB"
     ),
-    "Pip · 22 Apr 2029 · Complete · Proof"
+    "Pip · Coastal Reserve · 22 Apr 2029 · Complete · Proof"
   );
 
   equal(

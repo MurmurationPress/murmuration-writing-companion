@@ -4,8 +4,8 @@ parent: "[[Manuscript/The Greywater Signal/Listening]]"
 manuscript_order_key: O000000000
 story_date: 2041-09-18
 pov: "[[Story World/Characters/Ivo Saye]]"
+location: "[[Story World/Locations/Greywater Tidal Observatory]]"
 world_context:
-  - "[[Story World/Locations/Greywater Tidal Observatory]]"
   - "[[Story World/Technology/Tideglass Array]]"
   - "[[Story World/Events/Signal Emerges]]"
 ---

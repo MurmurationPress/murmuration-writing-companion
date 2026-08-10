@@ -1,12 +1,22 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { test } from "node:test";
-import { canonicalWikilink, isWikilinkActivationKey, presentReferenceCandidates, presentWikilinkValue, presentWikilinkValues } from "../src/story-world/WikilinkPresentation";
+import { canonicalWikilink, isWikilinkActivationKey, presentReferenceCandidates, presentWikilinkValue, presentWikilinkValues, resolvedReferenceNavigationTarget, wikilinkNavigationTarget } from "../src/story-world/WikilinkPresentation";
 
 test("presents scalar aliases, headings and block references without storage syntax", () => {
   equal(presentWikilinkValue("[[Tobias]]")?.label, "Tobias");
   deepEqual(presentWikilinkValue("[[Characters/Tobias#History|Tobias Hale]]"), { authored: "[[Characters/Tobias#History|Tobias Hale]]", label: "Tobias Hale", linkpath: "Characters/Tobias", wikilink: true });
   equal(presentWikilinkValue("[[Tobias#^arrival]]")?.label, "Tobias");
   equal(presentWikilinkValue("Unknown Character")?.label, "Unknown Character");
+});
+
+test("separates canonical storage, visible labels and safe navigation linktext", () => {
+  const stored = "[[Story World/Locations/Tobias' Home|Tobias' Home]]";
+  equal(canonicalWikilink("Story World/Locations/Tobias' Home", "Tobias' Home"), stored);
+  equal(presentWikilinkValue(stored)?.label, "Tobias' Home");
+  equal(wikilinkNavigationTarget(stored), "Story World/Locations/Tobias' Home");
+  equal(wikilinkNavigationTarget("Tobias' Home"), null);
+  equal(wikilinkNavigationTarget("[[Missing Place]]"), "Missing Place");
+  equal(resolvedReferenceNavigationTarget("Story World/Locations/Tobias' Home.md"), "Story World/Locations/Tobias' Home");
 });
 
 test("accepts native keyboard activation keys", () => {
@@ -34,5 +44,7 @@ test("reference candidates keep storage identity while presenting names, aliases
   deepEqual(choices.map((choice) => choice.label), ["Robin", "Robin", "PRIME"]);
   deepEqual(choices.map((choice) => choice.secondary), ["World/One", "World/Two", null]);
   equal(choices[0].storedValue, "[[World/One/Robin]]");
+  equal(choices[0].navigationTarget, "World/One/Robin");
+  equal(choices[1].navigationTarget, "World/Two/Robin");
   deepEqual(choices[0].searchTerms, ["Robin", "Pip", "World/One/Robin.md"]);
 });

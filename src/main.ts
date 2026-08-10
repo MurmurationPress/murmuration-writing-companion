@@ -43,6 +43,10 @@ import {
   buildPovSuggestions,
   PovSuggestion
 } from "./companion/PovSuggestions";
+import {
+  buildLocationSuggestions,
+  LocationSuggestion
+} from "./companion/LocationSuggestions";
 import { TransientAnnotationLocator } from "./companion/AnnotationLocator";
 import { installEditorialEnhancementStyles } from "./ui/EditorialEnhancementStyles";
 import {
@@ -680,6 +684,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.storyWorldIndex.index.getAll(),
       [...scopeReferences]
     );
+  }
+
+  getLocationSuggestions(): LocationSuggestion[] {
+    return buildLocationSuggestions(this.storyWorldIndex.index.getAll());
   }
 
   async createAnnotationFromEditor(editor: Editor, chapter: TFile | null) {

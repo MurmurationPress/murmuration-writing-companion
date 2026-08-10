@@ -41,7 +41,7 @@ function resolver(entries: Record<string, StoryWorldEntityRecord>) {
   return (reference: string) => entries[reference] ?? null;
 }
 
-test("uses explicit world context and omits a POV-only character", () => {
+test("combines semantic POV and explicit world context", () => {
   const pip = entity("World/Pip.md", "Pip", "character");
   const robin = entity("World/Robin.md", "Robin", "character");
   const prime = entity("World/PRIME.md", "PRIME", "intelligence");
@@ -60,14 +60,47 @@ test("uses explicit world context and omits a POV-only character", () => {
 
   deepEqual(result.entries.map((entry) => entry.entity.name), [
     "Robin",
-    "PRIME"
+    "PRIME",
+    "Pip"
   ]);
   deepEqual(result.entries.map((entry) => entry.reasons), [
     ["explicit"],
-    ["explicit"]
+    ["explicit"],
+    ["pov"]
   ]);
   deepEqual(result.unresolvedReferences, []);
   equal(result.invalidReferenceCount, 0);
+});
+
+test("resolved semantic Location contributes and deduplicates by entity path", () => {
+  const reserve = entity("World/Reserve.md", "Coastal Nature Reserve", "Location");
+  const event = entity("World/Event.md", "Storm", "event");
+  const result = buildWorldContext({
+    location: "[[Locations/Reserve|Reserve]]",
+    world_context: ["[[Reserve]]", "[[Storm]]"]
+  }, resolver({ "[[Locations/Reserve|Reserve]]": reserve, "[[Reserve]]": reserve, "[[Storm]]": event }));
+  deepEqual(result.entries.map((entry) => entry.entity.path), ["World/Reserve.md", "World/Event.md"]);
+  deepEqual(result.entries[0].reasons, ["explicit", "location"]);
+});
+
+test("free text unresolved and non-Location links do not infer Location context", () => {
+  const character = entity("World/Pip.md", "Pip", "character");
+  for (const location of ["Selsey seafront", "[[Missing]]", "[[Pip]]"]) {
+    const result = buildWorldContext({ location }, resolver({ "[[Pip]]": character }));
+    deepEqual(result.entries, []);
+    deepEqual(result.unresolvedReferences, []);
+    equal(result.invalidReferenceCount, 0);
+  }
+});
+
+test("POV Location and explicit context collapse by resolved identity", () => {
+  const mara = entity("World/Mara.md", "Mara", "character");
+  const reserve = entity("World/Reserve.md", "Reserve", "location");
+  const result = buildWorldContext({
+    pov: "[[Mara]]", location: "[[Reserve]]", world_context: ["[[Mara Alias]]", "[[Reserve Alias]]"]
+  }, resolver({ "[[Mara]]": mara, "[[Mara Alias]]": mara, "[[Reserve]]": reserve, "[[Reserve Alias]]": reserve }));
+  equal(result.entries.length, 2);
+  deepEqual(result.entries.map((entry) => entry.reasons), [["explicit", "pov"], ["explicit", "location"]]);
 });
 
 test("retains POV as a secondary reason when the entity is explicitly referenced", () => {

@@ -27,6 +27,12 @@ import {
   PovSuggestion,
   resolvePovInput
 } from "./PovSuggestions";
+import {
+  locationSuggestionInputValues,
+  locationNavigationTarget,
+  resolveLocationInput,
+  type LocationSuggestion
+} from "./LocationSuggestions";
 import { renderWikilinkValues } from "../ui/WikilinkPresentation";
 import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 import {
@@ -45,6 +51,7 @@ import { formatStoryDate } from "./SidebarSections";
 export { VIEW_TYPE };
 
 let nextPovSuggestionListId = 0;
+let nextLocationSuggestionListId = 0;
 let nextBookReviewContentId = 0;
 
 export class WritingCompanionView extends BaseWritingCompanionView {
@@ -318,6 +325,11 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         continue;
       }
 
+      if (field.key === "location") {
+        this.renderCompactLocation(value, contextValue.value, file, field.placeholder, save);
+        continue;
+      }
+
       if (field.key === "editorial_pass") {
         this.renderEditorialPassState(value, contextValue.value, file);
         continue;
@@ -497,6 +509,100 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     };
 
     renderResting(currentValue);
+  }
+
+  private renderCompactLocation(
+    container: HTMLElement,
+    currentValue: string,
+    file: TFile,
+    placeholder: string,
+    save: (value: string) => Promise<void>
+  ) {
+    const semanticLocation = (value: string) => {
+      const entity = this.plugin.storyWorldIndex.resolveWikilink(value, file.path);
+      return entity?.entityType.trim().toLocaleLowerCase() === "location" ? entity : null;
+    };
+    const renderResting = (value: string) => {
+      container.empty();
+      const display = container.createDiv({
+        cls: "mwc-pov-display mwc-location-display",
+        attr: { tabindex: "0", role: "group", "aria-label": "Scene location" }
+      });
+      const rendered = display.createDiv({ cls: "mwc-pov-value mwc-location-value" });
+      const entity = semanticLocation(value);
+      if (entity) {
+        const link = rendered.createEl("a", {
+          cls: "internal-link",
+          text: entity.name,
+          attr: { href: entity.path, "data-href": entity.path }
+        });
+        link.onclick = (event) => {
+          event.preventDefault();
+          const target = locationNavigationTarget(entity);
+          if (target) void this.app.workspace.openLinkText(target, file.path);
+        };
+      } else if (value.trim()) renderWikilinkValues(rendered, value, this.app, file.path, this.plugin);
+      else rendered.createSpan({ cls: "mwc-pov-placeholder", text: placeholder });
+      const edit = display.createEl("button", {
+        cls: "mwc-pov-edit",
+        text: "Edit",
+        attr: { type: "button", "aria-label": "Edit Scene location" }
+      });
+      const start = () => renderEditor(value);
+      edit.onclick = (event) => { event.preventDefault(); event.stopPropagation(); start(); };
+      display.onclick = (event) => {
+        const target = event.target;
+        if (target instanceof Element && target.closest("a.internal-link, button")) return;
+        start();
+      };
+      display.onkeydown = (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const target = event.target;
+        if (target instanceof Element && target.closest("a.internal-link, button")) return;
+        event.preventDefault(); start();
+      };
+    };
+    const renderEditor = (value: string) => {
+      container.empty();
+      const suggestions = this.plugin.getLocationSuggestions();
+      const presented = semanticLocation(value)?.name ?? presentWikilinkValue(value)?.label ?? value;
+      const listId = `mwc-location-suggestions-${++nextLocationSuggestionListId}`;
+      const editor = container.createEl("input", {
+        cls: "mwc-context-input mwc-location-input",
+        attr: { placeholder, "aria-label": "Scene location", list: listId }
+      });
+      editor.value = presented;
+      const list = container.createEl("datalist", { attr: { id: listId } });
+      this.renderLocationSuggestionOptions(list, suggestions);
+      let closed = false;
+      const commit = async () => {
+        if (closed) return;
+        closed = true;
+        const next = editor.value.trim() === presented.trim()
+          ? value
+          : resolveLocationInput(editor.value, suggestions);
+        await save(next); renderResting(next);
+      };
+      const cancel = () => { if (!closed) { closed = true; renderResting(value); } };
+      editor.onkeydown = (event) => {
+        if (event.key === "Enter") { event.preventDefault(); void commit(); }
+        else if (event.key === "Escape") { event.preventDefault(); cancel(); }
+      };
+      editor.onblur = () => window.setTimeout(() => void commit(), 0);
+      editor.focus(); editor.select();
+    };
+    renderResting(currentValue);
+  }
+
+  private renderLocationSuggestionOptions(
+    list: HTMLDataListElement,
+    suggestions: readonly LocationSuggestion[]
+  ) {
+    for (const item of locationSuggestionInputValues(suggestions)) {
+      const option = list.createEl("option");
+      option.value = item.value;
+      if (item.label) option.label = item.label;
+    }
   }
 
   private povCharacterOfferKey(file: TFile, value: string): string {

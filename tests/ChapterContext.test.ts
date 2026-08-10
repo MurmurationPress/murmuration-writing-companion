@@ -69,6 +69,16 @@ test("falls back to canonical property names when aliases are absent", () => {
   equal(findEditableChapterContextProperty({}, field("title")), "title");
   equal(findEditableChapterContextProperty({}, field("chapter_status")), "chapter_status");
   equal(findEditableChapterContextProperty({}, field("editorial_pass")), "editorial_pass");
+  equal(findEditableChapterContextProperty({}, field("location")), "location");
+});
+
+test("location is scalar-only canonical Chapter Context metadata and preserves authored values", () => {
+  deepEqual(getEditableChapterContextValue({ location: "Selsey seafront" }, field("location")), {
+    property: "location", value: "Selsey seafront"
+  });
+  const unresolved: Record<string, unknown> = { location: "[[Missing Place]]", custom: true };
+  updateEditableChapterContextFrontmatter(unresolved, field("location"), "[[Missing Place]]");
+  deepEqual(unresolved, { location: "[[Missing Place]]", custom: true });
 });
 
 test("does not treat the distinct story_day property as a story_date alias", () => {

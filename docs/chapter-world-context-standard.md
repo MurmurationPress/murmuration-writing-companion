@@ -72,42 +72,41 @@ The resolved entity's own `world_name`, title and filename rules determine its c
 
 `pov` remains the authoritative chapter property for point of view and is presented in Chapter Context.
 
-A POV character is not automatically duplicated in World Context. To include that character in the event-and-supporting context for a particular chapter, the author references the character explicitly:
+A resolved POV link to an indexed Story World entity contributes automatically to derived World Context. The author does not repeat it in `world_context`:
 
 ```yaml
 pov: "[[Pip]]"
 world_context:
   - "[[The Article]]"
-  - "[[Pip]]"
 ```
 
-In this example, Pip appears once in World Context because the explicit reference says that Pip is relevant beyond merely being the current POV.
+In this example, Pip appears once with POV relevance and The Article appears as explicit broader context.
 
 If the same resolved entity appears through both `pov` and `world_context`, MWC may retain both relevance reasons internally while displaying the entity only once. Plain-text POV values, unresolved POV links and POV-only characters do not affect World Context diagnostics.
 
 ## Relationship with `location`
 
-`location` keeps its existing manuscript meaning and may remain human-readable free text.
+`location` remains the canonical manuscript Scene property. Existing human-readable free text remains valid and editable:
 
 ```yaml
 location: Halcyon Pharmaceuticals (Essex)
 ```
 
-MWC does not rewrite, parse or automatically promote `location` into World Context. To include a location entity, the author adds it explicitly:
+MWC never guesses an entity from free text or migrates it automatically. When the author selects an indexed Story World Location through Chapter Context, MWC writes a canonical wikilink to the same `location` property:
 
 ```yaml
-location: Halcyon Pharmaceuticals (Essex)
-world_context:
-  - "[[Halcyon Pharmaceuticals]]"
+location: "[[Story World/Locations/Halcyon Pharmaceuticals]]"
 ```
 
-This avoids changing established compiler, reporting and authoring behaviour.
+A resolved link contributes that entity automatically to derived World Context only when its target has `world_entity: location`, case-insensitively. Repeating it in `world_context` is unnecessary; if present, both references resolve to one displayed entity by canonical vault path. Unresolved links and links to non-Location entities remain authored values but do not contribute semantic Location context.
+
+This retains the established compiler-facing `location` value while removing the need for duplicate Story World metadata. MWC does not introduce a `locations` property.
 
 ## No prose or backlink inference
 
-MWC does not add context from ordinary prose mentions, prose wikilinks, backlinks, tags, folder placement, `location`, filename similarity or model inference.
+MWC does not add context from ordinary prose mentions, prose wikilinks, backlinks, tags, folder placement, free-text `location`, filename similarity or model inference.
 
-Only explicit `world_context` entries form the displayed World Context set.
+Derived World Context combines recognized semantic manuscript fields (`pov` and `location`) with explicit `world_context` entries.
 
 ## Event-first hierarchy
 
@@ -163,6 +162,7 @@ Consumers degrade quietly:
 - missing `world_context` means no displayed World Context;
 - an empty list means no displayed World Context;
 - duplicate links display one resolved entity;
+- the same resolved Location in `location` and `world_context` displays once;
 - alias and path variants resolving to the same note display one entity;
 - unresolved explicit links are omitted from normal presentation or shown through a quiet diagnostic treatment;
 - links to notes without `world_entity` are ignored for Story World presentation;
@@ -178,7 +178,7 @@ Reading, indexing, presenting or previewing chapter context must never:
 - copy POV into `world_context`;
 - normalise scalar values into lists on disk;
 - rewrite aliases or path-qualified links;
-- convert plain-text locations into wikilinks;
+- convert plain-text locations into wikilinks without an explicit author selection;
 - create missing entity notes;
 - change entity status;
 - write Story World data into `.murmuration/writing-companion/editorial-data.json`.
@@ -191,6 +191,7 @@ This source:
 
 ```yaml
 pov: "[[Tobias Hale]]"
+location: "[[Story World/Locations/Halcyon Pharmaceuticals]]"
 world_context:
   - "[[Northbridge Systems]]"
   - "[[The Article]]"
@@ -208,12 +209,15 @@ is presented approximately as:
 >
 > **Organisations**  
 > Northbridge Systems
+>
+> **Locations**
+> Halcyon Pharmaceuticals
 
-Tobias remains visible in Chapter Context as POV but is not duplicated in World Context because Tobias was not explicitly referenced there.
+Tobias and Halcyon Pharmaceuticals contribute from their semantic manuscript fields without being copied into `world_context`.
 
 ## Compatibility
 
-- Existing `pov`, `location`, `story_date`, compiler and editorial properties retain their meanings.
+- Existing free-text or unresolved `location`, `pov`, `story_date`, compiler and editorial properties retain their authored meanings.
 - Ordinary Obsidian wikilinks and aliases remain authoritative for navigation.
 - Bases and Dataview may inspect `world_context` directly without MWC.
 - Unknown frontmatter properties remain preserved.
