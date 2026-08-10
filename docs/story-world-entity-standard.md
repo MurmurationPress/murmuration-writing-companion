@@ -4,6 +4,8 @@
 **Status:** Foundation specification  
 **Issue:** #50
 
+For ordinary authoring, start with [Story World Help](../Help/Story_World.md) and the [Canonical Property Reference](../Help/Property_Reference.md). This standard is the deeper entity contract and defers to the Help reference for the concise current property list.
+
 ## Purpose
 
 The Story World Entity Standard defines the smallest useful contract for describing fictional people, places, organisations, intelligences, systems, objects, events, concepts and documents in ordinary Obsidian Markdown.
@@ -78,6 +80,7 @@ Only `world_entity` is required.
 | `world_summary` | scalar string | Concise human-readable description |
 | `world_first_appearance` | wikilink string | First manuscript or published appearance |
 | `world_time` | ISO string or time mapping | Event or state time where relevant |
+| `world_participants` | scalar or list of wikilinks | Canonical explicit Event participants |
 | `world_relationships` | list of mappings | Simple entity-owned qualified assertions defined by the Supporting Model Conventions |
 | `pov_eligible` | boolean | Explicit capability to appear in manuscript POV selectors; Character defaults to eligible when omitted |
 
@@ -159,23 +162,21 @@ Unknown qualifier keys are preserved. A designation is not promoted to an ordina
 world_time: "2026-04-03T03:18:00+01:00"
 ```
 
-Use a mapping when time is approximate, ranged or qualified:
+Use a canonical mapping for a point or range:
 
 ```yaml
 world_time:
-  from: "2026-04-03T03:17:00+01:00"
-  until: "2026-04-03T03:19:38+01:00"
-  precision: observed-window
-  source: "[[The Router]]"
+  from: "2026-04-03"
+  until: "2026-04-05"
+  precision: day
 ```
 
-A time mapping may contain:
+A canonical time mapping contains:
 
-- `at`, or `from` and/or `until`;
-- optional `precision`;
-- optional `timezone` when it is not encoded in the value;
-- optional `source`;
-- additional preserved qualifiers.
+- `at` for a point, or `from` and `until` for a range;
+- optional supported `precision`: `year`, `month`, `day`, `hour`, or `minute` as written by the editor.
+
+Readers also accept valid second precision, ISO-like scalar values, numeric four-digit years, legacy `date` for `at`, and `to` for `until`. Authored mappings with unsupported extra keys are preserved and may remain displayable, but are not reliable chronology comparison/editing evidence. Put provenance in `world_sources` rather than adding `source` to the canonical time mapping.
 
 The standard must not manufacture precision. Conflicting source times remain separate qualified assertions rather than being silently reconciled.
 

@@ -22,8 +22,8 @@ leaves the labelled action disabled with an explanatory tooltip.
 An observation belongs to the selected book when its primary manuscript note
 or a canonical supporting manuscript note belongs to the book's authoritative
 manuscript projection. A Story World-primary observation is included only when
-that exact Story World path is reached through a structured `world_context`
-reference in one of the book's chapters.
+that exact Story World path is reached through a chapter's resolved derived
+context: semantic `pov`, semantic `location`, or structured `world_context`.
 
 The workspace does not infer scope from prose, backlinks, folders, searches,
 names or aliases. Global Story World maintenance observations with no direct
@@ -135,7 +135,7 @@ portable editorial store and its established atomic backup files.
 
 The Story World **Impact Across Manuscript** projection reuses current observations when their existing evidence involves both the selected Story World note and a manuscript Scene. It presents the observation summary as continuity evidence without copying rule logic, changing disposition semantics or creating another observation cache.
 
-Story World maintenance observations from **Story World Review** enter a Book's Continuity Review only when their primary or supporting Story World note is reached through that Book's exact structured `world_context`. They retain the same #129 fingerprint and evidence identity. Global findings remain available in Story World Review without an active Book and are not forced into manuscript scope.
+Story World maintenance observations from **Story World Review** enter a Book's Continuity Review only when their primary or supporting Story World note is reached through that Book's resolved derived Scene context. They retain the same #129 fingerprint and evidence identity. Global findings remain available in Story World Review without an active Book and are not forced into manuscript scope.
 
 The Story World Graph's temporal projection reuses these observation fingerprints and routes review markers back to the existing review workspaces. Temporal date conflicts or malformed evidence are displayed as read-only graph diagnostics; changing a temporal perspective or slider point does not create, resolve or dispose a Continuity Review observation and never writes an editorial disposition.
 

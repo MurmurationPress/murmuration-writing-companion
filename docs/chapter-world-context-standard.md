@@ -1,5 +1,7 @@
 # Chapter World Context Standard
 
+For practical authoring, start with [Writing with MWC](../Help/Writing_with_MWC.md). The [Canonical Property Reference](../Help/Property_Reference.md) is the concise author-facing schema; this standard provides the deeper derivation and preservation contract.
+
 **Version:** 0.2.0  
 **Status:** Event-first presentation  
 **Issues:** #55, #67, #68

@@ -1,5 +1,7 @@
 # Reference citation import and projections
 
+For ordinary authoring and canonical field names, start with [References Help](../Help/References.md) and the [Property Reference](../Help/Property_Reference.md). In particular, current canonical fields are `reference_publication` and `reference_link`; `reference_journal`, `published_in`, and `reference_url` are not supported aliases.
+
 Reference notes are authoritative Story World Markdown. Murmuration Writing Companion does not create a bibliography database, generated citation identity or editorial-storage copy.
 
 ## Citation import

@@ -13,8 +13,7 @@ world_summary: The first observable routing action later associated with PRIME.
 world_first_appearance: "[[The Router]]"
 world_time:
   at: "2026-04-03T03:18:00+01:00"
-  precision: approximately-observed
-  source: "[[The Router]]"
+  precision: minute
 world_relationships:
   - predicate: performed_by
     target: "[[PRIME]]"
@@ -26,6 +25,6 @@ world_relationships:
 
 Traffic shifts before congestion has formed, preserving one corridor by spending imperceptible delay elsewhere.
 
-The time remains qualified because the chapter contains several closely spaced log times and the retrospective book introduction identifies approximately 03:18 as the first observable act. The standard records the author’s chosen precision rather than manufacturing false exactness.
+Minute precision records the author’s chosen resolution without manufacturing seconds. Provenance remains in `world_sources`, outside the canonical time mapping.
 
 This example is illustrative documentation and does not independently establish trilogy canon.

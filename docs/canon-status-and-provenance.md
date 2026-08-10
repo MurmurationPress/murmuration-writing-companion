@@ -149,7 +149,7 @@ Unclassified material:
 
 Unknown custom values must be preserved exactly. A consumer may display an “Unrecognised status” treatment, but must not silently coerce the value.
 
-The earlier Story World examples used `canon`. For read-only compatibility, consumers may recognise `canon` as a legacy synonym for `confirmed`, but must preserve the stored value and must not rewrite the note merely by reading it. New notes should use `confirmed`.
+Earlier relationship/assertion examples used `canon`. Some relationship validation accepts that nested legacy value and preserves it, but this is not universal normalization. In particular, entity-level `world_status: canon` remains an unknown/custom status rather than reliably becoming Confirmed. New notes and assertions must use `confirmed`.
 
 ## Lightweight provenance properties
 

@@ -89,6 +89,7 @@ import {
 import { VaultBackupResult, VaultBackupService } from "./backup/VaultBackupService";
 import { installAboutCommand } from "./about/AboutMurmurationPress";
 import { AboutMurmurationPressModal } from "./about/AboutMurmurationPressModal";
+import { installHelpCommand, openHelp } from "./help/Help";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -137,6 +138,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.register(() => enhancementStyles.remove());
     this.addSettingTab(new ContinuitySettingsTab(this.app, this));
     installAboutCommand(this, () => new AboutMurmurationPressModal(this).open());
+    installHelpCommand(this, () => this.openHelp());
 
     const vaultName = this.app.vault.getName();
     let resourceRoot = vaultName;
@@ -808,6 +810,13 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   openProjectReadiness(): void {
     new Notice("Project readiness is unavailable in this plugin entry point.");
+  }
+
+  openHelp(): void {
+    openHelp(
+      (url, target, features) => window.open(url, target, features),
+      () => new Notice("Murmuration Writing Companion Help could not be opened.")
+    );
   }
 
   prepareExistingManuscript(_bookPath: string): Promise<void> {
