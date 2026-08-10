@@ -10,6 +10,7 @@ import { extractTemporalGraphEvidence, TemporalEvidenceDocument } from "./Tempor
 import { buildTemporalGraphModel, TemporalGraphModel } from "./TemporalStoryWorldGraph";
 import type { ObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
 import type { StoryWorldReviewProjection } from "./StoryWorldReview";
+import { buildWorldContext } from "./WorldContext";
 
 export interface ObsidianStoryWorldGraphOptions extends Omit<StoryWorldGraphOptions, "entities" | "documents" | "observations" | "resolve" | "scene" | "impactCount" | "allowedPaths"> {
   readonly currentBookOnly?: boolean;
@@ -27,11 +28,9 @@ function currentBookPaths(app: App, index: ObsidianStoryWorldIndex, bookPath: st
   for (const scene of book?.result.scenes ?? []) {
     const file = book?.filesByPath.get(scene.path); if (!file) continue;
     paths.add(file.path);
-    const raw = frontmatter(app, file).world_context;
-    for (const reference of Array.isArray(raw) ? raw : [raw]) {
-      const resolved = index.resolveReference(reference, file.path);
-      if (resolved?.indexed && !resolved.excluded) paths.add(resolved.path);
-    }
+    const context = buildWorldContext(frontmatter(app, file), (reference) =>
+      index.resolveWikilink(reference, file.path));
+    for (const entry of context.entries) paths.add(entry.entity.path);
   }
   for (const entity of index.index.getAll()) {
     if (entity.scope.some((reference) => index.resolveReference(reference, entity.path)?.path === bookPath)) paths.add(entity.path);

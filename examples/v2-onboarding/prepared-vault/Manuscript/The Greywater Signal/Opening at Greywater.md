@@ -3,8 +3,8 @@ type: scene
 parent: "[[Manuscript/The Greywater Signal]]"
 manuscript_order_key: 8000000000
 story_date: 2041-09-17
+location: "[[Story World/Locations/Greywater Tidal Observatory]]"
 world_context:
-  - "[[Story World/Locations/Greywater Tidal Observatory]]"
   - "[[Story World/Organisations/Pelagic Field Unit]]"
 ---
 

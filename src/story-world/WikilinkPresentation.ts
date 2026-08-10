@@ -17,6 +17,7 @@ export interface ReferenceCandidate {
 export interface ReferencePresentation {
   readonly storedValue: string;
   readonly resolvedPath: string;
+  readonly navigationTarget: string;
   readonly label: string;
   readonly secondary: string | null;
   readonly searchTerms: readonly string[];
@@ -43,6 +44,18 @@ export function canonicalWikilink(path: string, label?: string | null): string {
   return label?.trim() ? `[[${target}|${label.trim()}]]` : `[[${target}]]`;
 }
 
+/** Converts an already-resolved vault path into Obsidian linktext, never Markdown syntax. */
+export function resolvedReferenceNavigationTarget(path: string): string {
+  const target = path.trim().replace(/\.md$/i, "");
+  if (!target) throw new Error("A resolved reference path is required.");
+  return target;
+}
+
+/** Returns navigation linktext only for authored wikilinks; free text is not a target. */
+export function wikilinkNavigationTarget(value: unknown): string | null {
+  return parseWikilink(value)?.linkpath ?? null;
+}
+
 function parentContext(path: string): string | null {
   const parts = path.replace(/\\/g, "/").replace(/\.md$/i, "").split("/");
   return parts.length > 1 ? parts.slice(0, -1).join("/") : null;
@@ -61,6 +74,7 @@ export function presentReferenceCandidates(candidates: readonly ReferenceCandida
     return {
       storedValue: candidate.storedValue,
       resolvedPath: candidate.path,
+      navigationTarget: resolvedReferenceNavigationTarget(candidate.path),
       label,
       secondary: duplicate ? parentContext(candidate.path) : null,
       searchTerms: [label, ...(candidate.aliases ?? []), candidate.path]

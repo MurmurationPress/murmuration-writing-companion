@@ -11,6 +11,7 @@ import { buildStoryWorldManuscriptImpact, ManuscriptImpactProjection, Manuscript
 import { getWorldEventRelativeTimingPresentation } from "./WorldRelativeTime";
 import type { ObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
 import type { StoryWorldReviewProjection } from "./StoryWorldReview";
+import { buildWorldContext } from "./WorldContext";
 
 function frontmatter(app: App, file: TFile): Record<string, unknown> | undefined {
   return app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
@@ -64,7 +65,10 @@ export function buildObsidianStoryWorldManuscriptImpact(
       const file = book.filesByPath.get(entry.path);
       if (!file) continue;
       const metadata = frontmatter(app, file);
-      const contextPaths = values(metadata?.world_context).map((reference) => resolvePath(app, reference, file.path)).filter((path): path is string => Boolean(path));
+      const contextPaths = buildWorldContext(metadata, (reference) => {
+        const path = resolvePath(app, reference, file.path);
+        return path ? storyWorldIndex.index.getByPath(path) : null;
+      }).entries.map((entry) => entry.entity.path);
       const direct = contextPaths.includes(selected.path);
       if (contextPaths.some((path) => participantPaths.has(path))) addStructured(file.path, "Event participant reference");
       const continuityLabels = observations.filter((observation) => {

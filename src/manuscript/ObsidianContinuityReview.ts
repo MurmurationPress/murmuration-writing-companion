@@ -10,6 +10,7 @@ import {
 import { collectObsidianStoryWorldReview } from "../story-world/ObsidianStoryWorldReview";
 import { parseWikilink, StoryWorldEntityRecord } from "../story-world/StoryWorldIndex";
 import { ObsidianStoryWorldIndex } from "../story-world/ObsidianStoryWorldIndex";
+import { buildWorldContext } from "../story-world/WorldContext";
 import { resolveExplicitOwningBookWithSource } from "../companion/ManuscriptHierarchy";
 import { manuscriptDisplayTitle } from "./ManuscriptMetadata";
 import {
@@ -50,18 +51,12 @@ function directStoryWorldReferences(
 ): Map<string, StoryWorldEntityRecord> {
   const result = new Map<string, StoryWorldEntityRecord>();
   for (const scene of scenes) {
-    const value = frontmatter(app, scene)?.world_context;
-    const references = Array.isArray(value) ? value : [value];
-    for (const reference of references) {
-      if (typeof reference !== "string" || !parseWikilink(reference)) continue;
+    const context = buildWorldContext(frontmatter(app, scene), (reference) => {
       const target = resolveReference(app, reference, scene.path);
-      // Recollection runs after the metadata coalescing delay. Refresh the
-      // dependency from that settled cache rather than reusing the snapshot
-      // captured by an earlier metadata event.
       if (target) storyWorldIndex.handleMetadataChanged(target);
-      const entity = target ? storyWorldIndex.index.getByPath(target.path) : null;
-      if (entity) result.set(entity.path, entity);
-    }
+      return target ? storyWorldIndex.index.getByPath(target.path) : null;
+    });
+    for (const entry of context.entries) result.set(entry.entity.path, entry.entity);
   }
   return result;
 }

@@ -3,6 +3,7 @@ import type MurmurationWritingCompanionPlugin from "../main";
 import { ContinuityObservation, ObservationSeverity } from "../observations/ContinuityObservation";
 import { collectObsidianStoryWorldReview } from "./ObsidianStoryWorldReview";
 import { buildObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
+import { buildWorldContext } from "./WorldContext";
 
 export const STORY_WORLD_REVIEW_VIEW_TYPE = "murmuration-story-world-review";
 export const STORY_WORLD_REVIEW_LABEL = "Story World Review";
@@ -83,11 +84,9 @@ export class StoryWorldReviewView extends ItemView {
         const file = book?.filesByPath.get(scene.path);
         if (!file) continue;
         const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
-        const raw = frontmatter?.world_context;
-        for (const reference of Array.isArray(raw) ? raw : [raw]) {
-          const resolved = this.plugin.storyWorldIndex.resolveReference(reference, file.path);
-          if (resolved?.indexed) relevantPaths.add(resolved.path);
-        }
+        const context = buildWorldContext(frontmatter, (reference) =>
+          this.plugin.storyWorldIndex.resolveWikilink(reference, file.path));
+        for (const entry of context.entries) relevantPaths.add(entry.entity.path);
       }
       for (const entity of this.plugin.storyWorldIndex.index.getAll()) {
         if (entity.scope.some((reference) => this.plugin.storyWorldIndex.resolveReference(reference, entity.path)?.path === bookPath)) relevantPaths.add(entity.path);

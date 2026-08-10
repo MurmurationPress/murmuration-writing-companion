@@ -8,6 +8,7 @@ export { EDITORIAL_PASS_OPTIONS } from "../editorial/EditorialPass";
 export type ChapterContextFieldKey =
   | "title"
   | "pov"
+  | "location"
   | "story_date"
   | "chapter_status"
   | "editorial_pass"
@@ -58,6 +59,13 @@ export const EDITABLE_CHAPTER_CONTEXT_FIELDS: EditableChapterContextField[] = [
     label: "POV",
     aliases: ["pov", "point_of_view", "viewpoint"],
     placeholder: "Character name…",
+    renderMarkdownPreview: true
+  },
+  {
+    key: "location",
+    label: "Location",
+    aliases: ["location"],
+    placeholder: "Scene location…",
     renderMarkdownPreview: true
   },
   {

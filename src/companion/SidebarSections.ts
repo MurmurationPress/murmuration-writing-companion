@@ -142,6 +142,7 @@ export class SidebarSectionPreferences {
 
 const CHAPTER_CONTEXT_SUMMARY_KEYS = [
   "pov",
+  "location",
   "story_date",
   "chapter_status",
   "editorial_pass"
@@ -206,7 +207,7 @@ function displayContextValue(
   value: string,
   locale?: string | string[]
 ): string {
-  if (field.key === "pov") return renderWikilinkText(value);
+  if (field.key === "pov" || field.key === "location") return renderWikilinkText(value);
   if (field.key === "story_date") return formatStoryDate(value, locale);
   return field.optionLabels?.[value] ?? value;
 }
