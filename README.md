@@ -6,7 +6,14 @@ Writing a novel is difficult enough. Your tools shouldn't make it harder.
 
 ## Start here
 
-New to MWC? Follow the [V2 onboarding guide](docs/v2-onboarding-guide.md). It covers installation, Project Readiness, creating or preparing a manuscript, optional Story World use, recovery and the safe [fictional example vaults](examples/v2-onboarding/README.md). Keep the first pass short: open Project Readiness, follow the one relevant action it offers, and review every proposed write before approving it.
+New to MWC? Open the [author Help](Help/README.md). It starts with practical writing tasks, then provides a concise property reference and a separate legacy appendix. The [V2 onboarding guide](docs/v2-onboarding-guide.md) remains the deeper preparation walkthrough, including the safe [fictional example vaults](examples/v2-onboarding/README.md).
+
+## Documentation / Help
+
+- [Author Help](Help/README.md) — the primary task-oriented guide
+- [Canonical Property Reference](Help/Property_Reference.md) — current supported authoring properties
+- [Developer and Legacy Appendix](Help/Developer_and_Legacy_Appendix.md) — compatibility, precedence, and preservation details
+- [V2 onboarding guide](docs/v2-onboarding-guide.md) — detailed readiness and preparation workflow
 
 ## Author workflow
 
@@ -14,7 +21,9 @@ Use **Manuscript** in the left sidebar to choose a book, open scenes and manage 
 
 Manuscript and Story World Markdown remain authoritative. The plugin derives navigation, indexes, relationship presentation and temporal views from those files. Portable editorial data is stored separately for notes, annotations and workflow history.
 
-## Project documents
+## Maintainer and technical documents
+
+These deeper contracts and validation records support development. Authors should normally begin with [Help](Help/README.md).
 
 - [Manifesto](MANIFESTO.md) — what the project believes
 - [Constitution](CONSTITUTION.md) — the binding rules for product and development decisions
@@ -53,6 +62,7 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 **Open project readiness** reinspects the vault and explains each recognised Book's preparation state, optional Story World presence, and separate editorial storage without writing anything. A quiet first-run invitation appears once after indexes are ready; dismissal is local, and the command and Settings entry remain available. Relevant Book-specific preparation actions open the existing previewed and reversible workflow. See [project readiness](docs/project-readiness.md).
 
 - About Murmuration Writing Companion
+- Open Help
 - Open Writing Companion
 - Open Manuscript
 - Open Story World Navigator
@@ -93,7 +103,7 @@ The companion [Canon Status and Provenance Standard](docs/canon-status-and-prove
 
 The [Supporting Model Conventions](docs/supporting-model-conventions.md) define how ordinary Markdown can represent relationships, timelines, character arcs, continuity and knowledge states without copying entity identity or prose. Assertions use precise subject–predicate–object structure internally, while the author experience must use readable statements, guided forms and progressive disclosure.
 
-The [Chapter World Context Standard](docs/chapter-world-context-standard.md) defines the optional `world_context` chapter property. Recognised Story World POV links are included without duplication, while other relevant entities are listed explicitly. Existing free-text location and manuscript metadata remain unchanged, and no relevance is inferred from prose.
+The [Chapter World Context Standard](docs/chapter-world-context-standard.md) defines the optional `world_context` chapter property and derived semantic context from recognised POV and Location links. A selected Story World Location remains stored only in canonical Scene `location`; authors do not duplicate it in `world_context`. Existing free-text and unresolved values remain unchanged, and no relevance is inferred from prose.
 
 The [read-only Story World index](docs/story-world-index.md) discovers opted-in entity notes from Obsidian's metadata cache. It indexes path, canonical name, aliases, type, scope, status and common links, then updates individual records when notes change, move or disappear. The index is in-memory, disposable and never stored in the editorial data file.
 
@@ -103,7 +113,7 @@ The [existing-manuscript preparation workflow](docs/prepare-existing-manuscript.
 
 Entity notes remain authoritative Markdown. A primary kind provides stable grouping, optional facets represent additional roles, and qualified designations distinguish observer- or institution-specific names from ordinary aliases. Supporting models reference those entities, while indexes, inverse relationships, graphs, rendered sentences and chapter context displays remain derived and rebuildable.
 
-The **Writing Companion** presents a read-only World Context section for the active chapter. It combines recognised Story World POV links with explicit `world_context` references, removes duplicate resolved entities, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.
+The **Writing Companion** presents a read-only World Context section for the active chapter. It combines recognised Story World POV and Location links with explicit `world_context` references, removes duplicate resolved entities by path, groups them by type and shows concise names, summaries and canon status. Clicking an entity opens its Markdown note through normal Obsidian navigation.
 
 MWC still does not infer canon or relevance from prose. Story-world facts and model authority never enter the portable editorial store.
 

@@ -4,6 +4,8 @@
 **Status:** Foundation specification  
 **Issue:** #52
 
+For normal authoring, use [Relationships Help](../Help/Relationships.md). The [Canonical Property Reference](../Help/Property_Reference.md) is the concise schema authority; this file is the deeper supporting-model contract.
+
 ## Purpose
 
 Supporting models help an author understand relationships, chronology, character development, institutions, locations, technologies, continuity and knowledge across a story world.
@@ -57,6 +59,8 @@ Recommended model kinds are:
 - `assertion`.
 
 The vocabulary is open. Unknown model kinds remain valid.
+
+Open/indexable does not mean every model kind receives specialised runtime treatment. Current assertion graph and chronology semantics are concentrated on timeline models; other kinds remain valid author-maintained structure without an automatic promise of equivalent projection behaviour.
 
 A model may use `world_model_subject` for its principal focus:
 

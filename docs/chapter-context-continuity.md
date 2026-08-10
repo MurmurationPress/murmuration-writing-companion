@@ -11,7 +11,7 @@ observations are rebuilt from cached frontmatter and are never persisted.
 
 - Events are evaluated only when directly listed in the chapter's
   `world_context`.
-- POV alone does not make an entity or event relevant.
+- POV alone does not make an entity or event relevant to these diagnostics.
 - An entity-owned `world_relationships` assertion is evaluated only when its
   owner and its resolved wikilink target are both directly listed in the same
   `world_context`.

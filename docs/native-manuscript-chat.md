@@ -2,7 +2,7 @@
 
 MWC owns Obsidian presentation of the Murmuration Press manuscript chat contract. Markdown remains authoritative: only fenced `chat` blocks are registered, and the plugin never rewrites their source.
 
-The grammar deliberately matches the first-party Codex Press contract:
+The canonical grammar deliberately matches the first-party Codex Press contract:
 
 - `{{header|body|subtext}}`, with optional subtext;
 - the final unescaped pipe separates subtext and intermediate pipes remain in the body;
@@ -11,7 +11,9 @@ The grammar deliberately matches the first-party Codex Press contract:
 - `> Name` and `^ Name` declare right and centre alignment, including comma-separated names;
 - `...` is a divider and `#` introduces a rendered channel comment;
 - message bodies may span lines;
-- legacy `< **Speaker:**`, `> **Speaker:**` and `^ **Speaker:**` messages remain readable. Historical `chat-old` and `chat-old-old` fence names found in PRIME are registered as compatibility aliases as well as canonical `chat`.
+- legacy `< **Speaker:**`, `> **Speaker:**` and `^ **Speaker:**` messages remain readable. Historical fence names found in PRIME are compatibility-only and are not recommended for new authoring.
+
+See [Manuscript Chat Help](../Help/Manuscript_Chat.md) for the concise author workflow. MWC renders canonical `chat` blocks natively and does not require Chat View.
 
 MWC uses Obsidian's supported `registerMarkdownCodeBlockProcessor` API. Obsidian applies fenced-code processors in Reading View and its rendered Live Preview code-block surface, retaining its native source-reveal behaviour when the author edits the block. MWC adds no document-wide keystroke listener, private editor API or DOM interception.
 

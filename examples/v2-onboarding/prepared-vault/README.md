@@ -13,6 +13,8 @@ The direct Scene **Opening at Greywater** appears before the two Parts. Filename
 
 The Story World contains two Characters, a Location, an Organisation, a Technology, two dated Events and one Reference. **Tideglass Array** deliberately cites a missing `Uncatalogued Calibration Sheet`; Story World Review should report that explicit unresolved source, and the finding can appear in Continuity Review because Scenes reference Tideglass Array through `world_context`. This is a diagnostic demonstration, not accidental damage.
 
+Scenes that select **Greywater Tidal Observatory** store it in `location`; the resolved Location appears automatically in derived World Context without a duplicate `world_context` entry. See the repository's [author Help](../../../Help/README.md).
+
 Generate a vault entity index from **Generate entity index** and choose **Vault**. Reference citation metadata remains on the authoritative Reference note. Open `Story World/References/References.base` or `Reference Projections/References Dataview.md` for native, read-only Obsidian projections. The Base definition is not Markdown, and the Dataview support note deliberately lives outside Story World and Manuscript authority.
 
 ## Reset

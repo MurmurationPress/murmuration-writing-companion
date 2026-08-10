@@ -20,9 +20,9 @@ Undated events, omitted optional scope, unknown entity/model types, unknown pred
 
 Every finding uses the shared #129 `ContinuityObservation` contract: a namespaced kind, deterministic severity, exact property paths, structured evidence, rule version, lineage key and evidence fingerprint. Malformed required structure and unresolved relationship/event targets are conflicts where authority cannot settle; author-review questions use review severity; optional absence is omitted. Presentation wording does not determine severity or identity.
 
-The workspace groups by severity and kind and filters by severity, kind and current-Book relevance. Global review works without a selected Book. Book-scoped filtering follows exact Scene `world_context` and explicit `world_scope` references; it does not guess relevance from folders or names.
+The workspace groups by severity and kind and filters by severity, kind and current-Book relevance. Global review works without a selected Book. Book-scoped filtering follows resolved derived Scene context (semantic `pov`, semantic `location`, and explicit `world_context`) plus explicit `world_scope`; it does not guess relevance from folders or names.
 
-Story World observations relevant to a Book through exact `world_context` references also enter Continuity Review with the same fingerprint and evidence identity. The #134 disposition model is reused there; Story World Review adds no separate dismissal or canon state. Global findings remain visible in Story World Review even when Continuity Review has no Book scope.
+Story World observations relevant to a Book through resolved derived Scene context also enter Continuity Review with the same fingerprint and evidence identity. The #134 disposition model is reused there; Story World Review adds no separate dismissal or canon state. Global findings remain visible in Story World Review even when Continuity Review has no Book scope.
 
 ## Refresh and authority
 

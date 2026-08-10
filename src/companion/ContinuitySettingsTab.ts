@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { AboutMurmurationPressModal } from "../about/AboutMurmurationPressModal";
 import { ABOUT_SETTINGS_ENTRY } from "../about/AboutMurmurationPress";
+import { HELP_SETTINGS_ENTRY, invokeHelpSettingsAction } from "../help/Help";
 
 export class ContinuitySettingsTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: MurmurationWritingCompanionPlugin) {
@@ -24,6 +25,16 @@ export class ContinuitySettingsTab extends PluginSettingTab {
       .setName("Project readiness")
       .setDesc("Reinspect this vault and show recognised manuscript, optional Story World, and editorial information. This check does not modify notes.")
       .addButton((button) => button.setButtonText("Open project readiness").onClick(() => this.plugin.openProjectReadiness()));
+    new Setting(this.containerEl)
+      .setName(HELP_SETTINGS_ENTRY.name)
+      .setDesc(HELP_SETTINGS_ENTRY.description)
+      .addButton((button) => {
+        button
+          .setButtonText(HELP_SETTINGS_ENTRY.buttonLabel)
+          .setTooltip(HELP_SETTINGS_ENTRY.accessibleLabel)
+          .onClick(() => invokeHelpSettingsAction(() => this.plugin.openHelp()));
+        button.buttonEl.setAttribute("aria-label", HELP_SETTINGS_ENTRY.accessibleLabel);
+      });
     new Setting(this.containerEl)
       .setName(ABOUT_SETTINGS_ENTRY.name)
       .setDesc(ABOUT_SETTINGS_ENTRY.description)

@@ -1,5 +1,7 @@
 # Getting started with Murmuration Writing Companion
 
+This detailed preparation guide complements the primary [author Help](../Help/README.md). Start there for task-oriented writing, Story World, review, chat and property guidance.
+
 Murmuration Writing Companion (MWC) helps you organise a long manuscript, keep an optional Story World, review continuity and produce reviewable Markdown reports. Your manuscript and Story World notes remain authoritative. MWC reads and presents them; it does not silently extract canon from prose or replace your files with a private database.
 
 ## The short path
@@ -151,6 +153,8 @@ world_context:
   - "[[Signal Emerges]]"
 ```
 
+Chapter Context can also select an indexed Story World Location into the sole canonical Scene `location` property. Resolved POV and Location entities contribute automatically to derived World Context, so do not repeat them in `world_context`.
+
 MWC does not automatically extract entities, relationships or occurrences from unlinked prose. Story World Markdown remains authoritative. Navigator, Timeline, graph, impact, Story World Review and Continuity Review are derived views.
 
 Use:
@@ -228,6 +232,8 @@ Both are disposable and contain no PRIME prose, personal data, local paths, plug
 
 ## Further help
 
+- [Author Help](../Help/README.md)
+- [Canonical Property Reference](../Help/Property_Reference.md)
 - [Project Readiness details](project-readiness.md)
 - [Prepare an existing manuscript](prepare-existing-manuscript.md)
 - [Command and UI reference](v2-command-reference.md)
