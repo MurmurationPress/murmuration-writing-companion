@@ -11,6 +11,14 @@ const LABELS = {
   resolved: "Resolved"
 } as const;
 
+export type ContinuityDispositionPrimaryAction = "mark_intentional" | "return_unresolved";
+
+export function continuityDispositionPrimaryAction(match: DispositionMatch): ContinuityDispositionPrimaryAction {
+  return match.state === "current" && match.record?.disposition === "intentional"
+    ? "return_unresolved"
+    : "mark_intentional";
+}
+
 export function continuityDispositionStatus(match: DispositionMatch): string {
   if (!match.record) return "Unresolved";
   const label = LABELS[match.record.disposition];
@@ -48,13 +56,16 @@ export function renderContinuityDispositionControls(
   }
 
   const actions = controls.createDiv("mwc-continuity-disposition-actions");
-  const intentional = actions.createEl("button", {
-    text: "Mark intentional",
+  const primaryAction = continuityDispositionPrimaryAction(match);
+  const primary = actions.createEl("button", {
+    text: primaryAction === "return_unresolved" ? "Return to unresolved" : "Mark intentional",
     attr: { type: "button" }
   });
-  intentional.onclick = () => {
-    intentional.disabled = true;
-    void store.setContinuityDisposition(observation, "intentional");
+  primary.onclick = () => {
+    primary.disabled = true;
+    void (primaryAction === "return_unresolved"
+      ? store.clearContinuityDisposition(observation.lineageKey)
+      : store.setContinuityDisposition(observation, "intentional"));
   };
 
   const more = actions.createEl("details", { cls: "mwc-continuity-disposition-more" });
@@ -73,7 +84,9 @@ export function renderContinuityDispositionControls(
   action("Defer", () => store.setContinuityDisposition(observation, "deferred"));
   action("Mark resolved", () => store.setContinuityDisposition(observation, "resolved"));
   if (match.record) {
-    action("Return to unresolved", () => store.clearContinuityDisposition(observation.lineageKey));
+    if (primaryAction !== "return_unresolved") {
+      action("Return to unresolved", () => store.clearContinuityDisposition(observation.lineageKey));
+    }
     const noteButton = menu.createEl("button", {
       text: match.record.note ? "Edit note" : "Add note",
       attr: { type: "button" }
