@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.18.0 — 2026-08-17
+
+### Performance
+
+- Reduce work on ordinary editor keystrokes and avoid unnecessary full companion rerenders, improving responsiveness in long Scenes.
+- Cache settled manuscript and Story World Review projections so navigation, review and reporting surfaces can reuse vault-wide work and UI-only filter changes do not rescan the vault.
+- Reduce duplicate startup and runtime work, production-minify the plugin bundle and enforce a 720,896-byte release budget.
+
+### Manuscript and Story World
+
+- Add a read-only temporal mode to the focused Story World Graph with evidence-derived change points, previous/next and slider controls, World/Entity/Reader perspectives, exact/cumulative/change views, explicit provenance, separate effective/reveal dates and accessible change semantics without creating stored temporal authority.
+- Add a dedicated Story World Navigator References category, local citation and DOI import—including a warned repair for malformed SAGE underscore separators—canonical Reference projections for vault and selected-Book scopes, and read-only Bases and Dataview examples without adding a bibliography store or network lookup.
+- Offer every canonical Story World entity type when creating an entity from a newly authored unresolved Scene or Part wikilink, with optional `world_sources` provenance, alias reuse, collision checks, stale-input protection and write-free cancellation.
+- Present semantic Story World references as clean author-facing names across MWC-owned Chapter Context, POV, Entity Inspector, impact and Scope surfaces, while preserving authored scalar/list values and exposing links only for resolved targets rather than leaking raw wikilinks or vault paths.
+- Integrate Scene `location` with indexed Story World Location entities through a constrained semantic selector and derived World Context, without copying Location into authored `world_context` or rewriting free-text and unresolved values.
+
+### Manuscript chat, Help and backup
+
+- Render canonical manuscript chat blocks directly in MWC without the external Chat View dependency, including Markdown bodies, wikilinks and local embedded images while preserving the authored chat syntax.
+- Add a task-oriented author Help hierarchy and property/reference material, available through **Command Palette → Open Help** and **Settings → Murmuration Writing Companion → Help → Open Help**.
+- Make vault Git backup self-configuring and cross-platform on desktop Linux and Windows: detect the current vault repository and branch, choose `origin` or a sole remote automatically, allow ambiguous remotes to be selected, and provide **Check backup configuration**.
+- Keep backup conservative and credential-free: use existing Git authentication, leave legacy scripts untouched, refuse parent repositories and remote-ahead/diverged histories, and never pull, merge, rebase, switch branches, force-push or resolve conflicts automatically.
+
+### Fixed
+
+- Correct Continuity Review controls so a finding already marked **Intentional** offers **Return to unresolved** instead of a stale **Mark intentional** action, including after switching findings or restoring persisted review state.
+
 ## 0.17.1 — 2026-08-06
 
 - Fix read-only plugin startup creating an empty `.murmuration/writing-companion/editorial-data.json`.
@@ -15,38 +42,6 @@
 - Add Project Readiness and release-validation safeguards.
 - Add expanded Story World, continuity, chronology, graph and reference workflows.
 - Add validated Linux and Windows support.
-
-## Unreleased — 0.18.0
-
-- Add a read-only temporal mode to the focused Story World Graph with evidence-derived change points, previous/next and manual slider controls, World/Entity/Reader perspectives, exact/cumulative/change displays, explicit provenance, separate effective/reveal dates, actionable malformed-date exclusions, undated handling, and non-colour-only introduction, ending, contradiction and supersession semantics without automatic expiry or stored temporal authority.
-
-- Add a dedicated Story World Navigator References category, explicit local citation and DOI import to Reference creation—including a warned repair for SAGE's malformed underscore DOI separator—canonical Reference metadata projections for vault and selected-Book scopes, and read-only Obsidian Bases and Dataview examples without introducing a bibliography store or network lookup.
-
-- Offer every canonical Story World Navigator entity type for newly authored unresolved Scene and Part wikilinks instead of assuming Event, with explicit optional `world_sources` provenance, alias reuse, collision checks, stale-input protection and write-free cancellation.
-
-- Add the V2 author onboarding guide, exact command reference, screenshot and manual-validation checklists, and separate fictional prepared/migration example vaults with deterministic release packaging.
-
-- Add quiet first-run project readiness guidance with a one-time first-MWC-interaction hint, a reopenable command and Settings entry, per-Book #91 preparation states and diagnostics, optional Story World/editorial summaries, local dismissal, and Book-targeted routing into the existing previewed migration workflow.
-
-- Harden existing-manuscript preparation with explicit readiness states, exact-content transactional rollback and Undo, Book-first writes, verified legacy-array removal last, clearer previews and compiler-acceptance integration boundary.
-
-- Add a previewable, category-filtered printable entity index for a selected Book or the whole vault, using canonical Story World identity, explicit wikilinks, manuscript-impact evidence and authoritative Navigator order while excluding generated reports from future indexing.
-
-- Surface authoritative Book, Part, Chapter and Scene title/filename mismatches in the Manuscript Navigator and provide confirmed, stale-safe actions to rename the file through Obsidian or update only its authored `title` property.
-- Add a lightweight **About Murmuration Writing Companion** command and settings entry with authoritative version information, project context and stable Murmuration Press, PRIME Trilogy, documentation, GitHub and licence links.
-- Add a conservative **Remove Book** action to the Manuscript Navigator: only empty authoritative Books may be moved to Obsidian trash after explicit confirmation, while assigned Parts, Chapters or Scenes block removal without structural writes or cascade deletion.
-- Add a conservative **Remove Part** action to the Manuscript Navigator: only empty authoritative Parts may be moved to Obsidian trash after explicit confirmation, while contained Chapters or Scenes block removal without reparenting, rewriting or cascade deletion.
-- Refine the focused one-hop Story World Graph with bounded density presets, type shapes, event chevrons and status line styles while retaining deterministic limits and navigate-first behaviour.
-- Share clean wikilink presentation and resolution across Chapter Context, POV, Entity Inspector impact and Scope, preserving scalar/list authored values while making only resolved targets accessible links.
-- Treat Intelligence as character-like in Story World navigation and separate POV capability through optional `pov_eligible`, with Characters eligible by default and malformed or unresolved POV references using existing continuity observations.
-- Accept ordinary, aliased, unresolved and legacy plain-text Scope values during Story World entity creation, with authoritative vault-note suggestions and wikilink-compatible writes.
-- Offer the nearest preceding explicit Scene date in Chapter Context for an active undated manuscript Scene, using authoritative manuscript order and requiring stale-safe explicit acceptance.
-- Handle unmanaged manuscript deletion, local-Trash restoration and startup reconciliation defensively while retaining editorial data and never rewriting surviving structure.
-- Keep invalidly parented Parts and Scenes visible at Book level, diagnose invalid parent kinds and guarantee that Scene rows never conceal descendants.
-- Show a selected Story World entity or event's direct, temporal, structured and continuity impact across authoritative manuscript order in the existing Entity Inspector.
-- Preview, copy or save a read-only Markdown snapshot of an entire selected Book's Continuity Review or exactly its current filtered results.
-- Add a deterministic Story World Review for broken structured links, lookup collisions, malformed relationships, event chronology, scope, provenance and classification, sharing observation identity with Continuity Review without automatic repair.
-- Add a deterministic one-hop Story World Graph with explicit relationship, participant, model, timeline and optional manuscript-provenance edges, stable radial layout, deliberate Back/Forward traversal, explicit note opening, filters and review/impact routing.
 
 ## 0.16.0 — 2026-07-21
 
