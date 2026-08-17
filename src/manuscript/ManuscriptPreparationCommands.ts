@@ -1,4 +1,4 @@
-import { ItemView, Notice, Plugin, TFile } from "obsidian";
+import { Notice, Plugin, TFile } from "obsidian";
 import {
   buildObsidianManuscriptLibrary,
   ObsidianManuscriptBook
@@ -12,12 +12,15 @@ import {
   validateManuscriptPreparationPreview
 } from "./ObsidianManuscriptPreparation";
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
-import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
 import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 import {
   manuscriptPreparationActionsNeedInstallation,
   manuscriptPreparationUndoNoticeVisible
 } from "./ManuscriptPreparationActions";
+import {
+  forEachInitializedManuscriptView,
+  InitializedManuscriptActionView
+} from "./ManuscriptViewActions";
 
 export interface ManuscriptPreparationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
@@ -31,7 +34,7 @@ interface PreparationActions {
 
 function selectedBook(
   host: ManuscriptPreparationCommandHost,
-  view?: ItemView,
+  view?: InitializedManuscriptActionView,
   requestedBookPath?: string
 ): ObsidianManuscriptBook | null {
   const library = buildObsidianManuscriptLibrary(host.app);
@@ -62,9 +65,9 @@ export function installManuscriptPreparationCommands(
 ): ManuscriptPreparationCommandActions {
   let undoToken: ManuscriptPreparationUndoToken | null = null;
   let operationRunning = false;
-  const actionsByView = new WeakMap<ItemView, PreparationActions>();
+  const actionsByView = new WeakMap<InitializedManuscriptActionView, PreparationActions>();
 
-  const installUndoStatus = (view: ItemView) => {
+  const installUndoStatus = (view: InitializedManuscriptActionView) => {
     const existing = view.containerEl.querySelector<HTMLElement>(
       ".mwc-manuscript-preparation-undo-status"
     );
@@ -90,13 +93,8 @@ export function installManuscriptPreparationCommands(
   };
 
   const installActions = () => {
-    const leaves = host.app.workspace.getLeavesOfType(
-      MANUSCRIPT_NAVIGATOR_VIEW_TYPE
-    );
-    for (const leaf of leaves) {
-      const view = leaf.view as ItemView;
-      (view as ItemView & { setPreparationActionsRenderer?: (renderer: () => void) => void })
-        .setPreparationActionsRenderer?.(installActions);
+    forEachInitializedManuscriptView(host.app.workspace, (view) => {
+      view.setPreparationActionsRenderer(installActions);
       let actions = actionsByView.get(view);
       if (manuscriptPreparationActionsNeedInstallation(actions)) {
         const prepare = view.addAction(
@@ -113,11 +111,11 @@ export function installManuscriptPreparationCommands(
         actionsByView.set(view, installed);
         actions = installed;
       }
-      if (!actions) continue;
+      if (!actions) return;
       actions.prepare.style.display = operationRunning ? "none" : "";
       actions.undo.style.display = undoToken && !operationRunning ? "" : "none";
       installUndoStatus(view);
-    }
+    });
   };
 
   const refresh = () => {
@@ -125,7 +123,7 @@ export function installManuscriptPreparationCommands(
     window.setTimeout(installActions, 0);
   };
 
-  const prepareManuscript = async (view?: ItemView, requestedBookPath?: string) => {
+  const prepareManuscript = async (view?: InitializedManuscriptActionView, requestedBookPath?: string) => {
     if (operationRunning) return;
     const book = selectedBook(host, view, requestedBookPath);
     if (!book) {

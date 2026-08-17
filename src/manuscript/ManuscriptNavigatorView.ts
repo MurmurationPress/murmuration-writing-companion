@@ -62,9 +62,13 @@ import {
   planUpdateTitleFromFilename
 } from "./ManuscriptNameAlignment";
 import { ObsidianManuscriptNameAlignmentAdapter } from "./ObsidianManuscriptNameAlignment";
+import {
+  MANUSCRIPT_ACTION_VIEW,
+  MANUSCRIPT_ACTION_VIEW_TYPE
+} from "./ManuscriptViewActions";
 
 export const MANUSCRIPT_NAVIGATOR_VIEW_TYPE =
-  "murmuration-manuscript-navigator-view";
+  MANUSCRIPT_ACTION_VIEW_TYPE;
 
 let nextTooltipId = 0;
 
@@ -235,6 +239,7 @@ class ConfirmNameAlignmentModal extends Modal {
 }
 
 export class ManuscriptNavigatorView extends ItemView {
+  readonly [MANUSCRIPT_ACTION_VIEW] = true as const;
   private readonly plugin: MurmurationWritingCompanionPlugin;
   private readonly collapsedParts = new Set<string>();
   private suppressedActiveRevealPath: string | null = null;

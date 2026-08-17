@@ -1,4 +1,4 @@
-import { ItemView, Notice, Plugin, TFile } from "obsidian";
+import { Notice, Plugin, TFile } from "obsidian";
 import {
   buildObsidianManuscriptLibrary,
   ObsidianManuscriptBook
@@ -11,7 +11,10 @@ import {
 } from "./ObsidianManuscriptReconciliation";
 import { chooseManuscriptReconciliation } from "./ManuscriptReconciliationModal";
 import { manuscriptNeedsPreparation, manuscriptNeedsReconciliation } from "./ManuscriptReconciliation";
-import { MANUSCRIPT_NAVIGATOR_VIEW_TYPE } from "./ManuscriptNavigatorView";
+import {
+  forEachInitializedManuscriptView,
+  InitializedManuscriptActionView
+} from "./ManuscriptViewActions";
 
 export interface ManuscriptReconciliationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
@@ -26,7 +29,7 @@ interface ReconciliationActions {
 
 function selectedBook(
   host: ManuscriptReconciliationCommandHost,
-  view?: ItemView
+  view?: InitializedManuscriptActionView
 ): ObsidianManuscriptBook | null {
   const library = buildObsidianManuscriptLibrary(host.app);
   const selector = view?.containerEl.querySelector<HTMLSelectElement>(
@@ -50,7 +53,7 @@ function selectedBook(
 
 function installStatus(
   host: ManuscriptReconciliationCommandHost,
-  view: ItemView
+  view: InitializedManuscriptActionView
 ) {
   const existing = view.containerEl.querySelector<HTMLElement>(
     ".mwc-manuscript-reconciliation-status"
@@ -90,14 +93,10 @@ export function installManuscriptReconciliationCommands(
 ) {
   let undoToken: ManuscriptReconciliationUndoToken | null = null;
   let operationRunning = false;
-  const actionsByView = new WeakMap<ItemView, ReconciliationActions>();
+  const actionsByView = new WeakMap<InitializedManuscriptActionView, ReconciliationActions>();
 
   const installActions = () => {
-    const leaves = host.app.workspace.getLeavesOfType(
-      MANUSCRIPT_NAVIGATOR_VIEW_TYPE
-    );
-    for (const leaf of leaves) {
-      const view = leaf.view as ItemView;
+    forEachInitializedManuscriptView(host.app.workspace, (view) => {
       let actions = actionsByView.get(view);
       if (!actions) {
         const reconcile = view.addAction(
@@ -116,7 +115,7 @@ export function installManuscriptReconciliationCommands(
       actions.reconcile.style.display = operationRunning ? "none" : "";
       actions.undo.style.display = undoToken && !operationRunning ? "" : "none";
       installStatus(host, view);
-    }
+    });
   };
 
   const refresh = () => {
@@ -124,7 +123,7 @@ export function installManuscriptReconciliationCommands(
     window.setTimeout(installActions, 0);
   };
 
-  const reconcileManuscript = async (view?: ItemView) => {
+  const reconcileManuscript = async (view?: InitializedManuscriptActionView) => {
     if (operationRunning) return;
     const book = selectedBook(host, view);
     if (!book) {
