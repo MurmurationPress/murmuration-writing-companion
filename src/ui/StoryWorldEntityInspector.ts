@@ -7,6 +7,10 @@ import { inspectorPanelLabel } from "./PanelLabels";
 import { buildObsidianStoryWorldManuscriptImpact } from "../story-world/ObsidianStoryWorldManuscriptImpact";
 import { filterStoryWorldManuscriptImpact, ManuscriptImpactFilter } from "../story-world/StoryWorldManuscriptImpact";
 import { renderWikilinkValues } from "./WikilinkPresentation";
+import {
+  readStoryWorldTypedProperties,
+  storyWorldTypedPropertyTextValues
+} from "../story-world/TypedEntityProperties";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -35,6 +39,34 @@ function addValues(container: Element, heading: string, values: readonly string[
   for (const value of values) {
     const item = list.createDiv("mwc-story-world-inspector-value");
     renderWikilinkValues(item, value, plugin.app, file.path, plugin);
+  }
+}
+
+function renderTypedProperties(
+  container: Element,
+  plugin: MurmurationWritingCompanionPlugin,
+  file: TFile,
+  item: StoryWorldBuilderItem
+): void {
+  const properties = readStoryWorldTypedProperties(item.type, item.properties)
+    .map((property) => ({ property, values: storyWorldTypedPropertyTextValues(property) }))
+    .filter((row) => row.values.length > 0);
+  if (!properties.length) return;
+  const section = container.createDiv("mwc-story-world-inspector-section mwc-story-world-typed-properties");
+  section.createEl("h3", { text: `${item.type.replace(/^./, (value) => value.toUpperCase())} details` });
+  const list = section.createEl("dl", { cls: "mwc-story-world-typed-property-list" });
+  for (const { property, values } of properties) {
+    const row = list.createDiv("mwc-context-row mwc-story-world-typed-property");
+    row.createEl("dt", { text: property.definition.label });
+    const value = row.createEl("dd");
+    if (property.definition.valueType === "entity-reference") {
+      values.forEach((entry, index) => {
+        if (index) value.createSpan({ text: ", " });
+        renderWikilinkValues(value, entry, plugin.app, file.path, plugin);
+      });
+    } else {
+      value.setText(values.join(property.definition.cardinality === "multiple" ? "; " : ""));
+    }
   }
 }
 
@@ -113,6 +145,7 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   addValues(container, "First appearance", item.firstAppearance ? [item.firstAppearance] : [], plugin, file);
   addValues(container, "Sources", item.sources, plugin, file);
   addValues(container, "Subject", item.modelSubject, plugin, file);
+  if (item.kind === "entity") renderTypedProperties(container, plugin, file, item);
   renderManuscriptImpact(container, plugin, file);
   if (item.kind === "entity") renderEntityRelationshipWorkspace(container, plugin, file, item);
 }

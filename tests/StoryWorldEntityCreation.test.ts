@@ -51,6 +51,27 @@ test("adds an optional canonical source and leaves declined creation source-free
   equal(planStoryWorldEntityCreation({ kind: "location", name: "Elsewhere", sources: [] }).markdown.includes("world_sources"), false);
 });
 
+test("writes recognised Location details without inventing a closed schema", () => {
+  const plan = planStoryWorldEntityCreation({
+    kind: "location",
+    name: "Greywater Observatory",
+    typedProperties: {
+      address: "1 Tidal Reach",
+      latitude: 51.5074,
+      longitude: -0.1278,
+      timezone: "Europe/London",
+      parent_location: "[[Story World/Locations/London]]",
+      custom_not_in_registry: "must not be adopted"
+    }
+  });
+  match(plan.markdown, /address: "1 Tidal Reach"/);
+  match(plan.markdown, /latitude: 51\.5074/);
+  match(plan.markdown, /longitude: -0\.1278/);
+  match(plan.markdown, /timezone: "Europe\/London"/);
+  match(plan.markdown, /parent_location: "\[\[Story World\/Locations\/London\]\]"/);
+  equal(plan.markdown.includes("custom_not_in_registry"), false);
+});
+
 test("writes Reference details through the canonical schema only", () => {
   const plan = planStoryWorldEntityCreation({
     kind: "reference",

@@ -17,6 +17,22 @@ This is the concise author-facing contract for current MWC Markdown. Normally, u
 
 Folders, tags, prose, filenames, backlinks, and ordinary `type` do not opt a note into the entity index. A list-valued `world_entity` is not valid opt-in. Unknown scalar kinds remain indexable.
 
+Recognised type-specific properties are additive semantic help, not a closed schema. Custom YAML remains valid and is never removed merely because MWC does not recognise it.
+
+## Location entities
+
+All Location-specific properties are optional. Guided creation presents them only when the entity kind is Location.
+
+| Property | Purpose | Canonical form | MWC | Example |
+|---|---|---|---|---|
+| `address` | Street, postal, or descriptive address. | Scalar text. | R/W | `address: 1 Tidal Reach` |
+| `latitude` | Geographic latitude. | Number from -90 to 90. | R/W | `latitude: 51.5074` |
+| `longitude` | Geographic longitude. | Number from -180 to 180. | R/W | `longitude: -0.1278` |
+| `timezone` | Date-aware civil timezone. | IANA timezone identifier. | R/W | `timezone: Europe/London` |
+| `parent_location` | Containing place or region. | One wikilink to an indexed Location. | R/W | `parent_location: "[[Story World/Locations/London]]"` |
+
+The guided `parent_location` selector excludes Characters, Organisations, Events, References, and other non-Location entities. Existing custom Location properties remain untouched.
+
 ## Scope, status, and provenance
 
 | Property | Purpose and applies to | Canonical form | Required | MWC | Example |

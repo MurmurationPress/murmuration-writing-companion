@@ -86,6 +86,34 @@ Only `world_entity` is required.
 
 Extra properties are permitted and preserved.
 
+## Recognised type-specific properties
+
+MWC may recognise an additive set of properties for a particular `world_entity` type. Recognition lets the creation and inspector UI label values semantically, constrain entity-reference choices, and make selected values available to derived consumers. It does not create a closed schema: unrecognised types and custom author properties remain valid, indexed and untouched.
+
+The model is deliberately layered:
+
+```text
+common Story World properties
+  -> recognised type-specific properties
+  -> optional specialised profiles or behaviours
+```
+
+Type-specific values remain ordinary YAML in the entity note. Reading or displaying them never migrates or rewrites the note.
+
+### Location metadata
+
+Location entities may use this initial recognised set:
+
+| Property | Accepted form | Meaning |
+|---|---|---|
+| `address` | string | Author-useful street, postal or descriptive address |
+| `latitude` | number from -90 to 90 | Geographic latitude |
+| `longitude` | number from -180 to 180 | Geographic longitude |
+| `timezone` | IANA timezone identifier | Timezone such as `Europe/London`, allowing date-aware offsets later |
+| `parent_location` | wikilink to a Location entity | Containing place or region |
+
+The guided parent selector offers only indexed Location entities. Existing free-form or custom location properties remain untouched, and none of these fields is required.
+
 ### Reference metadata
 
 `Reference` entities remain ordinary Story World notes. The following optional properties are the canonical structured citation contract:
