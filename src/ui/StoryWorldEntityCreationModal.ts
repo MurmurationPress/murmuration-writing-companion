@@ -15,9 +15,14 @@ import { ReferenceCitationImportModal } from "./ReferenceCitationImportModal";
 import {
   buildStoryWorldTypedEntityReferenceCandidates,
   LOCATION_TYPED_PROPERTY_NAMES,
+  storyWorldControlledVocabulary,
+  storyWorldControlledVocabularyCandidates,
   storyWorldTypedPropertyDefinition,
-  storyWorldTypedPropertyDefinitions
+  storyWorldTypedPropertyDefinitions,
+  storyWorldTypedPropertyTextValues
 } from "../story-world/TypedEntityProperties";
+
+let controlledVocabularyInputId = 0;
 
 export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
   refreshStoryWorldNavigator?(): void;
@@ -185,6 +190,21 @@ export class StoryWorldEntityCreationModal extends Modal {
         const row = list.createDiv("mwc-context-row"); row.createEl("dt", { text: label }); row.createEl("dd", { text: value });
       }
     }
+    if (this.kind === "location") {
+      for (const definition of storyWorldTypedPropertyDefinitions("location")) {
+        const value = this.typedProperties[definition.property];
+        if (value === undefined || value === null || value === "") continue;
+        const display = storyWorldTypedPropertyTextValues({ definition, value }).join("; ");
+        if (!display) continue;
+        const row = list.createDiv("mwc-context-row");
+        row.createEl("dt", { text: definition.label });
+        row.createEl("dd", {
+          text: definition.valueType === "entity-reference"
+            ? presentWikilinkValue(display)?.label ?? display
+            : display
+        });
+      }
+    }
     if (collision) this.preview.createEl("p", { cls: "mod-warning", text: collision });
     this.createButton.disabled = Boolean(collision);
   }
@@ -252,9 +272,37 @@ export class StoryWorldEntityCreationModal extends Modal {
           });
         continue;
       }
-      const description = definition.property === LOCATION_TYPED_PROPERTY_NAMES.timezone
-        ? "IANA timezone, for example Europe/London."
-        : definition.valueType === "number" ? "Optional decimal coordinate." : "Optional.";
+      if (definition.valueType === "controlled-value") {
+        const vocabulary = definition.vocabulary
+          ? storyWorldControlledVocabulary(definition.vocabulary)
+          : null;
+        const candidates = definition.vocabulary
+          ? storyWorldControlledVocabularyCandidates(definition.vocabulary)
+          : [];
+        const inputId = `mwc-controlled-vocabulary-${++controlledVocabularyInputId}`;
+        const dataList = this.typedPropertySection.createEl("datalist", { attr: { id: inputId } });
+        for (const candidate of candidates) {
+          dataList.createEl("option", {
+            attr: { value: candidate.value, label: candidate.label ?? candidate.value }
+          });
+        }
+        new Setting(this.typedPropertySection)
+          .setName(definition.label)
+          .setDesc(vocabulary?.allowCustom
+            ? "Search the recognised values or enter an author-defined value."
+            : "Search and select a canonical value.")
+          .addText((text) => {
+            text.inputEl.setAttr("list", inputId);
+            text.setPlaceholder("Search values…");
+            text.setValue(String(this.typedProperties[definition.property] ?? ""));
+            text.onChange((value) => {
+              this.typedProperties[definition.property] = value;
+              this.renderPreview();
+            });
+          });
+        continue;
+      }
+      const description = definition.valueType === "number" ? "Optional decimal coordinate." : "Optional.";
       new Setting(this.typedPropertySection)
         .setName(definition.label)
         .setDesc(description)

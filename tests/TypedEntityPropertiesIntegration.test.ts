@@ -8,6 +8,8 @@ test("Story World creation and inspector consume the central typed-property mech
   const inspector = await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityInspector.ts"), "utf8");
   match(creation, /storyWorldTypedPropertyDefinitions\("location"\)/u);
   match(creation, /buildStoryWorldTypedEntityReferenceCandidates/u);
+  match(creation, /storyWorldControlledVocabularyCandidates/u);
+  match(creation, /definition\.valueType === "controlled-value"/u);
   match(creation, /storyWorldTypedPropertyDefinition\("reference"/u);
   match(inspector, /readStoryWorldTypedProperties\(item\.type, item\.properties\)/u);
   doesNotMatch(inspector, /reference_authors|parent_location|latitude|longitude/u);

@@ -72,6 +72,19 @@ test("writes recognised Location details without inventing a closed schema", () 
   equal(plan.markdown.includes("custom_not_in_registry"), false);
 });
 
+test("requires an explicit canonical selection for a new closed-vocabulary value", () => {
+  throws(() => planStoryWorldEntityCreation({
+    kind: "location",
+    name: "Unknown Zone",
+    typedProperties: { timezone: "Some/Unknown_Value" }
+  }), /selected from IANA timezone identifiers/);
+  throws(() => planStoryWorldEntityCreation({
+    kind: "location",
+    name: "Timezone Alias",
+    typedProperties: { timezone: "GMT" }
+  }), /selected from IANA timezone identifiers/);
+});
+
 test("writes Reference details through the canonical schema only", () => {
   const plan = planStoryWorldEntityCreation({
     kind: "reference",
