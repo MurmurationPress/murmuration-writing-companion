@@ -14,7 +14,9 @@ test("Story World creation and inspector consume the central typed-property mech
 });
 
 test("typed-property keystrokes update only creation-form state before explicit creation", async () => {
-  const creation = await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8");
+  const creation = (
+    await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8")
+  ).replace(/\r\n?/g, "\n");
   const typedSection = creation.match(/private renderTypedPropertySection\(\): void \{(?<body>[\s\S]*?)\n  \}\n\n  private applyReferenceTitleDefault/u)?.groups?.body ?? "";
   match(typedSection, /this\.typedProperties\[definition\.property\] =/u);
   doesNotMatch(typedSection, /processFrontMatter|vault\.modify|vault\.create|metadataCache/u);
