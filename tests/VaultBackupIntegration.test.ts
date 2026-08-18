@@ -79,6 +79,47 @@ test("real Git check refuses remote-ahead and divergence", async () => {
   equal((await remoteAhead.service.check()).kind, "diverged");
 });
 
+test("real Git pull fast-forwards remote work in a special-character vault path", async () => {
+  const remoteAhead = await fixture("pull remote ahead");
+  const other = path.join(remoteAhead.root, "Other Writer Ω");
+  await git(remoteAhead.root, "clone", "--branch", "main", remoteAhead.remote, other);
+  await git(other, "config", "user.name", "Remote Author");
+  await git(other, "config", "user.email", "remote@example.invalid");
+  await writeFile(path.join(other, "Remote Scene [final].md"), "Remote work\n", "utf8");
+  await git(other, "add", "-A");
+  await git(other, "commit", "-m", "Remote work");
+  await git(other, "push", "origin", "main");
+
+  equal((await remoteAhead.service.pull()).kind, "success");
+  equal(await git(remoteAhead.vault, "rev-parse", "HEAD"), await git(remoteAhead.remote, "rev-parse", "refs/heads/main"));
+  equal(await git(remoteAhead.vault, "status", "--porcelain"), "");
+});
+
+test("real Git pull refuses dirty and divergent repositories without modifying them", async () => {
+  const dirty = await fixture("pull-dirty");
+  await writeFile(path.join(dirty.vault, "Scene One.md"), "Uncommitted work\n", "utf8");
+  const dirtyHead = await git(dirty.vault, "rev-parse", "HEAD");
+  equal((await dirty.service.pull()).kind, "local_changes");
+  equal(await git(dirty.vault, "rev-parse", "HEAD"), dirtyHead);
+  match(await git(dirty.vault, "status", "--porcelain"), /Scene One\.md/u);
+
+  const diverged = await fixture("pull-diverged");
+  const other = path.join(diverged.root, "other");
+  await git(diverged.root, "clone", "--branch", "main", diverged.remote, other);
+  await git(other, "config", "user.name", "Remote Author");
+  await git(other, "config", "user.email", "remote@example.invalid");
+  await writeFile(path.join(other, "Remote.md"), "Remote work\n", "utf8");
+  await git(other, "add", "-A");
+  await git(other, "commit", "-m", "Remote work");
+  await git(other, "push", "origin", "main");
+  await writeFile(path.join(diverged.vault, "Local.md"), "Local work\n", "utf8");
+  await git(diverged.vault, "add", "-A");
+  await git(diverged.vault, "commit", "-m", "Local work");
+  const localHead = await git(diverged.vault, "rev-parse", "HEAD");
+  equal((await diverged.service.pull()).kind, "diverged");
+  equal(await git(diverged.vault, "rev-parse", "HEAD"), localHead);
+});
+
 test("real Git inspection rejects a vault nested in a parent repository", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "mwc-backup-parent-"));
   roots.push(root);

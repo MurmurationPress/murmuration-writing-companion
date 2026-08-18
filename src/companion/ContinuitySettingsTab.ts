@@ -60,6 +60,11 @@ export class ContinuitySettingsTab extends PluginSettingTab {
       .setName("Check backup configuration")
       .setDesc("Fetch the detected remote deliberately and verify that backup is safe to run.")
       .addButton((button) => button.setButtonText("Check backup configuration").onClick(() => this.plugin.checkVaultBackup()));
+    new Setting(this.containerEl)
+      .setName("Git actions")
+      .setDesc("Pull only fast-forwards a clean vault. Backup commits and pushes local vault changes. Neither action merges, rebases, stashes, resets, or changes branches.")
+      .addButton((button) => button.setButtonText("Pull from Git").onClick(() => this.plugin.pullVaultFromGit()))
+      .addButton((button) => button.setButtonText("Back up vault to GitHub").onClick(() => this.plugin.backUpVault()));
 
     void this.plugin.inspectVaultBackup().then((inspection) => {
       repository.setDesc(inspection.vaultPath ?? "Unavailable");

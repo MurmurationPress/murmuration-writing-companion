@@ -90,6 +90,7 @@ import {
   VaultBackupInspection,
   VaultBackupReadiness,
   VaultBackupResult,
+  VaultPullResult,
   VaultBackupService
 } from "./backup/VaultBackupService";
 import { installAboutCommand } from "./about/AboutMurmurationPress";
@@ -266,11 +267,18 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         remoteOverride: () => this.vaultBackupRemotePreference.get()
       });
       const backUpVault = () => void this.backUpVault();
+      const pullVaultFromGit = () => void this.pullVaultFromGit();
       this.addRibbonIcon("cloud-upload", "Back up vault to GitHub", backUpVault);
+      this.addRibbonIcon("cloud-download", "Pull from Git", pullVaultFromGit);
       this.addCommand({
         id: "back-up-vault-to-github",
         name: "Back up vault to GitHub",
         callback: backUpVault
+      });
+      this.addCommand({
+        id: "pull-vault-from-git",
+        name: "Pull from Git",
+        callback: pullVaultFromGit
       });
     }
 
@@ -471,7 +479,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
   }
 
-  private async backUpVault(): Promise<void> {
+  async backUpVault(): Promise<void> {
     if (!this.vaultBackupService) {
       new Notice("Vault backup is available only in the Obsidian desktop app.");
       return;
@@ -481,6 +489,18 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     const result = await this.vaultBackupService.run();
     progress.hide();
     new Notice(this.vaultBackupNotice(result), this.vaultBackupIsProblem(result.kind) ? 10000 : 5000);
+  }
+
+  async pullVaultFromGit(): Promise<void> {
+    if (!this.vaultBackupService) {
+      new Notice("Pull from Git is available only in the Obsidian desktop app.");
+      return;
+    }
+
+    const progress = new Notice("Checking for Git changes…", 0);
+    const result = await this.vaultBackupService.pull();
+    progress.hide();
+    new Notice(this.vaultPullNotice(result), this.vaultPullIsProblem(result.kind) ? 10000 : 5000);
   }
 
   async inspectVaultBackup(): Promise<VaultBackupInspection> {
@@ -538,6 +558,36 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       case "no_changes": return "No vault changes to back up.";
       case "busy": return "A vault backup is already running.";
       default: return this.vaultBackupProblemNotice(result);
+    }
+  }
+
+  private vaultPullIsProblem(kind: VaultPullResult["kind"]): boolean {
+    return !["success", "up_to_date", "local_ahead", "busy"].includes(kind);
+  }
+
+  private vaultPullNotice(result: VaultPullResult): string {
+    switch (result.kind) {
+      case "success": return "Pull complete. The vault was fast-forwarded to the fetched Git commit.";
+      case "up_to_date": return "The vault is already up to date.";
+      case "local_ahead": return "The local branch is ahead. There is nothing to pull.";
+      case "local_changes": return "Pull refused because the vault has uncommitted changes. Resolve them manually before pulling.";
+      case "busy": return "Another Git operation is already running.";
+      case "no_remote_branch": return "The current branch does not exist on the selected remote. There is nothing suitable to pull.";
+      case "fast_forward_failed": return `Git could not complete the fast-forward update: ${result.detail ?? "inspect the repository manually."}`;
+      case "detached_head": return "Pull refused because the repository is in detached HEAD state. Check out a branch manually first.";
+      case "no_remote": return "This repository has no Git remote. Configure one before pulling.";
+      case "ambiguous_remote": return "This repository has multiple remotes and no origin. Select the intended remote before pulling.";
+      case "remote_not_found": return "The selected Git remote is no longer available.";
+      case "fetch_failed": return `Git could not fetch the remote: ${result.detail ?? "check authentication and network access."}`;
+      case "diverged": return "Local and remote histories have diverged. Resolve them manually; MWC will not merge or rebase.";
+      case "git_unavailable": return "Git is not installed or is not available on PATH.";
+      case "unsupported": return "Pull from Git requires the Obsidian desktop app and a filesystem vault.";
+      case "not_repository": return "This vault is not a Git repository.";
+      case "unsafe_repository_scope": return "This vault is inside a larger Git repository. MWC requires the vault itself to be the repository root.";
+      case "remote_ahead": return "Remote changes were detected but could not be applied safely.";
+      case "commit_failed":
+      case "push_failed":
+      case "failed": return `Pull from Git failed: ${result.detail ?? "inspect the repository manually."}`;
     }
   }
 
