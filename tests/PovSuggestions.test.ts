@@ -42,6 +42,19 @@ test("explicit false overrides the Character compatibility default", () => {
   deepEqual(buildPovSuggestions([entity({ properties: { pov_eligible: false } })]), []);
 });
 
+test("a linked POV profile makes a non-character entity eligible unless explicitly disabled", () => {
+  const prime = entity({
+    path: "Story World/PRIME.md",
+    basename: "PRIME",
+    entityType: "intelligence",
+    name: "PRIME",
+    aliases: [],
+    properties: { pov_profile: "[[Story World/POV Profiles/PRIME POV]]" }
+  });
+  equal(buildPovSuggestions([prime])[0]?.entity.name, "PRIME");
+  deepEqual(buildPovSuggestions([{ ...prime, properties: { ...prime.properties, pov_eligible: false } }]), []);
+});
+
 test("prefers characters scoped to the active book", () => {
   const suggestions = buildPovSuggestions([
     entity({ path: "Pip.md", basename: "Pip", name: "Pip", aliases: [], scope: ["[[EMERGENCE]]"] }),

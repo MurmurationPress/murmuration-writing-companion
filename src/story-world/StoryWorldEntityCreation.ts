@@ -6,12 +6,14 @@ import {
 
 export const STORY_WORLD_ENTITY_KINDS = [
   "character",
+  "intelligence",
   "event",
   "location",
   "organisation",
   "technology",
   "concept",
   "reference",
+  "pov-profile",
   "other"
 ] as const;
 
@@ -40,12 +42,14 @@ export interface StoryWorldEntityCreationPlan {
 
 const FOLDERS: Record<Exclude<StoryWorldEntityKind, "other">, string> = {
   character: "Characters",
+  intelligence: "Intelligences",
   event: "Events",
   location: "Locations",
   organisation: "Organisations",
   technology: "Technologies",
   concept: "Concepts",
-  reference: "References"
+  reference: "References",
+  "pov-profile": "POV Profiles"
 };
 
 export function safeStoryWorldFilename(name: string): string {
@@ -69,6 +73,7 @@ function appendTypedProperties(
     if (error) throw new Error(error);
     const items = definition.cardinality === "multiple" && Array.isArray(value) ? value : [value];
     const serialised = items.flatMap((item) => {
+      if (typeof item === "boolean") return [String(item)];
       if (typeof item === "number" && Number.isFinite(item)) return [String(item)];
       if (typeof item === "string" && item.trim()) return [yamlString(item.trim())];
       return [];

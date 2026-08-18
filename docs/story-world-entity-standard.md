@@ -102,6 +102,16 @@ Type-specific values remain ordinary YAML in the entity note. Reading or display
 
 Typed properties may optionally name a reusable controlled vocabulary. Vocabularies are presentation and validation aids, not storage authority: closed technical vocabularies constrain only new guided selections, while permissive vocabularies can allow custom fictional values. Existing authored values outside a current vocabulary remain visible and untouched.
 
+### POV guidance
+
+`pov_eligible` and `pov_profile` are recognised for Character and Intelligence entities. `pov_profile` is constrained by the shared entity-reference mechanism to indexed `world_entity: pov-profile` notes. Assigning a profile implies POV eligibility unless an authored `pov_eligible: false` explicitly overrides it.
+
+A POV Profile stores substantial narrative and representation guidance in its Markdown body. It may declare one semantic `pov_extends` link to another POV Profile. Effective resolution follows the Scene's semantic `pov` link to its entity, then follows the profile chain and presents profiles base-first. Paths already being visited terminate a cycle; each profile appears at most once. Missing and wrong-type references produce no writes and do not prevent ordinary Chapter Context from rendering.
+
+The first implementation represents a variant as a specialised profile with `pov_extends`, rather than storing a `pov_variant` name on the entity. This keeps the effective variant's authored Markdown and provenance explicit without introducing a separate variant language.
+
+POV guidance is a distinct Chapter Context projection, not an ordinary canon fact and not an implicit `world_context` entry. The pure projection is available to existing and future Chapter Context consumers without adding a second index or scanning the vault. Scene-local context remains authoritative for immediate state and exceptions.
+
 ### Location metadata
 
 Location entities may use this initial recognised set:

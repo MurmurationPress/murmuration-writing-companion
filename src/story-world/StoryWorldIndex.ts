@@ -26,6 +26,7 @@ export function isPovEligible(entity: StoryWorldEntityRecord): boolean {
   const explicit = entity.properties.pov_eligible;
   if (typeof explicit === "boolean") return explicit;
   if (typeof explicit === "string" && /^(true|false)$/i.test(explicit.trim())) return explicit.trim().toLowerCase() === "true";
+  if (typeof entity.properties.pov_profile === "string" && entity.properties.pov_profile.trim()) return true;
   return entity.entityType.trim().toLowerCase() === "character";
 }
 

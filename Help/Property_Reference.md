@@ -12,7 +12,8 @@ This is the concise author-facing contract for current MWC Markdown. Normally, u
 | `world_name` | Preferred display name for entities and models. | Non-empty scalar text. | Optional | R/W | `world_name: Mara Venn` |
 | `aliases` | Interchangeable lookup/link names. | Scalar text or list of text. | Optional | R | `aliases: [Mara, Dr Venn]` |
 | `world_facets` | Additional roles without changing primary kind. | Scalar or list; open vocabulary. | Optional | R | `world_facets: [character, researcher]` |
-| `pov_eligible` | Includes an indexed entity in POV suggestions. Characters default to eligible when absent. | Boolean; `true`/`false` strings are also read. | Optional | R | `pov_eligible: true` |
+| `pov_eligible` | Includes a Character/Intelligence in POV suggestions. A profile link also implies eligibility unless this is explicitly false. | Boolean; `true`/`false` strings are also read. | Optional | R/W | `pov_eligible: true` |
+| `pov_profile` | Links a Character/Intelligence to its effective authorial POV guidance. | One wikilink to a `pov-profile` entity. | Optional | R/W | `pov_profile: "[[Story World/POV Profiles/Tobias POV]]"` |
 | `world_summary` | Concise description in Story World and context UI. | Scalar free text. | Optional | R | `world_summary: Lead hydrophone researcher.` |
 
 Folders, tags, prose, filenames, backlinks, and ordinary `type` do not opt a note into the entity index. A list-valued `world_entity` is not valid opt-in. Unknown scalar kinds remain indexable.
@@ -20,6 +21,14 @@ Folders, tags, prose, filenames, backlinks, and ordinary `type` do not opt a not
 Recognised type-specific properties are additive semantic help, not a closed schema. Custom YAML remains valid and is never removed merely because MWC does not recognise it.
 
 Some recognised properties offer a controlled vocabulary as an authoring aid. The selected value is still ordinary authoritative YAML. A closed technical vocabulary restricts new guided selections, but never migrates, deletes, or rewrites an existing unknown value. Future open-world vocabularies may permit custom fictional values.
+
+### POV Profile entities
+
+| Property | Purpose | Canonical form | MWC | Example |
+|---|---|---|---|---|
+| `pov_extends` | Reuses one base profile before this profile's Markdown guidance. | One wikilink to a `pov-profile` entity. | R/W | `pov_extends: "[[Story World/POV Profiles/Intelligence POV]]"` |
+
+The substantial guidance belongs in the profile's Markdown body rather than rigid YAML fields. Resolution is deterministic and base-first. Missing, wrong-type, or cyclic links stop safely without rewriting either note.
 
 ## Location entities
 

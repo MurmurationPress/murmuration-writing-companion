@@ -1,4 +1,4 @@
-import { TFile, WorkspaceLeaf } from "obsidian";
+import { MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
 import type { HoverPopover } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import type { PageEditorialNotes } from "../editorial/EditorialNote";
@@ -38,6 +38,10 @@ import type { DispositionMatch } from "../observations/ContinuityDisposition";
 import { renderContinuityDispositionControls } from "./ContinuityDispositionControls";
 import { chapterContextCardNavigationNotes } from "./ContinuityCardPresentation";
 import { isExplicitlyDetachedScene, manuscriptDisplayTitle } from "../manuscript/ManuscriptMetadata";
+import {
+  buildEffectivePovGuidance,
+  resolvePovProfileChain
+} from "../story-world/PovProfile";
 
 export { VIEW_TYPE };
 
@@ -156,6 +160,69 @@ export class WritingCompanionView extends BaseWritingCompanionView {
 
     super.renderChapterContext(collapsible.content, file);
     this.flattenEmbeddedSection(collapsible.content);
+    this.renderPovGuidance(collapsible.content, file, frontmatter as Record<string, unknown> | undefined);
+  }
+
+  private renderPovGuidance(
+    container: HTMLElement,
+    scene: TFile,
+    frontmatter: Record<string, unknown> | undefined
+  ): void {
+    const resolution = resolvePovProfileChain(
+      frontmatter,
+      scene.path,
+      (reference, sourcePath) => this.plugin.storyWorldIndex.resolveWikilink(reference, sourcePath)
+    );
+    if (!resolution.profiles.length && !resolution.issues.length) return;
+
+    const section = container.createDiv("mwc-pov-guidance");
+    section.createEl("h4", { text: "POV Guidance" });
+    const content = section.createDiv("mwc-pov-guidance-content");
+    content.createEl("p", { cls: "mwc-muted", text: "Loading author guidance…" });
+
+    void Promise.all(resolution.profiles.map(async (profile) => {
+      const file = this.app.vault.getAbstractFileByPath(profile.path);
+      return [profile.path, file instanceof TFile ? await this.app.vault.cachedRead(file) : null] as const;
+    })).then((documents) => {
+      if (!container.contains(section)) return;
+      const markdownByPath = new Map(documents);
+      const guidance = buildEffectivePovGuidance(
+        resolution,
+        (profile) => markdownByPath.get(profile.path)
+      );
+      content.empty();
+      for (const profileSection of guidance.sections) {
+        const profile = content.createDiv("mwc-pov-guidance-profile");
+        const heading = profile.createEl("button", {
+          text: profileSection.profile.name,
+          cls: "mwc-pov-guidance-profile-link",
+          attr: { type: "button", title: `Open ${profileSection.profile.path}` }
+        });
+        heading.onclick = () => void this.app.workspace.openLinkText(
+          profileSection.profile.path.replace(/\.md$/i, ""),
+          scene.path,
+          false
+        );
+        const markdown = profile.createDiv("mwc-pov-guidance-markdown");
+        void MarkdownRenderer.render(this.app, profileSection.markdown, markdown, profileSection.profile.path, this);
+      }
+      if (!guidance.sections.length) {
+        content.createEl("p", { cls: "mwc-muted", text: "The linked POV profile has no guidance body." });
+      }
+      if (guidance.issues.length) {
+        content.createEl("p", {
+          cls: "mwc-muted",
+          text: "Some linked POV profile guidance could not be resolved. Existing chapter context remains available."
+        });
+      }
+    }).catch(() => {
+      if (!container.contains(section)) return;
+      content.empty();
+      content.createEl("p", {
+        cls: "mwc-muted",
+        text: "POV guidance could not be read. Existing chapter context remains available."
+      });
+    });
   }
 
   private renderCollapsibleWorldContext(container: Element, file: TFile, manuscriptContext = true) {

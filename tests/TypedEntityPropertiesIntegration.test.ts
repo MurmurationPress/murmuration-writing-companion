@@ -4,9 +4,9 @@ import * as path from "node:path";
 import { test } from "node:test";
 
 test("Story World creation and inspector consume the central typed-property mechanism", async () => {
-  const creation = await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8");
-  const inspector = await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityInspector.ts"), "utf8");
-  match(creation, /storyWorldTypedPropertyDefinitions\("location"\)/u);
+  const creation = (await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8")).replace(/\r\n?/g, "\n");
+  const inspector = (await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityInspector.ts"), "utf8")).replace(/\r\n?/g, "\n");
+  match(creation, /storyWorldTypedPropertyDefinitions\(entityType\)/u);
   match(creation, /buildStoryWorldTypedEntityReferenceCandidates/u);
   match(creation, /storyWorldControlledVocabularyCandidates/u);
   match(creation, /definition\.valueType === "controlled-value"/u);

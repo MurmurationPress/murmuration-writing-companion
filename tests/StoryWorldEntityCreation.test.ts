@@ -85,6 +85,32 @@ test("requires an explicit canonical selection for a new closed-vocabulary value
   }), /selected from IANA timezone identifiers/);
 });
 
+test("creates POV-capable entities and Markdown profile inheritance through typed properties", () => {
+  const janus = planStoryWorldEntityCreation({
+    kind: "intelligence",
+    name: "JANUS",
+    typedProperties: {
+      pov_eligible: true,
+      pov_profile: "[[Story World/POV Profiles/JANUS POV]]",
+      unrelated_custom_value: "not adopted"
+    }
+  });
+  equal(janus.path, "Story World/Intelligences/JANUS.md");
+  match(janus.markdown, /pov_eligible: true/u);
+  match(janus.markdown, /pov_profile: "\[\[Story World\/POV Profiles\/JANUS POV\]\]"/u);
+  equal(janus.markdown.includes("unrelated_custom_value"), false);
+
+  const profile = planStoryWorldEntityCreation({
+    kind: "pov-profile",
+    name: "JANUS POV",
+    typedProperties: { pov_extends: "[[Story World/POV Profiles/Intelligence POV]]" }
+  });
+  equal(profile.path, "Story World/POV Profiles/JANUS POV.md");
+  match(profile.markdown, /world_entity: pov-profile/u);
+  match(profile.markdown, /pov_extends: "\[\[Story World\/POV Profiles\/Intelligence POV\]\]"/u);
+  match(profile.markdown, /# JANUS POV/u);
+});
+
 test("writes Reference details through the canonical schema only", () => {
   const plan = planStoryWorldEntityCreation({
     kind: "reference",

@@ -6,7 +6,7 @@ import {
 } from "./WikilinkPresentation";
 import { IANA_TIMEZONE_FALLBACK } from "./IanaTimezoneFallback";
 
-export type StoryWorldTypedPropertyValueType = "text" | "number" | "date" | "url" | "entity-reference" | "controlled-value";
+export type StoryWorldTypedPropertyValueType = "text" | "number" | "boolean" | "date" | "url" | "entity-reference" | "controlled-value";
 export type StoryWorldTypedPropertyCardinality = "single" | "multiple";
 export type StoryWorldTypedPropertyValidation = "latitude" | "longitude";
 
@@ -55,6 +55,12 @@ export const LOCATION_TYPED_PROPERTY_NAMES = {
   parent: "parent_location"
 } as const;
 
+export const POV_TYPED_PROPERTY_NAMES = {
+  eligible: "pov_eligible",
+  profile: "pov_profile",
+  extends: "pov_extends"
+} as const;
+
 const REFERENCE_PROPERTIES: readonly StoryWorldTypedPropertyDefinition[] = [
   { property: REFERENCE_TYPED_PROPERTY_NAMES.authors, label: "Authors", valueType: "text", cardinality: "multiple" },
   { property: REFERENCE_TYPED_PROPERTY_NAMES.title, label: "Title", valueType: "text", cardinality: "single" },
@@ -83,9 +89,38 @@ const LOCATION_PROPERTIES: readonly StoryWorldTypedPropertyDefinition[] = [
   }
 ];
 
+const POV_OWNER_PROPERTIES: readonly StoryWorldTypedPropertyDefinition[] = [
+  {
+    property: POV_TYPED_PROPERTY_NAMES.eligible,
+    label: "POV eligible",
+    valueType: "boolean",
+    cardinality: "single"
+  },
+  {
+    property: POV_TYPED_PROPERTY_NAMES.profile,
+    label: "POV profile",
+    valueType: "entity-reference",
+    cardinality: "single",
+    targetEntityTypes: ["pov-profile"]
+  }
+];
+
+const POV_PROFILE_PROPERTIES: readonly StoryWorldTypedPropertyDefinition[] = [
+  {
+    property: POV_TYPED_PROPERTY_NAMES.extends,
+    label: "Extends profile",
+    valueType: "entity-reference",
+    cardinality: "single",
+    targetEntityTypes: ["pov-profile"]
+  }
+];
+
 const DEFINITIONS = new Map<string, readonly StoryWorldTypedPropertyDefinition[]>([
   ["reference", REFERENCE_PROPERTIES],
-  ["location", LOCATION_PROPERTIES]
+  ["location", LOCATION_PROPERTIES],
+  ["character", POV_OWNER_PROPERTIES],
+  ["intelligence", POV_OWNER_PROPERTIES],
+  ["pov-profile", POV_PROFILE_PROPERTIES]
 ]);
 
 type IntlWithSupportedValues = typeof Intl & {
@@ -236,6 +271,7 @@ export function storyWorldTypedPropertyTextValues(
   return values.flatMap((value) => {
     if (typeof value === "string") return value.trim() ? [value.trim()] : [];
     if (typeof value === "number" && Number.isFinite(value)) return [String(value)];
+    if (typeof value === "boolean") return [String(value)];
     return [];
   });
 }
@@ -245,6 +281,11 @@ export function validateStoryWorldTypedPropertyValue(
   value: unknown
 ): string | null {
   if (value === null || value === undefined || value === "") return null;
+  if (definition.valueType === "boolean") {
+    return typeof value === "boolean"
+      ? null
+      : `${definition.label} must be true or false.`;
+  }
   if (definition.valueType === "controlled-value") {
     const vocabulary = definition.vocabulary
       ? storyWorldControlledVocabulary(definition.vocabulary)

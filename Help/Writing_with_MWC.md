@@ -16,6 +16,8 @@ Open a Scene and use **Chapter Context** rather than hand-editing frontmatter du
 
 When `pov` resolves to an indexed Story World entity, that entity automatically appears in derived World Context. You do not need to repeat it in `world_context`. If it is repeated, MWC displays it once by resolved note path.
 
+If that entity links to a POV Profile, Chapter Context also shows a separate **POV Guidance** block. MWC resolves reusable base-profile guidance before the entity's effective profile, so shared principles are not duplicated. The profile remains author-controlled Markdown and is not mixed into ordinary Story World facts or copied into Scene metadata. Scenes whose POV has no profile behave as before.
+
 Plain text and unresolved POV values remain authored data but cannot contribute a resolved entity card.
 
 ## Scene Location
