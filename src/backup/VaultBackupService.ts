@@ -60,6 +60,13 @@ export type VaultBackupResult =
   | { kind: "busy" }
   | Exclude<VaultBackupInspection, { kind: "ready" }>;
 
+export type VaultPullResult =
+  | ({ kind: "success" | "up_to_date" | "local_ahead" } & VaultBackupRepository)
+  | ({ kind: "local_changes" } & VaultBackupRepository)
+  | { kind: "busy" }
+  | { kind: "no_remote_branch" | "fast_forward_failed"; detail?: string; vaultPath?: string; repositoryRoot?: string }
+  | Exclude<VaultBackupInspection, { kind: "ready" }>;
+
 export interface VaultBackupServiceDependencies {
   execute?: GitExecutor;
   now?: () => Date;
@@ -281,6 +288,61 @@ export class VaultBackupService {
       const push = await this.git(inspected.vaultPath, "push", inspected.remote, inspected.branch);
       if (push.exitCode !== 0) return { kind: "push_failed", detail: detail(push), vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
       return { ...inspected, kind: "success", committed, pushed: true };
+    } catch (error) {
+      return { kind: "failed", detail: error instanceof Error ? error.message : String(error) };
+    } finally {
+      this.running = false;
+    }
+  }
+
+  async pull(): Promise<VaultPullResult> {
+    if (this.running) return { kind: "busy" };
+    this.running = true;
+    try {
+      const inspected = await this.inspect();
+      if (inspected.kind !== "ready") return inspected;
+
+      // Refuse before contacting the remote: pull never hides, stages, or
+      // otherwise modifies local work merely to make an update possible.
+      const initialChanges = await this.hasLocalChanges(inspected);
+      if (initialChanges === null) {
+        return { kind: "failed", vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
+      }
+      if (initialChanges) return { ...inspected, kind: "local_changes" };
+
+      const sync = await this.synchronisation(inspected);
+      if (sync.kind === "failed") {
+        return { kind: "fetch_failed", detail: sync.detail, vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
+      }
+      if (sync.kind === "initial") {
+        return { kind: "no_remote_branch", vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
+      }
+      if (sync.kind === "equal") return { ...inspected, kind: "up_to_date" };
+      if (sync.kind === "local_ahead") return { ...inspected, kind: "local_ahead" };
+      if (sync.kind === "diverged") {
+        return { kind: "diverged", vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
+      }
+
+      // Local files may have changed while fetch was running. Refuse rather
+      // than stashing or overwriting them.
+      const finalChanges = await this.hasLocalChanges(inspected);
+      if (finalChanges === null) {
+        return { kind: "failed", vaultPath: inspected.vaultPath, repositoryRoot: inspected.repositoryRoot };
+      }
+      if (finalChanges) return { ...inspected, kind: "local_changes" };
+
+      // FETCH_HEAD is the commit just classified above. --ff-only guarantees
+      // that Git cannot create a merge commit or rewrite local history.
+      const fastForward = await this.git(inspected.vaultPath, "merge", "--ff-only", "FETCH_HEAD");
+      if (fastForward.exitCode !== 0) {
+        return {
+          kind: "fast_forward_failed",
+          detail: detail(fastForward),
+          vaultPath: inspected.vaultPath,
+          repositoryRoot: inspected.repositoryRoot
+        };
+      }
+      return { ...inspected, kind: "success" };
     } catch (error) {
       return { kind: "failed", detail: error instanceof Error ? error.message : String(error) };
     } finally {

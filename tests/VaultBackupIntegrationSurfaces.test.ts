@@ -11,15 +11,19 @@ test("backup command and ribbon retain their established user-facing contract", 
   match(source, /id: "back-up-vault-to-github",\s+name: "Back up vault to GitHub",\s+callback: backUpVault/u);
   match(source, /new VaultBackupService\(this\.app\.vault\.adapter, \{/u);
   match(source, /remoteOverride: \(\) => this\.vaultBackupRemotePreference\.get\(\)/u);
+  match(source, /addRibbonIcon\("cloud-download", "Pull from Git", pullVaultFromGit\)/u);
+  match(source, /id: "pull-vault-from-git",\s+name: "Pull from Git",\s+callback: pullVaultFromGit/u);
 });
 
 test("Settings presents detected backup state and an explicit configuration check", async () => {
   const source = await readFile(path.join(root, "src/companion/ContinuitySettingsTab.ts"), "utf8");
-  for (const label of ["Vault backup", "Repository", "Branch", "Remote", "Remote URL", "Check backup configuration"]) {
+  for (const label of ["Vault backup", "Repository", "Branch", "Remote", "Remote URL", "Check backup configuration", "Git actions", "Pull from Git", "Back up vault to GitHub"]) {
     match(source, new RegExp(`"${label}"`, "u"));
   }
   match(source, /inspectVaultBackup\(\)/u);
   match(source, /checkVaultBackup\(\)/u);
+  match(source, /pullVaultFromGit\(\)/u);
+  match(source, /backUpVault\(\)/u);
   match(source, /vaultBackupRemoteOptions\(inspection\.remotes \?\? \[\]\)/u);
   match(source, /for \(const name of options\) dropdown\.addOption\(name, name\)/u);
   match(source, /case "detached_head": return "Detached HEAD"/u);

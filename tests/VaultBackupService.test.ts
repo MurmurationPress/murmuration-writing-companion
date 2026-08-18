@@ -23,13 +23,14 @@ interface MockState {
   local?: string;
   remote?: string;
   base?: string;
-  changes?: boolean;
+  changes?: boolean | boolean[];
   staged?: boolean;
   failures?: Partial<Record<string, GitExecution>>;
 }
 
 function mockGit(state: MockState = {}): { execute: GitExecutor; calls: string[][] } {
   const calls: string[][] = [];
+  let statusCount = 0;
   const execute: GitExecutor = async (executable, args, options) => {
     equal(executable, "git");
     equal(options.cwd, vaultPath);
@@ -45,9 +46,15 @@ function mockGit(state: MockState = {}): { execute: GitExecutor; calls: string[]
     if (key === "rev-parse HEAD") return ok(`${state.local ?? "aaa"}\n`);
     if (key === "rev-parse FETCH_HEAD") return ok(`${state.remote ?? state.local ?? "aaa"}\n`);
     if (command[0] === "merge-base") return ok(`${state.base ?? state.local ?? "aaa"}\n`);
-    if (key === "status --porcelain --untracked-files=normal") return ok(state.changes ? " M Scene.md\n" : "");
+    if (key === "status --porcelain --untracked-files=normal") {
+      const changed = Array.isArray(state.changes)
+        ? (state.changes[statusCount++] ?? state.changes[state.changes.length - 1])
+        : state.changes;
+      return ok(changed ? " M Scene.md\n" : "");
+    }
     if (key === "add -A -- .") return ok();
     if (key === "diff --cached --quiet --exit-code") return state.staged ? fail("", 1) : ok();
+    if (key === "merge --ff-only FETCH_HEAD") return ok("Updating aaa..bbb\nFast-forward\n");
     if (command[0] === "commit" || command[0] === "push") return ok();
     throw new Error(`Unexpected Git command: ${key}`);
   };
@@ -171,6 +178,81 @@ test("refuses remote-ahead and divergent histories", async () => {
   equal((await new VaultBackupService(adapter, mockGit({ local: "aaa", remote: "bbb", base: "ccc" })).check()).kind, "diverged");
 });
 
+test("pull fast-forwards a clean remote-ahead repository using the fetched commit", async () => {
+  const git = mockGit({ local: "aaa", remote: "bbb", base: "aaa" });
+  equal((await new VaultBackupService(adapter, git).pull()).kind, "success");
+  deepEqual(git.calls.find((args) => args[0] === "merge"), ["merge", "--ff-only", "FETCH_HEAD"]);
+  equal(git.calls.filter((args) => args[0] === "status").length, 2);
+});
+
+test("pull reports synchronized and local-ahead repositories without modifying them", async () => {
+  const equalGit = mockGit();
+  equal((await new VaultBackupService(adapter, equalGit).pull()).kind, "up_to_date");
+  equal(equalGit.calls.some((args) => args[0] === "merge"), false);
+
+  const aheadGit = mockGit({ local: "bbb", remote: "aaa", base: "aaa" });
+  equal((await new VaultBackupService(adapter, aheadGit).pull()).kind, "local_ahead");
+  equal(aheadGit.calls.some((args) => args[0] === "merge"), false);
+});
+
+test("pull refuses local changes before fetching and refuses divergent histories", async () => {
+  const dirty = mockGit({ changes: true, local: "aaa", remote: "bbb", base: "aaa" });
+  equal((await new VaultBackupService(adapter, dirty).pull()).kind, "local_changes");
+  equal(dirty.calls.some((args) => args[0] === "fetch"), false);
+
+  const diverged = mockGit({ local: "aaa", remote: "bbb", base: "ccc" });
+  equal((await new VaultBackupService(adapter, diverged).pull()).kind, "diverged");
+  equal(diverged.calls.some((args) => args[0] === "merge"), false);
+});
+
+test("pull rechecks the working tree after fetch and refuses a concurrent local edit", async () => {
+  const git = mockGit({ changes: [false, true], local: "aaa", remote: "bbb", base: "aaa" });
+  equal((await new VaultBackupService(adapter, git).pull()).kind, "local_changes");
+  equal(git.calls.some((args) => args[0] === "fetch"), true);
+  equal(git.calls.some((args) => args[0] === "merge"), false);
+});
+
+test("pull refuses detached HEAD and missing or ambiguous remote branches", async () => {
+  equal((await new VaultBackupService(adapter, mockGit({ branch: null })).pull()).kind, "detached_head");
+  equal((await new VaultBackupService(adapter, mockGit({ remotes: [] })).pull()).kind, "no_remote");
+  equal((await new VaultBackupService(adapter, mockGit({ remotes: ["one", "two"] })).pull()).kind, "ambiguous_remote");
+  equal((await new VaultBackupService(adapter, mockGit({ fetch: fail("fatal: couldn't find remote ref main") })).pull()).kind, "no_remote_branch");
+});
+
+test("pull reports fetch authentication and fast-forward failures without fallback", async () => {
+  const auth = await new VaultBackupService(adapter, mockGit({ fetch: fail("Authentication failed for remote") })).pull();
+  equal(auth.kind, "fetch_failed");
+  if (auth.kind === "fetch_failed") match(auth.detail ?? "", /Authentication failed/u);
+
+  const git = mockGit({
+    local: "aaa",
+    remote: "bbb",
+    base: "aaa",
+    failures: { "merge --ff-only FETCH_HEAD": fail("Not possible to fast-forward") }
+  });
+  equal((await new VaultBackupService(adapter, git).pull()).kind, "fast_forward_failed");
+  equal(git.calls.some((args) => args.includes("rebase") || args.includes("stash") || args.includes("reset")), false);
+});
+
+test("pull preserves Windows vault paths and argument boundaries", async () => {
+  const windowsVault = "C:\\Users\\Writer\\My Vault [Ω]";
+  const windowsAdapter = { getBasePath: () => windowsVault };
+  const base = mockGit({ root: windowsVault, local: "aaa", remote: "bbb", base: "aaa" });
+  const calls: { args: readonly string[]; cwd: string }[] = [];
+  const execute: GitExecutor = async (executable, args, options) => {
+    calls.push({ args, cwd: options.cwd });
+    return base.execute(executable, args, { cwd: vaultPath });
+  };
+  const result = await new VaultBackupService(windowsAdapter, {
+    execute,
+    canonicalPath: async (value) => value
+  }).pull();
+  equal(result.kind, "success");
+  equal(calls.every((call) => call.cwd === windowsVault), true);
+  deepEqual(calls.find((call) => call.args[0] === "fetch")?.args, ["fetch", "origin", "main"]);
+  deepEqual(calls.find((call) => call.args[0] === "merge")?.args, ["merge", "--ff-only", "FETCH_HEAD"]);
+});
+
 test("a clean synchronized repository returns no_changes without staging outside the vault", async () => {
   const git = mockGit();
   const result = await new VaultBackupService(adapter, git).run();
@@ -243,8 +325,27 @@ test("configuration checks and backups share one concurrency guard", async () =>
   await new Promise((resolve) => setTimeout(resolve, 0));
   equal((await service.run()).kind, "busy");
   equal((await service.check()).kind, "busy");
+  equal((await service.pull()).kind, "busy");
   release();
   equal((await checking).kind, "ready_clean");
+});
+
+test("pull shares the Git operation guard with backup and configuration checks", async () => {
+  let release!: () => void;
+  const wait = new Promise<void>((resolve) => { release = resolve; });
+  const git = mockGit();
+  const execute: GitExecutor = async (...args) => {
+    if (args[1][0] === "fetch") await wait;
+    return git.execute(...args);
+  };
+  const service = new VaultBackupService(adapter, { execute });
+  const pulling = service.pull();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  equal((await service.run()).kind, "busy");
+  equal((await service.check()).kind, "busy");
+  equal((await service.pull()).kind, "busy");
+  release();
+  equal((await pulling).kind, "up_to_date");
 });
 
 test("legacy backup script presence is irrelevant to all Git invocations", async () => {

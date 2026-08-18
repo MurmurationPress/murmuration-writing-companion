@@ -55,13 +55,15 @@ For the first backup:
 
 For a new empty remote, MWC can make the first ordinary push of the current branch. It does not change persistent upstream configuration merely for convenience.
 
-MWC does not create a GitHub account or remote repository, install Git, configure Git identity, or manage passwords, personal access tokens, or SSH keys. It also does not automatically pull, merge, rebase, reset, switch branches, force-push, or resolve conflicts. If the remote contains newer work or the histories have diverged, resolve that with Git outside MWC and run the configuration check again.
+MWC does not create a GitHub account or remote repository, install Git, configure Git identity, or manage passwords, personal access tokens, or SSH keys. It never performs background synchronization.
 
 Open **Settings → Murmuration Writing Companion → Vault backup** to see the repository, current branch, selected remote, and remote URL detected from the current vault. Choose **Check backup configuration** to fetch deliberately and verify readiness. MWC selects `origin` when present, otherwise the only configured remote. If several non-`origin` remotes exist, choose one from the Remote list; MWC remembers only that remote name and asks again if it is later removed.
 
 Run **Back up vault to GitHub** from the Command Palette or the cloud-upload ribbon action. MWC fetches the current branch, refuses remote-ahead or divergent history, stages vault changes, creates a dated backup commit when needed, and pushes the current branch. Despite the command's established name, ordinary SSH or HTTPS Git remotes are supported.
 
-MWC never pulls, merges, rebases, resets, switches branches, force-pushes, or resolves conflicts. If the remote is ahead or histories diverge, resolve that state manually and check again. A vault nested inside a larger repository is also refused so unrelated parent files cannot be staged.
+Run **Pull from Git** from the same Settings section, the Command Palette, or the cloud-download ribbon action when you explicitly want remote changes. MWC requires a clean working tree, fetches the selected remote and current branch, and updates only when the local branch can move straight forward to the fetched commit. It reports a no-op when the branch is already current or locally ahead.
+
+Pull is deliberately conservative. MWC never creates a merge commit, rebases, stashes, discards changes, resets history, switches branches, force-updates, resolves conflicts, or changes remote configuration. It refuses detached HEAD, missing or ambiguous remotes, missing remote branches, dirty vaults, and divergent histories. Authentication remains entirely with normal Git credential helpers. If pull refuses, inspect and resolve the repository manually. A vault nested inside a larger repository is also refused so unrelated parent files cannot be changed.
 
 Older vaults may contain `Scripts/backup-vault.sh`. The script is no longer required, and MWC neither reads nor runs it. You may leave it untouched or run it independently if you deliberately choose to do so.
 
