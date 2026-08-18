@@ -39,6 +39,12 @@ import {
 import {
   renderAndRetainFirst
 } from "./NavigatorViewState";
+import {
+  clearManuscriptSearchOnEscape,
+  filterManuscriptTree,
+  manuscriptPartIsCollapsed,
+  normaliseManuscriptSearch
+} from "./ManuscriptTreeFilter";
 import { openContinuityReviewFromEntryPoint } from "../companion/ContinuityReviewEntryPoint";
 import { ManuscriptBookCreationModal } from "./ManuscriptBookCreationModal";
 import { ManuscriptPartCreationModal } from "./ManuscriptPartCreationModal";
@@ -251,6 +257,7 @@ export class ManuscriptNavigatorView extends ItemView {
   private operationRunning = false;
   private revealedContextPath: string | null = null;
   private preparationActionsRenderer: (() => void) | null = null;
+  private searchQuery = "";
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
     super(leaf);
@@ -442,37 +449,81 @@ export class ManuscriptNavigatorView extends ItemView {
       return;
     }
 
-    const partPaths = collectPartPaths(selected.result.roots);
-    if (partPaths.length > 0) {
-      this.renderTreeControls(container, partPaths, activePath);
+    const search = container.createEl("input", {
+      cls: "mwc-manuscript-search",
+      attr: {
+        type: "search",
+        placeholder: "Search manuscript…",
+        "aria-label": "Search Part and Scene titles",
+        autocomplete: "off",
+        spellcheck: "false"
+      }
+    });
+    search.value = this.searchQuery;
+    const treeRegion = container.createDiv("mwc-manuscript-tree-region");
+    const renderTreeRegion = () => {
+      treeRegion.empty();
+      this.renderTreeProjection(treeRegion, selected, activeFile);
+    };
+    search.oninput = () => {
+      this.searchQuery = search.value;
+      renderTreeRegion();
+    };
+    search.onkeydown = (event) => {
+      const next = clearManuscriptSearchOnEscape(this.searchQuery, event.key);
+      if (next === this.searchQuery) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.searchQuery = next;
+      search.value = next;
+      renderTreeRegion();
+    };
+    renderTreeRegion();
+
+    this.renderDiagnostics(container, selected);
+    this.renderUnresolved(container, library);
+    this.finishRender();
+  }
+
+  private renderTreeProjection(
+    container: HTMLElement,
+    book: ObsidianManuscriptBook,
+    activeFile: TFile | null
+  ): void {
+    const queryActive = normaliseManuscriptSearch(this.searchQuery).length > 0;
+    const roots = filterManuscriptTree(book.result.roots, this.searchQuery);
+    const partPaths = collectPartPaths(book.result.roots);
+    if (!queryActive && partPaths.length > 0) {
+      this.renderTreeControls(container, partPaths, activeFile?.path ?? null);
+    }
+    if (roots.length === 0) {
+      container.createEl("p", {
+        cls: "mwc-muted mwc-manuscript-no-results",
+        text: "No matching Parts or Scenes."
+      });
+      return;
     }
 
     const tree = container.createDiv({
       cls: "mwc-manuscript-tree",
       attr: {
         role: "tree",
-        "aria-label": `${selected.record.title} manuscript order`
+        "aria-label": `${book.record.title} manuscript order`
       }
     });
     let activeRow: HTMLElement | null = null;
-
-    for (const node of selected.result.roots) {
+    for (const node of roots) {
       activeRow = renderAndRetainFirst(
         activeRow,
-        () => this.renderNode(tree, node, selected, activeFile, 0)
+        () => this.renderNode(tree, node, book, activeFile, 0, queryActive)
       );
     }
-
-    this.renderDiagnostics(container, selected);
-    this.renderUnresolved(container, library);
-
     if (activeRow) {
       window.setTimeout(() => {
         if (!activeRow?.isConnected) return;
         activeRow.scrollIntoView({ block: "nearest" });
       }, 0);
     }
-    this.finishRender();
   }
 
   private createBookActionsButton(heading: HTMLElement, book: ObsidianManuscriptBook): void {
@@ -609,7 +660,8 @@ export class ManuscriptNavigatorView extends ItemView {
     node: ManuscriptOrderNode,
     book: ObsidianManuscriptBook,
     activeFile: TFile | null,
-    depth: number
+    depth: number,
+    searchActive = false
   ): HTMLElement | null {
     const isPart = node.entry.kind === "part";
     const isActive = (this.revealedContextPath ?? activeFile?.path) === node.entry.path;
@@ -630,7 +682,11 @@ export class ManuscriptNavigatorView extends ItemView {
       const containsActive = nodeContainsPath(node, activePath);
       const revealActive = containsActive
         && this.suppressedActiveRevealPath !== activePath;
-      const collapsed = this.collapsedParts.has(node.entry.path) && !revealActive;
+      const collapsed = manuscriptPartIsCollapsed(
+        this.collapsedParts.has(node.entry.path),
+        searchActive,
+        revealActive
+      );
       wrapper.setAttribute("aria-expanded", String(!collapsed));
       const row = wrapper.createDiv("mwc-manuscript-row mwc-manuscript-row--part");
       const disclosure = row.createEl("button", {
@@ -641,9 +697,12 @@ export class ManuscriptNavigatorView extends ItemView {
           "aria-label": `${collapsed ? "Expand" : "Collapse"} ${node.entry.title}`
         }
       });
+      disclosure.disabled = searchActive;
+      if (searchActive) disclosure.setAttribute("aria-label", `${node.entry.title} expanded for search results`);
       disclosure.onclick = (event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (searchActive) return;
         if (this.collapsedParts.has(node.entry.path)) {
           this.collapsedParts.delete(node.entry.path);
           if (containsActive) this.suppressedActiveRevealPath = null;
@@ -671,7 +730,7 @@ export class ManuscriptNavigatorView extends ItemView {
         for (const child of node.children) {
           activeDescendant = renderAndRetainFirst(
             activeDescendant,
-            () => this.renderNode(children, child, book, activeFile, depth + 1)
+            () => this.renderNode(children, child, book, activeFile, depth + 1, searchActive)
           );
         }
       }
