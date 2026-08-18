@@ -2,12 +2,19 @@ import { deepEqual, equal, notStrictEqual, strictEqual } from "node:assert/stric
 import { test } from "node:test";
 import { REFERENCE_PROPERTY_NAMES, readReferenceMetadata } from "../src/references/ReferenceMetadata";
 import { parseStoryWorldEntity, type StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
+import { IANA_TIMEZONE_FALLBACK } from "../src/story-world/IanaTimezoneFallback";
 import {
+  buildIanaTimezoneCandidates,
   buildStoryWorldTypedEntityReferenceCandidates,
   LOCATION_TYPED_PROPERTY_NAMES,
   readContextUsefulStoryWorldTypedProperties,
   readStoryWorldTypedProperties,
   REFERENCE_TYPED_PROPERTY_NAMES,
+  searchStoryWorldControlledVocabulary,
+  searchStoryWorldControlledVocabularyCandidates,
+  storyWorldControlledVocabulary,
+  storyWorldControlledVocabularyAccepts,
+  storyWorldControlledVocabularyCandidates,
   storyWorldTypedPropertyDefinition,
   storyWorldTypedPropertyDefinitions,
   storyWorldTypedPropertyTextValues,
@@ -46,10 +53,69 @@ test("Location definitions are deliberately small and carry semantic constraints
   equal(storyWorldTypedPropertyDefinition("location", LOCATION_TYPED_PROPERTY_NAMES.parent)?.valueType, "entity-reference");
   deepEqual(storyWorldTypedPropertyDefinition("location", LOCATION_TYPED_PROPERTY_NAMES.parent)?.targetEntityTypes, ["location"]);
   equal(storyWorldTypedPropertyDefinition("location", "timezone")?.contextUseful, true);
+  equal(storyWorldTypedPropertyDefinition("location", "timezone")?.valueType, "controlled-value");
+  equal(storyWorldTypedPropertyDefinition("location", "timezone")?.vocabulary, "iana-timezone");
   equal(validateStoryWorldTypedPropertyValue(definitions[1], 51.5074), null);
   equal(validateStoryWorldTypedPropertyValue(definitions[1], 91)?.includes("between"), true);
   equal(validateStoryWorldTypedPropertyValue(definitions[3], "Europe/London"), null);
   equal(validateStoryWorldTypedPropertyValue(definitions[3], "GMT plus-ish")?.includes("IANA"), true);
+});
+
+test("IANA timezone vocabulary exposes canonical searchable values", () => {
+  const vocabulary = storyWorldControlledVocabulary("iana-timezone");
+  if (!vocabulary) throw new Error("Expected IANA timezone vocabulary");
+  equal(vocabulary.allowCustom, false);
+  const values = storyWorldControlledVocabularyCandidates(vocabulary.id).map((candidate) => candidate.value);
+  equal(values.includes("Europe/London"), true);
+  equal(values.includes("America/New_York"), true);
+  deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "London").map((candidate) => candidate.value), ["Europe/London"]);
+  deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "New York").map((candidate) => candidate.value), ["America/New_York"]);
+  deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "New_York").map((candidate) => candidate.value), ["America/New_York"]);
+});
+
+test("IANA candidate sourcing prefers populated runtime data and falls back safely", () => {
+  const runtime = buildIanaTimezoneCandidates(["Europe/Paris"]);
+  deepEqual(runtime.map((candidate) => candidate.value), ["Europe/Paris"]);
+
+  const unavailable = buildIanaTimezoneCandidates(undefined);
+  const empty = buildIanaTimezoneCandidates([]);
+  deepEqual(empty, unavailable);
+  equal(unavailable.length, IANA_TIMEZONE_FALLBACK.length);
+  for (const value of [
+    "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo",
+    "Asia/Kolkata", "Australia/Sydney", "Pacific/Auckland", "Africa/Johannesburg"
+  ]) {
+    equal(unavailable.some((candidate) => candidate.value === value), true, value);
+  }
+  deepEqual(
+    searchStoryWorldControlledVocabularyCandidates(unavailable, "New York").map((candidate) => candidate.value),
+    ["America/New_York"]
+  );
+});
+
+test("closed-vocabulary validation accepts fallback canonical values", () => {
+  const fallback = buildIanaTimezoneCandidates(null);
+  const closedFallback = {
+    id: "fallback-iana-timezone",
+    label: "IANA timezone identifiers",
+    allowCustom: false,
+    values: () => fallback
+  };
+  equal(storyWorldControlledVocabularyAccepts(closedFallback, "Asia/Kolkata"), true);
+  equal(storyWorldControlledVocabularyAccepts(closedFallback, "EST"), false);
+});
+
+test("controlled vocabularies distinguish closed authority from custom-permitted values", () => {
+  const closed = storyWorldControlledVocabulary("iana-timezone");
+  if (!closed) throw new Error("Expected IANA timezone vocabulary");
+  equal(storyWorldControlledVocabularyAccepts(closed, "Europe/London"), true);
+  equal(storyWorldControlledVocabularyAccepts(closed, "Some/Unknown_Value"), false);
+  equal(storyWorldControlledVocabularyAccepts({
+    id: "fictional-language",
+    label: "language names",
+    allowCustom: true,
+    values: () => [{ value: "English" }]
+  }, "Pelagic Cant"), true);
 });
 
 test("typed entity-reference candidates include only allowed entity types", () => {
@@ -82,6 +148,26 @@ test("recognised reads remain additive and preserve custom YAML exactly", () => 
     "address", "timezone", "parent_location"
   ]);
   deepEqual(frontmatter.custom_author_fact, custom);
+});
+
+test("unknown existing controlled values remain readable and are never normalised on read", () => {
+  const frontmatter = {
+    world_entity: "location",
+    world_name: "Elsewhere",
+    timezone: "Some/Unknown_Value",
+    custom_author_fact: "untouched"
+  };
+  const parsed = parseStoryWorldEntity({ path: "World/Elsewhere.md", basename: "Elsewhere", frontmatter });
+  if (!parsed) throw new Error("Expected entity");
+  const recognised = readStoryWorldTypedProperties(parsed.entityType, parsed.properties);
+  deepEqual(recognised.map(storyWorldTypedPropertyTextValues), [["Some/Unknown_Value"]]);
+  deepEqual(parsed.properties, frontmatter);
+  deepEqual(frontmatter, {
+    world_entity: "location",
+    world_name: "Elsewhere",
+    timezone: "Some/Unknown_Value",
+    custom_author_fact: "untouched"
+  });
 });
 
 test("entities without a typed definition remain valid and expose no irrelevant fields", () => {

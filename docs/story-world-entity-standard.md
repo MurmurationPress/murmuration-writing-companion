@@ -100,6 +100,8 @@ common Story World properties
 
 Type-specific values remain ordinary YAML in the entity note. Reading or displaying them never migrates or rewrites the note.
 
+Typed properties may optionally name a reusable controlled vocabulary. Vocabularies are presentation and validation aids, not storage authority: closed technical vocabularies constrain only new guided selections, while permissive vocabularies can allow custom fictional values. Existing authored values outside a current vocabulary remain visible and untouched.
+
 ### Location metadata
 
 Location entities may use this initial recognised set:
@@ -109,10 +111,10 @@ Location entities may use this initial recognised set:
 | `address` | string | Author-useful street, postal or descriptive address |
 | `latitude` | number from -90 to 90 | Geographic latitude |
 | `longitude` | number from -180 to 180 | Geographic longitude |
-| `timezone` | IANA timezone identifier | Timezone such as `Europe/London`, allowing date-aware offsets later |
+| `timezone` | canonical IANA timezone identifier | Searchable guided selection such as `Europe/London` or `America/New_York`; offsets and abbreviations are not stored as authority |
 | `parent_location` | wikilink to a Location entity | Containing place or region |
 
-The guided parent selector offers only indexed Location entities. Existing free-form or custom location properties remain untouched, and none of these fields is required.
+The guided parent selector offers only indexed Location entities. The timezone selector obtains the practical canonical identifier set from the supported JavaScript runtime, with a bundled IANA fallback for compatible older runtimes. Existing unknown timezone values, free-form properties, and custom location properties remain untouched, and none of these fields is required.
 
 ### Reference metadata
 

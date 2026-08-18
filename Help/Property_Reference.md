@@ -19,6 +19,8 @@ Folders, tags, prose, filenames, backlinks, and ordinary `type` do not opt a not
 
 Recognised type-specific properties are additive semantic help, not a closed schema. Custom YAML remains valid and is never removed merely because MWC does not recognise it.
 
+Some recognised properties offer a controlled vocabulary as an authoring aid. The selected value is still ordinary authoritative YAML. A closed technical vocabulary restricts new guided selections, but never migrates, deletes, or rewrites an existing unknown value. Future open-world vocabularies may permit custom fictional values.
+
 ## Location entities
 
 All Location-specific properties are optional. Guided creation presents them only when the entity kind is Location.
@@ -28,10 +30,10 @@ All Location-specific properties are optional. Guided creation presents them onl
 | `address` | Street, postal, or descriptive address. | Scalar text. | R/W | `address: 1 Tidal Reach` |
 | `latitude` | Geographic latitude. | Number from -90 to 90. | R/W | `latitude: 51.5074` |
 | `longitude` | Geographic longitude. | Number from -180 to 180. | R/W | `longitude: -0.1278` |
-| `timezone` | Date-aware civil timezone. | IANA timezone identifier. | R/W | `timezone: Europe/London` |
+| `timezone` | Date-aware civil timezone. | Canonical IANA timezone identifier selected through searchable guided creation. | R/W | `timezone: Europe/London` |
 | `parent_location` | Containing place or region. | One wikilink to an indexed Location. | R/W | `parent_location: "[[Story World/Locations/London]]"` |
 
-The guided `parent_location` selector excludes Characters, Organisations, Events, References, and other non-Location entities. Existing custom Location properties remain untouched.
+The guided `parent_location` selector excludes Characters, Organisations, Events, References, and other non-Location entities. Timezone selection stores the identifier, never an abbreviation or current UTC offset. Existing unknown timezone values and custom Location properties remain readable and untouched.
 
 ## Scope, status, and provenance
 

@@ -4,16 +4,31 @@ import {
   presentReferenceCandidates,
   type ReferencePresentation
 } from "./WikilinkPresentation";
+import { IANA_TIMEZONE_FALLBACK } from "./IanaTimezoneFallback";
 
-export type StoryWorldTypedPropertyValueType = "text" | "number" | "date" | "url" | "entity-reference";
+export type StoryWorldTypedPropertyValueType = "text" | "number" | "date" | "url" | "entity-reference" | "controlled-value";
 export type StoryWorldTypedPropertyCardinality = "single" | "multiple";
-export type StoryWorldTypedPropertyValidation = "iana-timezone" | "latitude" | "longitude";
+export type StoryWorldTypedPropertyValidation = "latitude" | "longitude";
+
+export interface StoryWorldControlledVocabularyCandidate {
+  readonly value: string;
+  readonly label?: string;
+  readonly searchTerms?: readonly string[];
+}
+
+export interface StoryWorldControlledVocabularyDefinition {
+  readonly id: string;
+  readonly label: string;
+  readonly allowCustom: boolean;
+  readonly values: () => readonly StoryWorldControlledVocabularyCandidate[];
+}
 
 export interface StoryWorldTypedPropertyDefinition {
   readonly property: string;
   readonly label: string;
   readonly valueType: StoryWorldTypedPropertyValueType;
   readonly cardinality: StoryWorldTypedPropertyCardinality;
+  readonly vocabulary?: string;
   readonly targetEntityTypes?: readonly string[];
   readonly validation?: StoryWorldTypedPropertyValidation;
   readonly contextUseful?: boolean;
@@ -57,7 +72,7 @@ const LOCATION_PROPERTIES: readonly StoryWorldTypedPropertyDefinition[] = [
   { property: LOCATION_TYPED_PROPERTY_NAMES.address, label: "Address", valueType: "text", cardinality: "single", contextUseful: true },
   { property: LOCATION_TYPED_PROPERTY_NAMES.latitude, label: "Latitude", valueType: "number", cardinality: "single", validation: "latitude", contextUseful: true },
   { property: LOCATION_TYPED_PROPERTY_NAMES.longitude, label: "Longitude", valueType: "number", cardinality: "single", validation: "longitude", contextUseful: true },
-  { property: LOCATION_TYPED_PROPERTY_NAMES.timezone, label: "Timezone", valueType: "text", cardinality: "single", validation: "iana-timezone", contextUseful: true },
+  { property: LOCATION_TYPED_PROPERTY_NAMES.timezone, label: "Timezone", valueType: "controlled-value", cardinality: "single", vocabulary: "iana-timezone", contextUseful: true },
   {
     property: LOCATION_TYPED_PROPERTY_NAMES.parent,
     label: "Parent location",
@@ -73,8 +88,108 @@ const DEFINITIONS = new Map<string, readonly StoryWorldTypedPropertyDefinition[]
   ["location", LOCATION_PROPERTIES]
 ]);
 
+type IntlWithSupportedValues = typeof Intl & {
+  supportedValuesOf?: (key: "timeZone") => string[];
+};
+
+let timezoneCandidates: readonly StoryWorldControlledVocabularyCandidate[] | null = null;
+
+function controlledVocabularyCandidates(
+  values: readonly string[]
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  return [...new Set(values.filter((value) => value.includes("/") && value.trim() === value))]
+    .sort()
+    .map((value) => ({
+      value,
+      label: value.replace(/_/g, " "),
+      searchTerms: value.split("/").map((part) => part.replace(/_/g, " "))
+    }));
+}
+
+/** Testable source selection: a populated runtime list wins; otherwise bundled IANA data is used. */
+export function buildIanaTimezoneCandidates(
+  runtimeValues: readonly string[] | null | undefined
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  const runtimeCandidates = controlledVocabularyCandidates(runtimeValues ?? []);
+  return runtimeCandidates.length > 0
+    ? runtimeCandidates
+    : controlledVocabularyCandidates(IANA_TIMEZONE_FALLBACK);
+}
+
+function runtimeIanaTimezoneValues(): readonly string[] {
+  try {
+    return (Intl as IntlWithSupportedValues).supportedValuesOf?.("timeZone") ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function ianaTimezoneCandidates(): readonly StoryWorldControlledVocabularyCandidate[] {
+  if (timezoneCandidates) return timezoneCandidates;
+  timezoneCandidates = buildIanaTimezoneCandidates(runtimeIanaTimezoneValues());
+  return timezoneCandidates;
+}
+
+const VOCABULARIES = new Map<string, StoryWorldControlledVocabularyDefinition>([
+  ["iana-timezone", {
+    id: "iana-timezone",
+    label: "IANA timezone identifiers",
+    allowCustom: false,
+    values: ianaTimezoneCandidates
+  }]
+]);
+
 function normaliseType(value: string): string {
   return value.trim().toLocaleLowerCase();
+}
+
+function normaliseVocabularySearch(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/[_/]+/g, " ").replace(/\s+/g, " ");
+}
+
+export function storyWorldControlledVocabulary(
+  id: string
+): StoryWorldControlledVocabularyDefinition | null {
+  return VOCABULARIES.get(id) ?? null;
+}
+
+export function storyWorldControlledVocabularyCandidates(
+  id: string
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  return storyWorldControlledVocabulary(id)?.values() ?? [];
+}
+
+export function searchStoryWorldControlledVocabulary(
+  id: string,
+  query: string
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  return searchStoryWorldControlledVocabularyCandidates(
+    storyWorldControlledVocabularyCandidates(id),
+    query
+  );
+}
+
+export function searchStoryWorldControlledVocabularyCandidates(
+  candidates: readonly StoryWorldControlledVocabularyCandidate[],
+  query: string
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  const search = normaliseVocabularySearch(query);
+  if (!search) return candidates;
+  return candidates.filter((candidate) => (
+    [candidate.value, candidate.label ?? "", ...(candidate.searchTerms ?? [])]
+      .some((value) => normaliseVocabularySearch(value).includes(search))
+  ));
+}
+
+export function storyWorldControlledVocabularyAccepts(
+  vocabulary: StoryWorldControlledVocabularyDefinition,
+  value: string
+): boolean {
+  const candidate = value.trim();
+  return Boolean(candidate) && (
+    vocabulary.allowCustom
+    || vocabulary.values().some((item) => item.value === candidate)
+  );
 }
 
 export function storyWorldTypedPropertyDefinitions(entityType: string): readonly StoryWorldTypedPropertyDefinition[] {
@@ -130,21 +245,24 @@ export function validateStoryWorldTypedPropertyValue(
   value: unknown
 ): string | null {
   if (value === null || value === undefined || value === "") return null;
+  if (definition.valueType === "controlled-value") {
+    const vocabulary = definition.vocabulary
+      ? storyWorldControlledVocabulary(definition.vocabulary)
+      : null;
+    if (!vocabulary) return `${definition.label} does not have an available controlled vocabulary.`;
+    if (typeof value !== "string" || !storyWorldControlledVocabularyAccepts(vocabulary, value)) {
+      return vocabulary.allowCustom
+        ? `${definition.label} must be a non-empty value.`
+        : `${definition.label} must be selected from ${vocabulary.label}.`;
+    }
+    return null;
+  }
   if (definition.validation === "latitude" || definition.validation === "longitude") {
     const number = typeof value === "number" ? value : Number(value);
     const limit = definition.validation === "latitude" ? 90 : 180;
     return Number.isFinite(number) && number >= -limit && number <= limit
       ? null
       : `${definition.label} must be between ${-limit} and ${limit}.`;
-  }
-  if (definition.validation === "iana-timezone") {
-    if (typeof value !== "string" || !value.trim()) return `${definition.label} must be an IANA timezone identifier.`;
-    try {
-      new Intl.DateTimeFormat("en", { timeZone: value.trim() }).format();
-      return null;
-    } catch {
-      return `${definition.label} must be an IANA timezone identifier such as Europe/London.`;
-    }
   }
   return null;
 }
