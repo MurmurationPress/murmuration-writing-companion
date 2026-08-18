@@ -114,7 +114,7 @@ Location entities may use this initial recognised set:
 | `timezone` | canonical IANA timezone identifier | Searchable guided selection such as `Europe/London` or `America/New_York`; offsets and abbreviations are not stored as authority |
 | `parent_location` | wikilink to a Location entity | Containing place or region |
 
-The guided parent selector offers only indexed Location entities. The timezone selector obtains the practical canonical identifier set from the supported JavaScript runtime. Existing unknown timezone values, free-form properties, and custom location properties remain untouched, and none of these fields is required.
+The guided parent selector offers only indexed Location entities. The timezone selector obtains the practical canonical identifier set from the supported JavaScript runtime, with a bundled IANA fallback for compatible older runtimes. Existing unknown timezone values, free-form properties, and custom location properties remain untouched, and none of these fields is required.
 
 ### Reference metadata
 

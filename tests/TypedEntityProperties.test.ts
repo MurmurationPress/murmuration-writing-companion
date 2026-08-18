@@ -2,13 +2,16 @@ import { deepEqual, equal, notStrictEqual, strictEqual } from "node:assert/stric
 import { test } from "node:test";
 import { REFERENCE_PROPERTY_NAMES, readReferenceMetadata } from "../src/references/ReferenceMetadata";
 import { parseStoryWorldEntity, type StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
+import { IANA_TIMEZONE_FALLBACK } from "../src/story-world/IanaTimezoneFallback";
 import {
+  buildIanaTimezoneCandidates,
   buildStoryWorldTypedEntityReferenceCandidates,
   LOCATION_TYPED_PROPERTY_NAMES,
   readContextUsefulStoryWorldTypedProperties,
   readStoryWorldTypedProperties,
   REFERENCE_TYPED_PROPERTY_NAMES,
   searchStoryWorldControlledVocabulary,
+  searchStoryWorldControlledVocabularyCandidates,
   storyWorldControlledVocabulary,
   storyWorldControlledVocabularyAccepts,
   storyWorldControlledVocabularyCandidates,
@@ -68,6 +71,38 @@ test("IANA timezone vocabulary exposes canonical searchable values", () => {
   deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "London").map((candidate) => candidate.value), ["Europe/London"]);
   deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "New York").map((candidate) => candidate.value), ["America/New_York"]);
   deepEqual(searchStoryWorldControlledVocabulary(vocabulary.id, "New_York").map((candidate) => candidate.value), ["America/New_York"]);
+});
+
+test("IANA candidate sourcing prefers populated runtime data and falls back safely", () => {
+  const runtime = buildIanaTimezoneCandidates(["Europe/Paris"]);
+  deepEqual(runtime.map((candidate) => candidate.value), ["Europe/Paris"]);
+
+  const unavailable = buildIanaTimezoneCandidates(undefined);
+  const empty = buildIanaTimezoneCandidates([]);
+  deepEqual(empty, unavailable);
+  equal(unavailable.length, IANA_TIMEZONE_FALLBACK.length);
+  for (const value of [
+    "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo",
+    "Asia/Kolkata", "Australia/Sydney", "Pacific/Auckland", "Africa/Johannesburg"
+  ]) {
+    equal(unavailable.some((candidate) => candidate.value === value), true, value);
+  }
+  deepEqual(
+    searchStoryWorldControlledVocabularyCandidates(unavailable, "New York").map((candidate) => candidate.value),
+    ["America/New_York"]
+  );
+});
+
+test("closed-vocabulary validation accepts fallback canonical values", () => {
+  const fallback = buildIanaTimezoneCandidates(null);
+  const closedFallback = {
+    id: "fallback-iana-timezone",
+    label: "IANA timezone identifiers",
+    allowCustom: false,
+    values: () => fallback
+  };
+  equal(storyWorldControlledVocabularyAccepts(closedFallback, "Asia/Kolkata"), true);
+  equal(storyWorldControlledVocabularyAccepts(closedFallback, "EST"), false);
 });
 
 test("controlled vocabularies distinguish closed authority from custom-permitted values", () => {

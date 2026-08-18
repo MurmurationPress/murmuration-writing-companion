@@ -4,6 +4,7 @@ import {
   presentReferenceCandidates,
   type ReferencePresentation
 } from "./WikilinkPresentation";
+import { IANA_TIMEZONE_FALLBACK } from "./IanaTimezoneFallback";
 
 export type StoryWorldTypedPropertyValueType = "text" | "number" | "date" | "url" | "entity-reference" | "controlled-value";
 export type StoryWorldTypedPropertyCardinality = "single" | "multiple";
@@ -93,16 +94,39 @@ type IntlWithSupportedValues = typeof Intl & {
 
 let timezoneCandidates: readonly StoryWorldControlledVocabularyCandidate[] | null = null;
 
-function ianaTimezoneCandidates(): readonly StoryWorldControlledVocabularyCandidate[] {
-  if (timezoneCandidates) return timezoneCandidates;
-  const values = (Intl as IntlWithSupportedValues).supportedValuesOf?.("timeZone") ?? [];
-  timezoneCandidates = [...new Set(values)]
+function controlledVocabularyCandidates(
+  values: readonly string[]
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  return [...new Set(values.filter((value) => value.includes("/") && value.trim() === value))]
     .sort()
     .map((value) => ({
       value,
       label: value.replace(/_/g, " "),
       searchTerms: value.split("/").map((part) => part.replace(/_/g, " "))
     }));
+}
+
+/** Testable source selection: a populated runtime list wins; otherwise bundled IANA data is used. */
+export function buildIanaTimezoneCandidates(
+  runtimeValues: readonly string[] | null | undefined
+): readonly StoryWorldControlledVocabularyCandidate[] {
+  const runtimeCandidates = controlledVocabularyCandidates(runtimeValues ?? []);
+  return runtimeCandidates.length > 0
+    ? runtimeCandidates
+    : controlledVocabularyCandidates(IANA_TIMEZONE_FALLBACK);
+}
+
+function runtimeIanaTimezoneValues(): readonly string[] {
+  try {
+    return (Intl as IntlWithSupportedValues).supportedValuesOf?.("timeZone") ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function ianaTimezoneCandidates(): readonly StoryWorldControlledVocabularyCandidate[] {
+  if (timezoneCandidates) return timezoneCandidates;
+  timezoneCandidates = buildIanaTimezoneCandidates(runtimeIanaTimezoneValues());
   return timezoneCandidates;
 }
 
@@ -139,7 +163,16 @@ export function searchStoryWorldControlledVocabulary(
   id: string,
   query: string
 ): readonly StoryWorldControlledVocabularyCandidate[] {
-  const candidates = storyWorldControlledVocabularyCandidates(id);
+  return searchStoryWorldControlledVocabularyCandidates(
+    storyWorldControlledVocabularyCandidates(id),
+    query
+  );
+}
+
+export function searchStoryWorldControlledVocabularyCandidates(
+  candidates: readonly StoryWorldControlledVocabularyCandidate[],
+  query: string
+): readonly StoryWorldControlledVocabularyCandidate[] {
   const search = normaliseVocabularySearch(query);
   if (!search) return candidates;
   return candidates.filter((candidate) => (
