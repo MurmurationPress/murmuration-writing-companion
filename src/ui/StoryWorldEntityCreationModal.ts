@@ -10,8 +10,14 @@ import {
 } from "../story-world/StoryWorldEntityCreation";
 import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 import { buildStoryWorldScopeCandidates } from "../story-world/StoryWorldScopeCandidates";
-import { EMPTY_REFERENCE_METADATA, ReferenceField, ReferenceMetadata, referenceCanonicalNameDefault, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
+import { EMPTY_REFERENCE_METADATA, REFERENCE_PROPERTY_NAMES, ReferenceField, ReferenceMetadata, referenceCanonicalNameDefault, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
 import { ReferenceCitationImportModal } from "./ReferenceCitationImportModal";
+import {
+  buildStoryWorldTypedEntityReferenceCandidates,
+  LOCATION_TYPED_PROPERTY_NAMES,
+  storyWorldTypedPropertyDefinition,
+  storyWorldTypedPropertyDefinitions
+} from "../story-world/TypedEntityProperties";
 
 export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanionPlugin {
   refreshStoryWorldNavigator?(): void;
@@ -55,6 +61,8 @@ export class StoryWorldEntityCreationModal extends Modal {
   private includeSource = false;
   private referenceMetadata: ReferenceMetadata = EMPTY_REFERENCE_METADATA;
   private referenceSection!: HTMLElement;
+  private typedPropertySection!: HTMLElement;
+  private readonly typedProperties: Record<string, unknown> = {};
   private citationInput = "";
   private readonly referenceInputs: Partial<Record<ReferenceField, HTMLInputElement>> = {};
   private canonicalNameInput: HTMLInputElement | null = null;
@@ -77,11 +85,18 @@ export class StoryWorldEntityCreationModal extends Modal {
       .addDropdown((dropdown) => {
         for (const kind of STORY_WORLD_ENTITY_KINDS) dropdown.addOption(kind, kind[0].toUpperCase() + kind.slice(1));
         dropdown.setValue(this.kind);
-        dropdown.onChange((value) => { this.kind = value as StoryWorldEntityKind; this.renderReferenceSection(); this.renderPreview(); });
+        dropdown.onChange((value) => {
+          this.kind = value as StoryWorldEntityKind;
+          this.renderReferenceSection();
+          this.renderTypedPropertySection();
+          this.renderPreview();
+        });
       });
 
     this.referenceSection = this.contentEl.createDiv("mwc-reference-creation-fields");
     this.renderReferenceSection();
+    this.typedPropertySection = this.contentEl.createDiv("mwc-typed-property-creation-fields");
+    this.renderTypedPropertySection();
 
     new Setting(this.contentEl)
       .setName("Custom kind")
@@ -135,7 +150,7 @@ export class StoryWorldEntityCreationModal extends Modal {
 
   private currentPlan() {
     try {
-      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined }), error: null };
+      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined, typedProperties: this.kind === "location" ? this.typedProperties : undefined }), error: null };
     } catch (error) {
       return { plan: null, error: error instanceof Error ? error.message : String(error) };
     }
@@ -180,12 +195,9 @@ export class StoryWorldEntityCreationModal extends Modal {
     for (const key of Object.keys(this.referenceInputs) as ReferenceField[]) delete this.referenceInputs[key];
     if (this.kind !== "reference") return;
     this.referenceSection.createEl("h3", { text: "Reference details" });
-    const labels: Record<ReferenceField, string> = {
-      authors: "Authors", title: "Title", date: "Publication year or date", publication: "Journal / publication",
-      publisher: "Publisher", volume: "Volume", issue: "Issue", pages: "Pages", doi: "DOI", link: "Canonical link"
-    };
     for (const field of Object.keys(EMPTY_REFERENCE_METADATA) as ReferenceField[]) {
-      new Setting(this.referenceSection).setName(labels[field]).setDesc(field === "authors" ? "Separate multiple authors with semicolons." : "").addText((text) => {
+      const definition = storyWorldTypedPropertyDefinition("reference", REFERENCE_PROPERTY_NAMES[field]);
+      new Setting(this.referenceSection).setName(definition?.label ?? field).setDesc(field === "authors" ? "Separate multiple authors with semicolons." : "").addText((text) => {
         text.setValue(referenceFieldText(this.referenceMetadata, field)).onChange((value) => {
           const values = {} as Record<ReferenceField, string>;
           for (const key of Object.keys(EMPTY_REFERENCE_METADATA) as ReferenceField[]) values[key] = key === field ? value : this.referenceInputs[key]?.value ?? referenceFieldText(this.referenceMetadata, key);
@@ -211,6 +223,62 @@ export class StoryWorldEntityCreationModal extends Modal {
           this.renderPreview();
         }).open();
       }));
+  }
+
+  private renderTypedPropertySection(): void {
+    if (!this.typedPropertySection) return;
+    this.typedPropertySection.empty();
+    if (this.kind !== "location") return;
+    this.typedPropertySection.createEl("h3", { text: "Location details" });
+    for (const definition of storyWorldTypedPropertyDefinitions("location")) {
+      if (definition.valueType === "entity-reference") {
+        const candidates = buildStoryWorldTypedEntityReferenceCandidates(
+          definition,
+          this.plugin.storyWorldIndex.index.getAll()
+        );
+        new Setting(this.typedPropertySection)
+          .setName(definition.label)
+          .setDesc("Optional semantic link to another Location.")
+          .addDropdown((dropdown) => {
+            dropdown.addOption("", "None");
+            for (const candidate of candidates) {
+              dropdown.addOption(candidate.storedValue, candidate.secondary ? `${candidate.label} — ${candidate.secondary}` : candidate.label);
+            }
+            dropdown.setValue(String(this.typedProperties[definition.property] ?? ""));
+            dropdown.onChange((value) => {
+              this.typedProperties[definition.property] = value;
+              this.renderPreview();
+            });
+          });
+        continue;
+      }
+      const description = definition.property === LOCATION_TYPED_PROPERTY_NAMES.timezone
+        ? "IANA timezone, for example Europe/London."
+        : definition.valueType === "number" ? "Optional decimal coordinate." : "Optional.";
+      new Setting(this.typedPropertySection)
+        .setName(definition.label)
+        .setDesc(description)
+        .addText((text) => {
+          if (definition.valueType === "number") {
+            text.inputEl.type = "number";
+            text.inputEl.step = "any";
+            if (definition.property === LOCATION_TYPED_PROPERTY_NAMES.latitude) {
+              text.inputEl.min = "-90";
+              text.inputEl.max = "90";
+            } else if (definition.property === LOCATION_TYPED_PROPERTY_NAMES.longitude) {
+              text.inputEl.min = "-180";
+              text.inputEl.max = "180";
+            }
+          }
+          text.setValue(String(this.typedProperties[definition.property] ?? ""));
+          text.onChange((value) => {
+            this.typedProperties[definition.property] = definition.valueType === "number" && value.trim()
+              ? Number(value)
+              : value;
+            this.renderPreview();
+          });
+        });
+    }
   }
 
   private applyReferenceTitleDefault(): void {

@@ -1,15 +1,6 @@
-export const REFERENCE_PROPERTY_NAMES = {
-  authors: "reference_authors",
-  title: "reference_title",
-  date: "reference_date",
-  publication: "reference_publication",
-  publisher: "reference_publisher",
-  volume: "reference_volume",
-  issue: "reference_issue",
-  pages: "reference_pages",
-  doi: "reference_doi",
-  link: "reference_link"
-} as const;
+import { REFERENCE_TYPED_PROPERTY_NAMES } from "../story-world/TypedEntityProperties";
+
+export const REFERENCE_PROPERTY_NAMES = REFERENCE_TYPED_PROPERTY_NAMES;
 
 export type ReferenceField = keyof typeof REFERENCE_PROPERTY_NAMES;
 

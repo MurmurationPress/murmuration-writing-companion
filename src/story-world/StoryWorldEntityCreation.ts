@@ -1,4 +1,8 @@
 import { hasReferenceMetadata, REFERENCE_PROPERTY_NAMES, ReferenceMetadata } from "../references/ReferenceMetadata";
+import {
+  storyWorldTypedPropertyDefinitions,
+  validateStoryWorldTypedPropertyValue
+} from "./TypedEntityProperties";
 
 export const STORY_WORLD_ENTITY_KINDS = [
   "character",
@@ -22,6 +26,7 @@ export interface StoryWorldEntityCreationInput {
   /** An explicitly authored unresolved wikilink target; ordinary Navigator creation omits this. */
   readonly targetPath?: string;
   readonly reference?: ReferenceMetadata;
+  readonly typedProperties?: Readonly<Record<string, unknown>>;
 }
 
 export interface StoryWorldEntityCreationPlan {
@@ -49,6 +54,32 @@ export function safeStoryWorldFilename(name: string): string {
 
 function yamlString(value: string): string {
   return JSON.stringify(value);
+}
+
+function appendTypedProperties(
+  lines: string[],
+  entityType: string,
+  values: Readonly<Record<string, unknown>>
+): void {
+  for (const definition of storyWorldTypedPropertyDefinitions(entityType)) {
+    if (entityType === "reference") continue;
+    const value = values[definition.property];
+    if (value === undefined || value === null || value === "") continue;
+    const error = validateStoryWorldTypedPropertyValue(definition, value);
+    if (error) throw new Error(error);
+    const items = definition.cardinality === "multiple" && Array.isArray(value) ? value : [value];
+    const serialised = items.flatMap((item) => {
+      if (typeof item === "number" && Number.isFinite(item)) return [String(item)];
+      if (typeof item === "string" && item.trim()) return [yamlString(item.trim())];
+      return [];
+    });
+    if (!serialised.length) continue;
+    if (definition.cardinality === "multiple") {
+      lines.push(`${definition.property}:`, ...serialised.map((item) => `  - ${item}`));
+    } else {
+      lines.push(`${definition.property}: ${serialised[0]}`);
+    }
+  }
 }
 
 export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInput): StoryWorldEntityCreationPlan {
@@ -84,6 +115,7 @@ export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInpu
       if (value) lines.push(`${REFERENCE_PROPERTY_NAMES[field]}: ${yamlString(value)}`);
     }
   }
+  if (input.typedProperties) appendTypedProperties(lines, entityType, input.typedProperties);
   lines.push("---", "", `# ${name}`, "");
   return { entityType, name, scope, folder, path, markdown: lines.join("\n") };
 }
