@@ -19,6 +19,21 @@ Use Story World Navigator's creation actions, or accept an explicit creation off
 
 Use ordinary wikilinks to connect notes. Use Chapter Context for POV and Scene Location, and `world_context` for broader Scene relevance. `world_sources` records explicit provenance or manuscript evidence on an entity.
 
+## POV Profiles
+
+A Character or Intelligence can link to a separate POV Profile. The entity note remains the authority for who or what the entity is; the profile's Markdown body holds author-controlled guidance about narrative voice, perception, vocabulary, structures, representation rules, and review checks.
+
+```yaml
+world_entity: character
+world_name: Tobias
+pov_eligible: true
+pov_profile: "[[Story World/POV Profiles/Tobias POV]]"
+```
+
+Create the profile as `world_entity: pov-profile` and edit its ordinary Markdown body. A specialised profile may use `pov_extends` to inherit one reusable base profile. MWC applies the base first and the specialised profile second; this is a single inheritance link, not a general rules language.
+
+When a Scene's `pov` resolves to an entity with a profile, the Writing Companion shows the effective material under **POV Guidance** in Chapter Context automatically. Do not repeat the profile in `world_context`. Scene-local Chapter Context remains separate and can supply immediate circumstances or exceptions. Existing entities do not require profiles, and missing or cyclic links do not block ordinary chapter use.
+
 ## Browse and review
 
 - **Story World Navigator** browses entities and supporting models.

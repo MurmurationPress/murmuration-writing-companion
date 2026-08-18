@@ -88,7 +88,9 @@ export class StoryWorldEntityCreationModal extends Modal {
     new Setting(this.contentEl)
       .setName("Entity kind")
       .addDropdown((dropdown) => {
-        for (const kind of STORY_WORLD_ENTITY_KINDS) dropdown.addOption(kind, kind[0].toUpperCase() + kind.slice(1));
+        for (const kind of STORY_WORLD_ENTITY_KINDS) {
+          dropdown.addOption(kind, kind === "pov-profile" ? "POV Profile" : kind[0].toUpperCase() + kind.slice(1));
+        }
         dropdown.setValue(this.kind);
         dropdown.onChange((value) => {
           this.kind = value as StoryWorldEntityKind;
@@ -106,7 +108,11 @@ export class StoryWorldEntityCreationModal extends Modal {
     new Setting(this.contentEl)
       .setName("Custom kind")
       .setDesc("Used only when Entity kind is Other.")
-      .addText((text) => text.setPlaceholder("e.g. institution").onChange((value) => { this.customKind = value; this.renderPreview(); }));
+      .addText((text) => text.setPlaceholder("e.g. institution").onChange((value) => {
+        this.customKind = value;
+        this.renderTypedPropertySection();
+        this.renderPreview();
+      }));
 
     new Setting(this.contentEl)
       .setName("Canonical name")
@@ -155,7 +161,8 @@ export class StoryWorldEntityCreationModal extends Modal {
 
   private currentPlan() {
     try {
-      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined, typedProperties: this.kind === "location" ? this.typedProperties : undefined }), error: null };
+      const entityType = this.currentEntityType();
+      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined, typedProperties: storyWorldTypedPropertyDefinitions(entityType).length ? this.typedProperties : undefined }), error: null };
     } catch (error) {
       return { plan: null, error: error instanceof Error ? error.message : String(error) };
     }
@@ -190,8 +197,9 @@ export class StoryWorldEntityCreationModal extends Modal {
         const row = list.createDiv("mwc-context-row"); row.createEl("dt", { text: label }); row.createEl("dd", { text: value });
       }
     }
-    if (this.kind === "location") {
-      for (const definition of storyWorldTypedPropertyDefinitions("location")) {
+    const entityType = this.currentEntityType();
+    if (storyWorldTypedPropertyDefinitions(entityType).length) {
+      for (const definition of storyWorldTypedPropertyDefinitions(entityType)) {
         const value = this.typedProperties[definition.property];
         if (value === undefined || value === null || value === "") continue;
         const display = storyWorldTypedPropertyTextValues({ definition, value }).join("; ");
@@ -248,9 +256,14 @@ export class StoryWorldEntityCreationModal extends Modal {
   private renderTypedPropertySection(): void {
     if (!this.typedPropertySection) return;
     this.typedPropertySection.empty();
-    if (this.kind !== "location") return;
-    this.typedPropertySection.createEl("h3", { text: "Location details" });
-    for (const definition of storyWorldTypedPropertyDefinitions("location")) {
+    const entityType = this.currentEntityType();
+    const definitions = storyWorldTypedPropertyDefinitions(entityType);
+    if (!definitions.length) return;
+    const heading = entityType === "location"
+      ? "Location details"
+      : entityType === "pov-profile" ? "Profile relationships" : "POV details";
+    this.typedPropertySection.createEl("h3", { text: heading });
+    for (const definition of definitions) {
       if (definition.valueType === "entity-reference") {
         const candidates = buildStoryWorldTypedEntityReferenceCandidates(
           definition,
@@ -258,7 +271,11 @@ export class StoryWorldEntityCreationModal extends Modal {
         );
         new Setting(this.typedPropertySection)
           .setName(definition.label)
-          .setDesc("Optional semantic link to another Location.")
+          .setDesc(definition.property === "pov_profile"
+            ? "Optional semantic link to the guidance used for this POV."
+            : definition.property === "pov_extends"
+              ? "Optional base profile applied before this profile."
+              : "Optional semantic link to another Location.")
           .addDropdown((dropdown) => {
             dropdown.addOption("", "None");
             for (const candidate of candidates) {
@@ -266,6 +283,19 @@ export class StoryWorldEntityCreationModal extends Modal {
             }
             dropdown.setValue(String(this.typedProperties[definition.property] ?? ""));
             dropdown.onChange((value) => {
+              this.typedProperties[definition.property] = value;
+              this.renderPreview();
+            });
+          });
+        continue;
+      }
+      if (definition.valueType === "boolean") {
+        new Setting(this.typedPropertySection)
+          .setName(definition.label)
+          .setDesc("Makes this entity available as a Scene POV.")
+          .addToggle((toggle) => {
+            toggle.setValue(this.typedProperties[definition.property] === true);
+            toggle.onChange((value) => {
               this.typedProperties[definition.property] = value;
               this.renderPreview();
             });
@@ -327,6 +357,10 @@ export class StoryWorldEntityCreationModal extends Modal {
           });
         });
     }
+  }
+
+  private currentEntityType(): string {
+    return this.kind === "other" ? this.customKind.trim().toLocaleLowerCase() : this.kind;
   }
 
   private applyReferenceTitleDefault(): void {

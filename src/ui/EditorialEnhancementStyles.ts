@@ -515,6 +515,29 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
   padding: 0;
 }
 
+.mwc-pov-guidance {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.mwc-pov-guidance-profile + .mwc-pov-guidance-profile {
+  margin-top: 12px;
+}
+
+.mwc-pov-guidance-profile-link {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--link-color);
+  font-weight: var(--font-semibold);
+}
+
+.mwc-pov-guidance-markdown > :first-child {
+  margin-top: 6px;
+}
+
 .mwc-annotation-locator-active .cm-selectionBackground,
 .mwc-annotation-locator-active .cm-selectionLayer .cm-selectionBackground {
   background: var(--text-highlight-bg) !important;

@@ -7,6 +7,7 @@ import {
   buildIanaTimezoneCandidates,
   buildStoryWorldTypedEntityReferenceCandidates,
   LOCATION_TYPED_PROPERTY_NAMES,
+  POV_TYPED_PROPERTY_NAMES,
   readContextUsefulStoryWorldTypedProperties,
   readStoryWorldTypedProperties,
   REFERENCE_TYPED_PROPERTY_NAMES,
@@ -59,6 +60,33 @@ test("Location definitions are deliberately small and carry semantic constraints
   equal(validateStoryWorldTypedPropertyValue(definitions[1], 91)?.includes("between"), true);
   equal(validateStoryWorldTypedPropertyValue(definitions[3], "Europe/London"), null);
   equal(validateStoryWorldTypedPropertyValue(definitions[3], "GMT plus-ish")?.includes("IANA"), true);
+});
+
+test("POV owner and profile definitions share typed semantic references", () => {
+  for (const entityType of ["character", "intelligence"]) {
+    const definitions = storyWorldTypedPropertyDefinitions(entityType);
+    deepEqual(definitions.map((definition) => definition.property), [
+      POV_TYPED_PROPERTY_NAMES.eligible,
+      POV_TYPED_PROPERTY_NAMES.profile
+    ]);
+    equal(definitions[0]?.valueType, "boolean");
+    equal(definitions[1]?.valueType, "entity-reference");
+    deepEqual(definitions[1]?.targetEntityTypes, ["pov-profile"]);
+  }
+  const profile = storyWorldTypedPropertyDefinition("pov-profile", POV_TYPED_PROPERTY_NAMES.extends);
+  equal(profile?.valueType, "entity-reference");
+  deepEqual(profile?.targetEntityTypes, ["pov-profile"]);
+});
+
+test("POV profile selectors offer only indexed profile entities", () => {
+  const definition = storyWorldTypedPropertyDefinition("character", POV_TYPED_PROPERTY_NAMES.profile);
+  if (!definition) throw new Error("Expected POV profile definition");
+  const candidates = buildStoryWorldTypedEntityReferenceCandidates(definition, [
+    entity("World/Pip.md", "character", "Pip"),
+    entity("World/Intelligence POV.md", "pov-profile", "Intelligence POV"),
+    entity("World/Tobias POV.md", "POV-Profile", "Tobias POV")
+  ]);
+  deepEqual(candidates.map((candidate) => candidate.label), ["Intelligence POV", "Tobias POV"]);
 });
 
 test("IANA timezone vocabulary exposes canonical searchable values", () => {
