@@ -318,6 +318,16 @@
   margin: 0 2px var(--mwc-space-1);
 }
 
+.mwc-manuscript-search {
+  box-sizing: border-box;
+  width: calc(100% - 4px);
+  margin: 0 2px var(--mwc-space-2);
+}
+
+.mwc-manuscript-no-results {
+  margin: var(--mwc-space-3) 2px;
+}
+
 .mwc-manuscript-collapse-all {
   font-size: var(--font-ui-smaller);
 }
