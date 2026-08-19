@@ -66,9 +66,9 @@ Missing status means Unclassified, not Confirmed. Use modern `confirmed`; legacy
 | `pov` | Scene viewpoint; a resolved indexed value contributes to derived World Context. | Free text or wikilink; semantic selection writes a wikilink. | Optional | R/W | `pov: "[[Pip]]"` |
 | `location` | Sole Scene location property; a resolved indexed Location contributes to derived World Context. | Free text or one wikilink; semantic selection writes a full-path wikilink. | Optional | R/W | `location: "[[Story World/Locations/Reserve]]"` |
 | `story_date` | When a Scene occurs/reveals material in manuscript chronology. | ISO-like scalar; guided flow writes `YYYY-MM-DD`. | Optional | R/W | `story_date: "2029-06-29"` |
-| `world_context` | Broader explicit Story World relevance for a manuscript note. | One wikilink or list. | Optional | R/W | `world_context: ["[[Some Event]]"]` |
+| `world_context` | Broader explicit Story World relevance for a manuscript note; Add World Context searches the index and writes an unambiguous wikilink. | One wikilink or list. | Optional | R/W | `world_context: ["[[Some Event]]"]` |
 
-POV, Location, and explicit context are deduplicated by resolved entity path. MWC never writes semantic POV or Location into `world_context` automatically.
+POV, Location, and explicit context are deduplicated by resolved entity path. MWC never writes semantic POV or Location into `world_context` automatically. Removing an explicit entry preserves other values, including unresolved manually authored links.
 
 ## Events and chronology
 

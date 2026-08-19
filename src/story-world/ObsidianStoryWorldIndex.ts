@@ -91,6 +91,9 @@ export class ObsidianStoryWorldIndex {
       return this.index.getByPath(destination.path);
     }
 
+    const indexedPath = this.index.getByReferencePath(parsed.linkpath);
+    if (indexedPath) return indexedPath;
+
     const aliasMatches = this.index.findByNameOrAlias(parsed.linkpath);
     return aliasMatches.length === 1 ? aliasMatches[0] : null;
   }
@@ -101,6 +104,8 @@ export class ObsidianStoryWorldIndex {
     if (!parsed) return null;
     const destination = this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, sourcePath);
     if (destination) return { path: destination.path, indexed: this.index.getByPath(destination.path) !== null, excluded: isObsidianTrashPath(destination.path) };
+    const indexedPath = this.index.getByReferencePath(parsed.linkpath);
+    if (indexedPath) return { path: indexedPath.path, indexed: true, excluded: false };
     const aliasMatches = this.index.findByNameOrAlias(parsed.linkpath);
     return aliasMatches.length === 1 ? { path: aliasMatches[0].path, indexed: true, excluded: false } : null;
   }

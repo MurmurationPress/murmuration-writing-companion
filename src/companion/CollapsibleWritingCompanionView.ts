@@ -1,4 +1,4 @@
-import { MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
+import { MarkdownRenderer, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import type { HoverPopover } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import type { PageEditorialNotes } from "../editorial/EditorialNote";
@@ -43,6 +43,11 @@ import {
   povProfileResolutionIssueMessage,
   resolvePovProfileChain
 } from "../story-world/PovProfile";
+import {
+  addIndexedEntityToWorldContext,
+  removeIndexedEntityFromWorldContext
+} from "./ObsidianWorldContextAuthoring";
+import { WorldContextEntityPickerModal } from "./WorldContextEntityPickerModal";
 
 export { VIEW_TYPE };
 
@@ -263,6 +268,45 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     );
     collapsible.section.classList.add("mwc-world-context");
 
+    const authoring = collapsible.content.createDiv("mwc-world-context-authoring");
+    const add = authoring.createEl("button", {
+      text: "Add World Context",
+      attr: { type: "button" }
+    });
+    add.onclick = () => {
+      const current = buildWorldContext(
+        this.app.metadataCache.getFileCache(file)?.frontmatter,
+        (reference) => this.plugin.storyWorldIndex.resolveWikilink(reference, file.path)
+      );
+      const explicitlyLinkedPaths = new Set(
+        current.entries
+          .filter((entry) => entry.reasons.includes("explicit"))
+          .map((entry) => entry.entity.path)
+      );
+      new WorldContextEntityPickerModal(this.app, {
+        entities: this.plugin.storyWorldIndex.index.getAll(),
+        explicitlyLinkedPaths,
+        onSelect: async (entity) => {
+          try {
+            const changed = await addIndexedEntityToWorldContext(
+              this.app,
+              this.plugin.storyWorldIndex,
+              file,
+              entity
+            );
+            this.plugin.refreshView();
+            new Notice(changed
+              ? `Added ${entity.name} to World Context.`
+              : `${entity.name} is already in World Context.`);
+          } catch (error) {
+            new Notice(error instanceof Error
+              ? error.message
+              : "Could not update World Context.");
+          }
+        }
+      }).open();
+    };
+
     renderWorldContext(
       collapsible.content,
       result,
@@ -291,6 +335,25 @@ export class WritingCompanionView extends BaseWritingCompanionView {
         onRelativeTimeModeChange: (mode) => {
           if (this.worldContextTimePreferences.setMode(mode)) {
             this.plugin.refreshView();
+          }
+        },
+        onRemoveExplicit: async (entry) => {
+          try {
+            const changed = await removeIndexedEntityFromWorldContext(
+              this.app,
+              this.plugin.storyWorldIndex,
+              file,
+              entry.entity
+            );
+            this.plugin.refreshView();
+            new Notice(changed
+              ? `Removed ${entry.entity.name} from World Context.`
+              : `${entry.entity.name} is no longer in explicit World Context.`);
+          } catch (error) {
+            new Notice(error instanceof Error
+              ? error.message
+              : "Could not update World Context.");
+            throw error;
           }
         }
       }

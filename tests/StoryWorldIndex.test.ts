@@ -179,6 +179,25 @@ test("duplicate names and aliases remain distinguishable by path and scope", () 
   equal(index.findByNameOrAlias("Bird").length, 2);
 });
 
+test("path-qualified references resolve directly from the current index", () => {
+  const index = new StoryWorldIndex();
+  index.upsert(document("Story World/Events/Intervention.md", {
+    world_entity: "event",
+    world_name: "First Routing Intervention"
+  }));
+
+  equal(
+    index.getByReferencePath("Story World/Events/Intervention")?.name,
+    "First Routing Intervention"
+  );
+  equal(
+    index.getByReferencePath("Story World\\Events\\Intervention.md")?.path,
+    "Story World/Events/Intervention.md"
+  );
+  equal(index.getByReferencePath("Intervention"), null);
+  equal(index.getByReferencePath("Story World/Events/Missing"), null);
+});
+
 test("metadata updates replace secondary name and type indexes cleanly", () => {
   const index = new StoryWorldIndex();
   index.upsert(document("World/Tobias.md", {
