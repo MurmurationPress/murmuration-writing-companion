@@ -10,3 +10,13 @@ MWC's reviews and reports are derived from authoritative manuscript and Story Wo
 - **Impact Across Manuscript** projects where an entity is explicitly relevant.
 
 Continuity dispositions are editorial decisions stored separately from Story World Markdown. Generated notes are marked as reports and excluded from entity/manuscript discovery, so later views do not treat them as source evidence.
+
+## Story World Review
+
+Story World Review checks the structure authors have explicitly recorded in Story World Markdown. It can flag deterministic name and alias collisions, ambiguous or explicitly Story-World-targeted broken manuscript links, duplicate relationship assertions, incompatible Event dates, conflicting recognised single-valued properties, and unreferenced entities.
+
+Findings are review suggestions, not automatic truth. A similar name can be intentional, and an unreferenced entity can be useful preparation. **Keep both** or **Mark intentional** retains that author decision with the finding evidence; changed evidence returns for review. Active findings and retained/history findings remain separately inspectable.
+
+Ambiguous links are never guessed. Where Story World Review offers **Relink**, the author chooses a target and confirms replacement of that one reviewed wikilink occurrence. Its display alias and surrounding prose are preserved. Review itself is read-only: opening or rerunning it does not rename, merge, delete, migrate, or rewrite any note.
+
+Recognised typed-property conflicts use the central Story World property definition, including whether a property is single- or multi-valued. Custom and unknown YAML properties remain valid and are not assigned invented schema rules. General entity merging and note renaming are deliberately not automated because preserving arbitrary body prose, relationships, provenance, scopes, aliases, and custom YAML requires an author-led edit.
