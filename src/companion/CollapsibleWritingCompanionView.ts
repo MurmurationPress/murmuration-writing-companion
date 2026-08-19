@@ -40,6 +40,7 @@ import { chapterContextCardNavigationNotes } from "./ContinuityCardPresentation"
 import { isExplicitlyDetachedScene, manuscriptDisplayTitle } from "../manuscript/ManuscriptMetadata";
 import {
   buildEffectivePovGuidance,
+  povProfileResolutionIssueMessage,
   resolvePovProfileChain
 } from "../story-world/PovProfile";
 
@@ -142,6 +143,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       this.renderBookReview(container, file);
     }
     this.renderCollapsibleChapterContext(container, file);
+    this.renderPovGuidance(container, file, frontmatter);
     this.renderCollapsibleWorldContext(container, file, !detached);
     this.renderCollapsibleEditorialPasses(container, file);
     this.renderCollapsibleChapterNote(container, file, page);
@@ -160,24 +162,38 @@ export class WritingCompanionView extends BaseWritingCompanionView {
 
     super.renderChapterContext(collapsible.content, file);
     this.flattenEmbeddedSection(collapsible.content);
-    this.renderPovGuidance(collapsible.content, file, frontmatter as Record<string, unknown> | undefined);
   }
 
   private renderPovGuidance(
-    container: HTMLElement,
+    container: Element,
     scene: TFile,
     frontmatter: Record<string, unknown> | undefined
   ): void {
     const resolution = resolvePovProfileChain(
       frontmatter,
       scene.path,
-      (reference, sourcePath) => this.plugin.storyWorldIndex.resolveWikilink(reference, sourcePath)
+      (reference, sourcePath) => this.plugin.storyWorldIndex.resolveWikilink(reference, sourcePath),
+      {
+        activeBookPath: this.plugin.getOwningBook(scene)?.path ?? null,
+        indexedEntities: this.plugin.storyWorldIndex.index.getAll(),
+        resolveScope: (reference, sourcePath) => {
+          const parsed = parseWikilink(reference);
+          return parsed
+            ? this.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, sourcePath)?.path ?? null
+            : null;
+        }
+      }
     );
     if (!resolution.profiles.length && !resolution.issues.length) return;
 
-    const section = container.createDiv("mwc-pov-guidance");
-    section.createEl("h4", { text: "POV Guidance" });
-    const content = section.createDiv("mwc-pov-guidance-content");
+    const collapsible = this.createCollapsibleSection(
+      container,
+      "povGuidance",
+      "POV Guidance"
+    );
+    const section = collapsible.section;
+    section.classList.add("mwc-pov-guidance");
+    const content = collapsible.content;
     content.createEl("p", { cls: "mwc-muted", text: "Loading author guidance…" });
 
     void Promise.all(resolution.profiles.map(async (profile) => {
@@ -209,10 +225,11 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       if (!guidance.sections.length) {
         content.createEl("p", { cls: "mwc-muted", text: "The linked POV profile has no guidance body." });
       }
-      if (guidance.issues.length) {
+      const issueMessage = povProfileResolutionIssueMessage(guidance.issues);
+      if (issueMessage) {
         content.createEl("p", {
           cls: "mwc-muted",
-          text: "Some linked POV profile guidance could not be resolved. Existing chapter context remains available."
+          text: issueMessage
         });
       }
     }).catch(() => {

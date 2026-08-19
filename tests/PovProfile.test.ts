@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   buildEffectivePovGuidance,
   buildPovGuidanceMarkdown,
+  povProfileResolutionIssueMessage,
   povProfileMarkdownBody,
   resolvePovProfileChain
 } from "../src/story-world/PovProfile";
@@ -143,4 +144,107 @@ test("profile body extraction is line-ending independent and never changes sourc
   const before = source.slice();
   equal(povProfileMarkdownBody(source), "# Guidance\n\nKeep this prose.");
   equal(source, before);
+});
+
+test("Book-scoped descendants append after the durable base-first profile chain", () => {
+  const shared = entity("Story World/POV Profiles/Intelligence POV.md", "Intelligence POV", "pov-profile");
+  const primeProfile = entity("Story World/POV Profiles/PRIME POV.md", "PRIME POV", "pov-profile", {
+    pov_extends: "[[Intelligence POV]]"
+  });
+  const multiplicity = {
+    ...entity("Story World/POV Profiles/PRIME POV - MULTIPLICITY.md", "PRIME POV — MULTIPLICITY", "pov-profile", {
+      pov_extends: "[[PRIME POV]]",
+      world_scope: ["[[Books/MULTIPLICITY]]"]
+    }),
+    scope: ["[[Books/MULTIPLICITY]]"]
+  };
+  const prime = entity("Story World/Intelligences/PRIME.md", "PRIME", "intelligence", {
+    pov_profile: "[[PRIME POV]]"
+  });
+  const resolve = resolver({
+    "[[PRIME]]": prime,
+    "[[PRIME POV]]": primeProfile,
+    "[[Intelligence POV]]": shared
+  });
+  const frontmatter = { pov: "[[PRIME]]" };
+  const before = JSON.stringify(frontmatter);
+  const chain = resolvePovProfileChain(frontmatter, "Books/MULTIPLICITY/Scene.md", resolve, {
+    activeBookPath: "Books/MULTIPLICITY.md",
+    indexedEntities: [shared, primeProfile, multiplicity, prime],
+    resolveScope: (reference) => reference === "[[Books/MULTIPLICITY]]" ? "Books/MULTIPLICITY.md" : null
+  });
+
+  deepEqual(chain.profiles.map((profile) => profile.name), [
+    "Intelligence POV", "PRIME POV", "PRIME POV — MULTIPLICITY"
+  ]);
+  deepEqual(chain.issues, []);
+  equal(JSON.stringify(frontmatter), before);
+});
+
+test("Book scope selects zero or one explicit child and never infers from folders", () => {
+  const pip = entity("Story World/Characters/Pip.md", "Pip", "character", { pov_profile: "[[Pip POV]]" });
+  const base = entity("Storage/Anywhere/Pip POV.md", "Pip POV", "pov-profile");
+  const scoped = {
+    ...entity("Not/A/Profile/Folder/Pip Later.md", "Pip POV — MULTIPLICITY", "pov-profile", {
+      pov_extends: "[[Pip POV]]"
+    }),
+    scope: ["[[MULTIPLICITY]]"]
+  };
+  const resolve = resolver({ "[[Pip]]": pip, "[[Pip POV]]": base });
+  const options = {
+    indexedEntities: [pip, base, scoped],
+    resolveScope: (reference: string) => reference === "[[MULTIPLICITY]]" ? "Books/MULTIPLICITY.md" : null
+  };
+  const otherBook = resolvePovProfileChain({ pov: "[[Pip]]" }, "Scenes/One.md", resolve, {
+    ...options,
+    activeBookPath: "Books/EMERGENCE.md"
+  });
+  const matchingBook = resolvePovProfileChain({ pov: "[[Pip]]" }, "Unrelated/Scene.md", resolve, {
+    ...options,
+    activeBookPath: "Books/MULTIPLICITY.md"
+  });
+  deepEqual(otherBook.profiles.map((profile) => profile.name), ["Pip POV"]);
+  deepEqual(matchingBook.profiles.map((profile) => profile.name), ["Pip POV", "Pip POV — MULTIPLICITY"]);
+});
+
+test("multiple scoped siblings surface deterministic ambiguity without choosing", () => {
+  const janus = entity("JANUS.md", "JANUS", "intelligence", { pov_profile: "[[JANUS POV]]" });
+  const base = entity("JANUS POV.md", "JANUS POV", "pov-profile");
+  const first = { ...entity("Z/First.md", "First delta", "pov-profile", { pov_extends: "[[JANUS POV]]" }), scope: ["[[Book]]"] };
+  const second = { ...entity("A/Second.md", "Second delta", "pov-profile", { pov_extends: "[[JANUS POV]]" }), scope: ["[[Book]]"] };
+  const chain = resolvePovProfileChain({ pov: "[[JANUS]]" }, "Scene.md", resolver({
+    "[[JANUS]]": janus,
+    "[[JANUS POV]]": base
+  }), {
+    activeBookPath: "Books/Book.md",
+    indexedEntities: [janus, base, first, second],
+    resolveScope: () => "Books/Book.md"
+  });
+  deepEqual(chain.profiles.map((profile) => profile.name), ["JANUS POV"]);
+  deepEqual(chain.issues, [{
+    kind: "ambiguous-scoped-profile",
+    reference: "Books/Book.md",
+    profilePath: "JANUS POV.md",
+    candidatePaths: ["A/Second.md", "Z/First.md"]
+  }]);
+  match(povProfileResolutionIssueMessage(chain.issues) ?? "", /Multiple Book-scoped POV profiles/u);
+  equal(povProfileResolutionIssueMessage([]), null);
+});
+
+test("explicit scoped extensions can recurse deterministically without duplication", () => {
+  const tobias = entity("Tobias.md", "Tobias", "character", { pov_profile: "[[Tobias POV]]" });
+  const base = entity("Tobias POV.md", "Tobias POV", "pov-profile");
+  const bookDelta = { ...entity("Book Delta.md", "Book delta", "pov-profile", { pov_extends: "[[Tobias POV]]" }), scope: ["[[Book]]"] };
+  const focusedDelta = { ...entity("Focused Delta.md", "Focused delta", "pov-profile", { pov_extends: "[[Book Delta]]" }), scope: ["[[Book]]"] };
+  const chain = resolvePovProfileChain({ pov: "[[Tobias]]" }, "Scene.md", resolver({
+    "[[Tobias]]": tobias,
+    "[[Tobias POV]]": base,
+    "[[Book Delta]]": bookDelta
+  }), {
+    activeBookPath: "Book.md",
+    indexedEntities: [tobias, base, bookDelta, focusedDelta],
+    resolveScope: () => "Book.md"
+  });
+  deepEqual(chain.profiles.map((profile) => profile.name), ["Tobias POV", "Book delta", "Focused delta"]);
+  equal(new Set(chain.profiles.map((profile) => profile.path)).size, 3);
 });

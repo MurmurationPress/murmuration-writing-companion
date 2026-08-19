@@ -4,6 +4,7 @@ import {
   findStoryWorldCreationCollision,
   findStoryWorldPathCollision,
   planStoryWorldEntityCreation,
+  povProfileTemplateMarkdown,
   safeStoryWorldFilename,
   STORY_WORLD_ENTITY_KINDS
 } from "../src/story-world/StoryWorldEntityCreation";
@@ -109,6 +110,38 @@ test("creates POV-capable entities and Markdown profile inheritance through type
   match(profile.markdown, /world_entity: pov-profile/u);
   match(profile.markdown, /pov_extends: "\[\[Story World\/POV Profiles\/Intelligence POV\]\]"/u);
   match(profile.markdown, /# JANUS POV/u);
+});
+
+test("creates editable Markdown base-profile guidance from a light template", () => {
+  const plan = planStoryWorldEntityCreation({
+    kind: "pov-profile",
+    name: "Pip POV",
+    povProfileTemplate: "base"
+  });
+  match(plan.markdown, /# Pip POV\n\n## Attention/u);
+  match(plan.markdown, /## Interpretation[\s\S]*## Voice[\s\S]*## Avoid/u);
+  equal(plan.markdown.includes("pov_extends"), false);
+});
+
+test("creates a delta-only scoped profile with explicit semantic parent and Book scope", () => {
+  const plan = planStoryWorldEntityCreation({
+    kind: "pov-profile",
+    name: "PRIME POV — MULTIPLICITY",
+    scope: "[[Books/MULTIPLICITY]]",
+    typedProperties: { pov_extends: "[[Story World/POV Profiles/PRIME POV]]" },
+    povProfileTemplate: "scoped"
+  });
+  match(plan.markdown, /world_scope:\n  - "\[\[Books\/MULTIPLICITY\]\]"/u);
+  match(plan.markdown, /pov_extends: "\[\[Story World\/POV Profiles\/PRIME POV\]\]"/u);
+  match(plan.markdown, /This profile extends \[\[Story World\/POV Profiles\/PRIME POV\]\] for \[\[Books\/MULTIPLICITY\]\]\./u);
+  match(plan.markdown, /## Changes in this book[\s\S]*## Emphasise[\s\S]*## Avoid/u);
+  equal(plan.markdown.includes("## Attention"), false);
+});
+
+test("scoped template refuses missing semantic authority and blank remains available", () => {
+  throws(() => povProfileTemplateMarkdown("scoped", "Delta", null, "[[Book]]"), /explicit parent profile/u);
+  throws(() => povProfileTemplateMarkdown("scoped", "Delta", "[[Parent]]", null), /explicit Book scope/u);
+  equal(povProfileTemplateMarkdown("blank", "Freeform"), "# Freeform\n");
 });
 
 test("writes Reference details through the canonical schema only", () => {

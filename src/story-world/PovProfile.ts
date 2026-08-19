@@ -10,12 +10,14 @@ export type PovProfileResolutionIssueKind =
   | "invalid-profile-reference"
   | "missing-profile"
   | "wrong-profile-type"
-  | "inheritance-cycle";
+  | "inheritance-cycle"
+  | "ambiguous-scoped-profile";
 
 export interface PovProfileResolutionIssue {
   readonly kind: PovProfileResolutionIssueKind;
   readonly reference: string;
   readonly profilePath?: string;
+  readonly candidatePaths?: readonly string[];
 }
 
 export interface ResolvedPovProfileChain {
@@ -34,10 +36,30 @@ export interface EffectivePovGuidance extends ResolvedPovProfileChain {
   readonly sections: readonly PovGuidanceSection[];
 }
 
+export function povProfileResolutionIssueMessage(
+  issues: readonly PovProfileResolutionIssue[]
+): string | null {
+  if (issues.some((issue) => issue.kind === "ambiguous-scoped-profile")) {
+    return "Multiple Book-scoped POV profiles match this Scene. None was applied; resolve the duplicate scope manually.";
+  }
+  return issues.length
+    ? "Some linked POV profile guidance could not be resolved. Existing chapter context remains available."
+    : null;
+}
+
 export type PovProfileEntityResolver = (
   reference: string,
   sourcePath: string
 ) => StoryWorldEntityRecord | null;
+
+export interface PovProfileScopeResolutionOptions {
+  /** The authoritative owning Book note path for the current Scene. */
+  readonly activeBookPath: string | null;
+  /** Existing indexed Story World entities; no vault scan is performed. */
+  readonly indexedEntities: readonly StoryWorldEntityRecord[];
+  /** Resolves a semantic world_scope wikilink to a vault path. */
+  readonly resolveScope: (reference: string, sourcePath: string) => string | null;
+}
 
 function scalarString(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -57,7 +79,8 @@ function isPovProfile(entity: StoryWorldEntityRecord): boolean {
 export function resolvePovProfileChain(
   sceneFrontmatter: Record<string, unknown> | undefined,
   scenePath: string,
-  resolve: PovProfileEntityResolver
+  resolve: PovProfileEntityResolver,
+  scopeOptions?: PovProfileScopeResolutionOptions
 ): ResolvedPovProfileChain {
   const pov = getEditableChapterContextValue(
     sceneFrontmatter,
@@ -112,6 +135,46 @@ export function resolvePovProfileChain(
   };
 
   visitReference(profileReference, povEntity.path);
+
+  const activeBookPath = scopeOptions?.activeBookPath;
+  if (activeBookPath && profiles.length) {
+    let current = profiles[profiles.length - 1];
+    while (current) {
+      const matching = scopeOptions.indexedEntities.filter((candidate) => {
+        if (!isPovProfile(candidate)) return false;
+        const parentReference = scalarString(candidate.properties[POV_TYPED_PROPERTY_NAMES.extends]);
+        if (!parentReference) return false;
+        const parent = resolve(parentReference, candidate.path);
+        if (parent?.path !== current.path) return false;
+        return candidate.scope.some((scope) => (
+          scopeOptions.resolveScope(scope, candidate.path) === activeBookPath
+        ));
+      }).sort((left, right) => left.path.localeCompare(right.path, "en", { sensitivity: "base" }));
+
+      if (matching.length > 1) {
+        issues.push({
+          kind: "ambiguous-scoped-profile",
+          reference: activeBookPath,
+          profilePath: current.path,
+          candidatePaths: matching.map((candidate) => candidate.path)
+        });
+        break;
+      }
+      const scoped = matching[0];
+      if (!scoped) break;
+      if (included.has(scoped.path)) {
+        issues.push({
+          kind: "inheritance-cycle",
+          reference: scalarString(scoped.properties[POV_TYPED_PROPERTY_NAMES.extends]) ?? scoped.path,
+          profilePath: scoped.path
+        });
+        break;
+      }
+      included.add(scoped.path);
+      profiles.push(scoped);
+      current = scoped;
+    }
+  }
   return { povEntity, profiles, issues };
 }
 

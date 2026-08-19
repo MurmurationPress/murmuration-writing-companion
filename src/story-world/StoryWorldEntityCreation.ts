@@ -29,7 +29,10 @@ export interface StoryWorldEntityCreationInput {
   readonly targetPath?: string;
   readonly reference?: ReferenceMetadata;
   readonly typedProperties?: Readonly<Record<string, unknown>>;
+  readonly povProfileTemplate?: PovProfileTemplateKind;
 }
+
+export type PovProfileTemplateKind = "blank" | "base" | "scoped";
 
 export interface StoryWorldEntityCreationPlan {
   readonly entityType: string;
@@ -87,6 +90,55 @@ function appendTypedProperties(
   }
 }
 
+export function povProfileTemplateMarkdown(
+  kind: PovProfileTemplateKind,
+  name: string,
+  parent?: string | null,
+  scope?: string | null
+): string {
+  if (kind === "blank") return `# ${name}\n`;
+  if (kind === "base") return [
+    `# ${name}`,
+    "",
+    "## Attention",
+    "",
+    "What does this POV notice first?",
+    "",
+    "## Interpretation",
+    "",
+    "How does observation become meaning?",
+    "",
+    "## Voice",
+    "",
+    "What characterises the prose and internal language?",
+    "",
+    "## Avoid",
+    "",
+    "What would feel wrong from this POV?",
+    ""
+  ].join("\n");
+  if (!parent?.trim()) throw new Error("A scoped POV Profile requires an explicit parent profile.");
+  if (!scope?.trim()) throw new Error("A scoped POV Profile requires an explicit Book scope.");
+  return [
+    `# ${name}`,
+    "",
+    `This profile extends ${parent.trim()} for ${scope.trim()}.`,
+    "",
+    "## Changes in this book",
+    "",
+    "What is different from the inherited profile?",
+    "",
+    "## Emphasise",
+    "",
+    "What becomes more prominent?",
+    "",
+    "## Avoid",
+    "",
+    "What earlier behaviour should no longer dominate?",
+    ""
+  ].join("\n");
+}
+
 export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInput): StoryWorldEntityCreationPlan {
   const name = input.name.trim();
   if (!name) throw new Error("Canonical name is required.");
@@ -121,7 +173,16 @@ export function planStoryWorldEntityCreation(input: StoryWorldEntityCreationInpu
     }
   }
   if (input.typedProperties) appendTypedProperties(lines, entityType, input.typedProperties);
-  lines.push("---", "", `# ${name}`, "");
+  lines.push("---", "");
+  const template = entityType === "pov-profile" && input.povProfileTemplate
+    ? povProfileTemplateMarkdown(
+        input.povProfileTemplate,
+        name,
+        typeof input.typedProperties?.pov_extends === "string" ? input.typedProperties.pov_extends : null,
+        scope
+      )
+    : `# ${name}\n`;
+  lines.push(...template.split("\n"));
   return { entityType, name, scope, folder, path, markdown: lines.join("\n") };
 }
 

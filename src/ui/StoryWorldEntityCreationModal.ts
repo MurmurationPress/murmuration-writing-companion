@@ -8,8 +8,11 @@ import {
   STORY_WORLD_ENTITY_KINDS,
   StoryWorldEntityKind
 } from "../story-world/StoryWorldEntityCreation";
+import type { PovProfileTemplateKind } from "../story-world/StoryWorldEntityCreation";
 import { presentWikilinkValue } from "../story-world/WikilinkPresentation";
 import { buildStoryWorldScopeCandidates } from "../story-world/StoryWorldScopeCandidates";
+import { parseWikilink } from "../story-world/StoryWorldIndex";
+import { isBookFrontmatter } from "../editorial/BookReview";
 import { EMPTY_REFERENCE_METADATA, REFERENCE_PROPERTY_NAMES, ReferenceField, ReferenceMetadata, referenceCanonicalNameDefault, referenceFieldText, referenceMetadataFromText } from "../references/ReferenceMetadata";
 import { ReferenceCitationImportModal } from "./ReferenceCitationImportModal";
 import {
@@ -67,7 +70,9 @@ export class StoryWorldEntityCreationModal extends Modal {
   private referenceMetadata: ReferenceMetadata = EMPTY_REFERENCE_METADATA;
   private referenceSection!: HTMLElement;
   private typedPropertySection!: HTMLElement;
+  private scopeSection!: HTMLElement;
   private readonly typedProperties: Record<string, unknown> = {};
+  private povProfileTemplate: PovProfileTemplateKind = "base";
   private citationInput = "";
   private readonly referenceInputs: Partial<Record<ReferenceField, HTMLInputElement>> = {};
   private canonicalNameInput: HTMLInputElement | null = null;
@@ -96,6 +101,7 @@ export class StoryWorldEntityCreationModal extends Modal {
           this.kind = value as StoryWorldEntityKind;
           this.renderReferenceSection();
           this.renderTypedPropertySection();
+          this.renderScopeSection();
           this.renderPreview();
         });
       });
@@ -127,24 +133,8 @@ export class StoryWorldEntityCreationModal extends Modal {
         });
       });
 
-    new Setting(this.contentEl)
-      .setName("Scope")
-      .setDesc("Optional explicit Book or Series scope; leave unset to retain normal scope inference.")
-      .addDropdown((dropdown) => {
-        dropdown.addOption("", "None (infer scope)");
-        const candidates = buildStoryWorldScopeCandidates(documents(this.plugin), (linkpath, sourcePath) => (
-          this.plugin.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath)?.path ?? null
-        ));
-        const known = new Set(candidates.map((candidate) => candidate.storedValue));
-        if (this.scopeInput && !known.has(this.scopeInput)) {
-          const label = presentWikilinkValue(this.scopeInput)?.label ?? this.scopeInput;
-          dropdown.addOption(this.scopeInput, `${label} (existing value)`);
-        }
-        for (const candidate of candidates) {
-          dropdown.addOption(candidate.storedValue, candidate.secondary ? `${candidate.label} — ${candidate.secondary}` : candidate.label);
-        }
-        dropdown.setValue(this.scopeInput).onChange((value) => { this.scopeInput = value; this.renderPreview(); });
-      });
+    this.scopeSection = this.contentEl.createDiv("mwc-story-world-scope-creation-field");
+    this.renderScopeSection();
 
     if (this.options.sourceReference) new Setting(this.contentEl)
       .setName(this.options.sourceLabel ?? "Add this manuscript note as a source")
@@ -162,7 +152,19 @@ export class StoryWorldEntityCreationModal extends Modal {
   private currentPlan() {
     try {
       const entityType = this.currentEntityType();
-      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined, typedProperties: storyWorldTypedPropertyDefinitions(entityType).length ? this.typedProperties : undefined }), error: null };
+      if (entityType === "pov-profile" && this.povProfileTemplate === "scoped" && this.scopeInput) {
+        const parsed = parseWikilink(this.scopeInput);
+        const target = parsed
+          ? this.plugin.app.metadataCache.getFirstLinkpathDest(parsed.linkpath, this.options.targetPath ?? "")
+          : null;
+        const frontmatter = target
+          ? this.plugin.app.metadataCache.getFileCache(target)?.frontmatter as Record<string, unknown> | undefined
+          : undefined;
+        if (!target || !isBookFrontmatter(frontmatter)) {
+          throw new Error("A scoped POV Profile requires an explicit recognised Book scope.");
+        }
+      }
+      return { plan: planStoryWorldEntityCreation({ kind: this.kind, customKind: this.customKind, name: this.name, scope: this.scopeInput, sources: this.includeSource && this.options.sourceReference ? [this.options.sourceReference] : [], targetPath: this.options.targetPath, reference: this.kind === "reference" ? this.referenceMetadata : undefined, typedProperties: storyWorldTypedPropertyDefinitions(entityType).length ? this.typedProperties : undefined, povProfileTemplate: entityType === "pov-profile" ? this.povProfileTemplate : undefined }), error: null };
     } catch (error) {
       return { plan: null, error: error instanceof Error ? error.message : String(error) };
     }
@@ -263,6 +265,22 @@ export class StoryWorldEntityCreationModal extends Modal {
       ? "Location details"
       : entityType === "pov-profile" ? "Profile relationships" : "POV details";
     this.typedPropertySection.createEl("h3", { text: heading });
+    if (entityType === "pov-profile") {
+      new Setting(this.typedPropertySection)
+        .setName("Profile template")
+        .setDesc("Templates are editable Markdown prompts; scoped profiles contain only guidance that changes for one Book.")
+        .addDropdown((dropdown) => {
+          dropdown.addOption("base", "Base profile");
+          dropdown.addOption("scoped", "Book-scoped extension");
+          dropdown.addOption("blank", "Blank profile");
+          dropdown.setValue(this.povProfileTemplate);
+          dropdown.onChange((value) => {
+            this.povProfileTemplate = value as PovProfileTemplateKind;
+            this.renderScopeSection();
+            this.renderPreview();
+          });
+        });
+    }
     for (const definition of definitions) {
       if (definition.valueType === "entity-reference") {
         const candidates = buildStoryWorldTypedEntityReferenceCandidates(
@@ -357,6 +375,37 @@ export class StoryWorldEntityCreationModal extends Modal {
           });
         });
     }
+  }
+
+  private renderScopeSection(): void {
+    if (!this.scopeSection) return;
+    this.scopeSection.empty();
+    const scopedProfile = this.currentEntityType() === "pov-profile" && this.povProfileTemplate === "scoped";
+    const allDocuments = documents(this.plugin);
+    const byPath = new Map(allDocuments.map((document) => [document.path, document]));
+    const candidates = buildStoryWorldScopeCandidates(allDocuments, (linkpath, sourcePath) => (
+      this.plugin.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath)?.path ?? null
+    )).filter((candidate) => !scopedProfile || isBookFrontmatter(byPath.get(candidate.resolvedPath)?.frontmatter ?? undefined));
+    new Setting(this.scopeSection)
+      .setName(scopedProfile ? "Book scope" : "Scope")
+      .setDesc(scopedProfile
+        ? "Required Book where this inherited POV guidance applies."
+        : "Optional explicit Book or Series scope; leave unset to retain normal scope inference.")
+      .addDropdown((dropdown) => {
+        dropdown.addOption("", scopedProfile ? "Select a Book" : "None (infer scope)");
+        const known = new Set(candidates.map((candidate) => candidate.storedValue));
+        if (this.scopeInput && !known.has(this.scopeInput)) {
+          const label = presentWikilinkValue(this.scopeInput)?.label ?? this.scopeInput;
+          dropdown.addOption(this.scopeInput, `${label} (not a recognised Book)`);
+        }
+        for (const candidate of candidates) {
+          dropdown.addOption(candidate.storedValue, candidate.secondary ? `${candidate.label} — ${candidate.secondary}` : candidate.label);
+        }
+        dropdown.setValue(this.scopeInput).onChange((value) => {
+          this.scopeInput = value;
+          this.renderPreview();
+        });
+      });
   }
 
   private currentEntityType(): string {
