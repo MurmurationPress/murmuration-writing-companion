@@ -26,7 +26,7 @@ Some recognised properties offer a controlled vocabulary as an authoring aid. Th
 
 | Property | Purpose | Canonical form | MWC | Example |
 |---|---|---|---|---|
-| `pov_extends` | Reuses one base profile before this profile's Markdown guidance. | One wikilink to a `pov-profile` entity. | R/W | `pov_extends: "[[Story World/POV Profiles/Intelligence POV]]"` |
+| `pov_extends` | Reuses one base profile before this profile's Markdown guidance. | One wikilink to a `pov-profile` entity. | R/W | `pov_extends: "[[Story World/POV Profiles/Earlier Tobias POV]]"` |
 | `world_scope` on a POV Profile | Applies an explicitly inherited profile delta to a Book. | One or more semantic Book wikilinks; use with `pov_extends`. | R/W | `world_scope: ["[[MULTIPLICITY]]"]` |
 
 The substantial guidance belongs in the profile's Markdown body rather than rigid YAML fields. Resolution is deterministic and base-first. Missing, wrong-type, or cyclic links stop safely without rewriting either note.

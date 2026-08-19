@@ -49,9 +49,9 @@ export type WorldContextResolver = (
   reference: string
 ) => StoryWorldEntityRecord | null;
 
-interface ReferenceCandidate {
-  reference: string;
-  reason: WorldContextReason;
+export interface SemanticManuscriptReference {
+  readonly reference: string;
+  readonly reason: WorldContextReason;
 }
 
 function nonEmptyString(value: unknown): string | null {
@@ -73,7 +73,7 @@ function stringValues(value: unknown): string[] {
 }
 
 function findPropertyValue(
-  frontmatter: Record<string, unknown> | undefined,
+  frontmatter: Readonly<Record<string, unknown>> | undefined,
   aliases: readonly string[]
 ): unknown {
   if (!frontmatter) return undefined;
@@ -89,7 +89,7 @@ function findPropertyValue(
 }
 
 function getPovValue(
-  frontmatter: Record<string, unknown> | undefined
+  frontmatter: Readonly<Record<string, unknown>> | undefined
 ): unknown {
   const field = EDITABLE_CHAPTER_CONTEXT_FIELDS.find(
     (candidate) => candidate.key === "pov"
@@ -100,7 +100,7 @@ function getPovValue(
 }
 
 function getLocationValue(
-  frontmatter: Record<string, unknown> | undefined
+  frontmatter: Readonly<Record<string, unknown>> | undefined
 ): unknown {
   const field = EDITABLE_CHAPTER_CONTEXT_FIELDS.find(
     (candidate) => candidate.key === "location"
@@ -109,14 +109,14 @@ function getLocationValue(
 }
 
 function getWorldContextValue(
-  frontmatter: Record<string, unknown> | undefined
+  frontmatter: Readonly<Record<string, unknown>> | undefined
 ): unknown {
   return findPropertyValue(frontmatter, ["world_context"]);
 }
 
 function explicitCandidates(
-  frontmatter: Record<string, unknown> | undefined
-): ReferenceCandidate[] {
+  frontmatter: Readonly<Record<string, unknown>> | undefined
+): SemanticManuscriptReference[] {
   return stringValues(getWorldContextValue(frontmatter)).map((reference) => ({
     reference,
     reason: "explicit" as const
@@ -124,8 +124,8 @@ function explicitCandidates(
 }
 
 function povCandidates(
-  frontmatter: Record<string, unknown> | undefined
-): ReferenceCandidate[] {
+  frontmatter: Readonly<Record<string, unknown>> | undefined
+): SemanticManuscriptReference[] {
   return stringValues(getPovValue(frontmatter)).map((reference) => ({
     reference,
     reason: "pov" as const
@@ -133,12 +133,35 @@ function povCandidates(
 }
 
 function locationCandidates(
-  frontmatter: Record<string, unknown> | undefined
-): ReferenceCandidate[] {
+  frontmatter: Readonly<Record<string, unknown>> | undefined
+): SemanticManuscriptReference[] {
   return stringValues(getLocationValue(frontmatter)).map((reference) => ({
     reference,
     reason: "location" as const
   }));
+}
+
+/**
+ * Returns only the manuscript frontmatter fields that existing Chapter Context
+ * semantics deliberately treat as Story World entity references. Arbitrary
+ * frontmatter wikilinks are not ontology.
+ */
+export function collectSemanticManuscriptReferences(
+  frontmatter: Readonly<Record<string, unknown>> | undefined
+): SemanticManuscriptReference[] {
+  return [
+    ...explicitCandidates(frontmatter),
+    ...povCandidates(frontmatter),
+    ...locationCandidates(frontmatter)
+  ];
+}
+
+export function isSemanticManuscriptReferenceTarget(
+  reference: SemanticManuscriptReference,
+  entity: StoryWorldEntityRecord
+): boolean {
+  return reference.reason !== "location"
+    || entity.entityType.trim().toLocaleLowerCase() === "location";
 }
 
 export function buildWorldContext(
@@ -153,22 +176,26 @@ export function buildWorldContext(
   const seenUnresolved = new Set<string>();
   let invalidReferenceCount = 0;
 
-  for (const candidate of explicitCandidates(frontmatter)) {
+  for (const candidate of collectSemanticManuscriptReferences(frontmatter)) {
     if (!parseWikilink(candidate.reference)) {
-      invalidReferenceCount += 1;
+      if (candidate.reason === "explicit") invalidReferenceCount += 1;
       continue;
     }
 
     const entity = resolve(candidate.reference);
 
     if (!entity) {
-      const key = candidate.reference.toLowerCase();
-      if (!seenUnresolved.has(key)) {
-        seenUnresolved.add(key);
-        unresolvedReferences.push(candidate.reference);
+      if (candidate.reason === "explicit") {
+        const key = candidate.reference.toLowerCase();
+        if (!seenUnresolved.has(key)) {
+          seenUnresolved.add(key);
+          unresolvedReferences.push(candidate.reference);
+        }
       }
       continue;
     }
+
+    if (!isSemanticManuscriptReferenceTarget(candidate, entity)) continue;
 
     const existing = entriesByPath.get(entity.path);
     if (existing) {
@@ -182,24 +209,6 @@ export function buildWorldContext(
       entity,
       reasons: [candidate.reason]
     });
-  }
-
-  // Explicit semantic manuscript fields contribute derived context without
-  // being copied into world_context. Invalid or unresolved values remain authored
-  // metadata and do not become World Context diagnostics.
-  for (const candidate of [...povCandidates(frontmatter), ...locationCandidates(frontmatter)]) {
-    if (!parseWikilink(candidate.reference)) continue;
-    const entity = resolve(candidate.reference);
-    if (!entity) continue;
-    if (candidate.reason === "location"
-      && entity.entityType.trim().toLocaleLowerCase() !== "location") continue;
-
-    const existing = entriesByPath.get(entity.path);
-    if (existing) {
-      if (!existing.reasons.includes(candidate.reason)) existing.reasons.push(candidate.reason);
-      continue;
-    }
-    entriesByPath.set(entity.path, { entity, reasons: [candidate.reason] });
   }
 
   return {

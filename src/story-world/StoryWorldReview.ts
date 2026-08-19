@@ -11,6 +11,10 @@ import { isRecord, projectEntityRelationships, relationshipProperty } from "./En
 import { parseWikilink, StoryWorldEntityRecord } from "./StoryWorldIndex";
 import { observeIncompleteEntityRelationships } from "./StoryWorldObservations";
 import { storyWorldTypedPropertyDefinitions } from "./TypedEntityProperties";
+import {
+  collectSemanticManuscriptReferences,
+  isSemanticManuscriptReferenceTarget
+} from "./WorldContext";
 
 export interface StoryWorldReviewLink {
   readonly raw: string;
@@ -41,6 +45,20 @@ export type StoryWorldReferenceResolver = (
 export interface StoryWorldReviewProjection {
   readonly observations: readonly ContinuityObservation[];
   readonly counts: Readonly<Record<"information" | "review" | "conflict", number>>;
+}
+
+export function storyWorldReviewEvidenceFingerprint(
+  frontmatter: Readonly<Record<string, unknown>>,
+  links: readonly StoryWorldReviewLink[] = []
+): string | null {
+  const storyWorldEvidence = Object.fromEntries(Object.entries(frontmatter)
+    .filter(([key]) => key.startsWith("world_") && key !== "world_context")
+    .sort(([left], [right]) => left.localeCompare(right)));
+  const semanticReferences = collectSemanticManuscriptReferences(frontmatter);
+  const bodyLinks = links.map((link) => [link.raw, link.linkpath, link.start, link.end]);
+  return Object.keys(storyWorldEvidence).length || semanticReferences.length || bodyLinks.length
+    ? JSON.stringify({ storyWorldEvidence, semanticReferences, bodyLinks })
+    : null;
 }
 
 const RULE_VERSION = 1;
@@ -452,9 +470,20 @@ function orphanObservations(
   resolve: StoryWorldReferenceResolver
 ): ContinuityObservation[] {
   const incoming = new Set<string>();
-  for (const document of documents) for (const link of document.links ?? []) {
-    const resolved = resolve(`[[${link.linkpath}]]`, document.path);
-    if (resolved?.indexed) incoming.add(resolved.path);
+  const entitiesByPath = new Map(entities.map((entity) => [entity.path, entity]));
+  for (const document of documents) {
+    for (const link of document.links ?? []) {
+      const resolved = resolve(`[[${link.linkpath}]]`, document.path);
+      if (resolved?.indexed) incoming.add(resolved.path);
+    }
+    for (const reference of collectSemanticManuscriptReferences(document.frontmatter)) {
+      if (!parseWikilink(reference.reference)) continue;
+      const resolved = resolve(reference.reference, document.path);
+      if (!resolved?.indexed) continue;
+      const target = entitiesByPath.get(resolved.path);
+      if (!target || !isSemanticManuscriptReferenceTarget(reference, target)) continue;
+      incoming.add(resolved.path);
+    }
   }
   for (const entity of entities) for (const reference of entity.links) {
     const resolved = resolve(reference, entity.path);

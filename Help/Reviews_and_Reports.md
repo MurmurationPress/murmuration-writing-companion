@@ -3,6 +3,7 @@
 MWC's reviews and reports are derived from authoritative manuscript and Story World Markdown. Opening or refreshing them does not make their findings canon.
 
 - **Continuity Review** gathers manuscript chronology, Chapter Context, and Book-relevant Story World findings. Relevance follows authoritative manuscript membership and resolved derived Scene context, including semantic POV, Location, and explicit `world_context`; it does not infer from prose or folders.
+- Informational orphan review counts recognised incoming semantic references, including manuscript body links, Scene `world_context`, resolved POV and resolved Location, Story World relationships, and typed entity-reference properties. Unresolved or ambiguous values are never guessed. An unreferenced entity may still be intentional preparatory canon.
 - **Story World Review** checks explicit relationships, participants, provenance, scope, names, aliases, statuses, and temporal structures. It reports problems but does not repair notes.
 - **Entity Index** creates a disposable Markdown report from explicit Scene links and established structured impact evidence. It does not infer plain-text mentions or page numbers.
 - **Graph** visualises explicit indexed relationships and supported evidence.

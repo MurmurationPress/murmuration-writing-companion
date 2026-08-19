@@ -1,7 +1,11 @@
 import { deepEqual, equal, notEqual, ok } from "node:assert/strict";
 import { test } from "node:test";
-import { StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
-import { buildStoryWorldReview, StoryWorldReviewDocument } from "../src/story-world/StoryWorldReview";
+import { parseWikilink, StoryWorldEntityRecord } from "../src/story-world/StoryWorldIndex";
+import {
+  buildStoryWorldReview,
+  storyWorldReviewEvidenceFingerprint,
+  StoryWorldReviewDocument
+} from "../src/story-world/StoryWorldReview";
 
 function entity(path: string, properties: Record<string, unknown>, options: Partial<StoryWorldEntityRecord> = {}): StoryWorldEntityRecord {
   const basename = path.split("/").pop()!.replace(/\.md$/, "");
@@ -22,6 +26,32 @@ function review(entities: readonly StoryWorldEntityRecord[], paths = new Set(ent
     const path = match.endsWith(".md") ? match : `${match}.md`;
     return paths.has(path) ? { path, indexed: entities.some((item) => item.path === path) } : null;
   });
+}
+
+function semanticReview(
+  manuscript: readonly StoryWorldReviewDocument[],
+  entities: readonly StoryWorldEntityRecord[]
+) {
+  const resolve = (reference: string) => {
+    const parsed = parseWikilink(reference);
+    if (!parsed) return null;
+    const lookup = parsed.linkpath.replace(/\.md$/iu, "").trim().toLocaleLowerCase();
+    const basename = lookup.split("/").pop() ?? lookup;
+    const candidates = entities.filter((item) => {
+      const path = item.path.replace(/\.md$/iu, "").toLocaleLowerCase();
+      if (lookup.includes("/")) return path === lookup;
+      return path === lookup
+        || item.basename.toLocaleLowerCase() === basename
+        || item.name.toLocaleLowerCase() === lookup
+        || item.aliases.some((alias) => alias.toLocaleLowerCase() === lookup);
+    });
+    return candidates.length === 1 ? { path: candidates[0].path, indexed: true } : null;
+  };
+  return buildStoryWorldReview(
+    [...documents(entities), ...manuscript],
+    entities,
+    resolve
+  );
 }
 
 test("observes broken targets, participants and provenance without suppressing valid assertions", () => {
@@ -203,6 +233,98 @@ test("orphan review respects manuscript links, semantic links and scoped POV des
   });
   const orphanPaths = result.observations.filter((item) => item.kind === "story-world.entity.orphan").map((item) => item.primary.path);
   deepEqual(orphanPaths, [orphan.path, owner.path, source.path]);
+});
+
+test("world_context semantic references prevent orphans through canonical, alias and qualified identity", () => {
+  const canonical = entity("World/Intervention.md", { world_entity: "event" }, {
+    entityType: "event", name: "First Routing Intervention"
+  });
+  const alias = entity("World/Four deaths.md", { world_entity: "event", aliases: ["Four deaths"] }, {
+    entityType: "event", name: "Four PRIME-Linked Deaths Identified", aliases: ["Four deaths"]
+  });
+  const qualified = entity("Story World/Locations/Reserve.md", { world_entity: "location" }, {
+    entityType: "location", name: "Coastal Reserve"
+  });
+  const scene: StoryWorldReviewDocument = {
+    path: "Books/One/Scene.md", basename: "Scene", links: [],
+    frontmatter: {
+      type: "scene",
+      world_context: [
+        "[[First Routing Intervention]]",
+        "[[Four deaths]]",
+        "[[Story World/Locations/Reserve]]"
+      ]
+    }
+  };
+  const result = semanticReview([scene], [canonical, alias, qualified]);
+  equal(result.observations.some((item) => item.kind === "story-world.entity.orphan"), false);
+});
+
+test("unresolved, ambiguous and malformed world_context values never guess away an orphan", () => {
+  const first = entity("World/One.md", { world_entity: "event" }, {
+    entityType: "event", name: "Collision", aliases: ["Shared"]
+  });
+  const second = entity("World/Two.md", { world_entity: "event" }, {
+    entityType: "event", name: "Other", aliases: ["Shared"]
+  });
+  const scene: StoryWorldReviewDocument = {
+    path: "Books/One/Scene.md", basename: "Scene", links: [],
+    frontmatter: { type: "scene", world_context: ["[[Shared]]", "[[Missing]]", "not a link", 42] }
+  };
+  const orphanPaths = semanticReview([scene], [first, second]).observations
+    .filter((item) => item.kind === "story-world.entity.orphan")
+    .map((item) => item.primary.path);
+  deepEqual(orphanPaths, [first.path, second.path]);
+});
+
+test("semantic Scene POV references Characters and Intelligences without rewriting world_context", () => {
+  const character = entity("World/Pip.md", { world_entity: "character" }, { name: "Pip" });
+  const intelligence = entity("World/PRIME.md", { world_entity: "intelligence" }, {
+    entityType: "intelligence", name: "PRIME"
+  });
+  const characterFrontmatter = { type: "scene", pov: "[[Pip]]", custom: { preserved: true } };
+  const intelligenceFrontmatter = { type: "scene", viewpoint: "[[PRIME]]" };
+  const before = JSON.stringify([characterFrontmatter, intelligenceFrontmatter]);
+  const result = semanticReview([
+    { path: "Books/One/Pip.md", basename: "Pip Scene", links: [], frontmatter: characterFrontmatter },
+    { path: "Books/One/Prime.md", basename: "PRIME Scene", links: [], frontmatter: intelligenceFrontmatter },
+    { path: "Books/One/Broken.md", basename: "Broken", links: [], frontmatter: { type: "scene", pov: "[[Missing]]" } }
+  ], [character, intelligence]);
+  equal(result.observations.some((item) => item.kind === "story-world.entity.orphan"), false);
+  equal(JSON.stringify([characterFrontmatter, intelligenceFrontmatter]), before);
+  equal(Object.prototype.hasOwnProperty.call(characterFrontmatter, "world_context"), false);
+});
+
+test("semantic Scene location counts only indexed Location targets", () => {
+  const location = entity("World/Reserve.md", { world_entity: "location" }, {
+    entityType: "location", name: "Reserve"
+  });
+  const character = entity("World/Robin.md", { world_entity: "character" }, { name: "Robin" });
+  const result = semanticReview([
+    { path: "Books/One/Located.md", basename: "Located", links: [], frontmatter: { type: "scene", location: "[[Reserve]]" } },
+    { path: "Books/One/Wrong.md", basename: "Wrong", links: [], frontmatter: { type: "scene", location: "[[Robin]]" } }
+  ], [location, character]);
+  const orphanPaths = result.observations.filter((item) => item.kind === "story-world.entity.orphan")
+    .map((item) => item.primary.path);
+  deepEqual(orphanPaths, [character.path]);
+});
+
+test("review invalidation fingerprints recognised semantic fields but not arbitrary hierarchy YAML", () => {
+  const base = { type: "scene", parent: "[[Books/One]]", custom: "[[World/Other]]" };
+  equal(storyWorldReviewEvidenceFingerprint(base), null);
+  const explicit = storyWorldReviewEvidenceFingerprint({ ...base, world_context: ["[[World/Event]]"] });
+  const pov = storyWorldReviewEvidenceFingerprint({ ...base, viewpoint: "[[World/Pip]]" });
+  const location = storyWorldReviewEvidenceFingerprint({ ...base, location: "[[World/Reserve]]" });
+  ok(explicit);
+  ok(pov);
+  ok(location);
+  notEqual(explicit, storyWorldReviewEvidenceFingerprint({ ...base, world_context: ["[[World/Other Event]]"] }));
+  notEqual(pov, storyWorldReviewEvidenceFingerprint({ ...base, viewpoint: "[[World/Robin]]" }));
+  notEqual(location, storyWorldReviewEvidenceFingerprint({ ...base, location: "[[World/Station]]" }));
+  equal(
+    storyWorldReviewEvidenceFingerprint({ ...base, parent: "[[Books/Two]]" }),
+    null
+  );
 });
 
 function parseTarget(reference: string): string {
