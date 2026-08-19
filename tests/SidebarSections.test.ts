@@ -41,6 +41,7 @@ class ThrowingStorage implements SidebarPreferenceStorage {
 test("uses quiet sidebar defaults when no preference exists", () => {
   deepEqual(parseSidebarSectionState(null), DEFAULT_SIDEBAR_SECTION_STATE);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.chapterContext, true);
+  equal(DEFAULT_SIDEBAR_SECTION_STATE.povGuidance, true);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.worldContext, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.editorialPasses, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.chapterNotes, true);
@@ -52,6 +53,7 @@ test("parses valid partial preferences without trusting malformed values", () =>
       version: 1,
       expanded: {
         chapterContext: false,
+        povGuidance: false,
         worldContext: true,
         editorialPasses: true,
         chapterNotes: "closed",
@@ -60,6 +62,7 @@ test("parses valid partial preferences without trusting malformed values", () =>
     })),
     {
       chapterContext: false,
+      povGuidance: false,
       worldContext: true,
       editorialPasses: true,
       chapterNotes: true
@@ -91,6 +94,7 @@ test("restores the new World Context default from older partial preferences", ()
     })),
     {
       chapterContext: false,
+      povGuidance: true,
       worldContext: false,
       editorialPasses: true,
       chapterNotes: false
@@ -104,14 +108,16 @@ test("persists each section independently and restores it on reload", () => {
   const preferences = new SidebarSectionPreferences(storage, key);
 
   equal(preferences.setExpanded("chapterContext", false), true);
+  equal(preferences.setExpanded("povGuidance", false), true);
   equal(preferences.setExpanded("worldContext", true), true);
   equal(preferences.setExpanded("editorialPasses", true), true);
   equal(preferences.setExpanded("chapterNotes", false), true);
   equal(preferences.setExpanded("chapterNotes", false), false);
-  equal(storage.writes, 4);
+  equal(storage.writes, 5);
 
   deepEqual(preferences.snapshot(), {
     chapterContext: false,
+    povGuidance: false,
     worldContext: true,
     editorialPasses: true,
     chapterNotes: false

@@ -516,9 +516,7 @@ export const EDITORIAL_ENHANCEMENT_STYLES = `
 }
 
 .mwc-pov-guidance {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--background-modifier-border);
+  overflow-wrap: anywhere;
 }
 
 .mwc-pov-guidance-profile + .mwc-pov-guidance-profile {

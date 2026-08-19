@@ -19,7 +19,16 @@ test("typed-property keystrokes update only creation-form state before explicit 
   const creation = (
     await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8")
   ).replace(/\r\n?/g, "\n");
-  const typedSection = creation.match(/private renderTypedPropertySection\(\): void \{(?<body>[\s\S]*?)\n  \}\n\n  private applyReferenceTitleDefault/u)?.groups?.body ?? "";
+  const typedSection = creation.match(/private renderTypedPropertySection\(\): void \{(?<body>[\s\S]*?)\n  \}\n\n  private renderScopeSection/u)?.groups?.body ?? "";
   match(typedSection, /this\.typedProperties\[definition\.property\] =/u);
+  doesNotMatch(typedSection, /processFrontMatter|vault\.modify|vault\.create|metadataCache/u);
+});
+
+test("POV template selection remains creation-form state until explicit creation", async () => {
+  const creation = (
+    await readFile(path.join(process.cwd(), "src/ui/StoryWorldEntityCreationModal.ts"), "utf8")
+  ).replace(/\r\n?/g, "\n");
+  const typedSection = creation.match(/private renderTypedPropertySection\(\): void \{(?<body>[\s\S]*?)\n  \}\n\n  private renderScopeSection/u)?.groups?.body ?? "";
+  match(typedSection, /this\.povProfileTemplate = value as PovProfileTemplateKind/u);
   doesNotMatch(typedSection, /processFrontMatter|vault\.modify|vault\.create|metadataCache/u);
 });

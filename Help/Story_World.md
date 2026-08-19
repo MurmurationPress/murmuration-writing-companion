@@ -30,7 +30,9 @@ pov_eligible: true
 pov_profile: "[[Story World/POV Profiles/Tobias POV]]"
 ```
 
-Create the profile as `world_entity: pov-profile` and edit its ordinary Markdown body. A specialised profile may use `pov_extends` to inherit one reusable base profile. MWC applies the base first and the specialised profile second; this is a single inheritance link, not a general rules language.
+Create the profile as `world_entity: pov-profile` and edit its ordinary Markdown body. The creation form can start with a light base-profile template, a blank profile, or a Book-scoped extension template; its headings are ordinary editable prompts, not schema fields. A specialised profile may use `pov_extends` to inherit one reusable base profile. MWC applies the base first and the specialised profile second; this is a single inheritance link, not a general rules language.
+
+A Book-scoped extension uses both an explicit `pov_extends` parent and `world_scope` Book link. When the current Scene belongs to that Book, MWC appends the single matching scoped delta after the durable profile chain. It never infers this relationship from folders or filenames. If multiple sibling deltas claim the same parent and Book, MWC reports unresolved guidance rather than choosing silently. Keep scoped profile prose to what changes in that Book; do not copy the parent guidance.
 
 When a Scene's `pov` resolves to an entity with a profile, the Writing Companion shows the effective material under **POV Guidance** in Chapter Context automatically. Do not repeat the profile in `world_context`. Scene-local Chapter Context remains separate and can supply immediate circumstances or exceptions. Existing entities do not require profiles, and missing or cyclic links do not block ordinary chapter use.
 
