@@ -4,6 +4,8 @@ import {
   filterStoryWorldBuilderItems,
   groupStoryWorldBuilderItems,
   parseStoryWorldBuilderItem,
+  projectStoryWorldBuilderGroups,
+  storyWorldCustomCategoryLabel,
   storyWorldBuilderItems
 } from "../src/story-world/WorldBuilder";
 
@@ -19,21 +21,105 @@ test("includes only explicit entities and supporting models", () => {
   ]);
 });
 
-test("groups known types, unknown entities and models without changing type values", () => {
+test("groups recognised entity types semantically in stable category order", () => {
   const items = storyWorldBuilderItems([
     { path: "A.md", basename: "A", frontmatter: { world_entity: "character" } },
     { path: "I.md", basename: "I", frontmatter: { world_entity: "intelligence" } },
+    { path: "P.md", basename: "P", frontmatter: { world_entity: "pov-profile" } },
+    { path: "L.md", basename: "L", frontmatter: { world_entity: "location" } },
+    { path: "O.md", basename: "O", frontmatter: { world_entity: "organization" } },
+    { path: "E.md", basename: "E", frontmatter: { world_entity: "event" } },
+    { path: "T.md", basename: "T", frontmatter: { world_entity: "technology" } },
+    { path: "K.md", basename: "K", frontmatter: { world_entity: "concept" } },
     { path: "R.md", basename: "R", frontmatter: { world_entity: "Reference" } },
-    { path: "B.md", basename: "B", frontmatter: { world_entity: "weather-system" } },
     { path: "C.md", basename: "C", frontmatter: { world_model: "continuity" } }
   ]);
   const groups = groupStoryWorldBuilderItems(items);
   deepEqual(groups.map((group) => [group.label, group.items.map((item) => item.type)]), [
-    ["Characters & intelligences", ["character", "intelligence"]],
+    ["Characters", ["character"]],
+    ["Intelligences", ["intelligence"]],
+    ["POV Profiles", ["pov-profile"]],
+    ["Locations", ["location"]],
+    ["Organisations", ["organization"]],
+    ["Events", ["event"]],
+    ["Technologies", ["technology"]],
+    ["Concepts", ["concept"]],
     ["References", ["Reference"]],
-    ["Other entities", ["weather-system"]],
     ["Supporting models", ["continuity"]]
   ]);
+});
+
+test("keeps custom entity types visible in deterministic human-readable categories", () => {
+  const groups = groupStoryWorldBuilderItems(storyWorldBuilderItems([
+    { path: "Storm/B.md", basename: "B", frontmatter: { world_entity: "weather-system", world_name: "Zephyr" } },
+    { path: "Elsewhere/A.md", basename: "A", frontmatter: { world_entity: "weather_system", world_name: "Aurora" } },
+    { path: "Dialect.md", basename: "Dialect", frontmatter: { world_entity: "dialect" } }
+  ]));
+  deepEqual(groups.map((group) => [group.key, group.label, group.items.map((item) => item.name)]), [
+    ["custom:dialect", "Dialects", ["Dialect"]],
+    ["custom:weather-system", "Weather Systems", ["Aurora", "Zephyr"]]
+  ]);
+  equal(storyWorldCustomCategoryLabel("weather-system"), "Weather Systems");
+});
+
+test("semantic categories and entity order are independent of physical folders", () => {
+  const before = storyWorldBuilderItems([
+    { path: "Story World/Characters/Z.md", basename: "Z", frontmatter: { world_entity: "character", world_name: "Pip" } },
+    { path: "Archive/A.md", basename: "A", frontmatter: { world_entity: "character", world_name: "Eleanor" } }
+  ]);
+  const moved = storyWorldBuilderItems([
+    { path: "Anywhere/Z.md", basename: "Z", frontmatter: { world_entity: "character", world_name: "Pip" } },
+    { path: "Story World/POV Profiles/A.md", basename: "A", frontmatter: { world_entity: "character", world_name: "Eleanor" } }
+  ]);
+  deepEqual(groupStoryWorldBuilderItems(before).map((group) => [group.label, group.items.map((item) => item.name)]),
+    groupStoryWorldBuilderItems(moved).map((group) => [group.label, group.items.map((item) => item.name)]));
+});
+
+test("omits empty categories", () => {
+  const groups = groupStoryWorldBuilderItems(storyWorldBuilderItems([
+    { path: "Pip.md", basename: "Pip", frontmatter: { world_entity: "character" } }
+  ]));
+  deepEqual(groups.map((group) => group.label), ["Characters"]);
+});
+
+test("search reveals matching collapsed categories without changing saved state", () => {
+  const items = storyWorldBuilderItems([
+    { path: "Pip.md", basename: "Pip", frontmatter: { world_entity: "character", world_name: "Pip" } },
+    { path: "Janus.md", basename: "Janus", frontmatter: { world_entity: "intelligence", world_name: "JANUS" } }
+  ]);
+  const collapsed = new Set(["intelligences"]);
+  deepEqual(projectStoryWorldBuilderGroups(items, "jan", collapsed).map((group) => [group.label, group.collapsed]), [
+    ["Intelligences", false]
+  ]);
+  deepEqual([...collapsed], ["intelligences"]);
+  deepEqual(projectStoryWorldBuilderGroups(items, "", collapsed).map((group) => [group.label, group.collapsed]), [
+    ["Characters", false], ["Intelligences", true]
+  ]);
+});
+
+test("tree projection does not mutate entity records, ordering, properties or collapse state", () => {
+  const items = storyWorldBuilderItems([
+    { path: "B.md", basename: "B", frontmatter: { world_entity: "location", world_name: "B", custom: { untouched: true } } },
+    { path: "A.md", basename: "A", frontmatter: { world_entity: "location", world_name: "A" } }
+  ]);
+  const collapsed = new Set(["locations"]);
+  const before = JSON.stringify(items);
+  projectStoryWorldBuilderGroups(items, "b", collapsed);
+  equal(JSON.stringify(items), before);
+  deepEqual([...collapsed], ["locations"]);
+});
+
+test("unrelated index additions retain collapse projection for existing categories", () => {
+  const collapsed = new Set(["characters"]);
+  const initial = storyWorldBuilderItems([
+    { path: "Pip.md", basename: "Pip", frontmatter: { world_entity: "character" } }
+  ]);
+  const refreshed = storyWorldBuilderItems([
+    { path: "Pip.md", basename: "Pip", frontmatter: { world_entity: "character" } },
+    { path: "London.md", basename: "London", frontmatter: { world_entity: "location" } }
+  ]);
+  equal(projectStoryWorldBuilderGroups(initial, "", collapsed)[0]?.collapsed, true);
+  equal(projectStoryWorldBuilderGroups(refreshed, "", collapsed)[0]?.collapsed, true);
 });
 
 test("searches canonical names, aliases and filenames", () => {

@@ -100,6 +100,10 @@ import {
   createVaultBackupRemotePreferenceKey,
   VaultBackupRemotePreference
 } from "./backup/VaultBackupRemotePreference";
+import {
+  createStoryWorldCategoryPreferenceKey,
+  StoryWorldCategoryPreferences
+} from "./story-world/StoryWorldCategoryPreferences";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -114,6 +118,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   manuscriptProjection!: ManuscriptProjectionService;
   storyWorldReviewProjection!: StoryWorldReviewProjectionService;
   sidebarSectionPreferences!: SidebarSectionPreferences;
+  storyWorldCategoryPreferences!: StoryWorldCategoryPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
   private readonly annotationLocator = new TransientAnnotationLocator();
@@ -178,6 +183,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         vaultName,
         resourceRoot
       )
+    );
+    this.storyWorldCategoryPreferences = new StoryWorldCategoryPreferences(
+      preferenceStorage,
+      createStoryWorldCategoryPreferenceKey(this.manifest.id, vaultName, resourceRoot)
     );
 
     this.storyWorldIndex = new ObsidianStoryWorldIndex(this.app);

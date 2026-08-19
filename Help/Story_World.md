@@ -36,7 +36,7 @@ When a Scene's `pov` resolves to an entity with a profile, the Writing Companion
 
 ## Browse and review
 
-- **Story World Navigator** browses entities and supporting models.
+- **Story World Navigator** groups entities into collapsible categories from their semantic `world_entity` value. POV Profiles have their own category, and custom kinds receive their own readable categories. Search temporarily reveals matching collapsed categories without changing your saved collapse choices. Folder placement never decides category or meaning.
 - **Entity Inspector** shows identity, status, time, relationships, sources, and manuscript impact.
 - **Graph** projects explicit relationships, participants, provenance, and supported temporal evidence.
 - **Timeline** places Events from explicit `world_time` and connects manuscript Scenes through explicit sources.

@@ -32,6 +32,8 @@ This allows gradual adoption and prevents existing manuscript notes from being r
 
 `world_entity` is one scalar primary kind. It provides a stable, author-chosen answer to “what is this principally?” and is the default grouping value in derived views.
 
+The Story World Navigator projects this value as a collapsible category tree. Recognised kinds receive stable labels and ordering; unknown kinds receive a derived, readable category and remain visible. Collapse and search state are presentation preferences only. Moving a note between folders cannot change its category, relationships, scope or context behaviour.
+
 `world_facets` is an optional scalar or list describing additional roles or aspects.
 
 ```yaml

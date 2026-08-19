@@ -1,12 +1,12 @@
-import { ItemView, MarkdownView, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownView, setIcon, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { StoryWorldEntityCreationHost, StoryWorldEntityCreationModal } from "../ui/StoryWorldEntityCreationModal";
 import {
   filterStoryWorldBuilderItems,
-  groupStoryWorldBuilderItems,
-  storyWorldBuilderItems,
+  builderItemFromEntity,
+  compareStoryWorldBuilderItems,
+  projectStoryWorldBuilderGroups,
   storyWorldTimeSortValue,
-  StoryWorldBuilderDocument,
   StoryWorldBuilderItem
 } from "./WorldBuilder";
 import { storyWorldNavigatorStatus } from "./StoryWorldNavigatorPresentation";
@@ -15,14 +15,6 @@ import { STORY_WORLD_NAVIGATOR_LABEL, STORY_WORLD_TIMELINE_LABEL } from "../ui/P
 export const STORY_WORLD_NAVIGATOR_VIEW_TYPE = "murmuration-story-world-navigator";
 interface StoryWorldNavigatorHost extends StoryWorldEntityCreationHost { activateStoryWorldTimeline(): Promise<void>; activateStoryWorldReview(): Promise<void>; activateStoryWorldGraph(path?: string): Promise<void>; }
 
-function documents(plugin: MurmurationWritingCompanionPlugin): StoryWorldBuilderDocument[] {
-  return plugin.app.vault.getMarkdownFiles().map((file) => ({
-    path: file.path,
-    basename: file.basename,
-    frontmatter: plugin.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined
-  }));
-}
-
 function compactDate(value: unknown): string | null {
   return storyWorldTimeSortValue(value);
 }
@@ -30,6 +22,8 @@ function compactDate(value: unknown): string | null {
 export class StoryWorldNavigatorView extends ItemView {
   private query = "";
   private manuallySelectedPath: string | null = null;
+  private allItems: StoryWorldBuilderItem[] = [];
+  private treeRegion: HTMLElement | null = null;
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldNavigatorHost) {
     super(leaf);
@@ -45,11 +39,14 @@ export class StoryWorldNavigatorView extends ItemView {
     container.empty();
     container.addClass("mwc-story-world-navigator");
 
-    const allItems = storyWorldBuilderItems(documents(this.plugin));
+    this.allItems = [
+      ...this.plugin.storyWorldIndex.index.getAll().map(builderItemFromEntity),
+      ...this.plugin.storyWorldIndex.getSupportingModels()
+    ].sort(compareStoryWorldBuilderItems);
     const heading = container.createDiv("mwc-story-world-navigator-heading");
     heading.createEl("h2", { text: STORY_WORLD_NAVIGATOR_LABEL });
     const headingActions = heading.createDiv("mwc-story-world-navigator-actions");
-    headingActions.createSpan({ cls: "mwc-story-world-navigator-count", text: `· ${allItems.length}` });
+    headingActions.createSpan({ cls: "mwc-story-world-navigator-count", text: `· ${this.allItems.length}` });
     const createButton = headingActions.createEl("button", {
       cls: "clickable-icon",
       attr: { type: "button", "aria-label": "Create Story World entity", title: "Create Story World entity" }
@@ -70,7 +67,7 @@ export class StoryWorldNavigatorView extends ItemView {
       cls: "clickable-icon", attr: { type: "button", "aria-label": "Open Story World Graph", title: "Open Story World Graph" }
     });
     graphButton.setText("◇");
-    graphButton.onclick = () => void this.plugin.activateStoryWorldGraph(this.activeStoryWorldPath(allItems) ?? undefined);
+    graphButton.onclick = () => void this.plugin.activateStoryWorldGraph(this.activeStoryWorldPath(this.allItems) ?? undefined);
 
     const search = container.createEl("input", {
       cls: "mwc-story-world-search",
@@ -78,15 +75,29 @@ export class StoryWorldNavigatorView extends ItemView {
       attr: { placeholder: "Search names, aliases or files", "aria-label": "Search Story World Navigator" }
     });
     search.value = this.query;
+    this.treeRegion = container.createDiv("mwc-story-world-tree-region");
+    const renderTreeRegion = () => {
+      if (!this.treeRegion) return;
+      this.treeRegion.empty();
+      this.renderTreeProjection(this.treeRegion);
+    };
     search.oninput = () => {
       this.query = search.value;
-      this.render();
-      const next = this.containerEl.querySelector<HTMLInputElement>(".mwc-story-world-search");
-      next?.focus();
-      next?.setSelectionRange(this.query.length, this.query.length);
+      renderTreeRegion();
     };
+    search.onkeydown = (event) => {
+      if (event.key !== "Escape" || this.query.length === 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.query = "";
+      search.value = "";
+      renderTreeRegion();
+    };
+    renderTreeRegion();
+  }
 
-    const items = filterStoryWorldBuilderItems(allItems, this.query);
+  private renderTreeProjection(container: HTMLElement): void {
+    const items = filterStoryWorldBuilderItems(this.allItems, this.query);
     if (!items.length) {
       container.createEl("p", {
         cls: "mwc-story-world-empty",
@@ -96,12 +107,44 @@ export class StoryWorldNavigatorView extends ItemView {
     }
 
     const activePath = this.activeStoryWorldPath(items);
-    for (const group of groupStoryWorldBuilderItems(items)) {
-      const section = container.createEl("section", { cls: "mwc-story-world-group" });
+    const groups = projectStoryWorldBuilderGroups(
+      this.allItems,
+      this.query,
+      this.plugin.storyWorldCategoryPreferences.snapshot()
+    );
+    const searchActive = this.query.trim().length > 0;
+    for (const group of groups) {
+      const section = container.createEl("section", {
+        cls: `mwc-story-world-group mwc-story-world-group--${group.key.replace(/[^a-z0-9-]/gu, "-")}`
+      });
       const title = section.createEl("h3", { cls: "mwc-story-world-group-title" });
-      title.createSpan({ text: group.label });
-      title.createSpan({ cls: "mwc-story-world-group-count", text: `· ${group.items.length}` });
+      const toggle = title.createEl("button", {
+        cls: "mwc-story-world-group-toggle",
+        attr: {
+          type: "button",
+          "aria-expanded": String(!group.collapsed),
+          "aria-label": searchActive
+            ? `${group.label} expanded for search results`
+            : `${group.collapsed ? "Expand" : "Collapse"} ${group.label}`
+        }
+      });
+      toggle.disabled = searchActive;
+      toggle.createSpan({
+        cls: "mwc-story-world-group-disclosure",
+        text: group.collapsed ? "›" : "⌄",
+        attr: { "aria-hidden": "true" }
+      });
+      const icon = toggle.createSpan({ cls: "mwc-story-world-group-icon", attr: { "aria-hidden": "true" } });
+      setIcon(icon, group.icon);
+      toggle.createSpan({ cls: "mwc-story-world-group-label", text: group.label });
+      toggle.createSpan({ cls: "mwc-story-world-group-count", text: `· ${group.items.length}` });
+      toggle.onclick = () => {
+        if (searchActive) return;
+        this.plugin.storyWorldCategoryPreferences.setCollapsed(group.key, !group.collapsed);
+        this.renderTreeRegion();
+      };
       const list = section.createEl("ul", { cls: "mwc-story-world-list" });
+      list.hidden = group.collapsed;
 
       for (const item of group.items) {
         const status = storyWorldNavigatorStatus(item.status);
@@ -134,6 +177,12 @@ export class StoryWorldNavigatorView extends ItemView {
     }
   }
 
+  private renderTreeRegion(): void {
+    if (!this.treeRegion?.isConnected) return;
+    this.treeRegion.empty();
+    this.renderTreeProjection(this.treeRegion);
+  }
+
   private activeStoryWorldPath(items: readonly StoryWorldBuilderItem[]): string | null {
     if (this.manuallySelectedPath && items.some((item) => item.path === this.manuallySelectedPath)) return this.manuallySelectedPath;
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -149,6 +198,6 @@ export class StoryWorldNavigatorView extends ItemView {
     await this.plugin.activateView();
     this.app.workspace.setActiveLeaf(leaf, { focus: true });
     if (leaf.view instanceof MarkdownView) leaf.view.editor.focus();
-    this.render();
+    this.renderTreeRegion();
   }
 }
