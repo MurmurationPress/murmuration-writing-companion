@@ -13,7 +13,10 @@ function evidenceFingerprint(app: App, file: TFile): string | null {
   const evidence = Object.fromEntries(Object.entries(frontmatter)
     .filter(([key]) => key.startsWith("world_") && key !== "world_context")
     .sort(([left], [right]) => left.localeCompare(right)));
-  return Object.keys(evidence).length ? JSON.stringify(evidence) : null;
+  const links = (app.metadataCache.getFileCache(file)?.links ?? []).map((link) => [
+    link.original, link.link, link.position.start.offset, link.position.end.offset
+  ]);
+  return Object.keys(evidence).length || links.length ? JSON.stringify({ evidence, links }) : null;
 }
 
 /** Lazy, disposable Story World review projection. Closed views do not warm it. */

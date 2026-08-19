@@ -13,7 +13,18 @@ export function collectObsidianStoryWorldReview(
   storyWorldIndex: ObsidianStoryWorldIndex
 ): StoryWorldReviewProjection {
   const files = app.vault.getMarkdownFiles().filter((file) => !isObsidianTrashPath(file.path));
-  const documents = files.map((file) => ({ path: file.path, basename: file.basename, frontmatter: frontmatter(app, file) }));
+  const documents = files.map((file) => ({
+    path: file.path,
+    basename: file.basename,
+    frontmatter: frontmatter(app, file),
+    links: (app.metadataCache.getFileCache(file)?.links ?? []).map((link) => ({
+      raw: link.original,
+      linkpath: link.link,
+      displayText: link.displayText ?? null,
+      start: link.position.start.offset,
+      end: link.position.end.offset
+    }))
+  }));
   const entities = storyWorldIndex.index.getAll();
   const resolvePath = (reference: string, sourcePath: string): string | null => {
     const resolved = storyWorldIndex.resolveReference(reference, sourcePath);

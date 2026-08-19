@@ -1,9 +1,10 @@
-import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { ContinuityObservation, ObservationSeverity } from "../observations/ContinuityObservation";
-import { collectObsidianStoryWorldReview } from "./ObsidianStoryWorldReview";
-import { buildObsidianManuscriptLibrary } from "../manuscript/ObsidianManuscript";
+import { matchContinuityDisposition } from "../observations/ContinuityDisposition";
+import { renderContinuityDispositionControls } from "../companion/ContinuityDispositionControls";
 import { buildWorldContext } from "./WorldContext";
+import { relinkStoryWorldOccurrence } from "./StoryWorldRelink";
 
 export const STORY_WORLD_REVIEW_VIEW_TYPE = "murmuration-story-world-review";
 export const STORY_WORLD_REVIEW_LABEL = "Story World Review";
@@ -31,6 +32,7 @@ export class StoryWorldReviewView extends ItemView {
   private severity = "all";
   private kind = "all";
   private scopeFilter = "global";
+  private reviewState = "active";
   private focusedFingerprint: string | null = null;
 
   constructor(leaf: WorkspaceLeaf, private readonly plugin: StoryWorldReviewHost) { super(leaf); }
@@ -41,7 +43,10 @@ export class StoryWorldReviewView extends ItemView {
 
   showFingerprint(fingerprint: string): void {
     this.focusedFingerprint = fingerprint;
-    this.severity = "all"; this.kind = "all"; this.scopeFilter = "global";
+    const observation = this.plugin.storyWorldReviewProjection.get().observations.find((item) => item.fingerprint === fingerprint);
+    const disposition = observation ? matchContinuityDisposition(observation, this.plugin.storeService.getContinuityDispositionRecords()) : null;
+    const retained = disposition?.state === "current" && Boolean(disposition.record);
+    this.severity = "all"; this.kind = "all"; this.scopeFilter = "global"; this.reviewState = retained ? "history" : "active";
     this.render();
     const row = this.containerEl.querySelector<HTMLElement>(`[data-observation-fingerprint="${fingerprint}"]`);
     if (row instanceof HTMLDetailsElement) row.open = true;
@@ -73,8 +78,12 @@ export class StoryWorldReviewView extends ItemView {
     scope.createEl("option", { value: "global", text: "Global Story World" });
     scope.createEl("option", { value: "book", text: "Current Book references" });
     scope.value = this.scopeFilter;
-    const rerender = () => { this.severity = severity.value; this.kind = kind.value; this.scopeFilter = scope.value; this.render(); };
-    severity.onchange = rerender; kind.onchange = rerender; scope.onchange = rerender;
+    const reviewState = controls.createEl("select", { attr: { "aria-label": "Filter Story World review by disposition" } });
+    reviewState.createEl("option", { value: "active", text: "Active" });
+    reviewState.createEl("option", { value: "history", text: "History / retained" });
+    reviewState.value = this.reviewState;
+    const rerender = () => { this.severity = severity.value; this.kind = kind.value; this.scopeFilter = scope.value; this.reviewState = reviewState.value; this.render(); };
+    severity.onchange = rerender; kind.onchange = rerender; scope.onchange = rerender; reviewState.onchange = rerender;
 
     const bookPath = this.plugin.manuscriptBookSelection.get().bookPath;
     const relevantPaths = new Set<string>();
@@ -92,11 +101,16 @@ export class StoryWorldReviewView extends ItemView {
         if (entity.scope.some((reference) => this.plugin.storyWorldIndex.resolveReference(reference, entity.path)?.path === bookPath)) relevantPaths.add(entity.path);
       }
     }
-    const visible = projection.observations.filter((observation) =>
-      (this.severity === "all" || observation.severity === this.severity as ObservationSeverity)
-      && (this.kind === "all" || observation.kind === this.kind)
-      && (this.scopeFilter === "global" || relevantPaths.has(observation.primary.path))
-    );
+    const records = this.plugin.storeService.getContinuityDispositionRecords();
+    const matches = projection.observations.map((observation) => matchContinuityDisposition(observation, records));
+    const visibleMatches = matches.filter((match) => {
+      const retained = match.state === "current" && match.record !== null;
+      return (this.reviewState === "history" ? retained : !retained)
+      && (this.severity === "all" || match.observation.severity === this.severity as ObservationSeverity)
+      && (this.kind === "all" || match.observation.kind === this.kind)
+      && (this.scopeFilter === "global" || relevantPaths.has(match.observation.primary.path));
+    });
+    const visible = visibleMatches.map((match) => match.observation);
     if (this.scopeFilter === "book" && !bookPath) {
       container.createEl("p", { cls: "mwc-muted", text: "Select a manuscript Book to use Book-scoped filtering. Global review remains available." });
       return;
@@ -136,6 +150,49 @@ export class StoryWorldReviewView extends ItemView {
           if (file instanceof TFile) void this.app.workspace.getLeaf(false).openFile(file, { active: true });
         };
       }
+      const match = visibleMatches.find((candidate) => candidate.observation.fingerprint === observation.fingerprint)!;
+      if (observation.kind.includes("collision") && !(match.state === "current" && match.record)) {
+        const keep = actions.createEl("button", { text: "Keep both", attr: { type: "button" } });
+        keep.onclick = () => {
+          keep.disabled = true;
+          void this.plugin.storeService.setContinuityDisposition(observation, "intentional", "Keep both Story World records.");
+        };
+      }
+      if (observation.kind === "story-world.link.ambiguous") {
+        const location = observation.evidence.find((item) => item.role === "wikilink");
+        const raw = location?.value.kind === "value" && typeof location.value.value === "string" ? location.value.value : null;
+        const [marker, start, end] = location?.source.property ?? [];
+        for (const candidate of observation.evidence.filter((item) => item.role === "candidate" && item.value.kind === "resolved_note")) {
+          if (!raw || marker !== "body" || typeof start !== "number" || typeof end !== "number" || candidate.value.kind !== "resolved_note") continue;
+          const target = candidate.value.note;
+          const relink = actions.createEl("button", { text: `Relink to ${target.label ?? target.path}`, attr: { type: "button" } });
+          relink.onclick = () => void this.relinkOccurrence(observation.primary.path, { raw, start, end }, target.path, relink);
+        }
+      }
+      renderContinuityDispositionControls(row, observation, match, this.plugin.storeService);
+    }
+  }
+
+  private async relinkOccurrence(
+    sourcePath: string,
+    occurrence: { readonly raw: string; readonly start: number; readonly end: number },
+    targetPath: string,
+    button: HTMLButtonElement
+  ): Promise<void> {
+    if (!window.confirm(`Replace only ${occurrence.raw} at the reviewed location with a link to ${targetPath}?`)) return;
+    const file = this.app.vault.getAbstractFileByPath(sourcePath);
+    if (!(file instanceof TFile)) { new Notice("The source note is no longer available."); return; }
+    button.disabled = true;
+    try {
+      const current = await this.app.vault.cachedRead(file);
+      const updated = relinkStoryWorldOccurrence(current, occurrence, targetPath);
+      await this.app.vault.modify(file, updated);
+      this.plugin.storyWorldReviewProjection.invalidate();
+      new Notice("Story World link updated.");
+      this.render();
+    } catch (error) {
+      button.disabled = false;
+      new Notice(error instanceof Error ? error.message : "The Story World link could not be updated.");
     }
   }
 }
