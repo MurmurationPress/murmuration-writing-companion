@@ -55,6 +55,8 @@ test("older sidebar preferences inherit the expanded POV Guidance default", () =
   equal(parsed.povGuidance, true);
   equal(parsed.chapterContext, false);
   equal(parsed.worldContext, true);
+  equal(parsed.entityInspectorImpact, false);
+  equal(parsed.entityInspectorRelationships, false);
 });
 
 test("one standard disclosure contains every effective profile and diagnostic", async () => {

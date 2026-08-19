@@ -374,11 +374,16 @@ export function renderEntityRelationshipWorkspace(
   container: Element,
   plugin: MurmurationWritingCompanionPlugin,
   file: TFile,
-  entity: { readonly name: string; readonly properties: Readonly<Record<string, unknown>> }
+  entity: { readonly name: string; readonly properties: Readonly<Record<string, unknown>> },
+  options: { readonly embedded?: boolean } = {}
 ): void {
-  const section = container.createDiv("mwc-section mwc-entity-relationships");
+  const section = container.createDiv(
+    options.embedded
+      ? "mwc-entity-relationships mwc-entity-relationships--embedded"
+      : "mwc-section mwc-entity-relationships"
+  );
   const heading = section.createDiv("mwc-entity-relationships-heading");
-  heading.createEl("h3", { text: "Relationships" });
+  if (!options.embedded) heading.createEl("h3", { text: "Relationships" });
   const add = heading.createEl("button", { text: "Add relationship" });
   const editor = section.createDiv("mwc-entity-relationship-editor");
   add.onclick = () => void beginForm(editor, plugin, file, entity.name);

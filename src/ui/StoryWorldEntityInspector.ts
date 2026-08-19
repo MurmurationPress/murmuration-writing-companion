@@ -11,6 +11,7 @@ import {
   readStoryWorldTypedProperties,
   storyWorldTypedPropertyTextValues
 } from "../story-world/TypedEntityProperties";
+import { createPersistedCollapsibleSection } from "./PersistedCollapsibleSection";
 
 function formatTime(value: unknown): string | null {
   if (typeof value === "string") return value.trim() || null;
@@ -70,13 +71,14 @@ function renderTypedProperties(
   }
 }
 
-function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
+function renderManuscriptImpactContent(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile): void {
   const selected = plugin.storyWorldIndex.index.getByPath(file.path);
-  if (!selected) return;
+  if (!selected) {
+    container.createEl("p", { cls: "mwc-muted", text: "Manuscript impact is unavailable for this item." });
+    return;
+  }
   const projection = buildObsidianStoryWorldManuscriptImpact(plugin.app, plugin.storyWorldIndex, selected, plugin.manuscriptProjection.get(), plugin.storyWorldReviewProjection.get());
-  const section = container.createDiv("mwc-story-world-inspector-section mwc-manuscript-impact");
-  section.createEl("h3", { text: "Impact Across Manuscript" });
-  const controls = section.createDiv("mwc-manuscript-impact-controls");
+  const controls = container.createDiv("mwc-manuscript-impact-controls");
   const count = controls.createSpan({ cls: "mwc-muted" });
   const filter = controls.createEl("select", { attr: { "aria-label": "Filter manuscript impact" } });
   const options: readonly [ManuscriptImpactFilter, string][] = [
@@ -85,7 +87,7 @@ function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCo
     ["before", "Before"], ["during", "During"], ["after", "After"], ["current-book", "Current Book only"]
   ];
   for (const [value, label] of options) { const option = filter.createEl("option", { text: label }); option.value = value; }
-  const results = section.createDiv("mwc-manuscript-impact-results");
+  const results = container.createDiv("mwc-manuscript-impact-results");
   const render = () => {
     results.empty();
     const selectedBook = plugin.manuscriptBookSelection.get().bookPath;
@@ -118,6 +120,55 @@ function renderManuscriptImpact(container: Element, plugin: MurmurationWritingCo
   render();
 }
 
+function renderManuscriptImpactDisclosure(
+  container: Element,
+  plugin: MurmurationWritingCompanionPlugin,
+  file: TFile
+): void {
+  if (!plugin.storyWorldIndex.index.getByPath(file.path)) return;
+  const collapsible = createPersistedCollapsibleSection(
+    container,
+    plugin.sidebarSectionPreferences,
+    "entityInspectorImpact",
+    "Impact Across Manuscript",
+    {
+      renderContent: (content) => renderManuscriptImpactContent(content, plugin, file),
+      renderContentOnEachExpansion: true
+    }
+  );
+  collapsible.section.classList.add(
+    "mwc-story-world-inspector-section",
+    "mwc-manuscript-impact"
+  );
+}
+
+function renderRelationshipsDisclosure(
+  container: Element,
+  plugin: MurmurationWritingCompanionPlugin,
+  file: TFile,
+  item: StoryWorldBuilderItem
+): void {
+  const collapsible = createPersistedCollapsibleSection(
+    container,
+    plugin.sidebarSectionPreferences,
+    "entityInspectorRelationships",
+    "Relationships",
+    {
+      renderContent: (content) => renderEntityRelationshipWorkspace(
+        content,
+        plugin,
+        file,
+        item,
+        { embedded: true }
+      )
+    }
+  );
+  collapsible.section.classList.add(
+    "mwc-story-world-inspector-section",
+    "mwc-entity-relationships-disclosure"
+  );
+}
+
 export function storyWorldBuilderItemForFile(plugin: MurmurationWritingCompanionPlugin, file: TFile): StoryWorldBuilderItem | null {
   const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
   return parseStoryWorldBuilderItem({ path: file.path, basename: file.basename, frontmatter });
@@ -146,6 +197,6 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   addValues(container, "Sources", item.sources, plugin, file);
   addValues(container, "Subject", item.modelSubject, plugin, file);
   if (item.kind === "entity") renderTypedProperties(container, plugin, file, item);
-  renderManuscriptImpact(container, plugin, file);
-  if (item.kind === "entity") renderEntityRelationshipWorkspace(container, plugin, file, item);
+  renderManuscriptImpactDisclosure(container, plugin, file);
+  if (item.kind === "entity") renderRelationshipsDisclosure(container, plugin, file, item);
 }
