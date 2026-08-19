@@ -6,39 +6,57 @@ import {
   StoryWorldIndex
 } from "./StoryWorldIndex";
 import { isObsidianTrashPath } from "../ObsidianTrash";
+import {
+  compareStoryWorldBuilderItems,
+  parseStoryWorldBuilderItem,
+  StoryWorldBuilderItem
+} from "./WorldBuilder";
 
 export class ObsidianStoryWorldIndex {
   readonly index = new StoryWorldIndex();
+  private readonly supportingModelsByPath = new Map<string, StoryWorldBuilderItem>();
 
   constructor(private readonly app: App) {}
 
   rebuild(): boolean {
-    return this.index.rebuild(
-      this.app.vault.getMarkdownFiles()
-        .filter((file) => !isObsidianTrashPath(file.path))
-        .map((file) => this.documentFor(file))
-    );
+    const documents = this.app.vault.getMarkdownFiles()
+      .filter((file) => !isObsidianTrashPath(file.path))
+      .map((file) => this.documentFor(file));
+    const beforeModels = JSON.stringify(this.getSupportingModels());
+    this.supportingModelsByPath.clear();
+    for (const document of documents) this.upsertSupportingModel(document);
+    return this.index.rebuild(documents) || beforeModels !== JSON.stringify(this.getSupportingModels());
   }
 
   handleMetadataChanged(file: TFile): boolean {
     if (file.extension !== "md") return false;
-    if (isObsidianTrashPath(file.path)) return this.index.remove(file.path);
-    return this.index.upsert(this.documentFor(file));
+    if (isObsidianTrashPath(file.path)) return this.handleDeletePath(file.path);
+    const document = this.documentFor(file);
+    const entityChanged = this.index.upsert(document);
+    const modelChanged = this.upsertSupportingModel(document);
+    return entityChanged || modelChanged;
   }
 
   handleCreate(file: TFile): boolean {
     if (file.extension !== "md") return false;
     if (isObsidianTrashPath(file.path)) return false;
-    return this.index.upsert(this.documentFor(file));
+    const document = this.documentFor(file);
+    const entityChanged = this.index.upsert(document);
+    const modelChanged = this.upsertSupportingModel(document);
+    return entityChanged || modelChanged;
   }
 
   handleDelete(file: TFile): boolean {
     if (file.extension !== "md") return false;
-    return this.index.remove(file.path);
+    const entityChanged = this.index.remove(file.path);
+    const modelChanged = this.supportingModelsByPath.delete(file.path);
+    return entityChanged || modelChanged;
   }
 
   handleDeletePath(path: string): boolean {
-    return this.index.remove(path);
+    const entityChanged = this.index.remove(path);
+    const modelChanged = this.supportingModelsByPath.delete(path);
+    return entityChanged || modelChanged;
   }
 
   handleRename(file: TFile, oldPath: string): boolean {
@@ -46,7 +64,15 @@ export class ObsidianStoryWorldIndex {
       return false;
     }
 
-    return this.index.rename(oldPath, this.documentFor(file));
+    const document = this.documentFor(file);
+    const entityChanged = this.index.rename(oldPath, document);
+    const removedModel = oldPath === file.path ? false : this.supportingModelsByPath.delete(oldPath);
+    const modelChanged = this.upsertSupportingModel(document);
+    return entityChanged || removedModel || modelChanged;
+  }
+
+  getSupportingModels(): StoryWorldBuilderItem[] {
+    return [...this.supportingModelsByPath.values()].sort(compareStoryWorldBuilderItems);
   }
 
   resolveWikilink(
@@ -88,5 +114,15 @@ export class ObsidianStoryWorldIndex {
       basename: file.basename,
       frontmatter
     };
+  }
+
+  private upsertSupportingModel(document: StoryWorldDocument): boolean {
+    const parsed = parseStoryWorldBuilderItem(document);
+    const next = parsed?.kind === "model" ? parsed : null;
+    const existing = this.supportingModelsByPath.get(document.path);
+    if (!next) return existing ? this.supportingModelsByPath.delete(document.path) : false;
+    if (existing && JSON.stringify(existing) === JSON.stringify(next)) return false;
+    this.supportingModelsByPath.set(document.path, next);
+    return true;
   }
 }

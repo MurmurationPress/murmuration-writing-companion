@@ -28,7 +28,12 @@ export interface StoryWorldBuilderItem {
 export interface StoryWorldBuilderGroup {
   readonly key: string;
   readonly label: string;
+  readonly icon: string;
   readonly items: readonly StoryWorldBuilderItem[];
+}
+
+export interface StoryWorldBuilderGroupProjection extends StoryWorldBuilderGroup {
+  readonly collapsed: boolean;
 }
 
 function text(value: unknown): string | null {
@@ -122,15 +127,40 @@ export function storyWorldBuilderItems(
     .sort(compareStoryWorldBuilderItems);
 }
 
-const GROUPS: Array<{ key: string; label: string; types: readonly string[] }> = [
-  { key: "characters", label: "Characters & intelligences", types: ["character", "intelligence"] },
-  { key: "events", label: "Events", types: ["event"] },
-  { key: "locations", label: "Locations", types: ["location", "place"] },
-  { key: "organisations", label: "Organisations", types: ["organisation", "organization", "institution"] },
-  { key: "technologies", label: "Technologies", types: ["technology", "system"] },
-  { key: "concepts", label: "Concepts", types: ["concept"] },
-  { key: "references", label: "References", types: ["reference"] }
+const GROUPS: Array<{ key: string; label: string; icon: string; types: readonly string[] }> = [
+  { key: "characters", label: "Characters", icon: "user-round", types: ["character"] },
+  { key: "intelligences", label: "Intelligences", icon: "cpu", types: ["intelligence"] },
+  { key: "pov-profiles", label: "POV Profiles", icon: "eye", types: ["pov-profile"] },
+  { key: "locations", label: "Locations", icon: "map-pin", types: ["location", "place"] },
+  { key: "organisations", label: "Organisations", icon: "building-2", types: ["organisation", "organization", "institution"] },
+  { key: "events", label: "Events", icon: "calendar-clock", types: ["event"] },
+  { key: "technologies", label: "Technologies", icon: "wrench", types: ["technology", "system"] },
+  { key: "concepts", label: "Concepts", icon: "lightbulb", types: ["concept"] },
+  { key: "references", label: "References", icon: "book-open", types: ["reference"] }
 ];
+
+function normalizedType(value: string): string {
+  return value.trim().toLocaleLowerCase().replace(/[\s_]+/gu, "-");
+}
+
+function titleWords(value: string): string[] {
+  return value.trim().split(/[\s_-]+/gu).filter(Boolean)
+    .map((word) => word[0].toLocaleUpperCase() + word.slice(1).toLocaleLowerCase());
+}
+
+function pluralize(word: string): string {
+  if (/s$/iu.test(word)) return word;
+  if (/[^aeiou]y$/iu.test(word)) return `${word.slice(0, -1)}ies`;
+  if (/(?:ch|sh|x|z)$/iu.test(word)) return `${word}es`;
+  return `${word}s`;
+}
+
+export function storyWorldCustomCategoryLabel(entityType: string): string {
+  const words = titleWords(entityType);
+  if (!words.length) return "Custom Entities";
+  words[words.length - 1] = pluralize(words[words.length - 1]);
+  return words.join(" ");
+}
 
 export function filterStoryWorldBuilderItems(
   items: readonly StoryWorldBuilderItem[],
@@ -152,22 +182,46 @@ export function groupStoryWorldBuilderItems(
 
   for (const definition of GROUPS) {
     const matches = items.filter((item) => item.kind === "entity"
-      && definition.types.includes(item.type.trim().toLowerCase()))
+      && definition.types.includes(normalizedType(item.type)))
       .sort(compareStoryWorldBuilderItems);
     if (!matches.length) continue;
     matches.forEach((item) => remaining.delete(item));
-    groups.push({ key: definition.key, label: definition.label, items: matches });
+    groups.push({ key: definition.key, label: definition.label, icon: definition.icon, items: matches });
   }
 
-  const otherEntities = items.filter((item) => remaining.has(item) && item.kind === "entity")
-    .sort(compareStoryWorldBuilderItems);
-  otherEntities.forEach((item) => remaining.delete(item));
-  if (otherEntities.length) groups.push({ key: "other", label: "Other entities", items: otherEntities });
+  const customTypes = new Map<string, StoryWorldBuilderItem[]>();
+  for (const item of items.filter((candidate) => remaining.has(candidate) && candidate.kind === "entity")) {
+    const key = normalizedType(item.type);
+    const matches = customTypes.get(key) ?? [];
+    matches.push(item);
+    customTypes.set(key, matches);
+    remaining.delete(item);
+  }
+  const customGroups = [...customTypes.entries()].map(([type, matches]) => ({
+    key: `custom:${type}`,
+    label: storyWorldCustomCategoryLabel(type),
+    icon: "tag",
+    items: matches.sort(compareStoryWorldBuilderItems)
+  })).sort((left, right) => left.label.localeCompare(right.label, "en", { sensitivity: "base" })
+    || left.key.localeCompare(right.key));
+  groups.push(...customGroups);
 
   const models = items.filter((item) => remaining.has(item) && item.kind === "model")
     .sort(compareStoryWorldBuilderItems);
-  if (models.length) groups.push({ key: "models", label: "Supporting models", items: models });
+  if (models.length) groups.push({ key: "models", label: "Supporting models", icon: "boxes", items: models });
   return groups;
+}
+
+export function projectStoryWorldBuilderGroups(
+  items: readonly StoryWorldBuilderItem[],
+  query: string,
+  collapsedCategories: ReadonlySet<string>
+): StoryWorldBuilderGroupProjection[] {
+  const searchActive = query.trim().length > 0;
+  return groupStoryWorldBuilderItems(filterStoryWorldBuilderItems(items, query)).map((group) => ({
+    ...group,
+    collapsed: !searchActive && collapsedCategories.has(group.key)
+  }));
 }
 
 export function builderItemFromEntity(entity: StoryWorldEntityRecord): StoryWorldBuilderItem {
