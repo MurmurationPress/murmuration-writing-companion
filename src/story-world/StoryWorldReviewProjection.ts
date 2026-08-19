@@ -2,7 +2,10 @@ import { App, TFile } from "obsidian";
 import { isObsidianTrashPath } from "../ObsidianTrash";
 import { collectObsidianStoryWorldReview } from "./ObsidianStoryWorldReview";
 import { ObsidianStoryWorldIndex } from "./ObsidianStoryWorldIndex";
-import { StoryWorldReviewProjection } from "./StoryWorldReview";
+import {
+  storyWorldReviewEvidenceFingerprint,
+  StoryWorldReviewProjection
+} from "./StoryWorldReview";
 import { DisposableProjection } from "../projections/DisposableProjection";
 
 type Collector = (app: App, index: ObsidianStoryWorldIndex) => StoryWorldReviewProjection;
@@ -10,13 +13,11 @@ type Collector = (app: App, index: ObsidianStoryWorldIndex) => StoryWorldReviewP
 function evidenceFingerprint(app: App, file: TFile): string | null {
   if (file.extension !== "md" || isObsidianTrashPath(file.path)) return null;
   const frontmatter = (app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined) ?? {};
-  const evidence = Object.fromEntries(Object.entries(frontmatter)
-    .filter(([key]) => key.startsWith("world_") && key !== "world_context")
-    .sort(([left], [right]) => left.localeCompare(right)));
   const links = (app.metadataCache.getFileCache(file)?.links ?? []).map((link) => [
-    link.original, link.link, link.position.start.offset, link.position.end.offset
-  ]);
-  return Object.keys(evidence).length || links.length ? JSON.stringify({ evidence, links }) : null;
+    link.original, link.link, link.displayText ?? null,
+    link.position.start.offset, link.position.end.offset
+  ] as const).map(([raw, linkpath, displayText, start, end]) => ({ raw, linkpath, displayText, start, end }));
+  return storyWorldReviewEvidenceFingerprint(frontmatter, links);
 }
 
 /** Lazy, disposable Story World review projection. Closed views do not warm it. */
