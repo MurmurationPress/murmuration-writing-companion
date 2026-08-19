@@ -282,6 +282,13 @@ export class StoryWorldIndex {
     return this.entitiesByPath.get(path) ?? null;
   }
 
+  /** Resolves an explicit path-qualified link from the in-memory index. */
+  getByReferencePath(linkpath: string): StoryWorldEntityRecord | null {
+    const normalized = linkpath.trim().replace(/\\/gu, "/").replace(/\.md$/iu, "");
+    if (!normalized.includes("/")) return null;
+    return this.getByPath(`${normalized}.md`);
+  }
+
   findByNameOrAlias(value: string): StoryWorldEntityRecord[] {
     return this.recordsForPaths(this.pathsByName.get(normalizeLookup(value)));
   }

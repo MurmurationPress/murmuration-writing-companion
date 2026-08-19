@@ -38,6 +38,8 @@ A resolved Story World Location automatically contributes to derived World Conte
 
 Use `world_context` for the broader set of indexed entities relevant to the Scene: an Event being discussed, an Organisation acting off-page, a Technology in use, or another contextual entity.
 
+In the Writing Companion's **World Context** section, choose **Add World Context** to search indexed entity names and aliases. You can filter by entity type; Events appear first for quick attachment. MWC stores a readable canonical wikilink when that link resolves uniquely and uses a path-qualified link when disambiguation is required.
+
 ```yaml
 pov: "[[Pip]]"
 location: "[[Story World/Locations/Coastal Nature Reserve]]"
@@ -47,3 +49,5 @@ world_context:
 ```
 
 POV, Location, and explicit context remain semantically distinct but are displayed once per resolved entity path. MWC does not infer World Context from prose, folders, tags, backlinks, or filename similarity.
+
+Only explicit `world_context` entries show **Remove** here. POV and Location remain editable through their own Chapter Context fields. Add/remove preserves other entries, aliases, unresolved manual links, custom Scene YAML, and manuscript prose. Equivalent canonical, alias, and path-qualified references are recognised as the same indexed entity rather than duplicated. Manual wikilinks remain supported.

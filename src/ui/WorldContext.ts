@@ -32,6 +32,29 @@ export interface WorldContextRenderOptions {
   storyDate?: unknown;
   relativeTimeMode?: WorldEventRelativeTimeMode;
   onRelativeTimeModeChange?: (mode: WorldEventRelativeTimeMode) => void;
+  onRemoveExplicit?: (entry: WorldContextEntry) => void | Promise<void>;
+}
+
+function renderExplicitRemoveControl(
+  container: HTMLElement,
+  entry: WorldContextEntry,
+  onRemove: ((entry: WorldContextEntry) => void | Promise<void>) | undefined
+): void {
+  if (!onRemove || !entry.reasons.includes("explicit")) return;
+  const button = container.createEl("button", {
+    cls: "mwc-world-context-remove",
+    text: "Remove",
+    attr: {
+      type: "button",
+      "aria-label": `Remove ${entry.entity.name} from explicit World Context`
+    }
+  });
+  button.onclick = () => {
+    button.disabled = true;
+    void Promise.resolve(onRemove(entry)).catch(() => {
+      button.disabled = false;
+    });
+  };
 }
 
 function entityDestination(entry: WorldContextEntry): string {
@@ -245,6 +268,7 @@ function renderEventGroup(
         text: entry.entity.summary
       });
     }
+    renderExplicitRemoveControl(content, entry, options.onRemoveExplicit);
   }
 }
 
@@ -252,7 +276,8 @@ function renderSupportingGroup(
   container: HTMLElement,
   group: WorldContextGroup,
   openEntity: OpenWorldContextEntity,
-  previewEntity: PreviewWorldContextEntity | undefined
+  previewEntity: PreviewWorldContextEntity | undefined,
+  options: WorldContextRenderOptions
 ) {
   const groupEl = container.createDiv(
     "mwc-world-context-group mwc-world-context-group--supporting"
@@ -283,6 +308,7 @@ function renderSupportingGroup(
       previewEntity,
       "mwc-world-context-supporting-link"
     );
+    renderExplicitRemoveControl(item, entry, options.onRemoveExplicit);
   }
 }
 
@@ -313,7 +339,7 @@ export function renderWorldContext(
   );
 
   for (const group of hierarchy.supportingGroups) {
-    renderSupportingGroup(container, group, openEntity, previewEntity);
+    renderSupportingGroup(container, group, openEntity, previewEntity, options);
   }
 
   if (result.unresolvedReferences.length > 0) {
