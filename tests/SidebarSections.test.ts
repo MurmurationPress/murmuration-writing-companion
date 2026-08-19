@@ -45,6 +45,8 @@ test("uses quiet sidebar defaults when no preference exists", () => {
   equal(DEFAULT_SIDEBAR_SECTION_STATE.worldContext, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.editorialPasses, false);
   equal(DEFAULT_SIDEBAR_SECTION_STATE.chapterNotes, true);
+  equal(DEFAULT_SIDEBAR_SECTION_STATE.entityInspectorImpact, false);
+  equal(DEFAULT_SIDEBAR_SECTION_STATE.entityInspectorRelationships, false);
 });
 
 test("parses valid partial preferences without trusting malformed values", () => {
@@ -65,7 +67,9 @@ test("parses valid partial preferences without trusting malformed values", () =>
       povGuidance: false,
       worldContext: true,
       editorialPasses: true,
-      chapterNotes: true
+      chapterNotes: true,
+      entityInspectorImpact: false,
+      entityInspectorRelationships: false
     }
   );
 
@@ -97,7 +101,9 @@ test("restores the new World Context default from older partial preferences", ()
       povGuidance: true,
       worldContext: false,
       editorialPasses: true,
-      chapterNotes: false
+      chapterNotes: false,
+      entityInspectorImpact: false,
+      entityInspectorRelationships: false
     }
   );
 });
@@ -112,15 +118,19 @@ test("persists each section independently and restores it on reload", () => {
   equal(preferences.setExpanded("worldContext", true), true);
   equal(preferences.setExpanded("editorialPasses", true), true);
   equal(preferences.setExpanded("chapterNotes", false), true);
+  equal(preferences.setExpanded("entityInspectorImpact", true), true);
+  equal(preferences.setExpanded("entityInspectorRelationships", true), true);
   equal(preferences.setExpanded("chapterNotes", false), false);
-  equal(storage.writes, 5);
+  equal(storage.writes, 7);
 
   deepEqual(preferences.snapshot(), {
     chapterContext: false,
     povGuidance: false,
     worldContext: true,
     editorialPasses: true,
-    chapterNotes: false
+    chapterNotes: false,
+    entityInspectorImpact: true,
+    entityInspectorRelationships: true
   });
 
   const reloaded = new SidebarSectionPreferences(storage, key);

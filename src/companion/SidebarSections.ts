@@ -9,7 +9,9 @@ export const SIDEBAR_SECTION_KEYS = [
   "povGuidance",
   "worldContext",
   "editorialPasses",
-  "chapterNotes"
+  "chapterNotes",
+  "entityInspectorImpact",
+  "entityInspectorRelationships"
 ] as const;
 
 export type SidebarSectionKey = typeof SIDEBAR_SECTION_KEYS[number];
@@ -20,7 +22,9 @@ export const DEFAULT_SIDEBAR_SECTION_STATE: Readonly<SidebarSectionState> = {
   povGuidance: true,
   worldContext: false,
   editorialPasses: false,
-  chapterNotes: true
+  chapterNotes: true,
+  entityInspectorImpact: false,
+  entityInspectorRelationships: false
 };
 
 const SIDEBAR_SECTION_PREFERENCE_VERSION = 1;
@@ -83,7 +87,9 @@ export function serializeSidebarSectionState(state: SidebarSectionState): string
       povGuidance: state.povGuidance,
       worldContext: state.worldContext,
       editorialPasses: state.editorialPasses,
-      chapterNotes: state.chapterNotes
+      chapterNotes: state.chapterNotes,
+      entityInspectorImpact: state.entityInspectorImpact,
+      entityInspectorRelationships: state.entityInspectorRelationships
     }
   };
 

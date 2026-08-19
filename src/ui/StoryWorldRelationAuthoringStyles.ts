@@ -19,6 +19,7 @@ export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
 
 .mwc-entity-relationships-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .mwc-entity-relationships-heading h3 { margin: 0; }
+.mwc-entity-relationships--embedded > .mwc-entity-relationships-heading { justify-content: flex-end; }
 .mwc-entity-relationships-empty { margin: 6px 0 0; color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .mwc-entity-relationship { margin-top: 6px; padding: 7px 0 8px 9px; border: 0; border-left: 2px solid var(--background-modifier-border); background: transparent; }
 .mwc-entity-relationship:hover,

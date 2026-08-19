@@ -48,22 +48,14 @@ import {
   removeIndexedEntityFromWorldContext
 } from "./ObsidianWorldContextAuthoring";
 import { WorldContextEntityPickerModal } from "./WorldContextEntityPickerModal";
+import {
+  CollapsibleSectionElements,
+  CollapsibleSectionOptions,
+  createPersistedCollapsibleSection
+} from "../ui/PersistedCollapsibleSection";
 
 export { VIEW_TYPE };
 
-interface CollapsibleSectionOptions {
-  summary?: string;
-  status?: string;
-}
-
-interface CollapsibleSectionElements {
-  section: HTMLDivElement;
-  content: HTMLDivElement;
-  setSummary(summary: string): void;
-  setStatus(status: string): void;
-}
-
-let nextViewInstanceId = 0;
 const registeredHoverSources = new WeakSet<MurmurationWritingCompanionPlugin>();
 
 function createWorldContextTimePreferences(
@@ -98,8 +90,6 @@ function createWorldContextTimePreferences(
 export class WritingCompanionView extends BaseWritingCompanionView {
   hoverPopover: HoverPopover | null = null;
 
-  private readonly collapsibleSectionIdPrefix =
-    `mwc-collapsible-view-${++nextViewInstanceId}`;
   private readonly worldContextTimePreferences: WorldContextTimePreferences;
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
@@ -547,87 +537,12 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     title: string,
     options: CollapsibleSectionOptions = {}
   ): CollapsibleSectionElements {
-    const section = container.createDiv(
-      `mwc-section mwc-collapsible-section mwc-collapsible-section--${key}`
+    return createPersistedCollapsibleSection(
+      container,
+      this.plugin.sidebarSectionPreferences,
+      key,
+      title,
+      options
     );
-    const contentId = `${this.collapsibleSectionIdPrefix}-${key}`;
-    const heading = section.createEl("h3", {
-      cls: "mwc-collapsible-heading"
-    });
-    const toggle = heading.createEl("button", {
-      cls: "mwc-section-toggle",
-      attr: {
-        type: "button",
-        "aria-controls": contentId
-      }
-    });
-    const label = toggle.createSpan({ cls: "mwc-section-toggle-label" });
-    label.createSpan({
-      cls: "mwc-section-toggle-icon",
-      text: "›",
-      attr: { "aria-hidden": "true" }
-    });
-    label.createSpan({
-      cls: "mwc-section-toggle-title",
-      text: title
-    });
-    const status = toggle.createSpan({
-      cls: "mwc-section-toggle-status"
-    });
-    const summary = section.createEl("p", {
-      cls: "mwc-section-summary"
-    });
-    const content = section.createDiv({
-      cls: "mwc-section-content",
-      attr: { id: contentId }
-    });
-
-    let expanded = this.plugin.sidebarSectionPreferences.isExpanded(key);
-    let currentSummary = options.summary?.trim() ?? "";
-    let currentStatus = options.status?.trim() ?? "";
-
-    const applyState = () => {
-      section.classList.toggle(
-        "mwc-collapsible-section--expanded",
-        expanded
-      );
-      toggle.setAttribute("aria-expanded", String(expanded));
-      toggle.setAttribute(
-        "aria-label",
-        `${expanded ? "Collapse" : "Expand"} ${title}`
-      );
-      content.hidden = !expanded;
-      summary.hidden = expanded || currentSummary.length === 0;
-      status.hidden = currentStatus.length === 0;
-    };
-
-    const setSummary = (nextSummary: string) => {
-      currentSummary = nextSummary.trim();
-      summary.textContent = currentSummary;
-      summary.hidden = expanded || currentSummary.length === 0;
-    };
-
-    const setStatus = (nextStatus: string) => {
-      currentStatus = nextStatus.trim();
-      status.textContent = currentStatus;
-      status.hidden = currentStatus.length === 0;
-    };
-
-    toggle.onclick = () => {
-      expanded = !expanded;
-      this.plugin.sidebarSectionPreferences.setExpanded(key, expanded);
-      applyState();
-    };
-
-    setSummary(currentSummary);
-    setStatus(currentStatus);
-    applyState();
-
-    return {
-      section,
-      content,
-      setSummary,
-      setStatus
-    };
   }
 }
