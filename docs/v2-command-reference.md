@@ -9,6 +9,7 @@ Use Obsidian's Command Palette unless a context action is noted.
 | **Undo manuscript preparation** | Restore the exact pre-preparation files while the immediate Undo token remains available and no prepared file has changed. |
 | **Open Manuscript** | Open Manuscript Navigator. The ribbon tooltip also says **Open Manuscript**; the view heading is **Manuscript**. |
 | **Open Story World Navigator** | Browse canonical Story World entities and supporting models. |
+| **Rebuild Story World Index** | Re-read Story World entities from Obsidian's current metadata cache and refresh MWC views. |
 | **Open Story World Timeline** | Open chronology and event–Scene mapping. |
 | **Open Story World Review** | Inspect structured Story World diagnostics. |
 | **Open Story World Graph** | Open the derived relationship/provenance graph; its in-view Temporal mode provides change-point, perspective and display controls. |

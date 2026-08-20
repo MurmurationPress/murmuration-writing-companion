@@ -80,7 +80,7 @@ Only destinations already present in the Story World index are returned.
 
 ## Lifecycle
 
-The index is built from `vault.getMarkdownFiles()` when the plugin loads and rebuilt once when the Obsidian layout is ready, ensuring the metadata cache has settled.
+The index is built from `vault.getMarkdownFiles()` when the plugin loads. A layout-ready fallback covers plugins enabled after Obsidian's initial metadata-resolution event; when that event arrives during startup, one final bounded rebuild converges the index against the fully resolved cache. Dependent Story World and Writing Companion views refresh from the settled projection.
 
 After startup, ordinary events update one path at a time:
 
@@ -91,7 +91,7 @@ After startup, ordinary events update one path at a time:
 
 A note that removes or invalidates `world_entity` is removed from the index on its next metadata change.
 
-The sidebar does not trigger a full-vault scan. Full rebuilds are reserved for startup or an explicit future recovery action.
+The sidebar does not trigger a full-vault scan. Full rebuilds are reserved for the bounded startup sequence or the explicit read-only **Rebuild Story World Index** recovery command.
 
 ## Read-only boundary
 
