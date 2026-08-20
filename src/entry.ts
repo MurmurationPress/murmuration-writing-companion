@@ -90,6 +90,10 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.addCommand({ id: "open-continuity-review", name: "Open Continuity Review", callback: () => void this.activateContinuityReview() });
     this.addCommand({ id: "open-story-world-review", name: "Open Story World Review", callback: () => void this.activateStoryWorldReview() });
     this.addCommand({ id: "open-story-world-graph", name: "Open Story World Graph", callback: () => void this.activateStoryWorldGraph() });
+    this.addCommand({ id: "rebuild-story-world-index", name: "Rebuild Story World Index", callback: () => {
+      const count = this.rebuildStoryWorldIndexFromMetadataCache();
+      new Notice(`Story World index rebuilt: ${count} entities.`);
+    } });
     this.addCommand({ id: "generate-entity-index", name: "Generate entity index", callback: () => new EntityIndexReportModal(this).open() });
     this.addCommand({ id: "open-project-readiness", name: "Open project readiness", callback: () => this.openProjectReadiness() });
 
@@ -443,6 +447,12 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       if (leaf.view instanceof StoryWorldNavigatorView) leaf.view.render();
     }
     this.refreshStoryWorldReview();
+  }
+
+  protected override refreshStoryWorldIndexConsumers(): void {
+    this.refreshStoryWorldNavigator();
+    this.refreshStoryWorldGraph();
+    this.refreshView();
   }
 
   getPendingStoryWorldEventAuthoring(chapter: TFile): PendingStoryWorldEventAuthoring | null { return this.storyWorldEventAuthoringSession.getPending(chapter.path); }

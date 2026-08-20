@@ -26,6 +26,7 @@
 ### Fixed
 
 - Correct Continuity Review controls so a finding already marked **Intentional** offers **Return to unresolved** instead of a stale **Mark intentional** action, including after switching findings or restoring persisted review state.
+- Ensure the Story World index converges after Obsidian finishes resolving startup metadata, refresh dependent views from the settled projection, and provide a read-only manual rebuild command for recovery and diagnosis.
 
 ## 0.17.1 — 2026-08-06
 

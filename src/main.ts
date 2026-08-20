@@ -192,11 +192,17 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.storyWorldIndex = new ObsidianStoryWorldIndex(this.app);
     this.storyWorldStartup = new StoryWorldStartup(
       () => this.storyWorldIndex.rebuild(),
-      () => this.app.vault.getMarkdownFiles().every((file) => Boolean(this.app.metadataCache.getFileCache(file)))
+      () => {
+        this.storyWorldReviewProjection.invalidate();
+        this.refreshStoryWorldIndexConsumers();
+      }
     );
     this.storyWorldStartup.initialise();
     this.manuscriptProjection = new ManuscriptProjectionService(this.app);
     this.storyWorldReviewProjection = new StoryWorldReviewProjectionService(this.app, this.storyWorldIndex);
+    // Register before asynchronous store loading: the initial resolved event can
+    // otherwise pass while only part of the frontmatter cache has been indexed.
+    this.registerEvent(this.app.metadataCache.on("resolved", () => this.storyWorldStartup.metadataResolved()));
 
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => {
@@ -241,10 +247,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(() => {
       this.manuscriptIntegrityCoordinator.initialise();
-      if (this.storyWorldStartup.settle() !== null) {
-        this.storyWorldReviewProjection.invalidate();
-        this.refreshView();
-      }
+      this.storyWorldStartup.settle();
       this.refreshManuscriptNavigator();
 
       void (async () => {
@@ -930,6 +933,17 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
   openProjectReadiness(): void {
     new Notice("Project readiness is unavailable in this plugin entry point.");
+  }
+
+  rebuildStoryWorldIndexFromMetadataCache(): number {
+    this.storyWorldIndex.rebuild();
+    this.storyWorldReviewProjection.invalidate();
+    this.refreshStoryWorldIndexConsumers();
+    return this.storyWorldIndex.index.getAll().length;
+  }
+
+  protected refreshStoryWorldIndexConsumers(): void {
+    this.refreshView();
   }
 
   openHelp(): void {

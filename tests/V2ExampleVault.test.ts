@@ -219,7 +219,7 @@ test("onboarding documentation links resolve and command labels match registrati
     }
   }
   const registrations = `${await readFile(path.join(root, "src/main.ts"), "utf8")}\n${await readFile(path.join(root, "src/entry.ts"), "utf8")}\n${await readFile(path.join(root, "src/manuscript/ManuscriptPreparationCommands.ts"), "utf8")}`;
-  for (const label of ["Open project readiness", "Prepare existing manuscript", "Open Manuscript", "Open Story World Navigator", "Open Story World Review", "Open Continuity Review", "Generate entity index"]) match(registrations, new RegExp(`name: "${label}"`));
+  for (const label of ["Open project readiness", "Prepare existing manuscript", "Open Manuscript", "Open Story World Navigator", "Open Story World Review", "Open Continuity Review", "Rebuild Story World Index", "Generate entity index"]) match(registrations, new RegExp(`name: "${label}"`));
   const commandGuide = await readFile(path.join(root, "docs/v2-command-reference.md"), "utf8");
   match(commandGuide, /no \*\*Generate references report\*\* command/);
   const screenshots = await readFile(path.join(root, "docs/v2-onboarding-screenshot-checklist.md"), "utf8");
