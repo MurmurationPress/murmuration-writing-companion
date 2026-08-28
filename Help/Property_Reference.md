@@ -135,3 +135,7 @@ All Reference citation properties are optional and authoritative Markdown.
 ## Derived report metadata
 
 Generated reports may write `type: generated-report`, `report_type`, `report_scope`, `book`, and `generated_at`. These describe disposable projections, not Story World authority. Legacy `type: continuity-review-report` is also excluded from discovery.
+
+## Derived artefact definitions
+
+`world_entity: derived-artefact` opts a definition note into manual artefact generation. The first supported `artefact_type` is `line-chart`. Its generic fields are documented in [Derived Artefacts](Derived_Artefacts.md). Definition properties are authoritative configuration; the generated SVG is disposable and is never read as canonical data.
