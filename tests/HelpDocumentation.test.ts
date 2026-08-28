@@ -24,6 +24,7 @@ test("author Help has one discoverable task-oriented entry point", async () => {
     "Relationships.md",
     "References.md",
     "Reviews_and_Reports.md",
+    "Derived_Artefacts.md",
     "Manuscript_Chat.md",
     "Backup_Preparation_and_Recovery.md",
     "Troubleshooting.md",

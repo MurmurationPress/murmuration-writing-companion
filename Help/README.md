@@ -15,6 +15,7 @@ From an installed plugin, open this guide with **Command Palette → Open Help**
 - [Relationships](Relationships.md) — record qualified, sourced Story World assertions.
 - [References](References.md) — create Reference entities and use citation metadata.
 - [Reviews and Reports](Reviews_and_Reports.md) — understand derived findings, indexes, and reports.
+- [Derived Artefacts](Derived_Artefacts.md) — generate deterministic SVG line charts from Markdown properties.
 - [Manuscript Chat](Manuscript_Chat.md) — write first-party native chat blocks.
 - [Backup, Preparation, and Recovery](Backup_Preparation_and_Recovery.md) — preview changes, Undo safely, and recover from trouble.
 - [Troubleshooting](Troubleshooting.md) — common recognition, link, YAML, and recovery problems.
