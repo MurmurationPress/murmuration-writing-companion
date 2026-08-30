@@ -49,6 +49,7 @@ export interface ManuscriptPartCreationPlan {
   readonly parentReference: string;
   readonly markdown: string;
   readonly missingFolders: readonly string[];
+  readonly companionFolders: readonly string[];
   readonly errors: readonly string[];
 }
 
@@ -109,6 +110,13 @@ export function planManuscriptPartCreation(
   const duplicate = snapshot.parts.find((part) => part.bookPath === bookPath && part.title.trim().toLocaleLowerCase("en-US") === shared.title.toLocaleLowerCase("en-US"));
   if (shared.title && duplicate) errors.push(`A Part titled “${duplicate.title}” already exists in ${bookTitle}.`);
   const parentReference = bookPath ? `[[${bookPath.replace(/\.md$/i, "")}]]` : "";
+  const companionFolder = shared.path.replace(/\.md$/i, "");
+  const companionCollision = snapshot.entries.find((entry) => (
+    entry.path.toLocaleLowerCase("en-US") === companionFolder.toLocaleLowerCase("en-US")
+  ));
+  if (companionCollision) {
+    errors.push(`A ${companionCollision.kind} already exists at the required Part folder path “${companionCollision.path}”.`);
+  }
   return {
     title: shared.title, path: shared.path, bookPath, bookTitle,
     selectionRevision: snapshot.selectionRevision,
@@ -117,7 +125,9 @@ export function planManuscriptPartCreation(
     previous: placement?.previous ?? null, next: placement?.next ?? null,
     orderKey: orderKey ?? "", parentReference,
     markdown: bookPath && orderKey ? serializeManuscriptPart(shared.title, bookPath, orderKey) : "",
-    missingFolders: shared.missingFolders, errors: [...new Set(errors)]
+    missingFolders: shared.missingFolders,
+    companionFolders: companionFolder ? [companionFolder] : [],
+    errors: [...new Set(errors)]
   };
 }
 

@@ -1,6 +1,15 @@
 import { App, TFile, TFolder } from "obsidian";
 import type { ManuscriptVaultEntry } from "./ManuscriptNoteCreation";
 
+export function manuscriptVaultEntryAtPath(app: App, path: string) {
+  const exact = app.vault.getAbstractFileByPath(path);
+  if (exact) return exact;
+  const normalized = path.replace(/\\/g, "/").toLocaleLowerCase("en-US");
+  return app.vault.getAllLoadedFiles().find((entry) => (
+    entry.path.replace(/\\/g, "/").toLocaleLowerCase("en-US") === normalized
+  )) ?? null;
+}
+
 export function snapshotManuscriptVaultEntries(app: App): ManuscriptVaultEntry[] {
   return app.vault.getAllLoadedFiles().filter((entry) => entry.path.length > 0).map((entry) => ({
     path: entry.path,
@@ -15,9 +24,13 @@ export async function ensurePreviewedManuscriptFolder(app: App, path: string): P
   await app.vault.createFolder(path);
 }
 
-export async function cleanupUnchangedCreatedNote(app: App, file: TFile, createdMtime: number): Promise<void> {
+export async function cleanupUnchangedCreatedNote(app: App, file: TFile, createdMtime: number): Promise<boolean> {
   const current = app.vault.getAbstractFileByPath(file.path);
-  if (current instanceof TFile && current === file && current.stat.mtime === createdMtime) await app.vault.delete(file);
+  if (current instanceof TFile && current === file && current.stat.mtime === createdMtime) {
+    await app.vault.delete(file);
+    return true;
+  }
+  return false;
 }
 
 export async function boundedManuscriptRecognition(

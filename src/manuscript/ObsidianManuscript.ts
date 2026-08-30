@@ -119,15 +119,19 @@ function firstResolvedPath(
 }
 
 export function associatedManuscriptFolderPath(app: App, file: TFile): string | null {
+  const expected = expectedAssociatedManuscriptFolderPath(file);
+  if (!expected) return null;
+  const folder = app.vault.getAbstractFileByPath(expected);
+  return folder instanceof TFolder ? folder.path : null;
+}
+
+export function expectedAssociatedManuscriptFolderPath(file: TFile): string | null {
   const parent = file.parent;
   if (!parent) return null;
   if (parent.name === file.basename) return parent.path;
-
-  const siblingPath = parent.path
+  return parent.path
     ? `${parent.path}/${file.basename}`
     : file.basename;
-  const sibling = app.vault.getAbstractFileByPath(siblingPath);
-  return sibling instanceof TFolder ? sibling.path : null;
 }
 
 function rawFiles(app: App): Map<string, RawManuscriptFile> {

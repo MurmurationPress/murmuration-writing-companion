@@ -20,7 +20,7 @@ export interface ManuscriptBookCreationAdapter<Handle> {
   createFolder(path: string): Promise<void>;
   createFile(path: string, markdown: string): Promise<Handle>;
   readFile(handle: Handle): Promise<string>;
-  cleanupReadBackMismatch(handle: Handle): Promise<void>;
+  cleanupReadBackMismatch(handle: Handle): Promise<void | boolean>;
   waitForRecognition(path: string): Promise<boolean>;
 }
 

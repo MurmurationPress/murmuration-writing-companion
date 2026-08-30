@@ -64,8 +64,8 @@ async function cleanupReadBackMismatch(
   app: App,
   created: TFile,
   createdMtime: number
-): Promise<void> {
-  await cleanupUnchangedCreatedNote(app, created, createdMtime);
+): Promise<boolean> {
+  return cleanupUnchangedCreatedNote(app, created, createdMtime);
 }
 
 const adapters = new WeakMap<App, ManuscriptBookCreationAdapter<TFile>>();
@@ -88,7 +88,7 @@ function creationAdapter(app: App): ManuscriptBookCreationAdapter<TFile> {
     readFile: (file) => app.vault.cachedRead(file),
     cleanupReadBackMismatch: async (file) => {
       const mtime = createdMtimes.get(file);
-      if (mtime !== undefined) await cleanupReadBackMismatch(app, file, mtime);
+      return mtime !== undefined && await cleanupReadBackMismatch(app, file, mtime);
     },
     waitForRecognition: (path) => waitForBookRecognition(app, path)
   };

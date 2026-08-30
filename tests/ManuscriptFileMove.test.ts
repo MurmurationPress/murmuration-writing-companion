@@ -6,6 +6,11 @@ import {
   ManuscriptFileMoveCollisionError,
   moveManuscriptFile
 } from "../src/manuscript/ManuscriptFileMove";
+import {
+  cleanupManuscriptCompanionFolder,
+  createManuscriptCompanionFolder,
+  ManuscriptCompanionFolderAdapter
+} from "../src/manuscript/ManuscriptCompanionFolder";
 
 class Vault implements ManuscriptFileMoveAdapter {
   readonly files = new Map<string, { parent: string; manuscript_order_key: string }>();
@@ -102,4 +107,53 @@ test("a same-path move is a safe no-op", async () => {
   vault.files.set(path, { parent: "same", manuscript_order_key: "A" });
   await moveManuscriptFile(vault, path, path);
   equal(vault.files.size, 1);
+});
+
+interface Folder { readonly kind: "folder"; children: string[] }
+function folderAdapter(vault: Vault, folders: Map<string, Folder>): ManuscriptCompanionFolderAdapter<Folder> {
+  return {
+    current: (path) => folders.get(path) ?? null,
+    kind: () => "folder",
+    create: async (path) => { const folder: Folder = { kind: "folder", children: [] }; folders.set(path, folder); return folder; },
+    isEmpty: (folder) => folder.children.length === 0,
+    remove: async (folder) => { for (const [path, candidate] of folders) if (candidate === folder) folders.delete(path); }
+  };
+}
+
+test("legacy folderless Part remains logical and is repaired before moving its Scene", async () => {
+  const vault = new Vault(); const folders = new Map<string, Folder>();
+  const source = `${bookFolder}/${name}`; const destination = `${partB}/${name}`;
+  const metadata = { parent: `[[${bookFolder}]]`, manuscript_order_key: "000000000A" };
+  vault.files.set(source, metadata);
+  const logicalPart = { path: `${partB}.md`, kind: "part", associatedFolder: null };
+  equal(logicalPart.kind, "part"); equal(logicalPart.associatedFolder, null, "folderless legacy Part still loads");
+
+  const created = await createManuscriptCompanionFolder(folderAdapter(vault, folders), partB);
+  metadata.parent = `[[${partB}]]`; metadata.manuscript_order_key = "000000000Z";
+  await moveManuscriptFile(vault, source, destination); created.handle.children.push(name);
+
+  equal(folders.has(partB), true); equal(vault.exists(source), false); equal(vault.exists(destination), true);
+  deepEqual(vault.files.get(destination), { parent: `[[${partB}]]`, manuscript_order_key: "000000000Z" });
+
+  await moveManuscriptFile(vault, destination, source); Object.assign(vault.files.get(source)!, {
+    parent: `[[${bookFolder}]]`, manuscript_order_key: "000000000A"
+  });
+  created.handle.children.splice(0); await cleanupManuscriptCompanionFolder(folderAdapter(vault, folders), created);
+  equal(folders.has(partB), false, "Undo removes only the empty repair folder");
+  equal(vault.exists(destination), false); equal(vault.exists(source), true);
+});
+
+test("failure after legacy folder repair restores metadata and removes only the empty folder", async () => {
+  const vault = new Vault(); const folders = new Map<string, Folder>();
+  const source = `${bookFolder}/${name}`; const destination = `${partB}/${name}`;
+  const before = { parent: `[[${bookFolder}]]`, manuscript_order_key: "000000000A" };
+  vault.files.set(source, { ...before });
+  const adapter = folderAdapter(vault, folders);
+  const created = await createManuscriptCompanionFolder(adapter, partB);
+  const metadata = vault.files.get(source)!; metadata.parent = `[[${partB}]]`; metadata.manuscript_order_key = "Z";
+  vault.failNextMove = true;
+  await rejects(moveManuscriptFile(vault, source, destination));
+  Object.assign(metadata, before); await cleanupManuscriptCompanionFolder(adapter, created);
+
+  equal(folders.has(partB), false); equal(vault.exists(destination), false); deepEqual(vault.files.get(source), before);
 });
