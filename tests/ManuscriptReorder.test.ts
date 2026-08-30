@@ -189,6 +189,25 @@ test("allows a scene to become a direct child of the book", () => {
   equal(writes.changes[0].afterParentPath, bookPath);
 });
 
+test("allows a direct Book Scene to move inside a Part", () => {
+  const proposal = proposeManuscriptMove(bookPath, entries, {
+    movedPath: prologue.path,
+    targetPath: absence.path,
+    position: "inside-end"
+  });
+
+  equal(proposal.valid, true);
+  deepEqual(proposal.parentChange, {
+    path: prologue.path,
+    beforeParentPath: bookPath,
+    afterParentPath: absence.path
+  });
+  const writes = planDistributedManuscriptMoveWrites(bookPath, proposal);
+  equal(writes.changes.length, 1);
+  equal(writes.changes[0].afterParentPath, absence.path);
+  equal(typeof writes.changes[0].afterOrderKey, "string");
+});
+
 test("rebalances only the destination sibling set when no key gap remains", () => {
   const first = record("Books/PLURALITY/A.md", "A", "scene", bookPath, "000000000A");
   const second = record("Books/PLURALITY/B.md", "B", "scene", bookPath, "000000000B");

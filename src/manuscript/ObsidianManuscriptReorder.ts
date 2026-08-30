@@ -3,8 +3,16 @@ import {
   MANUSCRIPT_PARENT_ALIASES,
   normalizeBookPropertyName
 } from "../editorial/BookReview";
-import { buildObsidianManuscriptLibrary } from "./ObsidianManuscript";
+import {
+  associatedManuscriptFolderPath,
+  buildObsidianManuscriptLibrary
+} from "./ObsidianManuscript";
 import { MANUSCRIPT_ORDER_KEY_PROPERTY, manuscriptOrderKey } from "./ManuscriptOrderKey";
+import {
+  manuscriptFileDestination,
+  ManuscriptFileMoveCollisionError,
+  moveManuscriptFile
+} from "./ManuscriptFileMove";
 import {
   ManuscriptMoveProposal,
   planDistributedManuscriptMoveWrites,
@@ -16,7 +24,8 @@ interface PropertySnapshot {
 }
 
 interface FileUndoState {
-  readonly file: TFile;
+  readonly beforePath: string;
+  readonly afterPath: string;
   readonly before: PropertySnapshot;
   readonly after: PropertySnapshot;
 }
@@ -44,6 +53,13 @@ export class ManuscriptSyncConflictError extends Error {
   constructor(path: string) {
     super(`Resolve sync or Git conflict markers before changing manuscript structure: ${path}`);
     this.name = "ManuscriptSyncConflictError";
+  }
+}
+
+export class ManuscriptMoveDestinationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ManuscriptMoveDestinationError";
   }
 }
 
@@ -164,16 +180,85 @@ async function verifyWrittenSnapshot(
   }
 }
 
+function fileAtPath(app: App, path: string): TFile | null {
+  const file = app.vault.getAbstractFileByPath(path);
+  return file instanceof TFile ? file : null;
+}
+
+function requireFileAtPath(app: App, path: string): TFile {
+  const file = fileAtPath(app, path);
+  if (!file) throw new StaleManuscriptMoveError();
+  return file;
+}
+
+interface PlannedPathMove {
+  readonly beforePath: string;
+  readonly afterPath: string;
+}
+
+function planPathMove(
+  app: App,
+  book: TFile,
+  currentBook: ReturnType<typeof buildObsidianManuscriptLibrary>["books"][number],
+  writePlan: ReturnType<typeof planDistributedManuscriptMoveWrites>
+): PlannedPathMove | null {
+  const parentChange = writePlan.changes.find((change) => (
+    change.beforeParentPath !== change.afterParentPath
+  ));
+  if (!parentChange) return null;
+
+  const file = currentBook.filesByPath.get(parentChange.path);
+  const parent = parentChange.afterParentPath === book.path
+    ? book
+    : currentBook.filesByPath.get(parentChange.afterParentPath);
+  if (!file || !parent) throw new StaleManuscriptMoveError();
+
+  const folder = associatedManuscriptFolderPath(app, parent);
+  if (!folder) {
+    throw new ManuscriptMoveDestinationError(
+      `The target ${parent.basename} does not have an associated manuscript folder.`
+    );
+  }
+
+  const afterPath = manuscriptFileDestination(folder, file.name);
+  if (afterPath === file.path) return null;
+  if (app.vault.getAbstractFileByPath(afterPath)) {
+    throw new ManuscriptMoveDestinationError(
+      `A file already exists at ${afterPath}; the manuscript move was not applied.`
+    );
+  }
+  return { beforePath: file.path, afterPath };
+}
+
+async function renameAndVerify(
+  app: App,
+  beforePath: string,
+  afterPath: string
+): Promise<void> {
+  await moveManuscriptFile({
+    exists: (path) => Boolean(app.vault.getAbstractFileByPath(path)),
+    move: async (source, destination) => {
+      await app.vault.rename(requireFileAtPath(app, source), destination);
+    }
+  }, beforePath, afterPath).catch((error) => {
+    if (error instanceof ManuscriptFileMoveCollisionError) {
+      throw new ManuscriptMoveDestinationError(error.message);
+    }
+    throw error;
+  });
+}
+
 async function rollbackStates(app: App, states: readonly FileUndoState[]): Promise<void> {
   for (const state of [...states].reverse()) {
     try {
-      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+      const file = fileAtPath(app, state.afterPath) ?? requireFileAtPath(app, state.beforePath);
+      await app.fileManager.processFrontMatter(file, (frontmatter) => {
         const current = captureProperties(frontmatter);
         if (snapshotsEqual(current, state.after)) {
           replaceProperties(frontmatter, state.before);
         }
       });
-      await verifyWrittenSnapshot(app, state.file, state.before);
+      await verifyWrittenSnapshot(app, file, state.before);
     } catch {
       // A later edit is never overwritten while recovering from a failed transaction.
     }
@@ -205,6 +290,7 @@ export async function applyManuscriptReorder(
   const currentByPath = new Map(
     currentBook.result.entries.map((entry) => [entry.path, entry])
   );
+  const pathMove = planPathMove(app, book, currentBook, writePlan);
   const states: FileUndoState[] = [];
 
   try {
@@ -238,10 +324,27 @@ export async function applyManuscriptReorder(
       if (!before || !after) {
         throw new Error(`Could not capture manuscript changes for ${file.path}.`);
       }
+      states.push({
+        beforePath: file.path,
+        afterPath: pathMove?.beforePath === file.path ? pathMove.afterPath : file.path,
+        before,
+        after
+      });
       await verifyWrittenSnapshot(app, file, after);
-      states.push({ file, before, after });
     }
+    if (pathMove) await renameAndVerify(app, pathMove.beforePath, pathMove.afterPath);
   } catch (error) {
+    if (
+      pathMove
+      && fileAtPath(app, pathMove.afterPath)
+      && !app.vault.getAbstractFileByPath(pathMove.beforePath)
+    ) {
+      try {
+        await renameAndVerify(app, pathMove.afterPath, pathMove.beforePath);
+      } catch {
+        // Metadata rollback below remains conservative if Obsidian cannot restore the path.
+      }
+    }
     await rollbackStates(app, states);
     throw error;
   }
@@ -259,28 +362,50 @@ export async function undoManuscriptReorder(
   const restored: FileUndoState[] = [];
 
   try {
+    const movedState = token.states.find((state) => state.beforePath !== state.afterPath);
+    if (movedState) {
+      await renameAndVerify(app, movedState.afterPath, movedState.beforePath);
+    }
+
     for (const state of [...token.states].reverse()) {
-      await assertNoConflictMarkers(app, state.file);
-      await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+      const currentPath = state.beforePath !== state.afterPath
+        ? state.beforePath
+        : state.afterPath;
+      const file = requireFileAtPath(app, currentPath);
+      await assertNoConflictMarkers(app, file);
+      await app.fileManager.processFrontMatter(file, (frontmatter) => {
         const current = captureProperties(frontmatter);
         if (!snapshotsEqual(current, state.after)) throw new StaleManuscriptUndoError();
         replaceProperties(frontmatter, state.before);
       });
-      await verifyWrittenSnapshot(app, state.file, state.before);
+      await verifyWrittenSnapshot(app, file, state.before);
       restored.push(state);
     }
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {
-        await app.fileManager.processFrontMatter(state.file, (frontmatter) => {
+        const file = requireFileAtPath(app, state.beforePath);
+        await app.fileManager.processFrontMatter(file, (frontmatter) => {
           const current = captureProperties(frontmatter);
           if (snapshotsEqual(current, state.before)) {
             replaceProperties(frontmatter, state.after);
           }
         });
-        await verifyWrittenSnapshot(app, state.file, state.after);
+        await verifyWrittenSnapshot(app, file, state.after);
       } catch {
         // Do not overwrite a later edit while rolling back an unsafe Undo.
+      }
+    }
+    const movedState = token.states.find((state) => state.beforePath !== state.afterPath);
+    if (
+      movedState
+      && fileAtPath(app, movedState.beforePath)
+      && !app.vault.getAbstractFileByPath(movedState.afterPath)
+    ) {
+      try {
+        await renameAndVerify(app, movedState.beforePath, movedState.afterPath);
+      } catch {
+        // Preserve the original error; the attempted transaction rollback is best effort.
       }
     }
     throw error;
