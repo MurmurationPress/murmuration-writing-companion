@@ -1,6 +1,6 @@
 # Derived Artefacts
 
-Derived artefacts are portable files generated from authoritative Markdown properties. The Markdown notes remain canonical; an SVG is a disposable projection that can be regenerated or deleted without losing source data. MWC does not read generated SVGs as data.
+Derived artefacts are portable files generated from authoritative Markdown properties. The Markdown notes remain canonical; generated files are disposable projections that can be regenerated or deleted without losing source data. MWC supports `line-chart` SVG projections and `state-table` Markdown projections. It does not read either format back as canonical data.
 
 ## Define a line chart
 
@@ -41,12 +41,51 @@ The rolling window ends at `end`. If `end` is omitted, it ends at the latest sou
 
 Use explicit `end` and dated output filenames for stable historical snapshots.
 
+## Define a state table
+
+A state table compares the current observation at an endpoint with the immediately preceding canonical observation. Define one with generic frontmatter like this:
+
+```yaml
+---
+world_entity: derived-artefact
+artefact_type: state-table
+source: "Research/Measurements"
+x: measured_on
+end: 2029-05-29
+parameters:
+  - property: water_level
+    label: Water level
+  - property: flow_rate
+    label: Flow rate
+output: "Visualisations/River state — 2029-05-29.md"
+---
+```
+
+`source`, `x`, `parameters`, and a `.md` `output` path are required. Each parameter has a unique property and a label. Declared parameter order becomes table row order. `end` is optional for consistency with line charts; when omitted, MWC uses the latest valid canonical observation.
+
+MWC sorts every Markdown observation below `source` by the `x` date, using source path as the stable tie-break for equal dates. Current means the latest observation on or before `end`. Previous means the immediately preceding observation in that canonical sequence—not the previous chapter and not a sampled or aggregated value. Adding an intermediate observation therefore changes previous and delta on regeneration.
+
+For every parameter, delta is `current - previous`. Values use deterministic signed two-decimal formatting: positive values and zero include `+`, negative values retain `-`. If current is the first observation, previous and delta are em dashes because MWC does not invent history.
+
+Generated state tables are ordinary portable Markdown:
+
+```markdown
+|parameter|current|previous|Δ|
+|---|---:|---:|---:|
+|Water level|+0.94|+0.92|+0.02|
+|Flow rate|+0.33|+0.37|-0.04|
+```
+
+MWC adds a deterministic HTML ownership comment to the generated file. This allows safe regeneration without treating an unrelated Markdown note as disposable output. A state-table output may not collide with a source note, definition note, folder, or unrelated Markdown file.
+
 ## Generate and embed
 
-To generate one chart, open its definition note and run **Generate derived artefact** from the Command Palette. Run **Generate all derived artefacts** to regenerate every note marked `world_entity: derived-artefact`.
+To generate one projection, open its definition note and run **Generate derived artefact** from the Command Palette. Run **Generate all derived artefacts** to regenerate every note marked `world_entity: derived-artefact`. Generate-all dispatches each mixed `line-chart` or `state-table` definition to its renderer; one invalid definition is reported without preventing valid definitions from being generated.
 
-Generation creates missing parent folders and replaces an existing SVG at the output path. Invalid definitions do not write output or modify source/definition notes. Generated files are standalone SVG and do not require MWC to remain active. Embed one with normal Obsidian syntax:
+Generation creates missing parent folders and replaces an owned existing projection at the output path. Invalid definitions or malformed source observations do not write output or modify source/definition notes. Generated files do not require MWC to remain active. Embed one with normal Obsidian syntax:
 
 ```text
 ![[Visualisations/River measurements — 2029-05-29.svg]]
 ```
+
+Markdown state tables can be embedded the same way, using their `.md` path.
