@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import type { ManuscriptBookSelectionService } from "./ManuscriptBookSelection";
 import {
   ManuscriptPartCreationPlan,
@@ -8,7 +8,8 @@ import {
 } from "./ManuscriptPartCreation";
 import { associatedManuscriptFolderPath, buildObsidianManuscriptLibrary } from "./ObsidianManuscript";
 import { executeManuscriptNoteCreation, InvalidManuscriptNoteConfirmationError, ManuscriptNoteCreationAdapter } from "./ManuscriptNoteCreationExecution";
-import { boundedManuscriptRecognition, cleanupUnchangedCreatedNote, ensurePreviewedManuscriptFolder, snapshotManuscriptVaultEntries } from "./ObsidianManuscriptNoteCreation";
+import { boundedManuscriptRecognition, cleanupUnchangedCreatedNote, ensurePreviewedManuscriptFolder, manuscriptVaultEntryAtPath, snapshotManuscriptVaultEntries } from "./ObsidianManuscriptNoteCreation";
+import { cleanupManuscriptCompanionFolder, createManuscriptCompanionFolder, CreatedManuscriptCompanionFolder, ManuscriptCompanionFolderAdapter } from "./ManuscriptCompanionFolder";
 
 export interface ManuscriptPartCreationAuthority {
   readonly app: App;
@@ -48,9 +49,30 @@ function adapterFor(
   const existing = hostAdapters.get(preview.path);
   if (existing) return existing;
   const mtimes = new WeakMap<TFile, number>();
+  const companionFolders = new Map<string, CreatedManuscriptCompanionFolder<TAbstractFile>>();
+  const folderAdapter: ManuscriptCompanionFolderAdapter<TAbstractFile> = {
+    current: (path: string) => manuscriptVaultEntryAtPath(host.app, path),
+    kind: (entry: ReturnType<typeof host.app.vault.getAbstractFileByPath>) => entry instanceof TFolder ? "folder" as const : "file" as const,
+    create: async (path: string) => {
+      await host.app.vault.createFolder(path);
+      const created = host.app.vault.getAbstractFileByPath(path);
+      if (!created) throw new Error(`Could not read the required Part folder at ${path}.`);
+      return created;
+    },
+    isEmpty: (folder: TAbstractFile) => folder instanceof TFolder && folder.children.length === 0,
+    remove: (folder: TAbstractFile) => host.app.vault.delete(folder)
+  };
   const adapter: ManuscriptNoteCreationAdapter<TFile, ManuscriptPartCreationSnapshot> = {
     snapshot: () => snapshotManuscriptPartCreation(host),
     createFolder: (path) => ensurePreviewedManuscriptFolder(host.app, path),
+    createCompanionFolder: async (path) => {
+      const created = await createManuscriptCompanionFolder(folderAdapter, path);
+      companionFolders.set(path, created);
+    },
+    cleanupCompanionFolder: async (path) => {
+      await cleanupManuscriptCompanionFolder(folderAdapter, companionFolders.get(path) ?? null);
+      companionFolders.delete(path);
+    },
     createFile: async (path, markdown) => {
       const file = await host.app.vault.create(path, markdown);
       mtimes.set(file, file.stat.mtime);
@@ -59,7 +81,7 @@ function adapterFor(
     readFile: (file) => host.app.vault.read(file),
     cleanupReadBackMismatch: async (file) => {
       const mtime = mtimes.get(file);
-      if (mtime !== undefined) await cleanupUnchangedCreatedNote(host.app, file, mtime);
+      return mtime !== undefined && await cleanupUnchangedCreatedNote(host.app, file, mtime);
     },
     waitForRecognition: () => boundedManuscriptRecognition(() => {
       const expected = expectedPlans.get(host)?.get(preview.path) ?? preview;

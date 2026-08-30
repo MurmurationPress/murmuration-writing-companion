@@ -1,11 +1,12 @@
-import { App, parseYaml, TFile } from "obsidian";
+import { App, parseYaml, TAbstractFile, TFile, TFolder } from "obsidian";
 import {
   MANUSCRIPT_PARENT_ALIASES,
   normalizeBookPropertyName
 } from "../editorial/BookReview";
 import {
   associatedManuscriptFolderPath,
-  buildObsidianManuscriptLibrary
+  buildObsidianManuscriptLibrary,
+  expectedAssociatedManuscriptFolderPath
 } from "./ObsidianManuscript";
 import { MANUSCRIPT_ORDER_KEY_PROPERTY, manuscriptOrderKey } from "./ManuscriptOrderKey";
 import {
@@ -13,6 +14,13 @@ import {
   ManuscriptFileMoveCollisionError,
   moveManuscriptFile
 } from "./ManuscriptFileMove";
+import {
+  cleanupManuscriptCompanionFolder,
+  createManuscriptCompanionFolder,
+  CreatedManuscriptCompanionFolder,
+  ManuscriptCompanionFolderAdapter
+} from "./ManuscriptCompanionFolder";
+import { manuscriptVaultEntryAtPath } from "./ObsidianManuscriptNoteCreation";
 import {
   ManuscriptMoveProposal,
   planDistributedManuscriptMoveWrites,
@@ -32,6 +40,7 @@ interface FileUndoState {
 
 export interface ManuscriptReorderUndoToken {
   readonly states: readonly FileUndoState[];
+  readonly createdFolder: CreatedManuscriptCompanionFolder<TAbstractFile> | null;
   readonly message: string;
 }
 
@@ -194,6 +203,7 @@ function requireFileAtPath(app: App, path: string): TFile {
 interface PlannedPathMove {
   readonly beforePath: string;
   readonly afterPath: string;
+  readonly folderToCreate: string | null;
 }
 
 function planPathMove(
@@ -213,11 +223,24 @@ function planPathMove(
     : currentBook.filesByPath.get(parentChange.afterParentPath);
   if (!file || !parent) throw new StaleManuscriptMoveError();
 
-  const folder = associatedManuscriptFolderPath(app, parent);
+  let folder = associatedManuscriptFolderPath(app, parent);
+  let folderToCreate: string | null = null;
   if (!folder) {
-    throw new ManuscriptMoveDestinationError(
-      `The target ${parent.basename} does not have an associated manuscript folder.`
-    );
+    const parentEntry = currentBook.result.entries.find((entry) => entry.path === parent.path);
+    const expected = expectedAssociatedManuscriptFolderPath(parent);
+    if (parentEntry?.kind !== "part" || !expected) {
+      throw new ManuscriptMoveDestinationError(
+        `The target ${parent.basename} does not have an associated manuscript folder.`
+      );
+    }
+    const collision = manuscriptVaultEntryAtPath(app, expected);
+    if (collision) {
+      throw new ManuscriptMoveDestinationError(
+        `A ${collision instanceof TFolder ? "folder" : "file"} already exists at the required Part folder path ${expected}.`
+      );
+    }
+    folder = expected;
+    folderToCreate = expected;
   }
 
   const afterPath = manuscriptFileDestination(folder, file.name);
@@ -227,7 +250,22 @@ function planPathMove(
       `A file already exists at ${afterPath}; the manuscript move was not applied.`
     );
   }
-  return { beforePath: file.path, afterPath };
+  return { beforePath: file.path, afterPath, folderToCreate };
+}
+
+function companionFolderAdapter(app: App): ManuscriptCompanionFolderAdapter<TAbstractFile> {
+  return {
+    current: (path: string) => manuscriptVaultEntryAtPath(app, path),
+    kind: (entry: ReturnType<typeof app.vault.getAbstractFileByPath>) => entry instanceof TFolder ? "folder" as const : "file" as const,
+    create: async (path: string) => {
+      await app.vault.createFolder(path);
+      const created = app.vault.getAbstractFileByPath(path);
+      if (!created) throw new Error(`Could not read the required Part folder at ${path}.`);
+      return created;
+    },
+    isEmpty: (folder: TAbstractFile) => folder instanceof TFolder && folder.children.length === 0,
+    remove: (folder: TAbstractFile) => app.vault.delete(folder)
+  };
 }
 
 async function renameAndVerify(
@@ -292,8 +330,12 @@ export async function applyManuscriptReorder(
   );
   const pathMove = planPathMove(app, book, currentBook, writePlan);
   const states: FileUndoState[] = [];
+  let createdFolder: CreatedManuscriptCompanionFolder<TAbstractFile> | null = null;
 
   try {
+    if (pathMove?.folderToCreate) {
+      createdFolder = await createManuscriptCompanionFolder(companionFolderAdapter(app), pathMove.folderToCreate);
+    }
     for (const change of writePlan.changes) {
       const file = currentBook.filesByPath.get(change.path) ?? filesByPath.get(change.path);
       const currentEntry = currentByPath.get(change.path);
@@ -346,11 +388,13 @@ export async function applyManuscriptReorder(
       }
     }
     await rollbackStates(app, states);
+    try { await cleanupManuscriptCompanionFolder(companionFolderAdapter(app), createdFolder); } catch { /* Preserve the transaction failure. */ }
     throw error;
   }
 
   return {
     states,
+    createdFolder,
     message: writePlan.message
   };
 }
@@ -381,6 +425,7 @@ export async function undoManuscriptReorder(
       await verifyWrittenSnapshot(app, file, state.before);
       restored.push(state);
     }
+    try { await cleanupManuscriptCompanionFolder(companionFolderAdapter(app), token.createdFolder); } catch { /* An empty repaired folder is safe to retain. */ }
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {

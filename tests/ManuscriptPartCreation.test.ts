@@ -71,6 +71,7 @@ test("planning is deterministic and preview bytes contain its exact key", () => 
   const second = planManuscriptPartCreation(snapshot(), input);
   equal(first.orderKey, second.orderKey);
   match(first.markdown, new RegExp(`manuscript_order_key: "${first.orderKey}"`));
+  deepEqual(first.companionFolders, ["Books/BOOK 4/FEVER"]);
 });
 
 test("blocks malformed, duplicate and exhausted direct-child keys", () => {
@@ -98,6 +99,22 @@ test("reuses path safety while allowing the same basename elsewhere", () => {
   equal(planManuscriptPartCreation(snapshot({ entries: [{ path: "Archive/FEVER.md", kind: "file" }] }), input).errors.length, 0);
   match(planManuscriptPartCreation(snapshot({ entries: [{ path: "books/book 4/fever.MD", kind: "file" }] }), input).errors.join(" "), /already exists/);
   match(planManuscriptPartCreation(snapshot(), { ...input, path: "Books/../FEVER.md" }).errors.join(" "), /traversal/);
+});
+
+test("rejects file or folder collisions at the required companion path", () => {
+  for (const kind of ["file", "folder"] as const) {
+    const plan = planManuscriptPartCreation(snapshot({
+      entries: [...snapshot().entries, { path: "books/book 4/fever", kind }]
+    }), input);
+    match(plan.errors.join(" "), new RegExp(`${kind} already exists`, "i"));
+  }
+});
+
+test("preserves spaces and punctuation in the companion Part folder", () => {
+  const plan = planManuscriptPartCreation(snapshot(), {
+    ...input, title: "HIVE MINDS (II)!", path: "Books/BOOK 4/HIVE MINDS (II)!.md"
+  });
+  deepEqual(plan.companionFolders, ["Books/BOOK 4/HIVE MINDS (II)!"]);
 });
 
 test("default location is a proposal using Parts, association, children, then Book parent", () => {
