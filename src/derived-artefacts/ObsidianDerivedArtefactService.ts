@@ -17,6 +17,11 @@ export function createObsidianDerivedArtefactService(app: App): DerivedArtefactS
       const file = app.vault.getAbstractFileByPath(normalizePath(path));
       if (!(file instanceof TFile)) throw new Error(`${path} is no longer a file.`);
       await app.vault.modify(file, content);
+    },
+    read: async (path) => {
+      const file = app.vault.getAbstractFileByPath(normalizePath(path));
+      if (!(file instanceof TFile)) throw new Error(`${path} is no longer a file.`);
+      return app.vault.cachedRead(file);
     }
   });
 }
