@@ -1,6 +1,7 @@
 import { access, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { bundleReport, printBundleReport, enforceBundleBudget } from "./bundle-policy.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -40,8 +41,9 @@ for (const asset of ["main.js", "manifest.json", "styles.css"]) {
 }
 
 const main = await readFile(path.join(projectRoot, "main.js"), "utf8");
-const bundleBudgetBytes = 720_896;
-assert(Buffer.byteLength(main) <= bundleBudgetBytes, `main.js exceeds the ${bundleBudgetBytes}-byte production bundle budget`);
+const report = bundleReport(Buffer.from(main));
+printBundleReport(report);
+enforceBundleBudget(report);
 assert(!main.includes("//# sourceMappingURL="), "release main.js must not reference a sourcemap");
 for (const unwanted of ["main.js.map", "meta.json", "metafile.json"]) {
   try { await access(path.join(projectRoot, unwanted)); throw new Error(`${unwanted} must not be a release artefact`); }

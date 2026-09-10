@@ -698,14 +698,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.storyWorldMetadataRefreshTimer = null;
       const paths = [...this.pendingStoryWorldMetadataPaths];
       this.pendingStoryWorldMetadataPaths.clear();
-      for (const changedPath of paths) {
+      const files = paths.flatMap((changedPath) => {
         const file = this.app.vault.getAbstractFileByPath(changedPath);
-        if (file instanceof TFile) {
-          const changed = this.storyWorldIndex.handleMetadataChanged(file);
-          this.storyWorldReviewProjection.invalidateMetadata(file, changed);
-        }
-      }
-      this.refreshStoryWorldIndexConsumers();
+        return file instanceof TFile ? [file] : [];
+      });
+      if (this.storyWorldReviewProjection.refreshMetadata(files)) this.refreshStoryWorldIndexConsumers();
     }, 50);
   }
 

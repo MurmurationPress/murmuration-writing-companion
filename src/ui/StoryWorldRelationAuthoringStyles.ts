@@ -1,4 +1,4 @@
-export const STORY_WORLD_RELATION_AUTHORING_STYLES = `
+export const STORY_WORLD_RELATION_AUTHORING_STYLES = /* css */ `
 .mwc-story-world-relation-authoring { margin-top: 12px; }
 .mwc-story-world-relation-offer { padding: 9px 10px; border: 1px solid var(--background-modifier-border); border-radius: 7px; background: var(--background-secondary-alt); }
 .mwc-story-world-relation-title,
