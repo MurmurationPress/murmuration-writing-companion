@@ -134,7 +134,7 @@ test("event wiring retries unknown Markdown and invalidates review after deferre
     match(main.slice(main.indexOf(handler), main.indexOf(handler) + 180), /scheduleStoryWorldMetadataRefresh/);
   }
   const deferred = main.slice(main.indexOf("private scheduleStoryWorldMetadataRefresh"), main.indexOf("getPendingFocusNoteId"));
-  match(deferred, /invalidateMetadata\(file, changed\)/);
+  match(deferred, /if \(this.storyWorldReviewProjection.refreshMetadata\(files\)\)/);
   match(deferred, /refreshStoryWorldIndexConsumers\(\)/);
   const form = readFileSync("src/ui/EntityRelationshipWorkspace.ts", "utf8");
   match(form, /\(\) => plugin.storyWorldIndex.index.getAll\(\)/);

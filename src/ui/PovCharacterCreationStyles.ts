@@ -1,4 +1,4 @@
-export const POV_CHARACTER_CREATION_STYLES = `
+export const POV_CHARACTER_CREATION_STYLES = /* css */ `
 .mwc-pov-character-offer {
   margin-top: 5px;
   padding: 7px 8px;

@@ -1,4 +1,4 @@
-export const EDITORIAL_ENHANCEMENT_STYLES = `
+export const EDITORIAL_ENHANCEMENT_STYLES = /* css */ `
 .mwc-book-review {
   margin-top: 12px;
 }

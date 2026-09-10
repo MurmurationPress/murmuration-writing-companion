@@ -1,4 +1,4 @@
-export const STORY_WORLD_TIMELINE_STYLES = `
+export const STORY_WORLD_TIMELINE_STYLES = /* css */ `
 .mwc-story-world-timeline { box-sizing: border-box; width: 100%; max-width: none; padding: clamp(16px, 2.5vw, 28px) clamp(16px, 3vw, 36px); overflow: auto; }
 .mwc-timeline-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .mwc-timeline-heading h2, .mwc-timeline-heading p { margin: 0; }
