@@ -26,10 +26,3 @@ export function dispositionContinuityRefreshDecision(): ContinuityRefreshDecisio
     deferredChronology: false
   };
 }
-
-export function shouldScheduleSettledStoryWorldRefresh(
-  wasIndexedStoryWorld: boolean,
-  indexChanged: boolean
-): boolean {
-  return wasIndexedStoryWorld || indexChanged;
-}

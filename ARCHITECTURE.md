@@ -54,7 +54,7 @@ Responsible for:
 - Resolving ordinary wikilinks through Obsidian's metadata cache
 - Updating one indexed path when relevant vault or metadata events occur
 
-The [read-only Story World index](docs/story-world-index.md) is an in-memory projection. It is built from Markdown metadata at plugin startup, receives a layout-ready fallback rebuild, and converges with one final bounded rebuild when Obsidian reports metadata resolution complete. After startup settles, metadata changes, creation, deletion and rename events update individual paths rather than rescanning the vault on every sidebar render.
+The [read-only Story World index](docs/story-world-index.md) is an in-memory projection. It is built from Markdown metadata at plugin startup, receives a layout-ready fallback rebuild, and reconciles whenever Obsidian reports a metadata batch resolved, including imports and external sync after startup. Metadata changes, creation, deletion and rename events also update individual paths, with a deferred cache read for new or changed Markdown notes. Settled reads invalidate dependent review projections and refresh index consumers; sidebar renders do not rebuild the index.
 
 Duplicate names and aliases remain separate records ordered by path. Scope and path are retained for disambiguation. A unique indexed name or alias may provide a fallback when normal Obsidian link resolution finds no destination; ambiguous matches are never guessed.
 

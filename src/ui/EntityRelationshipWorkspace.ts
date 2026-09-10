@@ -20,7 +20,7 @@ import {
   exactDateQualifierState,
   exactDateQualifierUpdate,
   ExactDateQualifierState,
-  resolveEntityRelationshipTarget
+  EntityRelationshipTargets
 } from "../story-world/EntityRelationshipFormValues";
 
 function errorMessage(error: unknown): string {
@@ -206,10 +206,12 @@ function renderGuidedForm(
   objectKind.createEl("option", { value: "target", text: "Story World entity" });
   objectKind.createEl("option", { value: "value", text: "Literal value" });
   objectKind.value = relation?.objectKind ?? "target";
-  const entities = plugin.storyWorldIndex.index.getAll();
-  const existingPaths = plugin.app.vault.getMarkdownFiles().map((candidate) => candidate.path);
+  const targets = new EntityRelationshipTargets(
+    () => plugin.storyWorldIndex.index.getAll(),
+    () => plugin.app.vault.getMarkdownFiles().map((candidate) => candidate.path)
+  );
   const storedTarget = relation?.objectKind === "target" && typeof relation.objectValue === "string"
-    ? resolveEntityRelationshipTarget(relation.objectValue, entities, existingPaths)
+    ? targets.resolve(relation.objectValue)
     : null;
   const objectInput = addField(
     controls,
@@ -218,10 +220,6 @@ function renderGuidedForm(
   );
   objectInput.setAttr("list", "mwc-story-world-relationship-targets");
   const datalist = controls.createEl("datalist", { attr: { id: "mwc-story-world-relationship-targets" } });
-  for (const entity of entities) {
-    datalist.createEl("option", { value: entity.name });
-    for (const alias of entity.aliases) datalist.createEl("option", { value: alias, attr: { label: entity.name } });
-  }
   const targetError = controls.createEl("p", { cls: "mwc-entity-relationship-target-error" });
 
   const statusRow = controls.createEl("label");
@@ -257,7 +255,7 @@ function renderGuidedForm(
       : selected;
     const objectValue = objectInput.value.trim();
     const target = objectKind.value === "target"
-      ? resolveEntityRelationshipTarget(objectValue, entities, existingPaths)
+      ? targets.resolve(objectValue)
       : null;
     if (!storedPredicate || !objectValue || !status.value || target?.error) return null;
     const qualifierUpdates: Record<string, unknown | undefined> = {};
@@ -278,10 +276,14 @@ function renderGuidedForm(
     };
   };
   const update = () => {
+    datalist.empty();
+    for (const suggestion of targets.suggestions()) {
+      datalist.createEl("option", { value: suggestion.value, attr: { label: suggestion.label } });
+    }
     custom.parentElement!.hidden = predicate.value !== "other";
     objectInput.previousElementSibling!.textContent = objectKind.value === "target" ? "Target entity" : "Literal value";
     const target = objectKind.value === "target"
-      ? resolveEntityRelationshipTarget(objectInput.value, entities, existingPaths)
+      ? targets.resolve(objectInput.value)
       : null;
     targetError.setText(target?.error ?? "");
     targetError.hidden = !target?.error;
@@ -304,6 +306,8 @@ function renderGuidedForm(
     element.addEventListener("input", update);
     element.addEventListener("change", update);
   }
+  // An open form also refreshes when revisited without typing. Save resolves again.
+  form.addEventListener("focusin", update);
   cancel.onclick = () => { host.empty(); };
   save.onclick = async () => {
     const draft = currentDraft();

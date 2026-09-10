@@ -62,8 +62,7 @@ import {
 import { BookReviewContinuityDisclosure } from "./companion/BookReviewContinuityDisclosure";
 import {
   dispositionContinuityRefreshDecision,
-  metadataContinuityRefreshDecision,
-  shouldScheduleSettledStoryWorldRefresh
+  metadataContinuityRefreshDecision
 } from "./companion/ContinuityRefresh";
 import { ManuscriptBookSelectionService } from "./manuscript/ManuscriptBookSelection";
 import { collectObsidianContinuityReview } from "./manuscript/ObsidianContinuityReview";
@@ -374,7 +373,6 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
         if (this.manuscriptProjection.affectsMetadata(file)) this.manuscriptIntegrityCoordinator.queue(file.path);
-        const wasStoryWorld = this.storyWorldIndex.index.getByPath(file.path) !== null;
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
         this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         const currentChapter = this.getCurrentChapter();
@@ -390,7 +388,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           currentBookChanged
         });
         if (decision.companion) this.refreshView();
-        if (shouldScheduleSettledStoryWorldRefresh(wasStoryWorld, worldChanged)) this.scheduleStoryWorldMetadataRefresh(file.path);
+        if (file.extension === "md") this.scheduleStoryWorldMetadataRefresh(file.path);
         if (decision.deferredChronology) this.scheduleManuscriptChronologyRefresh();
         if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
       })
@@ -405,6 +403,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (!(file instanceof TFile) || file.extension !== "md") return;
 
         const worldChanged = this.storyWorldIndex.handleCreate(file);
+        this.scheduleStoryWorldMetadataRefresh(file.path);
         this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         this.manuscriptIntegrityCoordinator.queue(file.path);
         this.pendingEditorialCreates.set(file.path, file);
@@ -459,6 +458,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (renameKind === "trash-restore") {
           this.manuscriptIntegrityCoordinator.queueUnmanagedMove(oldPath, file.path);
           const worldChanged = this.storyWorldIndex.handleCreate(file);
+          this.scheduleStoryWorldMetadataRefresh(file.path);
           this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
           this.pendingEditorialCreates.set(file.path, file);
           this.refreshView();
@@ -477,6 +477,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
           );
         }
         const worldChanged = this.storyWorldIndex.handleRename(file, oldPath);
+        if (file.extension === "md") this.scheduleStoryWorldMetadataRefresh(file.path);
         this.storyWorldReviewProjection.invalidatePath(oldPath);
         this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
         await this.storeService.handleRename(file, oldPath);
@@ -699,9 +700,12 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       this.pendingStoryWorldMetadataPaths.clear();
       for (const changedPath of paths) {
         const file = this.app.vault.getAbstractFileByPath(changedPath);
-        if (file instanceof TFile) this.storyWorldIndex.handleMetadataChanged(file);
+        if (file instanceof TFile) {
+          const changed = this.storyWorldIndex.handleMetadataChanged(file);
+          this.storyWorldReviewProjection.invalidateMetadata(file, changed);
+        }
       }
-      this.refreshView();
+      this.refreshStoryWorldIndexConsumers();
     }, 50);
   }
 
