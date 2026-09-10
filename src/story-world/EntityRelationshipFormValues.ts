@@ -41,6 +41,23 @@ export function resolveEntityRelationshipTarget(
   };
 }
 
+/** A form keeps this provider, never a captured array of entity candidates. */
+export class EntityRelationshipTargets {
+  constructor(
+    private readonly entities: () => readonly StoryWorldEntityRecord[],
+    private readonly paths: () => readonly string[]
+  ) {}
+
+  suggestions(): { value: string; label: string }[] {
+    return this.entities().flatMap((entity) => [entity.name, ...entity.aliases, entity.path.replace(/\.md$/i, "")]
+      .map((value) => ({ value, label: entity.name })));
+  }
+
+  resolve(input: string): ResolvedEntityRelationshipTarget {
+    return resolveEntityRelationshipTarget(input, this.entities(), this.paths());
+  }
+}
+
 export function exactIsoDate(value: unknown): string | null {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const [year, month, day] = value.split("-").map(Number);

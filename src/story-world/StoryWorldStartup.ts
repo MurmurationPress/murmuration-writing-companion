@@ -1,4 +1,4 @@
-/** Coordinates bounded full-index passes across Obsidian's startup phases. */
+/** Coordinates startup and authoritative passes after each metadata resolution batch. */
 export class StoryWorldStartup<T> {
   private built = false;
   private layoutSettled = false;
@@ -22,9 +22,9 @@ export class StoryWorldStartup<T> {
     return this.rebuildSettled();
   }
 
-  /** Final authoritative pass when Obsidian reports all metadata resolved. */
+  /** Reconcile every settled batch, including imports and external sync after startup. */
   metadataResolved(): T | null {
-    if (!this.built || this.metadataSettled) return null;
+    if (!this.built) return null;
     this.metadataSettled = true;
     return this.rebuildSettled();
   }

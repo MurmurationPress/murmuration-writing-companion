@@ -5,7 +5,7 @@ import { DisposableProjection } from "../src/projections/DisposableProjection";
 import { StoryWorldStartup } from "../src/story-world/StoryWorldStartup";
 import { StoryWorldDocument, StoryWorldIndex } from "../src/story-world/StoryWorldIndex";
 
-test("Story World startup bounds full indexing across layout and metadata resolution", () => {
+test("Story World bounds startup passes and reconciles each settled metadata batch", () => {
   let rebuilds = 0;
   const startup = new StoryWorldStartup(() => ++rebuilds);
   equal(startup.initialise(), 1);
@@ -13,9 +13,9 @@ test("Story World startup bounds full indexing across layout and metadata resolu
   equal(startup.settle(), 2);
   equal(startup.settle(), null);
   equal(startup.metadataResolved(), 3);
-  equal(startup.metadataResolved(), null);
+  equal(startup.metadataResolved(), 4);
   equal(startup.settle(), null);
-  equal(rebuilds, 3);
+  equal(rebuilds, 4);
 });
 
 test("Story World startup converges after frontmatter becomes fully available and refreshes consumers read-only", () => {
