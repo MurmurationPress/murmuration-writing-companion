@@ -5,13 +5,20 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourceRoot = path.resolve(process.argv[2] ?? root);
+const views = process.argv.includes("--views");
+const sourceRoot = path.resolve(process.argv.slice(2).find(arg => arg !== "--views") ?? root);
 const temporary = await mkdtemp(path.join(tmpdir(), "mwc-performance-"));
 try {
   const outfile = path.join(temporary, "benchmark.mjs");
-  await build({ entryPoints: [path.join(root, "benchmarks/RuntimeBaseline.ts")], bundle: true,
+  await build({ entryPoints: [path.join(root, views ? "benchmarks/ViewProjectionBaseline.ts" : "benchmarks/RuntimeBaseline.ts")], bundle: true,
     platform: "node", format: "esm", outfile, logLevel: "silent",
     plugins: [{ name: "measured-source", setup(builder) {
+      if (views) {
+        builder.onResolve({ filter: /^obsidian$/ }, () => ({ path: "obsidian", namespace: "synthetic-host" }));
+        builder.onLoad({ filter: /.*/, namespace: "synthetic-host" }, () => ({
+          contents: "export class TFolder {} export class TFile {}", loader: "js"
+        }));
+      }
       builder.onResolve({ filter: /(?:^|\/)src\// }, args => {
         const suffix = args.path.slice(args.path.indexOf("src/") + 4);
         return { path: path.join(sourceRoot, "src", `${suffix}.ts`) };

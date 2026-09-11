@@ -122,6 +122,9 @@ export function getChapterContextField(
 }
 
 export function normalizePropertyName(name: string): string {
+  // Canonical YAML keys dominate repeated projection lookups. Keep the full
+  // Unicode/whitespace normalization below for every other spelling.
+  if (!/[^a-z0-9_]/.test(name)) return name;
   return name
     .trim()
     .toLowerCase()

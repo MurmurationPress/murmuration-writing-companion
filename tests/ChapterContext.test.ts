@@ -278,3 +278,21 @@ test("clearing editorial pass removes aliases and leaves unrelated data intact",
     chapter_status: "revision"
   });
 });
+
+test("canonical-name fast path retains Unicode, whitespace and separator normalization", () => {
+  for (const name of ["story_date", "pov", "world_context", "key2", "_", "", "  ", " Story Date ",
+    "point--of view", "ÉDITORIAL", "İ", "Straße", "Ａ", "story\u00a0date", "story\tdate", "story\ndate", "pov\n", "pov\r", "pov\u2028", "pov\u2029"]) {
+    equal(normalizePropertyName(name), name.trim().toLowerCase().replace(/[\s-]+/g, "_"));
+  }
+});
+
+test("alias lookups preserve precedence and observe in-place edits and key deletion", () => {
+  const frontmatter: Record<string, unknown> = { story_date: "first", "Story-Date": "last", narrative_date: "fallback" };
+  deepEqual(findAliasedProperty(frontmatter, ["story_date", "narrative_date"]), { property: "Story-Date", value: "last" });
+  frontmatter["Story-Date"] = "edited";
+  equal(findAliasedProperty(frontmatter, ["story_date"])?.value, "edited");
+  delete frontmatter["Story-Date"];
+  deepEqual(findAliasedProperty(frontmatter, ["story_date"]), { property: "story_date", value: "first" });
+  delete frontmatter.story_date;
+  equal(findAliasedProperty(frontmatter, ["story_date", "narrative_date"])?.value, "fallback");
+});

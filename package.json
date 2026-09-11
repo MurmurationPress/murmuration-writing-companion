@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "esbuild src/entry.ts --bundle --external:obsidian --external:node:* --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",
-    "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs && node --test scripts/tests/build-tools.test.mjs",
+    "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs && node --test scripts/tests/build-tools.test.mjs scripts/tests/interaction-capture.test.mjs scripts/tests/view-benchmark.test.mjs",
+    "benchmark:views": "node scripts/benchmark-performance.mjs --views",
     "benchmark:performance": "node scripts/benchmark-performance.mjs",
     "test:build": "node --test scripts/tests/build-tools.test.mjs",
     "test:watch": "node scripts/run-tests.mjs --watch",
