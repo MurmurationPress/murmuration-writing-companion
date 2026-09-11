@@ -189,3 +189,5 @@ Preserve Markdown/YAML authority, disposable indexes, author-facing functionalit
 - Ubuntu/Windows CI results belong to the published branch/PR; local Linux validation does not substitute for those remote checks.
 
 The diff contains only intended source, build tooling, synthetic benchmarks, tests and maintainer documentation. Version/manifest, dependency versions, package-lock, styles.css and release state are unchanged. Runtime benchmarks and build analysis do not read or write any author vault.
+
+See [the follow-up runtime and interaction investigation](runtime-responsiveness-252.md) for expanded manuscript/view-adapter measurements and the unresolved first-click report.
