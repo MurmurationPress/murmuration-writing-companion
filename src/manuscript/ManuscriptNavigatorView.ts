@@ -331,12 +331,13 @@ export class ManuscriptNavigatorView extends ItemView {
     const selected = library.books.find((book) => book.file.path === selectedBookPath)
       ?? library.books[0] ?? null;
 
+    container.setAttribute("data-mwc-context", `manuscript:${selected?.file.path ?? ""}`);
     const heading = container.createDiv("mwc-manuscript-heading");
     heading.createEl("h2", { text: "Manuscript" });
     const createBook = heading.createEl("button", {
       cls: "mwc-manuscript-create-book",
       text: "Create book",
-      attr: { type: "button", "aria-label": "Create manuscript book" }
+      attr: { type: "button", "aria-label": "Create manuscript book", "data-mwc-focus-key": "create-book" }
     });
     createBook.onclick = () => new ManuscriptBookCreationModal(this.plugin).open();
 
@@ -353,7 +354,7 @@ export class ManuscriptNavigatorView extends ItemView {
     if (library.books.length > 1) {
       const selector = heading.createEl("select", {
         cls: "mwc-manuscript-book-selector",
-        attr: { "aria-label": "Select manuscript book" }
+        attr: { "aria-label": "Select manuscript book", "data-mwc-focus-key": "select-book" }
       });
 
       for (const book of library.books) {
@@ -763,6 +764,7 @@ export class ManuscriptNavigatorView extends ItemView {
       attr: {
         type: "button",
         "aria-label": `Open ${entry.title}`,
+        "data-mwc-focus-key": `open:${entry.path}`,
         "aria-keyshortcuts": "Alt+ArrowUp Alt+ArrowDown",
         ...(active ? { "aria-current": "page" } : {})
       }

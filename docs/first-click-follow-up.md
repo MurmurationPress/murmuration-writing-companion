@@ -1,12 +1,14 @@
 # First-click and render investigation after #256
 
+This records the initial #258 head, `c1195f9`. The blur-save failure identified here is addressed by the [continuation and final validation](blur-save-follow-up.md); the historical measurements below remain unchanged.
+
 On 2026-10-01, #256 was reviewed, amended for cancellation/unload safety and squash-merged as `50e5a400481e59f9b698548cb14f0b2c02445f94`. Its reviewed head was `345ea19891744eeb1d1a64525bf8153d858d8b63`, with passing Ubuntu and Windows CI; the merged tree matches. See [queue review](scene-numbering-review-256.md). #255 remains an unmerged draft. Only its development capture script and corresponding tests are reused here, from `5b32c4347654830448543ae4833fb7bbfe923a2a`; none of its production normalization changes is included. #252 must remain open.
 
 ## What the live experiment establishes
 
 This is actual Obsidian 1.12.7, Electron 39.8.3, Chromium 142.0.7444.265 on Linux, running in an isolated profile with 95 synthetic Markdown notes, default theme and MWC alone. Input uses trusted Chromium CDP mouse events, with a requested 35 ms press. It is not a synthetic DOM test, but neither is it Ted's Windows environment or author vault. No author-vault deployment occurred. Builds/tests did not run concurrently with the final timing trials. [Measurements and representative event traces](measurements/first-click-live.json) record installed bundle hashes, actual render calls, DOM removals, pointer order, long tasks and handler counts.
 
-| Operation (five repetitions per case) | Merged #256 baseline | This draft |
+| Operation (five repetitions per case) | Merged #256 baseline | Initial #258 head |
 | --- | --- | --- |
 | First click, inactive Manuscript Create book | 0/5; second click needed | 5/5; handler once |
 | First click, inactive Companion Chapter Notes toggle | 0/5; second click needed | 5/5; handler once |
@@ -30,11 +32,11 @@ The draft preserves the target during tool-pane activation. Switching between tw
 
 Prose remains a broader invalidation problem. After Obsidian saves the editor buffer, metadata `changed` reaches `ManuscriptProjectionService.affectsMetadata()`, which returns true for a known manuscript member without comparing structural fields. `main.ts` queues the integrity coordinator; after its 100 ms settlement it rebuilds the cached library and requests numbering, which finds no reporting changes. The same event reaches `metadataContinuityRefreshDecision()` (Navigator refresh is unconditional), current-chapter Companion refresh, and deferred chronology/world paths. `entry.ts` also schedules consumers. Subsequent convergence refreshes add further renders. The measured four Companion/three Navigator renders remain in this draft. Zero numbering writes therefore does not mean zero regeneration, scans or DOM rebuilds.
 
-## Confirmed remaining defect
+## Remaining defect at the initial head
 
 Editing **Change summary**, then pressing **Chapter Notes** in the already-active Companion, still failed on the first press in all five instrumented draft trials. `EditorialWritingCompanionView` saves the textarea on blur; `updateChapterContextProperty()` awaits the frontmatter write. Metadata listeners then refresh the view and remove the pressed toggle before `pointerup`. The original toggle handler executed zero times. The write helper itself does not directly refresh the view. A representative trace is retained in the measurements.
 
-This needs a separate control-lifetime correction for save-triggered renders, with tests covering focus, blur commits, pending edits, validation failures and external updates. Arbitrary delays or replaying lost clicks would conceal the lifetime problem. This draft deliberately changes neither persistence semantics nor these save handlers. #252's first-click acceptance criterion is **not met**. Large-vault performance, physical return from another application, Windows and the other Story World controls remain unverified.
+At the initial head, this needed a control-lifetime correction for save-triggered renders, with tests covering focus, blur commits, pending edits, validation failures and external updates. Arbitrary delays or replaying lost clicks would conceal the lifetime problem. The initial head changed neither persistence semantics nor these save handlers. Its disposable-vault first-click criterion was **not met**; see the continuation for the correction. Large-vault performance, physical return from another application, Windows and the other Story World controls remain unverified.
 
 ## Short capture for Ted
 
@@ -58,7 +60,7 @@ node scripts/diagnostics/replay-first-click.mjs --vault=/absolute/disposable/vau
 
 Install the comparison bundle **only into this disposable vault**, disable/re-enable MWC and repeat. Add `--expect-fixed` on the draft's click runs to assert first actions and exactly one original handler call in instrumented MWC cases. This assertion covers activation trials, not the remaining blur defect. Prose mode performs five real editor insertions and waits four seconds per save; its assertions require settled captures with one metadata event, one regeneration pass and no reporting writes. Stop all captures before reloading. The script mutates only the explicitly marked fixture and reports its environment and installed bundle hash.
 
-## Validation and separate schema proposal
+## Initial-head validation and separate schema proposal
 
 926 TypeScript tests and 13 script tests pass; production/test type checks, production build, bundle analysis/report, release metadata checks and whitespace checks pass. Bundle size is 705,940 raw / 195,810 gzip bytes, leaving 14,956 bytes below the unchanged hard ceiling; the existing headroom warning remains. Capture forwarding/restoration tests and real-host replay complement the display-authority regression test. No test result is a claim that all live first-click paths are fixed.
 

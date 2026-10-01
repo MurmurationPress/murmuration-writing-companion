@@ -64,7 +64,8 @@ test("settled Story World rebuild refreshes every index-backed workspace consume
   equal(refresh.includes("this.refreshStoryWorldGraph()"), true);
   equal(refresh.includes("this.refreshView()"), true);
   equal(entry.match(/refreshStoryWorldNavigator\(\) \{(?<body>[\s\S]*?)\n  \}/u)?.groups?.body.includes("this.refreshStoryWorldReview()"), true);
-  equal(entry.match(/override refreshView\(\) \{(?<body>[\s\S]*?)\n  \}/u)?.groups?.body.includes("this.refreshStoryWorldTimeline()"), true);
+  equal(main.includes('this.interactionRefresh.request("companion", () => this.renderCompanion())'), true);
+  equal(entry.match(/override renderCompanion\(\) \{(?<body>[\s\S]*?)\n  \}/u)?.groups?.body.includes("this.refreshStoryWorldTimeline()"), true);
 });
 
 test("manuscript consumers reuse one settled projection and one settled change rebuilds once", () => {
