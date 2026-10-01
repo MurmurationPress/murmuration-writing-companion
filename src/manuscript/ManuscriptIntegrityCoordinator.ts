@@ -9,7 +9,7 @@ import {
   ManuscriptDeletionContext,
   reconcileManuscriptSelection
 } from "./ManuscriptIntegrity";
-import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
+import { ManuscriptSequenceCancelledError, ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 import { ManuscriptProjectionService } from "./ManuscriptProjection";
 
 export interface ManuscriptIntegrityRefresh {
@@ -50,6 +50,7 @@ export class ManuscriptIntegrityCoordinator {
   }
 
   initialise(): void {
+    if (this.disposed) return;
     const library = this.projection.rebuild();
     this.reconcileAndPublish(
       library,
@@ -62,6 +63,7 @@ export class ManuscriptIntegrityCoordinator {
   }
 
   queue(path: string): void {
+    if (this.disposed) return;
     const normalized = normalizePath(path);
     const generation = this.generations.touch(normalized);
     this.pendingPaths.add(normalized);
@@ -70,6 +72,7 @@ export class ManuscriptIntegrityCoordinator {
   }
 
   queueRename(oldPath: string, newPath: string): void {
+    if (this.disposed) return;
     this.pendingRenamePaths.add(normalizePath(oldPath));
     this.pendingRenamePaths.add(normalizePath(newPath));
     this.queue(oldPath);
@@ -87,6 +90,9 @@ export class ManuscriptIntegrityCoordinator {
 
   dispose(): void {
     this.disposed = true;
+    this.manuscriptSequenceProperties.dispose();
+    this.pendingPaths.clear();
+    this.pendingRenamePaths.clear();
     if (this.timer !== null) window.clearTimeout(this.timer);
     this.timer = null;
   }
@@ -94,12 +100,14 @@ export class ManuscriptIntegrityCoordinator {
   getLastSettledSnapshot(): LastKnownManuscriptSnapshot | null { return this.snapshot; }
 
   rebuildReportingSequence(): Promise<void> {
+    if (this.disposed) return Promise.reject(new ManuscriptSequenceCancelledError());
     return this.manuscriptSequenceProperties.reconcile(
       buildObsidianManuscriptLibrary(this.app)
     );
   }
 
   private schedule(generation: number, retry: number): void {
+    if (this.disposed) return;
     if (this.timer !== null) window.clearTimeout(this.timer);
     const delay = retry === 0 ? this.options.debounceMs ?? 100 : this.options.retryMs ?? 75;
     this.timer = window.setTimeout(() => {
@@ -190,6 +198,7 @@ export class ManuscriptIntegrityCoordinator {
     try {
       await this.manuscriptSequenceProperties.reconcile(library);
     } catch (error) {
+      if (error instanceof ManuscriptSequenceCancelledError) return;
       console.error("Writing Companion could not reconcile manuscript reporting sequence", error);
     }
   }

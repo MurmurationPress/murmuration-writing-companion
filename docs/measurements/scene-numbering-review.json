@@ -1,0 +1,42 @@
+{
+  "node": "v22.23.1",
+  "warmups": 1,
+  "repetitions": 5,
+  "note": "Synthetic in-memory host, immediate cache visibility, batched generated events, no debounce/disk/DOM time. Refresh callbacks are not view rebuilds. Backlog gate models pending I/O, not measured host delay.",
+  "backlog": [
+    {
+      "size": 30,
+      "requests": 11,
+      "regenerationPasses": 2,
+      "writes": 60,
+      "filesWritten": 30,
+      "metadataEvents": 0,
+      "viewRebuilds": null,
+      "medianMs": 0.221,
+      "maxMs": 0.265
+    },
+    {
+      "size": 300,
+      "requests": 11,
+      "regenerationPasses": 2,
+      "writes": 600,
+      "filesWritten": 300,
+      "metadataEvents": 0,
+      "viewRebuilds": null,
+      "medianMs": 1.461,
+      "maxMs": 1.726
+    },
+    {
+      "size": 1000,
+      "requests": 11,
+      "regenerationPasses": 2,
+      "writes": 2000,
+      "filesWritten": 1000,
+      "metadataEvents": 0,
+      "viewRebuilds": null,
+      "medianMs": 4.017,
+      "maxMs": 5.208
+    }
+  ],
+  "countsMatchPreviousHead": true
+}
