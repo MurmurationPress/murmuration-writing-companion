@@ -78,3 +78,59 @@ test('latest membership removes stale fields while preserving unrelated metadata
   const writes = f.writes.length;
   await f.service.reconcile(f.library([], 'legacy')); equal(f.writes.length, writes);
 });
+
+test('a request arriving while the second pass is active schedules a third latest pass', async () => {
+  const f = fixture(); const entered = gate(), blocked = gate(); let secondStarted = false;
+  await f.service.reconcile(f.library(['A.md', 'B.md', 'C.md']));
+  f.beforeWrite(async () => { if (!secondStarted) { secondStarted = true; entered.release(); await blocked.promise; } });
+  const second = f.service.reconcile(f.library(['C.md', 'B.md', 'A.md'])); await entered.promise;
+  const third = f.service.reconcile(f.library(['B.md', 'A.md', 'C.md']));
+  const latest = f.service.reconcile(f.library(['A.md', 'C.md', 'B.md']));
+  equal(third, latest); blocked.release(); await Promise.all([second, third, latest]);
+  equal(f.passes(), 3);
+  equal(f.metadata.get('A.md')!.book_scene_number, 1);
+  equal(f.metadata.get('C.md')!.book_scene_number, 2);
+  equal(f.metadata.get('B.md')!.book_scene_number, 3);
+});
+
+test('a partially failed coalesced batch rejects every caller and a later request repairs it', async () => {
+  const f = fixture(); let attempts = 0;
+  f.beforeWrite(async () => { if (++attempts === 2) throw new Error('partial failure'); });
+  const a = f.service.reconcile(f.library(['A.md', 'B.md', 'C.md']));
+  const b = f.service.reconcile(f.library(['C.md', 'A.md', 'B.md']));
+  await Promise.all([rejects(a, /partial failure/), rejects(b, /partial failure/)]);
+  equal(f.metadata.get('A.md')!.book_scene_number, 2);
+  equal(f.metadata.get('B.md')!.book_scene_number, undefined);
+  await f.service.reconcile(f.library(['C.md', 'A.md', 'B.md']));
+  equal(f.metadata.get('C.md')!.book_scene_number, 1);
+  equal(f.metadata.get('B.md')!.book_scene_number, 3);
+});
+
+test('disposal before a queued pass starts cancels it and rejects future requests without scanning', async () => {
+  const f = fixture(); const pending = f.service.reconcile(f.library(['A.md']));
+  f.service.dispose(); f.service.dispose();
+  await rejects(pending, /cancelled/);
+  await rejects(f.service.reconcile(f.library(['B.md'])), /cancelled/);
+  equal(f.passes(), 0); equal(f.writes.length, 0);
+});
+
+test('disposal while host I/O waits prevents its mutation and cancels the pending batch', async () => {
+  const f = fixture(); const entered = gate(), blocked = gate();
+  f.beforeWrite(async () => { entered.release(); await blocked.promise; });
+  const active = f.service.reconcile(f.library(['A.md', 'B.md', 'C.md'])); await entered.promise;
+  const pending = f.service.reconcile(f.library(['C.md', 'A.md', 'B.md']));
+  const cancelled = Promise.all([rejects(active, /cancelled/), rejects(pending, /cancelled/)]);
+  f.service.dispose(); blocked.release(); await cancelled;
+  equal(f.passes(), 1); equal(f.writes.length, 1); // Host call began; callback did not mutate.
+  for (const fm of f.metadata.values()) deepEqual(fm, {});
+});
+
+test('disposal after a committed mutation does not undo it or start the next file', async () => {
+  const f = fixture();
+  f.app.fileManager.processFrontMatter = async (_file, mutate) => {
+    mutate(f.metadata.get('A.md')!); f.service.dispose();
+  };
+  await rejects(f.service.reconcile(f.library(['A.md', 'B.md', 'C.md'])), /cancelled/);
+  equal(f.metadata.get('A.md')!.book_scene_number, 1);
+  deepEqual(f.metadata.get('B.md'), {}); deepEqual(f.metadata.get('C.md'), {});
+});
