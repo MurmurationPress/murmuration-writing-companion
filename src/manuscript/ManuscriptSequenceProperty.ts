@@ -57,13 +57,25 @@ export async function exactManuscriptContentIsProtected(
 /** Maintains disposable Navigator-derived frontmatter for native Bases reports. */
 export class ManuscriptSequencePropertyService {
   private queue: Promise<void> = Promise.resolve();
+  private pending: { library: ObsidianManuscriptLibrary } | null = null;
 
   constructor(private readonly app: App) {}
 
   reconcile(library: ObsidianManuscriptLibrary): Promise<void> {
+    // Keep the active write pass serial, but replace obsolete work that has not
+    // started. Every caller in the pending batch awaits its latest snapshot.
+    if (this.pending) {
+      this.pending.library = library;
+      return this.queue;
+    }
+    const pending = { library };
+    this.pending = pending;
     const requested = this.queue
       .catch(() => undefined)
-      .then(() => this.reconcileNow(library));
+      .then(() => {
+        this.pending = null;
+        return this.reconcileNow(pending.library);
+      });
     this.queue = requested;
     return requested;
   }
