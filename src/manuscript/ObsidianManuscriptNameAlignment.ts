@@ -1,6 +1,7 @@
 import { App, TFile } from "obsidian";
 import { findAliasedProperty, getChapterContextField, updateEditableChapterContextFrontmatter } from "../companion/ChapterContext";
 import { isObsidianTrashPath } from "../ObsidianTrash";
+import type { ManuscriptDocumentRecord } from "./ManuscriptOrder";
 import { buildObsidianManuscriptLibrary } from "./ObsidianManuscript";
 import {
   ManuscriptNameAlignmentAdapter,
@@ -22,6 +23,24 @@ function authoritativeEntry(app: App, path: string) {
   return null;
 }
 
+/** Display only: reuse membership from the render's already-resolved tree.
+ * Mutation planning still calls snapshot(), which revalidates current authority.
+ */
+export function snapshotManuscriptNameForDisplay(
+  app: App,
+  entry: ManuscriptDocumentRecord
+): ManuscriptNameSnapshot | null {
+  if (isObsidianTrashPath(entry.path)) return null;
+  if (entry.kind !== "book" && entry.kind !== "part" && entry.kind !== "scene") return null;
+  const file = app.vault.getAbstractFileByPath(entry.path);
+  if (!(file instanceof TFile) || file.extension !== "md") return null;
+  const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
+  if (!frontmatter) return null;
+  const titleField = getChapterContextField("title");
+  const authoredTitle = findAliasedProperty(frontmatter, titleField.aliases)?.value;
+  return { path: file.path, basename: file.basename, title: authoredTitle, kind: entry.kind, authoritative: true };
+}
+
 export class ObsidianManuscriptNameAlignmentAdapter implements ManuscriptNameAlignmentAdapter {
   constructor(private readonly host: ObsidianManuscriptNameAlignmentHost) {}
 
@@ -30,12 +49,8 @@ export class ObsidianManuscriptNameAlignmentAdapter implements ManuscriptNameAli
     const file = this.host.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile) || file.extension !== "md") return null;
     const entry = authoritativeEntry(this.host.app, path);
-    if (!entry || (entry.kind !== "book" && entry.kind !== "part" && entry.kind !== "scene")) return null;
-    const frontmatter = this.host.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
-    if (!frontmatter) return null;
-    const titleField = getChapterContextField("title");
-    const authoredTitle = findAliasedProperty(frontmatter, titleField.aliases)?.value;
-    return { path: file.path, basename: file.basename, title: authoredTitle, kind: entry.kind, authoritative: true };
+    if (!entry) return null;
+    return snapshotManuscriptNameForDisplay(this.host.app, entry);
   }
 
   targetExists(path: string): boolean {

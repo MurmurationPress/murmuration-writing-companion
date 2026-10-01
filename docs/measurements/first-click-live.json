@@ -1,0 +1,2150 @@
+{
+  "schema": 1,
+  "date": "2026-10-01",
+  "baselineSource": "50e5a400481e59f9b698548cb14f0b2c02445f94",
+  "scope": "Actual Linux Obsidian 1.12.7 / Electron 39.8.3 renderer and trusted CDP input, 95 synthetic notes, MWC alone. Not Ted's vault, Windows, OS focus switching or measured paint latency. No overlapping tests/builds during final timings.",
+  "baseline": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.12.7",
+      "electron": "39.8.3",
+      "chrome": "142.0.7444.265",
+      "platform": "linux",
+      "notes": 95,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "installedBundleSha256": "ec1cbad1f2c895c487b66a817b057fa31698d5734f032aebbef7f5655a3adcb6",
+    "instrumented": true,
+    "cases": [
+      {
+        "control": "manuscript",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 36.5,
+          "max": 36.8,
+          "samples": [
+            36.8,
+            36.5,
+            36.7,
+            36.5,
+            36.5
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 4.799999997019768,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.599999994039536,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.599999994039536,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 41.69999998807907,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "manuscript",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 0,
+        "secondClicksRequired": 5,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "pointerDownToUpMs": {
+          "median": 137.5,
+          "max": 149.5,
+          "samples": [
+            137.5,
+            137.1,
+            146.4,
+            137.0,
+            149.5
+          ]
+        },
+        "companionRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "navigatorRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          18,
+          18,
+          18,
+          18,
+          18
+        ],
+        "longTasksMs": [
+          [
+            107
+          ],
+          [
+            106
+          ],
+          [
+            113
+          ],
+          [
+            105
+          ],
+          [
+            116
+          ]
+        ],
+        "exampleTrace": [
+          {
+            "t": 16.299999997019768,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 138.6000000089407,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 140.20000000298023,
+            "kind": "pressed-target-removed",
+            "pointer": 1,
+            "node": 1
+          },
+          {
+            "t": 153.79999999701977,
+            "kind": "pointerup",
+            "node": 5,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 153.79999999701977,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": false,
+            "up": 5
+          },
+          {
+            "t": 458.6000000089407,
+            "kind": "pointerdown",
+            "node": 5,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 495.79999999701977,
+            "kind": "pointerup",
+            "node": 5,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 495.90000000596046,
+            "kind": "press-end",
+            "down": 5,
+            "downConnected": true,
+            "up": 5
+          },
+          {
+            "t": 495.90000000596046,
+            "kind": "click",
+            "node": 5,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 36.4,
+          "max": 36.8,
+          "samples": [
+            36.8,
+            36.4,
+            36.3,
+            36.1,
+            36.8
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 4.4000000059604645,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.20000000298023,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.20000000298023,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 41.20000000298023,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 0,
+        "secondClicksRequired": 5,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "pointerDownToUpMs": {
+          "median": 136.4,
+          "max": 144.6,
+          "samples": [
+            134.9,
+            136.4,
+            136.4,
+            142.7,
+            144.6
+          ]
+        },
+        "companionRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "navigatorRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          18,
+          18,
+          18,
+          18,
+          18
+        ],
+        "longTasksMs": [
+          [
+            104
+          ],
+          [
+            105
+          ],
+          [
+            105
+          ],
+          [
+            111
+          ],
+          [
+            114
+          ]
+        ],
+        "exampleTrace": [
+          {
+            "t": 18.400000005960464,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 138.1000000089407,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 139.29999999701977,
+            "kind": "pressed-target-removed",
+            "pointer": 1,
+            "node": 1
+          },
+          {
+            "t": 153.29999999701977,
+            "kind": "pointerup",
+            "node": 5,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 153.29999999701977,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": false,
+            "up": 5
+          },
+          {
+            "t": 459,
+            "kind": "pointerdown",
+            "node": 6,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 496.1000000089407,
+            "kind": "pointerup",
+            "node": 6,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 496.1000000089407,
+            "kind": "press-end",
+            "down": 6,
+            "downConnected": true,
+            "up": 6
+          },
+          {
+            "t": 496.20000000298023,
+            "kind": "click",
+            "node": 6,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 36.2,
+          "max": 36.5,
+          "samples": [
+            36.1,
+            36.0,
+            36.5,
+            36.3,
+            36.2
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          2,
+          1,
+          1,
+          1,
+          1
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 5.399999991059303,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.5,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.599999994039536,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 41.599999994039536,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 124.8,
+          "max": 130.6,
+          "samples": [
+            122.8,
+            124.8,
+            125.7,
+            119.9,
+            130.6
+          ]
+        },
+        "companionRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "navigatorRenders": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          19,
+          19,
+          19,
+          19,
+          19
+        ],
+        "longTasksMs": [
+          [
+            101
+          ],
+          [
+            104
+          ],
+          [
+            106
+          ],
+          [
+            100
+          ],
+          [
+            111
+          ]
+        ],
+        "exampleTrace": [
+          {
+            "t": 19.400000005960464,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 136.29999999701977,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 142.20000000298023,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 142.20000000298023,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 142.20000000298023,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.12.7",
+      "electron": "39.8.3",
+      "chrome": "142.0.7444.265",
+      "platform": "linux",
+      "notes": 95,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "installedBundleSha256": "985fb84365b42f53bee79f74e177f867049ecdf2f66abea1562737d7aa5b1b3b",
+    "instrumented": true,
+    "cases": [
+      {
+        "control": "manuscript",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 37.0,
+          "max": 37.2,
+          "samples": [
+            36.9,
+            37.2,
+            37.0,
+            36.5,
+            37.0
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 7.200000002980232,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 44.099999994039536,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 44.099999994039536,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 44.20000000298023,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "manuscript",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 38.5,
+          "max": 38.7,
+          "samples": [
+            38.7,
+            38.5,
+            38.7,
+            38.3,
+            38.2
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 19.299999997019768,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 36.599999994039536,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 58,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 58,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 58,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 36.6,
+          "max": 36.7,
+          "samples": [
+            36.7,
+            36.6,
+            36.5,
+            36.5,
+            36.6
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 4.9000000059604645,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.6000000089407,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.6000000089407,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 41.80000001192093,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 38.3,
+          "max": 38.9,
+          "samples": [
+            38.4,
+            38.3,
+            38.9,
+            38.3,
+            38.3
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 14.299999997019768,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 30.5,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 52.70000000298023,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 52.70000000298023,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 52.70000000298023,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": true,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 36.3,
+          "max": 37.1,
+          "samples": [
+            36.3,
+            36.0,
+            36.0,
+            37.1,
+            36.3
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 5.5,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.79999999701977,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 41.79999999701977,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 41.79999999701977,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "firstPressDownTargetConnected": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "pointerDownToUpMs": {
+          "median": 38.6,
+          "max": 39.4,
+          "samples": [
+            38.6,
+            39.4,
+            38.2,
+            39.1,
+            38.4
+          ]
+        },
+        "companionRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "navigatorRenders": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "metadataChangedEvents": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "numberingPasses": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "domChildRemovals": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "longTasksMs": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "exampleTrace": [
+          {
+            "t": 18.700000002980232,
+            "kind": "pointerdown",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": false,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 35.30000001192093,
+            "kind": "obsidian-active-leaf-change"
+          },
+          {
+            "t": 57.30000001192093,
+            "kind": "pointerup",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false,
+            "pointer": 1
+          },
+          {
+            "t": 57.30000001192093,
+            "kind": "press-end",
+            "down": 1,
+            "downConnected": true,
+            "up": 1
+          },
+          {
+            "t": 57.30000001192093,
+            "kind": "click",
+            "node": 1,
+            "connected": true,
+            "disabled": false,
+            "activeElement": false,
+            "pane": 2,
+            "activePane": true,
+            "trusted": true,
+            "defaultPreventedAtCapture": false
+          }
+        ]
+      }
+    ]
+  },
+  "baselineWithoutCapture": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.12.7",
+      "electron": "39.8.3",
+      "chrome": "142.0.7444.265",
+      "platform": "linux",
+      "notes": 95,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "installedBundleSha256": "ec1cbad1f2c895c487b66a817b057fa31698d5734f032aebbef7f5655a3adcb6",
+    "instrumented": false,
+    "cases": [
+      {
+        "control": "manuscript",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "manuscript",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 0,
+        "secondClicksRequired": 5,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 0,
+        "secondClicksRequired": 5,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      }
+    ]
+  },
+  "afterWithoutCapture": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.12.7",
+      "electron": "39.8.3",
+      "chrome": "142.0.7444.265",
+      "platform": "linux",
+      "notes": 95,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "installedBundleSha256": "985fb84365b42f53bee79f74e177f867049ecdf2f66abea1562737d7aa5b1b3b",
+    "instrumented": false,
+    "cases": [
+      {
+        "control": "manuscript",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "manuscript",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "companion",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": true,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "control": "native",
+        "initiallyActive": false,
+        "trials": 5,
+        "firstClickSuccesses": 5,
+        "secondClicksRequired": 0,
+        "handlerCounts": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      }
+    ]
+  },
+  "proseBaseline": {
+    "trials": 5,
+    "numberingPasses": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "reportingWriteAttempts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "metadataChangedEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "libraryProjectionRebuilds": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "markdownEnumerations": [
+      202,
+      202,
+      202,
+      202,
+      202
+    ],
+    "navigatorRenderCount": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "companionRenderCount": [
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "navigatorTotalRenderMs": {
+      "median": 312.2,
+      "max": 359.4,
+      "samples": [
+        312.2,
+        359.4,
+        314.7,
+        283.3,
+        293.3
+      ]
+    },
+    "companionTotalRenderMs": {
+      "median": 24.7,
+      "max": 27.0,
+      "samples": [
+        26.3,
+        27.0,
+        23.8,
+        23.4,
+        24.7
+      ]
+    },
+    "longTasksMs": [
+      [
+        119,
+        103,
+        107
+      ],
+      [
+        120,
+        120,
+        139
+      ],
+      [
+        103,
+        110,
+        120
+      ],
+      [
+        102,
+        94,
+        102
+      ],
+      [
+        100,
+        96,
+        115
+      ]
+    ],
+    "exampleTrace": [
+      {
+        "t": 3.7999999970197678,
+        "kind": "obsidian-editor-change"
+      },
+      {
+        "t": 2124.8999999910593,
+        "kind": "obsidian-changed"
+      },
+      {
+        "t": 2140.7000000029802,
+        "kind": "obsidian-resolved"
+      },
+      {
+        "t": 2143.8999999910593,
+        "kind": "long-task",
+        "startMs": 2006.5999999940395,
+        "durationMs": 119
+      },
+      {
+        "t": 2329,
+        "kind": "long-task",
+        "startMs": 2224.8999999910593,
+        "durationMs": 103
+      },
+      {
+        "t": 2440.7999999970198,
+        "kind": "long-task",
+        "startMs": 2329,
+        "durationMs": 107
+      }
+    ]
+  },
+  "proseAfter": {
+    "trials": 5,
+    "numberingPasses": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "reportingWriteAttempts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "metadataChangedEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "libraryProjectionRebuilds": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "markdownEnumerations": [
+      19,
+      19,
+      19,
+      19,
+      19
+    ],
+    "navigatorRenderCount": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "companionRenderCount": [
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "navigatorTotalRenderMs": {
+      "median": 19.1,
+      "max": 20.3,
+      "samples": [
+        18.8,
+        19.3,
+        18.6,
+        19.1,
+        20.3
+      ]
+    },
+    "companionTotalRenderMs": {
+      "median": 29.2,
+      "max": 29.7,
+      "samples": [
+        29.6,
+        26.3,
+        29.2,
+        29.7,
+        27.4
+      ]
+    },
+    "longTasksMs": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ],
+    "exampleTrace": [
+      {
+        "t": 5.600000008940697,
+        "kind": "obsidian-editor-change"
+      },
+      {
+        "t": 2022.4000000059605,
+        "kind": "obsidian-changed"
+      },
+      {
+        "t": 2038.2000000029802,
+        "kind": "obsidian-resolved"
+      }
+    ]
+  },
+  "remainingBlurFailure": {
+    "trials": 5,
+    "firstClickSuccesses": 0,
+    "handlerCounts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "downTargetConnected": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "exampleTrace": [
+      {
+        "t": 2.8999999910593033,
+        "kind": "pointerdown",
+        "node": 1,
+        "connected": true,
+        "disabled": false,
+        "activeElement": false,
+        "pane": 2,
+        "activePane": true,
+        "trusted": true,
+        "defaultPreventedAtCapture": false,
+        "pointer": 1
+      },
+      {
+        "t": 26.099999994039536,
+        "kind": "obsidian-changed"
+      },
+      {
+        "t": 27.099999994039536,
+        "kind": "pressed-target-removed",
+        "pointer": 1,
+        "node": 1
+      },
+      {
+        "t": 40.29999999701977,
+        "kind": "pressed-target-removed",
+        "pointer": 1,
+        "node": 1
+      },
+      {
+        "t": 40.3999999910593,
+        "kind": "pressed-target-removed",
+        "pointer": 1,
+        "node": 1
+      },
+      {
+        "t": 44.099999994039536,
+        "kind": "pointerup",
+        "node": 4,
+        "connected": true,
+        "disabled": false,
+        "activeElement": false,
+        "pane": 2,
+        "activePane": true,
+        "trusted": true,
+        "defaultPreventedAtCapture": false,
+        "pointer": 1
+      },
+      {
+        "t": 44.099999994039536,
+        "kind": "press-end",
+        "down": 1,
+        "downConnected": false,
+        "up": 4
+      }
+    ]
+  },
+  "keyboard": [
+    {
+      "key": "Enter",
+      "focused": true,
+      "calls": 1,
+      "modals": 1,
+      "connected": true
+    },
+    {
+      "key": "Space",
+      "focused": true,
+      "calls": 1,
+      "modals": 1,
+      "connected": true
+    }
+  ],
+  "sourceSwitch": {
+    "alreadyOpenMarkdownLeaves": "B0S001 \u2192 B0S000",
+    "currentChapterUpdated": true,
+    "companionTitleUpdated": true
+  }
+}

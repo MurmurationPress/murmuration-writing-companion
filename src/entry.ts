@@ -122,7 +122,14 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => storyWorldGraphStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(true); }));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      this.seedActiveEditor();
+      // Tool-pane activation does not select a new source note. Keep its
+      // controls alive; Markdown activation still follows the active source.
+      if (!this.app.workspace.getActiveViewOfType(MarkdownView)) return;
+      this.refreshStoryWorldNavigator();
+      this.refreshStoryWorldGraph(true);
+    }));
     this.registerEvent(this.app.vault.on("delete", (file) => {
       if (!(file instanceof TFile)) return;
       this.storyWorldEventAuthoringSession.clear(file.path);

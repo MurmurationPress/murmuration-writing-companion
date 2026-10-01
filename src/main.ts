@@ -342,6 +342,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
         this.annotationLocator.clear();
+        // Entering a tool pane preserves the current manuscript context. A
+        // rebuild here can remove its pressed control before the click arrives.
+        if (!this.app.workspace.getActiveViewOfType(MarkdownView)) return;
         const activeChapter = this.getActiveChapter();
         if (activeChapter) {
           this.currentChapter = activeChapter;
