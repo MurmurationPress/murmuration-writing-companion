@@ -1,3 +1,4 @@
+import { InteractionRefresh } from "./ui/InteractionRefresh";
 import {
   App,
   Editor,
@@ -112,6 +113,7 @@ export interface EditorialPassViewState {
 }
 
 export default class MurmurationWritingCompanionPlugin extends Plugin {
+  protected readonly interactionRefresh = new InteractionRefresh();
   readonly manuscriptBookSelection: ManuscriptBookSelectionService;
   storeService!: EditorialStoreService;
   storyWorldIndex!: ObsidianStoryWorldIndex;
@@ -154,6 +156,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async onload() {
+    this.interactionRefresh.observe(document);
+    this.app.workspace.iterateAllLeaves(leaf => this.interactionRefresh.observe(leaf.view.containerEl.ownerDocument));
+    this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, win) => this.interactionRefresh.observe(win.document)));
+    this.register(() => this.interactionRefresh.dispose());
     const enhancementStyles = installEditorialEnhancementStyles();
     this.register(() => enhancementStyles.remove());
     this.addSettingTab(new ContinuitySettingsTab(this.app, this));
@@ -342,6 +348,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
         this.annotationLocator.clear();
+        // Entering a tool pane preserves the current manuscript context. A
+        // rebuild here can remove its pressed control before the click arrives.
+        if (!this.app.workspace.getActiveViewOfType(MarkdownView)) return;
         const activeChapter = this.getActiveChapter();
         if (activeChapter) {
           this.currentChapter = activeChapter;
@@ -607,6 +616,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   onunload() {
+    this.interactionRefresh.dispose();
     this.manuscriptIntegrityCoordinator?.dispose();
     if (this.manuscriptChronologyRefreshTimer !== null) {
       window.clearTimeout(this.manuscriptChronologyRefreshTimer);
@@ -962,6 +972,14 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   refreshView() {
+    this.interactionRefresh.request("companion", () => this.renderCompanion());
+  }
+
+  refreshContextControl(container: HTMLElement, render: () => void): void {
+    this.interactionRefresh.request(container, () => { if (container.isConnected) render(); });
+  }
+
+  protected renderCompanion() {
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
 
     for (const leaf of leaves) {
@@ -973,6 +991,10 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   refreshManuscriptNavigator() {
+    this.interactionRefresh.request("manuscript", () => this.renderManuscriptNavigator());
+  }
+
+  private renderManuscriptNavigator() {
     const leaves = this.app.workspace.getLeavesOfType(
       MANUSCRIPT_NAVIGATOR_VIEW_TYPE
     );

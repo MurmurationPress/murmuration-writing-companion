@@ -176,6 +176,7 @@ export function storyWorldBuilderItemForFile(plugin: MurmurationWritingCompanion
 
 export function renderStoryWorldEntityInspector(container: Element, plugin: MurmurationWritingCompanionPlugin, file: TFile, item: StoryWorldBuilderItem): void {
   container.empty();
+  container.setAttribute("data-mwc-context", `entity:${file.path}`);
   container.addClass("mwc-container", "mwc-story-world-inspector");
   container.createEl("h2", { text: inspectorPanelLabel("entity") });
 

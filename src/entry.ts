@@ -122,7 +122,14 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.register(() => storyWorldGraphStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => { this.seedActiveEditor(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(true); }));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      this.seedActiveEditor();
+      // Tool-pane activation does not select a new source note. Keep its
+      // controls alive; Markdown activation still follows the active source.
+      if (!this.app.workspace.getActiveViewOfType(MarkdownView)) return;
+      this.refreshStoryWorldNavigator();
+      this.refreshStoryWorldGraph(true);
+    }));
     this.registerEvent(this.app.vault.on("delete", (file) => {
       if (!(file instanceof TFile)) return;
       this.storyWorldEventAuthoringSession.clear(file.path);
@@ -235,7 +242,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     this.refreshView();
   }
 
-  override refreshView() {
+  protected override renderCompanion() {
     this.refreshContinuityReview();
     const active = this.app.workspace.getActiveViewOfType(MarkdownView)?.file ?? null;
     const activeItem = active ? storyWorldBuilderItemForFile(this, active) : null;
@@ -264,7 +271,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     for (const leaf of this.app.workspace.getLeavesOfType(WRITING_COMPANION_VIEW_TYPE)) {
       setCompanionRole(leaf.view, "chapter");
     }
-    super.refreshView();
+    super.renderCompanion();
     this.refreshStoryWorldTimeline();
     const chapter = this.getCurrentChapter();
     if (!chapter) return;
@@ -301,7 +308,10 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   refreshStoryWorldReview(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_REVIEW_VIEW_TYPE)) {
-      if (leaf.view instanceof StoryWorldReviewView) leaf.view.render();
+      if (leaf.view instanceof StoryWorldReviewView) {
+        const view = leaf.view;
+        this.interactionRefresh.request(view, () => { if (view.containerEl.isConnected) view.render(); });
+      }
     }
   }
 
@@ -320,7 +330,11 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   refreshStoryWorldGraph(followActive = false): void {
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_GRAPH_VIEW_TYPE)) {
-      if (leaf.view instanceof StoryWorldGraphView) { if (followActive) leaf.view.followActiveSelection(); leaf.view.render(); }
+      if (leaf.view instanceof StoryWorldGraphView) {
+        const view = leaf.view;
+        if (followActive) view.followActiveSelection();
+        this.interactionRefresh.request(view, () => { if (view.containerEl.isConnected) view.render(); });
+      }
     }
   }
 
@@ -363,13 +377,19 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   refreshStoryWorldTimeline(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_TIMELINE_VIEW_TYPE)) {
-      if (leaf.view instanceof StoryWorldTimelineView) leaf.view.render();
+      if (leaf.view instanceof StoryWorldTimelineView) {
+        const view = leaf.view;
+        this.interactionRefresh.request(view, () => { if (view.containerEl.isConnected) view.render(); });
+      }
     }
   }
 
   override refreshContinuityReview(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(CONTINUITY_REVIEW_VIEW_TYPE)) {
-      if (leaf.view instanceof ContinuityReviewView) leaf.view.render();
+      if (leaf.view instanceof ContinuityReviewView) {
+        const view = leaf.view;
+        this.interactionRefresh.request(view, () => { if (view.containerEl.isConnected) view.render(); });
+      }
     }
   }
 
@@ -444,7 +464,10 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   refreshStoryWorldNavigator() {
     for (const leaf of this.app.workspace.getLeavesOfType(STORY_WORLD_NAVIGATOR_VIEW_TYPE)) {
-      if (leaf.view instanceof StoryWorldNavigatorView) leaf.view.render();
+      if (leaf.view instanceof StoryWorldNavigatorView) {
+        const view = leaf.view;
+        this.interactionRefresh.request(view, () => { if (view.containerEl.isConnected) view.render(); });
+      }
     }
     this.refreshStoryWorldReview();
   }

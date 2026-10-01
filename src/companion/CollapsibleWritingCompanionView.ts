@@ -111,6 +111,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     container.addClass("mwc-container");
 
     const file = this.plugin.getCurrentChapter();
+    container.setAttribute("data-mwc-context", `chapter:${file?.path ?? ""}`);
     const focusNoteId = this.plugin.getPendingFocusNoteId();
 
     container.createEl("h2", { text: "Writing Companion" });
