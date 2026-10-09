@@ -12,8 +12,9 @@ type Collector = (app: App, index: ObsidianStoryWorldIndex) => StoryWorldReviewP
 
 function evidenceFingerprint(app: App, file: TFile): string | null {
   if (file.extension !== "md" || isObsidianTrashPath(file.path)) return null;
-  const frontmatter = (app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined) ?? {};
-  const links = (app.metadataCache.getFileCache(file)?.links ?? []).map((link) => [
+  const cache = app.metadataCache.getFileCache(file);
+  const frontmatter = (cache?.frontmatter as Record<string, unknown> | undefined) ?? {};
+  const links = (cache?.links ?? []).map((link) => [
     link.original, link.link, link.displayText ?? null,
     link.position.start.offset, link.position.end.offset
   ] as const).map(([raw, linkpath, displayText, start, end]) => ({ raw, linkpath, displayText, start, end }));
@@ -41,6 +42,16 @@ export class StoryWorldReviewProjectionService {
 
   private fingerprintsCaptured = false;
   invalidate(): void { this.projection.invalidate(); this.fingerprintsCaptured = false; }
+
+  /** Drain coalesced paths; only fresh index or review evidence needs a view refresh. */
+  refreshMetadata(files: Iterable<TFile>): boolean {
+    let changed = false;
+    for (const file of files) {
+      const indexChanged = this.index.handleMetadataChanged(file);
+      changed = this.invalidateMetadata(file, indexChanged) || changed;
+    }
+    return changed;
+  }
 
   invalidateMetadata(file: TFile, indexChanged: boolean): boolean {
     const next = evidenceFingerprint(this.app, file);

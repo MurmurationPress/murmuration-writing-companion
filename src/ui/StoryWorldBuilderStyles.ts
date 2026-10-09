@@ -1,4 +1,4 @@
-export const STORY_WORLD_BUILDER_STYLES = `
+export const STORY_WORLD_BUILDER_STYLES = /* css */ `
 .mwc-story-world-navigator-actions,
 .mwc-story-world-inspector-heading { display: flex; align-items: baseline; gap: var(--mwc-space-2, 8px); }
 .mwc-story-world-navigator-actions { align-items: center; }

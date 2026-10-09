@@ -1,3 +1,4 @@
+import { ChapterContextEdit } from "./ChapterContextEdit";
 import { MarkdownRenderer, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import {
@@ -55,6 +56,7 @@ let nextLocationSuggestionListId = 0;
 let nextBookReviewContentId = 0;
 
 export class WritingCompanionView extends BaseWritingCompanionView {
+  private readonly contextEdits = new WeakMap<TFile, Map<string, ChapterContextEdit>>();
   private readonly dismissedPovCharacterOffers = new Set<string>();
 
   constructor(leaf: WorkspaceLeaf, plugin: MurmurationWritingCompanionPlugin) {
@@ -305,8 +307,14 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       attr: { "aria-label": `Chapter context for ${file.basename}` }
     });
 
+    let edits = this.contextEdits.get(file);
+    if (!edits) { edits = new Map(); this.contextEdits.set(file, edits); }
     for (const field of EDITABLE_CHAPTER_CONTEXT_FIELDS) {
+      let edit = edits.get(field.key);
+      if (!edit) { edit = new ChapterContextEdit(); edits.set(field.key, edit); }
+      const draft = edit;
       const contextValue = getEditableChapterContextValue(frontmatter, field);
+      const displayedValue = draft.draft ?? contextValue.value;
       const row = this.createContextRow(
         list,
         field.label,
@@ -315,18 +323,23 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       );
       const value = row.value;
 
-      const save = async (nextValue: string) => {
-        if (contextValue.value.trim() === nextValue.trim()) return;
-        await this.plugin.updateChapterContextProperty(file, field, nextValue.trim());
+      const save = (nextValue: string): Promise<void> => {
+        if (draft.draft === null && contextValue.value.trim() === nextValue.trim()) return Promise.resolve();
+        // Read/write authority stays inside processFrontMatter. Comparing its
+        // asynchronous metadata cache here could skip the last of rapid A/B/A edits.
+        return draft.commit(nextValue.trim(), value => this.plugin.updateChapterContextProperty(file, field, value));
+      };
+      const reportFailure = (error: unknown) => {
+        new Notice(`Could not save ${field.label} for ${file.basename}. Your edit is retained; retry by leaving the field. ${error instanceof Error ? error.message : ""}`);
       };
 
       if (field.key === "pov") {
-        this.renderCompactPov(value, contextValue.value, file, field.placeholder, save);
+        this.renderCompactPov(value, displayedValue, file, field.placeholder, save);
         continue;
       }
 
       if (field.key === "location") {
-        this.renderCompactLocation(value, contextValue.value, file, field.placeholder, save);
+        this.renderCompactLocation(value, displayedValue, file, field.placeholder, save);
         continue;
       }
 
@@ -336,7 +349,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       }
 
       const placeholder = field.key === "title" ? file.basename : field.placeholder;
-      const selectOptions = getChapterContextSelectOptions(field, contextValue.value);
+      const selectOptions = getChapterContextSelectOptions(field, displayedValue);
 
       if (selectOptions) {
         const editor = value.createEl("select", {
@@ -347,23 +360,30 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           const optionEl = editor.createEl("option", { text: option.label });
           optionEl.value = option.value;
         }
-        editor.value = contextValue.value;
-        editor.onchange = () => void save(editor.value);
+        editor.value = displayedValue;
+        editor.setAttribute("data-mwc-focus-key", `context:${field.key}`);
+        editor.onchange = () => void save(editor.value).catch(reportFailure);
       } else if (field.multiline) {
         const editor = value.createEl("textarea", {
           cls: "mwc-context-input mwc-context-input--multiline",
           attr: { placeholder, "aria-label": field.label }
         });
-        editor.value = contextValue.value;
-        editor.onblur = () => void save(editor.value);
+        editor.value = displayedValue;
+        editor.setAttribute("data-mwc-focus-key", `context:${field.key}`);
+        editor.defaultValue = displayedValue;
+        editor.oninput = () => draft.change(editor.value);
+        editor.onblur = () => void save(editor.value).catch(reportFailure);
       } else {
         const editor = value.createEl("input", {
           cls: "mwc-context-input",
-          type: getChapterContextInputType(field, contextValue.value),
+          type: getChapterContextInputType(field, displayedValue),
           attr: { placeholder, "aria-label": field.label }
         });
-        editor.value = contextValue.value;
-        editor.onchange = () => void save(editor.value);
+        editor.value = displayedValue;
+        editor.setAttribute("data-mwc-focus-key", `context:${field.key}`);
+        editor.defaultValue = displayedValue;
+        editor.oninput = () => draft.change(editor.value);
+        editor.onchange = () => void save(editor.value).catch(reportFailure);
         editor.onkeydown = (event) => {
           if (event.key !== "Enter") return;
           event.preventDefault();
@@ -427,7 +447,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       container.empty();
       const display = container.createDiv({
         cls: "mwc-pov-display",
-        attr: { tabindex: "0", role: "group", "aria-label": "POV character" }
+        attr: { tabindex: "0", role: "group", "aria-label": "POV character", "data-mwc-focus-key": "context:pov-display" }
       });
       const rendered = display.createDiv({ cls: "mwc-pov-value" });
 
@@ -440,7 +460,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const edit = display.createEl("button", {
         cls: "mwc-pov-edit",
         text: "Edit",
-        attr: { type: "button", "aria-label": "Edit POV character" }
+        attr: { type: "button", "aria-label": "Edit POV character", "data-mwc-focus-key": "context:pov-edit" }
       });
       const startEditing = () => renderEditor(value);
       edit.onclick = (event) => {
@@ -471,7 +491,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const listId = `mwc-pov-suggestions-${++nextPovSuggestionListId}`;
       const editor = container.createEl("input", {
         cls: "mwc-context-input mwc-pov-input",
-        attr: { placeholder, "aria-label": "POV character", list: listId }
+        attr: { placeholder, "aria-label": "POV character", list: listId, "data-mwc-focus-key": "context:pov-display" }
       });
       editor.value = presentedValue;
 
@@ -482,11 +502,16 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const commit = async () => {
         if (closed) return;
         closed = true;
+        editor.readOnly = true;
+        editor.setAttribute("data-mwc-editing", "false");
         const nextValue = editor.value.trim() === presentedValue.trim()
           ? value
           : resolvePovInput(editor.value, suggestions);
-        await save(nextValue);
-        renderResting(nextValue);
+        try { await save(nextValue); this.plugin.refreshContextControl(container, () => renderResting(nextValue)); }
+        catch (error) {
+          closed = false; editor.readOnly = false; editor.removeAttribute("data-mwc-editing");
+          new Notice(`Could not save POV: ${error instanceof Error ? error.message : error}`);
+        }
       };
       const cancel = () => {
         if (closed) return;
@@ -503,7 +528,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
           cancel();
         }
       };
-      editor.onblur = () => window.setTimeout(() => void commit(), 0);
+      editor.onblur = () => void commit();
       editor.focus();
       editor.select();
     };
@@ -526,7 +551,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       container.empty();
       const display = container.createDiv({
         cls: "mwc-pov-display mwc-location-display",
-        attr: { tabindex: "0", role: "group", "aria-label": "Scene location" }
+        attr: { tabindex: "0", role: "group", "aria-label": "Scene location", "data-mwc-focus-key": "context:location-display" }
       });
       const rendered = display.createDiv({ cls: "mwc-pov-value mwc-location-value" });
       const entity = semanticLocation(value);
@@ -546,7 +571,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const edit = display.createEl("button", {
         cls: "mwc-pov-edit",
         text: "Edit",
-        attr: { type: "button", "aria-label": "Edit Scene location" }
+        attr: { type: "button", "aria-label": "Edit Scene location", "data-mwc-focus-key": "context:location-edit" }
       });
       const start = () => renderEditor(value);
       edit.onclick = (event) => { event.preventDefault(); event.stopPropagation(); start(); };
@@ -569,7 +594,7 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const listId = `mwc-location-suggestions-${++nextLocationSuggestionListId}`;
       const editor = container.createEl("input", {
         cls: "mwc-context-input mwc-location-input",
-        attr: { placeholder, "aria-label": "Scene location", list: listId }
+        attr: { placeholder, "aria-label": "Scene location", list: listId, "data-mwc-focus-key": "context:location-display" }
       });
       editor.value = presented;
       const list = container.createEl("datalist", { attr: { id: listId } });
@@ -578,17 +603,23 @@ export class WritingCompanionView extends BaseWritingCompanionView {
       const commit = async () => {
         if (closed) return;
         closed = true;
+        editor.readOnly = true;
+        editor.setAttribute("data-mwc-editing", "false");
         const next = editor.value.trim() === presented.trim()
           ? value
           : resolveLocationInput(editor.value, suggestions);
-        await save(next); renderResting(next);
+        try { await save(next); this.plugin.refreshContextControl(container, () => renderResting(next)); }
+        catch (error) {
+          closed = false; editor.readOnly = false; editor.removeAttribute("data-mwc-editing");
+          new Notice(`Could not save location: ${error instanceof Error ? error.message : error}`);
+        }
       };
       const cancel = () => { if (!closed) { closed = true; renderResting(value); } };
       editor.onkeydown = (event) => {
         if (event.key === "Enter") { event.preventDefault(); void commit(); }
         else if (event.key === "Escape") { event.preventDefault(); cancel(); }
       };
-      editor.onblur = () => window.setTimeout(() => void commit(), 0);
+      editor.onblur = () => void commit();
       editor.focus(); editor.select();
     };
     renderResting(currentValue);

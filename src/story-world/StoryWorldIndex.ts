@@ -209,6 +209,22 @@ export function parseStoryWorldEntity(
   };
 }
 
+/** Preserve YAML value types: JSON alone conflates Date objects with strings. */
+function sameFrontmatter(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (left instanceof Date || right instanceof Date) {
+    return left instanceof Date && right instanceof Date && left.getTime() === right.getTime();
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length
+      && left.every((value, index) => sameFrontmatter(value, right[index]));
+  }
+  if (!isRecord(left) || !isRecord(right)) return false;
+  const keys = Object.keys(left); const otherKeys = Object.keys(right);
+  return keys.length === otherKeys.length
+    && keys.every((key, index) => key === otherKeys[index] && sameFrontmatter(left[key], right[key]));
+}
+
 function sameEntity(
   left: StoryWorldEntityRecord,
   right: StoryWorldEntityRecord
@@ -226,22 +242,31 @@ export class StoryWorldIndex {
   }
 
   rebuild(documents: Iterable<StoryWorldDocument>): boolean {
-    const before = JSON.stringify(this.getAll());
-    this.clear();
-
+    // Reconcile authoritative documents without discarding unchanged records and
+    // secondary indexes. Last document wins, matching the previous rebuild.
+    const next = new Map<string, StoryWorldDocument>();
     for (const document of documents) {
-      this.upsert(document);
+      const path = nonEmptyString(document.path);
+      if (path) next.set(path, document);
     }
-
-    return before !== JSON.stringify(this.getAll());
+    let changed = false;
+    for (const path of this.entitiesByPath.keys()) {
+      if (!next.has(path)) changed = this.remove(path) || changed;
+    }
+    for (const document of next.values()) changed = this.upsert(document) || changed;
+    return changed;
   }
 
   upsert(document: StoryWorldDocument): boolean {
     const path = nonEmptyString(document.path);
     if (!path) return false;
 
-    const next = parseStoryWorldEntity(document);
     const existing = this.entitiesByPath.get(path);
+    // The record owns a defensive frontmatter copy. An unchanged authoritative
+    // document needs neither parsing/cloning nor secondary-index updates.
+    if (existing && existing.basename === (nonEmptyString(document.basename) ?? basenameFromPath(path))
+      && sameFrontmatter(existing.properties, document.frontmatter)) return false;
+    const next = parseStoryWorldEntity(document);
 
     if (!next) {
       return existing ? this.remove(path) : false;

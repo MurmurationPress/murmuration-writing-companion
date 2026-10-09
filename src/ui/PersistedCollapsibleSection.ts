@@ -56,7 +56,8 @@ export function createPersistedCollapsibleSection(
     cls: "mwc-section-toggle",
     attr: {
       type: "button",
-      "aria-controls": contentId
+      "aria-controls": contentId,
+      "data-mwc-focus-key": `section:${key}`
     }
   });
   const label = toggle.createSpan({ cls: "mwc-section-toggle-label" });

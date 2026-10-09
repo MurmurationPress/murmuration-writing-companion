@@ -39,7 +39,7 @@ export interface ManuscriptPreparationUndoToken {
 
 export class StaleManuscriptPreparationError extends Error {
   constructor() {
-    super("The manuscript metadata changed before preparation could be written. Review the preview again.");
+    super("The manuscript changed before preparation; review again.");
     this.name = "StaleManuscriptPreparationError";
   }
 }
@@ -47,22 +47,22 @@ export class StaleManuscriptPreparationError extends Error {
 export class StaleManuscriptPreparationUndoError extends Error {
   constructor(readonly paths: readonly string[] = []) {
     super(paths.length
-      ? `Undo is not safe because these prepared notes changed, moved or disappeared: ${paths.join(", ")}.`
-      : "The manuscript metadata changed after preparation, so Undo is no longer safe.");
+      ? `Undo is not safe: notes changed, moved or disappeared: ${paths.join(", ")}.`
+      : "Notes changed after preparation; Undo is no longer safe.");
     this.name = "StaleManuscriptPreparationUndoError";
   }
 }
 
 export class ManuscriptPreparationSyncConflictError extends Error {
   constructor(path: string) {
-    super(`Resolve sync or Git conflict markers before preparing the manuscript: ${path}`);
+    super(`Resolve conflict markers before preparation: ${path}`);
     this.name = "ManuscriptPreparationSyncConflictError";
   }
 }
 
 export class ManuscriptPreparationRollbackError extends Error {
   constructor(readonly originalError: unknown, readonly failedPaths: readonly string[]) {
-    super(`Preparation failed and exact rollback could not be verified for: ${failedPaths.join(", ")}. Restore these notes from version control or backup before continuing.`);
+    super(`Rollback could not be verified: ${failedPaths.join(", ")}. Restore from backup before continuing.`);
     this.name = "ManuscriptPreparationRollbackError";
   }
 }
@@ -182,7 +182,7 @@ export function planObsidianManuscriptPreparation(
   }
   return {
     ...plan, files, selection: book.preparationSelection,
-    inputSnapshots: book.preparationInputs?.map(input => ({ ...input, frontmatter: captureFrontmatter(input.frontmatter).values })),
+    inputSnapshots: book.preparationFiles?.map(file => ({ path: file.path, mtime: file.stat.mtime, size: file.stat.size, frontmatter: captureFrontmatter(frontmatterFor(app, file) ?? {}).values })),
     diagnostics, canApply: files.length > 0 && diagnostics.length === 0,
     alreadyPrepared: files.length === 0 && diagnostics.length === 0,
     state: book.preparationDiagnostics?.length ? "ambiguous_hierarchy" : plan.state
@@ -201,33 +201,33 @@ export async function validateManuscriptPreparationPreview(
   for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path), ...(plan.inputSnapshots?.map(input => input.path) ?? [])])) {
     const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : app.vault.getAbstractFileByPath(path));
     if (!(file instanceof TFile)) {
-      diagnostics.push({ path, message: "This recognised manuscript note is no longer available at its previewed path." });
+      diagnostics.push({ path, message: "Note moved or missing; reopen preparation." });
       continue;
     }
     const content = await app.vault.read(file);
     const cached = app.metadataCache.getFileCache(file);
     if (!cached) {
-      diagnostics.push({ path, message: "Obsidian has not indexed this note yet. Wait for indexing to finish, then reopen preparation." });
+      diagnostics.push({ path, message: "Note not indexed; wait for indexing and reopen preparation." });
     }
-    if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve sync or Git conflict markers before preparation." }); }
+    if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve conflict markers before preparation." }); }
     const match = frontmatterMatch(content);
     if (!match && content.startsWith("---")) {
       malformed = true;
-      diagnostics.push({ path, message: "Frontmatter is not closed correctly; repair it before preparation." });
+      diagnostics.push({ path, message: "Close frontmatter before preparation." });
     } else if (match) {
       try {
         const parsed = match[1].trim() ? parseYaml(match[1]) : {};
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not a mapping");
         if (!snapshotsEqual(captureFrontmatter(parsed), captureFrontmatter(cached?.frontmatter ?? {}))) {
-          diagnostics.push({ path, message: "The note's frontmatter differs from Obsidian's indexed metadata. Wait for indexing, then review again." });
+          diagnostics.push({ path, message: "Frontmatter differs from Obsidian's index; wait and review again." });
         }
       } catch {
         malformed = true;
-        diagnostics.push({ path, message: "Frontmatter is malformed; repair its YAML before preparation." });
+        diagnostics.push({ path, message: "Repair malformed YAML." });
       }
     }
     if (!match && !content.startsWith("---") && Object.keys(captureFrontmatter(cached?.frontmatter ?? {}).values).length) {
-      diagnostics.push({ path, message: "Obsidian's indexed metadata is older than this note. Wait for indexing, then review again." });
+      diagnostics.push({ path, message: "Stale index; wait for indexing and review again." });
     }
   }
   if (diagnostics.length === plan.diagnostics.length) return plan;
@@ -269,7 +269,7 @@ async function verifyWrittenSnapshot(
   }
   const actual = captureFrontmatter(frontmatterFromMarkdown(content));
   if (!snapshotsEqual(actual, expected)) {
-    throw new Error(`Could not verify manuscript metadata after writing ${file.path}.`);
+    throw new Error(`Metadata verification failed: ${file.path}.`);
   }
 }
 
@@ -284,9 +284,9 @@ async function rollbackAppliedStates(
   for (const state of [...states].reverse()) {
     try {
       const current = await app.vault.read(state.file);
-      if (current !== state.afterContent) throw new Error("The note changed during rollback.");
+      if (current !== state.afterContent) throw new Error("Note changed during rollback.");
       await app.vault.modify(state.file, state.beforeContent);
-      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("Exact rollback verification failed.");
+      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("Rollback verification failed.");
     } catch {
       failures.push(state.file.path);
     }
@@ -327,10 +327,9 @@ function contentMatchesPreparationUndoState(
   const currentBody = markdownBody(content);
   const preparedBody = markdownBody(state.afterContent);
   if (currentBody === null || preparedBody === null || currentBody !== preparedBody) return false;
-  const current = captureFrontmatter(frontmatterFromMarkdown(content));
   return snapshotsEqual(
-    withoutDerivedReporting(current),
-    withoutDerivedReporting(state.after)
+    withoutDerivedReporting({ values: frontmatterFromMarkdown(content) }),
+    withoutDerivedReporting({ values: frontmatterFromMarkdown(state.afterContent) })
   );
 }
 
@@ -343,7 +342,7 @@ export async function applyManuscriptPreparation(
   if (!plan.canApply) {
     throw new Error(
       plan.diagnostics[0]?.message
-      ?? "This manuscript has no preparation changes to apply."
+      ?? "No changes to apply."
     );
   }
 
@@ -369,7 +368,7 @@ export async function applyManuscriptPreparation(
       ? { mtime: file.stat.mtime, size: file.stat.size }
       : filePlan.expectedFileVersion ?? { mtime: file.stat.mtime, size: file.stat.size };
     if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) throw new StaleManuscriptPreparationError();
-    const expectedBefore: FrontmatterSnapshot = existingState?.after ?? { values: cloneValue(filePlan.beforeFrontmatter) };
+    const expectedBefore: FrontmatterSnapshot = existingState?.after ?? captureFrontmatter(filePlan.beforeFrontmatter);
     let before: FrontmatterSnapshot | null = null;
     let after: FrontmatterSnapshot | null = null;
     await app.fileManager.processFrontMatter(file, (frontmatter) => {
@@ -378,7 +377,7 @@ export async function applyManuscriptPreparation(
       if (!snapshotsEqual(current, expectedBefore)) throw new StaleManuscriptPreparationError();
       before = current; applyMutation(frontmatter, mutation); after = captureFrontmatter(frontmatter);
     });
-    if (!before || !after) throw new Error(`Could not capture preparation changes for ${filePlan.title}.`);
+    if (!before || !after) throw new Error(`Could not capture changes: ${filePlan.title}.`);
     const afterContent = await app.vault.read(file);
     if (existingState) {
       existingState.after = after;
@@ -400,7 +399,7 @@ export async function applyManuscriptPreparation(
   return {
     bookPath: plan.bookPath,
     states,
-    message: `Prepared ${plan.bookTitle}: ${states.length} ${states.length === 1 ? "note" : "notes"} updated with distributed order keys.`
+    message: `Prepared ${plan.bookTitle}: ${states.length} ${states.length === 1 ? "note" : "notes"} updated.`
   };
 }
 
@@ -437,14 +436,14 @@ export async function undoManuscriptPreparation(
       if (await app.vault.read(file) !== preparedContent) throw new StaleManuscriptPreparationUndoError();
       await app.vault.modify(file, state.beforeContent);
       restored.push(state);
-      if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify exact Undo for ${state.file.path}.`);
+      if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify Undo: ${state.file.path}.`);
     }
     completeExactManuscriptContentRestoration(app, paths);
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {
         const file = filesByPath.get(state.file.path) ?? state.file;
-        if (await app.vault.read(file) !== state.beforeContent) throw new Error("The note changed during Undo rollback.");
+        if (await app.vault.read(file) !== state.beforeContent) throw new Error("Note changed during Undo rollback.");
         const preparedContent = preparedContentByPath.get(state.file.path) ?? state.afterContent;
         await app.vault.modify(file, preparedContent);
         if (await app.vault.read(file) !== preparedContent) throw new Error("Undo rollback verification failed.");

@@ -1,4 +1,4 @@
-export const STORY_WORLD_EVENT_AUTHORING_STYLES = `
+export const STORY_WORLD_EVENT_AUTHORING_STYLES = /* css */ `
 .mwc-story-world-event-authoring {
   margin-top: 12px;
 }

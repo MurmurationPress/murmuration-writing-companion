@@ -12,7 +12,7 @@ import {
   validateManuscriptPreparationPreview
 } from "./ObsidianManuscriptPreparation";
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
-import { ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
+import { ManuscriptSequenceCancelledError, ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 import {
   manuscriptPreparationActionsNeedInstallation,
   manuscriptPreparationUndoNoticeVisible
@@ -67,6 +67,9 @@ export function installManuscriptPreparationCommands(
 ): ManuscriptPreparationCommandActions {
   let undoToken: ManuscriptPreparationUndoToken | null = null;
   let operationRunning = false;
+  let disposed = false;
+  const reportingSequence = new ManuscriptSequencePropertyService(host.app);
+  host.register(() => { disposed = true; reportingSequence.dispose(); });
   const actionsByView = new WeakMap<InitializedManuscriptActionView, PreparationActions>();
 
   const installUndoStatus = (view: InitializedManuscriptActionView) => {
@@ -183,19 +186,21 @@ export function installManuscriptPreparationCommands(
   };
 
   const rebuildReportingSequence = async () => {
-    if (operationRunning) return;
+    if (operationRunning || disposed) return;
     operationRunning = true;
     installActions();
     try {
       const library = buildObsidianManuscriptLibrary(host.app);
-      await new ManuscriptSequencePropertyService(host.app).reconcile(library);
+      await reportingSequence.reconcile(library);
+      if (disposed) return;
       new Notice("Manuscript reporting sequence rebuilt.");
     } catch (error) {
+      if (error instanceof ManuscriptSequenceCancelledError) return;
       console.error("Writing Companion could not rebuild manuscript reporting sequence", error);
       new Notice("Could not rebuild the manuscript reporting sequence.", 10000);
     } finally {
       operationRunning = false;
-      refresh();
+      if (!disposed) refresh();
     }
   };
 

@@ -111,7 +111,7 @@ export function preparationHarness(typed = true, rootPath = "/") {
   // Dynamic bundle boundary deliberately executes the production modules with
   // a shared Obsidian API, rather than reimplementing preparation in the test.
   const api = module.exports as any;
-  const host = { app, getCurrentChapter: () => loaded.get(fixture.root), addCommand: (command: { id: string; callback: () => Promise<void> | void }) => commands.set(command.id, command), registerEvent() {}, refreshManuscriptNavigator() {} };
+  const host = { app, getCurrentChapter: () => loaded.get(fixture.root), addCommand: (command: { id: string; callback: () => Promise<void> | void }) => commands.set(command.id, command), registerEvent() {}, register() {}, refreshManuscriptNavigator() {} };
   (globalThis as any).window = { setTimeout: () => 0 };
   api.installManuscriptPreparationCommands(host);
   const invoke = (id = "prepare-existing-manuscript") => commands.get(id)!.callback();

@@ -32,7 +32,7 @@ import { isObsidianTrashPath } from "../ObsidianTrash";
 import { isContinuityReviewReportFrontmatter } from "../companion/ContinuityReviewReportClassification";
 import { isGeneratedReportFrontmatter } from "../reports/GeneratedReportClassification";
 import type { ManuscriptPreparationSelection } from "./ManuscriptPreparationSelection";
-import type { ManuscriptPreparationDiagnostic, ManuscriptPreparationInputSnapshot } from "./ManuscriptPreparation";
+import type { ManuscriptPreparationDiagnostic } from "./ManuscriptPreparation";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -67,7 +67,7 @@ interface PreliminaryManuscriptFile {
 export interface ObsidianManuscriptBook {
   readonly preparationSelection?: ManuscriptPreparationSelection;
   readonly preparationDiagnostics?: readonly ManuscriptPreparationDiagnostic[];
-  readonly preparationInputs?: readonly ManuscriptPreparationInputSnapshot[];
+  readonly preparationFiles?: readonly TFile[];
   readonly file: TFile;
   readonly record: ManuscriptDocumentRecord;
   readonly result: ManuscriptOrderResult;

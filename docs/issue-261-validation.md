@@ -16,7 +16,7 @@ The other three inferred Scenes were Contents, Import Guide and Conversion Repor
 
 `tests/fixtures/aikido-manuscript.json` contains the representative paths and imported properties, not the author's prose, images or plugin bundle. The command tests run the production registration, selection modals, recogniser, planner, transaction and Undo with a common Obsidian API stub. They cover typed/untyped roots, folder selection without a companion, forty Scenes/six Parts, support exclusions, inclusion changes, mixed direct Scenes/Parts, natural order, duplicate positions/companions, authority conflicts, unindexed/stale metadata, empty/malformed frontmatter, stale excluded/new inputs, valid legacy arrays/distributed keys, partial preparation, rollback, exact Undo, changed-note Undo refusal and idempotence. Preview and cancellation have zero writes. Prose, asset bytes and unrelated metadata are checked; no POV/date/status or derived numbering is required.
 
-Required checks: `npm test`, `npm run build`, `npm run release:check`, plus `git diff --check`.
+Required checks passed against current main (`6bba288`): `npm test` (124 compiled test files, including 23 preparation-command regressions, plus the build-tools and interaction-capture suites), `npm run build`, `npm run release:check`, and whitespace checks. The production bundle is 720,853 bytes against the unchanged 720,896-byte ceiling; the existing headroom warning remains. The inclusion review reuses the preparation modal renderer rather than duplicating preview and confirmation code. Cache-only positions are filtered consistently during preparation, while Undo compares raw authored properties so an authored `position` edit cannot be overwritten.
 
 ## Supplied archive and Codex Press
 

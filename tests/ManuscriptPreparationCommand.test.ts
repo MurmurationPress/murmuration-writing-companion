@@ -300,3 +300,29 @@ test("cancelling the root picker performs zero writes and settles the command", 
   equal(h.writes(), 0); deepEqual(h.contents, original);
   equal(h.modals.length, 0);
 });
+
+
+test("cache-only positions do not become properties or prevent preparation", async () => {
+  const h = preparationHarness();
+  for (const cache of h.cache.values()) cache.frontmatter = { ...cache.frontmatter, position: { start: 0, end: 10 } };
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  equal(plan.canApply, true);
+  await h.api.applyManuscriptPreparation(h.app, book, plan);
+  for (const content of h.contents.values()) ok(!content.includes('"position"'));
+});
+
+test("Undo refuses an authored position property edit despite cache position filtering", async () => {
+  const h = preparationHarness(false);
+  const path = h.fixture.notes.find(note => note.frontmatter.type === "scene")!.path;
+  h.add(path, { position: 5, document_role: "chapter" });
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const token = await h.api.applyManuscriptPreparation(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  const file = h.loaded.get(path) as File;
+  await h.app.fileManager.processFrontMatter(file, fm => { fm.position = 6; });
+  const edited = new Map(h.contents);
+  await rejects(h.api.undoManuscriptPreparation(h.app, token), /Undo is not safe/);
+  deepEqual(h.contents, edited);
+});

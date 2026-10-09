@@ -10,7 +10,7 @@ export function installContinuityReviewStyles(): HTMLStyleElement {
   document.getElementById(STYLE_ID)?.remove();
   const style = document.createElement("style");
   style.id = STYLE_ID;
-  style.textContent = `
+  style.textContent = /* css */ `
 .mwc-continuity-review { padding: 18px; overflow: auto; }
 .mwc-continuity-review-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: start; }
 .mwc-continuity-review-header h2, .mwc-continuity-review-header p { margin: 0 0 4px; }

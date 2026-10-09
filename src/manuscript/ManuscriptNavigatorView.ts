@@ -67,7 +67,7 @@ import {
   planRenameFileFromTitle,
   planUpdateTitleFromFilename
 } from "./ManuscriptNameAlignment";
-import { ObsidianManuscriptNameAlignmentAdapter } from "./ObsidianManuscriptNameAlignment";
+import { ObsidianManuscriptNameAlignmentAdapter, snapshotManuscriptNameForDisplay } from "./ObsidianManuscriptNameAlignment";
 import {
   MANUSCRIPT_ACTION_VIEW,
   MANUSCRIPT_ACTION_VIEW_TYPE
@@ -331,12 +331,13 @@ export class ManuscriptNavigatorView extends ItemView {
     const selected = library.books.find((book) => book.file.path === selectedBookPath)
       ?? library.books[0] ?? null;
 
+    container.setAttribute("data-mwc-context", `manuscript:${selected?.file.path ?? ""}`);
     const heading = container.createDiv("mwc-manuscript-heading");
     heading.createEl("h2", { text: "Manuscript" });
     const createBook = heading.createEl("button", {
       cls: "mwc-manuscript-create-book",
       text: "Create book",
-      attr: { type: "button", "aria-label": "Create manuscript book" }
+      attr: { type: "button", "aria-label": "Create manuscript book", "data-mwc-focus-key": "create-book" }
     });
     createBook.onclick = () => new ManuscriptBookCreationModal(this.plugin).open();
 
@@ -353,7 +354,7 @@ export class ManuscriptNavigatorView extends ItemView {
     if (library.books.length > 1) {
       const selector = heading.createEl("select", {
         cls: "mwc-manuscript-book-selector",
-        attr: { "aria-label": "Select manuscript book" }
+        attr: { "aria-label": "Select manuscript book", "data-mwc-focus-key": "select-book" }
       });
 
       for (const book of library.books) {
@@ -383,7 +384,7 @@ export class ManuscriptNavigatorView extends ItemView {
       });
     }
 
-    if (selected) this.renderNameMismatchIndicator(heading, selected.file.path);
+    if (selected) this.renderNameMismatchIndicator(heading, selected.record);
 
     if (selected && manuscriptBookRemovalActionVisible(selected.record.kind, this.operationRunning)) {
       this.createBookActionsButton(heading, selected);
@@ -714,7 +715,7 @@ export class ManuscriptNavigatorView extends ItemView {
       };
 
       const label = this.createOpenButton(row, node.entry, book, isActive);
-      this.renderNameMismatchIndicator(row, node.entry.path);
+      this.renderNameMismatchIndicator(row, node.entry);
       this.createMoveMenuButton(row, node.entry, book);
       this.configureDrag(row, node.entry, book);
       this.renderMetadataTooltip(row, label, book, node.entry);
@@ -744,7 +745,7 @@ export class ManuscriptNavigatorView extends ItemView {
         : "mwc-manuscript-row"
     );
     const label = this.createOpenButton(row, node.entry, book, isActive);
-    this.renderNameMismatchIndicator(row, node.entry.path);
+    this.renderNameMismatchIndicator(row, node.entry);
     this.createMoveMenuButton(row, node.entry, book);
     this.configureDrag(row, node.entry, book);
     this.renderMetadataTooltip(row, label, book, node.entry);
@@ -763,6 +764,7 @@ export class ManuscriptNavigatorView extends ItemView {
       attr: {
         type: "button",
         "aria-label": `Open ${entry.title}`,
+        "data-mwc-focus-key": `open:${entry.path}`,
         "aria-keyshortcuts": "Alt+ArrowUp Alt+ArrowDown",
         ...(active ? { "aria-current": "page" } : {})
       }
@@ -939,8 +941,8 @@ export class ManuscriptNavigatorView extends ItemView {
     return new ObsidianManuscriptNameAlignmentAdapter(this.plugin);
   }
 
-  private renderNameMismatchIndicator(container: HTMLElement, path: string) {
-    const mismatch = detectManuscriptNameMismatch(this.nameAlignmentAdapter().snapshot(path));
+  private renderNameMismatchIndicator(container: HTMLElement, entry: ManuscriptDocumentRecord) {
+    const mismatch = detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry));
     if (!mismatch) return;
     container.createSpan({
       cls: "mwc-manuscript-name-mismatch",
@@ -1161,7 +1163,7 @@ export class ManuscriptNavigatorView extends ItemView {
   ) {
     const metadata = book.metadataByPath.get(entry.path);
     const rows = metadata ? metadataRows(metadata) : [];
-    const mismatch = detectManuscriptNameMismatch(this.nameAlignmentAdapter().snapshot(entry.path));
+    const mismatch = detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry));
     if (mismatch) rows.unshift(["Filename", mismatch.filename], ["Title", mismatch.title]);
     if (rows.length === 0) return;
 

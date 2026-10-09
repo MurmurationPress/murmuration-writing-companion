@@ -54,21 +54,48 @@ export async function exactManuscriptContentIsProtected(
   return exactContentIsProtected(app, path, read);
 }
 
+/** Terminal lifecycle cancellation, distinct from a failed host write. */
+export class ManuscriptSequenceCancelledError extends Error {
+  constructor() { super("Manuscript reporting reconciliation was cancelled."); }
+}
+
 /** Maintains disposable Navigator-derived frontmatter for native Bases reports. */
 export class ManuscriptSequencePropertyService {
   private queue: Promise<void> = Promise.resolve();
+  private pending: { library: ObsidianManuscriptLibrary } | null = null;
+  private disposed = false;
 
   constructor(private readonly app: App) {}
 
+  /** Cannot revoke a host write already committed; prevents any later mutation. */
+  dispose(): void { this.disposed = true; }
+
+  private assertActive(): void {
+    if (this.disposed) throw new ManuscriptSequenceCancelledError();
+  }
+
   reconcile(library: ObsidianManuscriptLibrary): Promise<void> {
+    if (this.disposed) return Promise.reject(new ManuscriptSequenceCancelledError());
+    // Keep the active write pass serial, but replace obsolete work that has not
+    // started. Every caller in the pending batch awaits its latest snapshot.
+    if (this.pending) {
+      this.pending.library = library;
+      return this.queue;
+    }
+    const pending = { library };
+    this.pending = pending;
     const requested = this.queue
       .catch(() => undefined)
-      .then(() => this.reconcileNow(library));
+      .then(() => {
+        this.pending = null;
+        return this.reconcileNow(pending.library);
+      });
     this.queue = requested;
     return requested;
   }
 
   private async reconcileNow(library: ObsidianManuscriptLibrary): Promise<void> {
+    this.assertActive();
     const scope = manuscriptSequenceReconciliationScope(
       library.books.map((book) => ({
         source: book.result.source,
@@ -82,6 +109,7 @@ export class ManuscriptSequencePropertyService {
     const projection = deriveManuscriptSequenceProjection(scope.projectable);
 
     for (const file of this.app.vault.getMarkdownFiles()) {
+      this.assertActive();
       if (isObsidianTrashPath(file.path)) continue;
       // Legacy and otherwise unprepared structure is not authoritative yet.
       // Preserve any authored/pre-existing reporting fields, but do not create
@@ -99,14 +127,17 @@ export class ManuscriptSequencePropertyService {
       if (desired && valuesMatch(frontmatter, desired)) continue;
       await this.sync(file, desired);
     }
+    this.assertActive();
   }
 
   private async sync(
     file: TFile,
     desired: ManuscriptSequenceValues | undefined
   ): Promise<void> {
+    this.assertActive();
     if (hasExactContentProtection(this.app, file.path)) return;
     await this.app.fileManager.processFrontMatter(file, (properties) => {
+      this.assertActive();
       // A queued reconciliation may have passed its first check before Undo
       // began. Recheck at the synchronous mutation boundary.
       if (hasExactContentProtection(this.app, file.path)) return;

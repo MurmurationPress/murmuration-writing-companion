@@ -1,0 +1,1708 @@
+{
+  "schema": 1,
+  "date": "2026-10-01",
+  "scope": "Actual isolated Linux Obsidian 1.12.7 with 95 synthetic notes, MWC only, trusted CDP input. Not Windows live UI, physical application focus, normal-vault acceptance or paint latency. No concurrent build/test processes during timings.",
+  "environment": {
+    "title": "B0S000 - vault - Obsidian 1.12.7",
+    "electron": "39.8.3",
+    "chrome": "142.0.7444.265",
+    "platform": "linux",
+    "notes": 95,
+    "plugins": [
+      "murmuration-writing-companion"
+    ]
+  },
+  "baselineHead": "c1195f93db6a50760f83a5c3a98fdfa756694c55",
+  "beforeBundleSha256": "985fb84365b42f53bee79f74e177f867049ecdf2f66abea1562737d7aa5b1b3b",
+  "afterBundleSha256": "ec77bcbe383e93b27a1c2ce7c3e48c9bace41a4ad4963db4e48fc0c775cdf1cc",
+  "baselineBlur": [
+    {
+      "case": "summary-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 0,
+      "handlerCalls": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "pressedTargetsConnected": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "representativeTrace": [
+        {
+          "t": 13.699999988079071,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 46.3999999910593,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 47.5,
+          "kind": "pressed-target-removed",
+          "pointer": 1,
+          "node": 1
+        },
+        {
+          "t": 61.5,
+          "kind": "pointerup",
+          "node": 4,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 61.5,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": false,
+          "up": 4
+        }
+      ]
+    }
+  ],
+  "correctedBlur": [
+    {
+      "case": "summary-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 22.5,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 40.400000005960464,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 60.6000000089407,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 60.6000000089407,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 60.6000000089407,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "summary-scene",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        4,
+        4,
+        4,
+        4,
+        3
+      ],
+      "navigatorRenders": [
+        4,
+        4,
+        4,
+        4,
+        3
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 17.299999997019768,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": false,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 33.3999999910593,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 56.099999994039536,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 56.099999994039536,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 56.099999994039536,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "summary-modal",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 22.799999997019768,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": false,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 39.20000000298023,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 61.1000000089407,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 61.1000000089407,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 61.1000000089407,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "title-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 19.799999997019768,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 36.599999994039536,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 57.79999999701977,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 57.79999999701977,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 57.8999999910593,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "pov-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 6.799999997019768,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 24.5,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 44.29999999701977,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 44.29999999701977,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 44.29999999701977,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "location-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "navigatorRenders": [
+        3,
+        3,
+        3,
+        3,
+        1
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 5,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 23.30000001192093,
+          "kind": "obsidian-changed"
+        },
+        {
+          "t": 42.400000005960464,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 42.400000005960464,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 42.400000005960464,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        }
+      ]
+    },
+    {
+      "case": "slow-summary-scene",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md",
+        "B0S001.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ],
+      "saveCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "savedPaths": [
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ],
+        [
+          "B0S000.md"
+        ]
+      ],
+      "savesCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "companionRenders": [
+        4,
+        4,
+        4,
+        4,
+        5
+      ],
+      "navigatorRenders": [
+        4,
+        4,
+        4,
+        4,
+        5
+      ],
+      "pressedTargetsConnected": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "representativeTrace": [
+        {
+          "t": 15.699999988079071,
+          "kind": "pointerdown",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": false,
+          "pane": 2,
+          "activePane": false,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 55,
+          "kind": "pointerup",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false,
+          "pointer": 1
+        },
+        {
+          "t": 55.099999994039536,
+          "kind": "press-end",
+          "down": 1,
+          "downConnected": true,
+          "up": 1
+        },
+        {
+          "t": 55.099999994039536,
+          "kind": "click",
+          "node": 1,
+          "connected": true,
+          "disabled": false,
+          "activeElement": true,
+          "pane": 2,
+          "activePane": true,
+          "trusted": true,
+          "defaultPreventedAtCapture": false
+        },
+        {
+          "t": 327.09999999403954,
+          "kind": "obsidian-changed"
+        }
+      ],
+      "actionBeforeWriteCompleted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  ],
+  "withoutInstrumentation": [
+    {
+      "case": "summary-toggle",
+      "trials": 5,
+      "firstActionSuccesses": 5,
+      "handlerCalls": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "diskReadBack": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "currentScene": [
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md",
+        "B0S000.md"
+      ],
+      "holdsMs": [
+        35,
+        35,
+        35,
+        35,
+        180
+      ]
+    }
+  ],
+  "activation": [
+    {
+      "control": "manuscript",
+      "initiallyActive": true,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "control": "manuscript",
+      "initiallyActive": false,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "control": "companion",
+      "initiallyActive": true,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "control": "companion",
+      "initiallyActive": false,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "control": "native",
+      "initiallyActive": true,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "control": "native",
+      "initiallyActive": false,
+      "trials": 5,
+      "firstClickSuccesses": 5,
+      "handlerCalls": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "keyboardTabThenActivate": [
+    {
+      "activation": "Space",
+      "repeat": 0,
+      "key": "section:worldContext",
+      "before": "false",
+      "calls": 1,
+      "after": "true",
+      "disk": true
+    },
+    {
+      "activation": "Space",
+      "repeat": 1,
+      "key": "section:worldContext",
+      "before": "true",
+      "calls": 1,
+      "after": "false",
+      "disk": true
+    },
+    {
+      "activation": "Space",
+      "repeat": 2,
+      "key": "section:worldContext",
+      "before": "false",
+      "calls": 1,
+      "after": "true",
+      "disk": true
+    },
+    {
+      "activation": "Space",
+      "repeat": 3,
+      "key": "section:worldContext",
+      "before": "true",
+      "calls": 1,
+      "after": "false",
+      "disk": true
+    },
+    {
+      "activation": "Space",
+      "repeat": 4,
+      "key": "section:worldContext",
+      "before": "false",
+      "calls": 1,
+      "after": "true",
+      "disk": true
+    },
+    {
+      "activation": "Enter",
+      "repeat": 0,
+      "key": "section:worldContext",
+      "before": "true",
+      "calls": 1,
+      "after": "false",
+      "disk": true
+    },
+    {
+      "activation": "Enter",
+      "repeat": 1,
+      "key": "section:worldContext",
+      "before": "false",
+      "calls": 1,
+      "after": "true",
+      "disk": true
+    },
+    {
+      "activation": "Enter",
+      "repeat": 2,
+      "key": "section:worldContext",
+      "before": "true",
+      "calls": 1,
+      "after": "false",
+      "disk": true
+    },
+    {
+      "activation": "Enter",
+      "repeat": 3,
+      "key": "section:worldContext",
+      "before": "false",
+      "calls": 1,
+      "after": "true",
+      "disk": true
+    },
+    {
+      "activation": "Enter",
+      "repeat": 4,
+      "key": "section:worldContext",
+      "before": "true",
+      "calls": 1,
+      "after": "false",
+      "disk": true
+    }
+  ],
+  "keyboardTitleThenPov": [
+    {
+      "repeat": 0,
+      "calls": 1,
+      "editors": 1,
+      "disk": true
+    },
+    {
+      "repeat": 1,
+      "calls": 1,
+      "editors": 1,
+      "disk": true
+    },
+    {
+      "repeat": 2,
+      "calls": 1,
+      "editors": 1,
+      "disk": true
+    },
+    {
+      "repeat": 3,
+      "calls": 1,
+      "editors": 1,
+      "disk": true
+    },
+    {
+      "repeat": 4,
+      "calls": 1,
+      "editors": 1,
+      "disk": true
+    }
+  ],
+  "compactEnterCommits": [
+    {
+      "property": "pov",
+      "repeat": 0,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:pov-display"
+    },
+    {
+      "property": "pov",
+      "repeat": 1,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:pov-display"
+    },
+    {
+      "property": "pov",
+      "repeat": 2,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:pov-display"
+    },
+    {
+      "property": "pov",
+      "repeat": 3,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:pov-display"
+    },
+    {
+      "property": "pov",
+      "repeat": 4,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:pov-display"
+    },
+    {
+      "property": "location",
+      "repeat": 0,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:location-display"
+    },
+    {
+      "property": "location",
+      "repeat": 1,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:location-display"
+    },
+    {
+      "property": "location",
+      "repeat": 2,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:location-display"
+    },
+    {
+      "property": "location",
+      "repeat": 3,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:location-display"
+    },
+    {
+      "property": "location",
+      "repeat": 4,
+      "calls": 1,
+      "editors": 0,
+      "focus": "context:location-display"
+    }
+  ],
+  "externalMetadata": [
+    {
+      "dirtyLocalDraft": false,
+      "assertionsPassed": true
+    },
+    {
+      "dirtyLocalDraft": true,
+      "assertionsPassed": true
+    }
+  ],
+  "failedSaveAndRetry": [
+    {
+      "attempts": 2,
+      "firstActionCalls": 1,
+      "disk": true
+    }
+  ],
+  "nativeTabShiftTabThenActivate": [
+    {
+      "key": "Enter",
+      "focused": false,
+      "calls": 0,
+      "modals": 0,
+      "connected": true
+    },
+    {
+      "key": "Space",
+      "focused": false,
+      "calls": 0,
+      "modals": 0,
+      "connected": true
+    }
+  ],
+  "proseBefore": {
+    "bundleSha256": "985fb84365b42f53bee79f74e177f867049ecdf2f66abea1562737d7aa5b1b3b",
+    "trials": 5,
+    "metadataEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "fileModifyEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "numberingPasses": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "numberingWriteAttempts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "libraryRebuilds": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "markdownEnumerations": [
+      19,
+      19,
+      19,
+      19,
+      19
+    ],
+    "companionRenders": [
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "navigatorRenders": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "navigatorTotalRenderMs": {
+      "samples": [
+        28.5,
+        23.5,
+        20.7,
+        23.4,
+        22.4
+      ],
+      "median": 23.4,
+      "max": 28.5
+    },
+    "companionTotalRenderMs": {
+      "samples": [
+        34.8,
+        29.5,
+        23.2,
+        28.8,
+        27.9
+      ],
+      "median": 28.8,
+      "max": 34.8
+    },
+    "numberingPassMs": {
+      "samples": [
+        0.5,
+        0.5,
+        0.2,
+        0.2,
+        0.2
+      ],
+      "median": 0.2,
+      "max": 0.5
+    },
+    "longTasksMs": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  "proseAfter": {
+    "bundleSha256": "ec77bcbe383e93b27a1c2ce7c3e48c9bace41a4ad4963db4e48fc0c775cdf1cc",
+    "trials": 5,
+    "metadataEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "fileModifyEvents": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "numberingPasses": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "numberingWriteAttempts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "libraryRebuilds": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "markdownEnumerations": [
+      19,
+      19,
+      19,
+      19,
+      19
+    ],
+    "companionRenders": [
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "navigatorRenders": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "navigatorTotalRenderMs": {
+      "samples": [
+        24.6,
+        21.2,
+        19.9,
+        20,
+        22.2
+      ],
+      "median": 21.2,
+      "max": 24.6
+    },
+    "companionTotalRenderMs": {
+      "samples": [
+        31.6,
+        25.7,
+        23.3,
+        24.2,
+        24.2
+      ],
+      "median": 24.2,
+      "max": 31.6
+    },
+    "numberingPassMs": {
+      "samples": [
+        0.3,
+        0.2,
+        0.1,
+        0.3,
+        0.3
+      ],
+      "median": 0.3,
+      "max": 0.3
+    },
+    "longTasksMs": [
+      [],
+      [],
+      [],
+      [],
+      []
+    ]
+  },
+  "fixtureSetupObservation": {
+    "note": "An earlier baseline trial after raw fixture-file restoration and plugin reload lost current-chapter context. Its original handler ran once but the Companion then emptied. It is not counted as evidence of the blur handler-loss mechanism. The committed driver explicitly opens another scene and then the source to establish context; the controlled five-trial baseline above has stable scene context and loses all five original handlers. Startup/normal-vault acceptance remains open.",
+    "handlerCalls": 1,
+    "currentScene": null,
+    "finalControlState": null,
+    "trace": [
+      {
+        "t": 14.800000011920929,
+        "kind": "pointerdown",
+        "node": 1,
+        "connected": true,
+        "disabled": false,
+        "activeElement": false,
+        "pane": 2,
+        "activePane": true,
+        "trusted": true,
+        "defaultPreventedAtCapture": false,
+        "pointer": 1
+      },
+      {
+        "t": 63,
+        "kind": "pointerup",
+        "node": 1,
+        "connected": true,
+        "disabled": false,
+        "activeElement": true,
+        "pane": 2,
+        "activePane": true,
+        "trusted": true,
+        "defaultPreventedAtCapture": false,
+        "pointer": 1
+      },
+      {
+        "t": 63,
+        "kind": "press-end",
+        "down": 1,
+        "downConnected": true,
+        "up": 1
+      },
+      {
+        "t": 63.1000000089407,
+        "kind": "click",
+        "node": 1,
+        "connected": true,
+        "disabled": false,
+        "activeElement": true,
+        "pane": 2,
+        "activePane": true,
+        "trusted": true,
+        "defaultPreventedAtCapture": false
+      }
+    ]
+  }
+}
