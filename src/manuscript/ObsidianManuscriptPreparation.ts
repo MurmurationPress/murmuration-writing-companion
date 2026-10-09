@@ -16,6 +16,8 @@ import {
   completeExactManuscriptContentRestoration
 } from "./ManuscriptSequenceProperty";
 import { manuscriptPreparationContentMatchesUndoState } from "./ManuscriptPreparationUndoComparison";
+import { buildSelectedManuscript, manuscriptPreparationCandidates } from "./ManuscriptPreparationSelection";
+import { DETACHED_SCENE_TYPE, isExplicitlyDetachedScene } from "./ManuscriptMetadata";
 
 interface FrontmatterSnapshot {
   readonly values: Readonly<Record<string, unknown>>;
@@ -131,6 +133,11 @@ function frontmatterFor(
     Record<string, unknown> | undefined;
 }
 
+function frontmatterMatch(content: string): RegExpMatchArray | null {
+  if (!/^---[ \t]*\r?\n/.test(content)) return null;
+  return content.match(/^---[ \t]*\r?\n([\s\S]*?)^---[ \t]*(?:\r?\n|$)/m);
+}
+
 export function planObsidianManuscriptPreparation(
   app: App,
   book: ObsidianManuscriptBook
@@ -154,12 +161,32 @@ export function planObsidianManuscriptPreparation(
     }
   }
 
-  return planManuscriptPreparation({
+  const plan = planManuscriptPreparation({
     book: book.record,
     result: book.result,
     frontmatterByPath,
     fileVersionByPath
   });
+  const diagnostics = [...plan.diagnostics, ...(book.preparationDiagnostics ?? [])];
+  const files = [...plan.files];
+  if (book.preparationSelection) {
+    for (const candidate of manuscriptPreparationCandidates(app, book.preparationSelection)) {
+      if (candidate.included || candidate.locked) continue;
+      const fm = captureFrontmatter(frontmatterFor(app, candidate.file) ?? {}).values;
+      if (isExplicitlyDetachedScene(fm)) continue;
+      files.push({ path: candidate.file.path, title: candidate.file.basename, kind: "excluded", beforeFrontmatter: fm,
+        expectedFileVersion: { mtime: candidate.file.stat.mtime, size: candidate.file.stat.size },
+        changes: [{ property: "type", before: fm.type, after: DETACHED_SCENE_TYPE }],
+        mutation: { set: { type: DETACHED_SCENE_TYPE }, remove: [] } });
+    }
+  }
+  return {
+    ...plan, files, selection: book.preparationSelection,
+    inputSnapshots: book.preparationInputs?.map(input => ({ ...input, frontmatter: captureFrontmatter(input.frontmatter).values })),
+    diagnostics, canApply: files.length > 0 && diagnostics.length === 0,
+    alreadyPrepared: files.length === 0 && diagnostics.length === 0,
+    state: book.preparationDiagnostics?.length ? "ambiguous_hierarchy" : plan.state
+  };
 }
 
 /** Adds content-level blockers that are not represented by the metadata cache. */
@@ -171,26 +198,36 @@ export async function validateManuscriptPreparationPreview(
   const diagnostics = [...plan.diagnostics];
   let malformed = false;
   let conflict = false;
-  for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path)])) {
-    const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : null);
-    if (!file) {
+  for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path), ...(plan.inputSnapshots?.map(input => input.path) ?? [])])) {
+    const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : app.vault.getAbstractFileByPath(path));
+    if (!(file instanceof TFile)) {
       diagnostics.push({ path, message: "This recognised manuscript note is no longer available at its previewed path." });
       continue;
     }
     const content = await app.vault.read(file);
+    const cached = app.metadataCache.getFileCache(file);
+    if (!cached) {
+      diagnostics.push({ path, message: "Obsidian has not indexed this note yet. Wait for indexing to finish, then reopen preparation." });
+    }
     if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve sync or Git conflict markers before preparation." }); }
-    const match = content.match(/^---\s*\r?\n([\s\S]*?)(?:\r?\n---(?:\s*\r?\n|$))/);
+    const match = frontmatterMatch(content);
     if (!match && content.startsWith("---")) {
       malformed = true;
       diagnostics.push({ path, message: "Frontmatter is not closed correctly; repair it before preparation." });
     } else if (match) {
       try {
-        const parsed = parseYaml(match[1]);
+        const parsed = match[1].trim() ? parseYaml(match[1]) : {};
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not a mapping");
+        if (!snapshotsEqual(captureFrontmatter(parsed), captureFrontmatter(cached?.frontmatter ?? {}))) {
+          diagnostics.push({ path, message: "The note's frontmatter differs from Obsidian's indexed metadata. Wait for indexing, then review again." });
+        }
       } catch {
         malformed = true;
         diagnostics.push({ path, message: "Frontmatter is malformed; repair its YAML before preparation." });
       }
+    }
+    if (!match && !content.startsWith("---") && Object.keys(captureFrontmatter(cached?.frontmatter ?? {}).values).length) {
+      diagnostics.push({ path, message: "Obsidian's indexed metadata is older than this note. Wait for indexing, then review again." });
     }
   }
   if (diagnostics.length === plan.diagnostics.length) return plan;
@@ -213,11 +250,9 @@ async function assertNoConflictMarkers(app: App, file: TFile): Promise<void> {
 }
 
 function frontmatterFromMarkdown(content: string): Record<string, unknown> {
-  const match = content.match(
-    /^---\s*\r?\n([\s\S]*?)\r?\n---(?:\s*\r?\n|$)/
-  );
+  const match = frontmatterMatch(content);
   if (!match) return {};
-  const parsed = parseYaml(match[1]);
+  const parsed = match[1].trim() ? parseYaml(match[1]) : {};
   return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
     ? parsed as Record<string, unknown>
     : {};
@@ -280,7 +315,7 @@ function withoutDerivedReporting(snapshot: FrontmatterSnapshot): FrontmatterSnap
 }
 
 function markdownBody(content: string): string | null {
-  const match = content.match(/^---\s*\r?\n[\s\S]*?\r?\n---(?:\s*\r?\n|$)/);
+  const match = frontmatterMatch(content);
   return match ? content.slice(match[0].length) : null;
 }
 
@@ -312,12 +347,12 @@ export async function applyManuscriptPreparation(
     );
   }
 
-  const currentBook = buildObsidianManuscriptLibrary(app).books.find((candidate) => (
+  const currentBook = plan.selection ? buildSelectedManuscript(app, plan.selection) : buildObsidianManuscriptLibrary(app).books.find((candidate) => (
     candidate.file.path === book.file.path
   ));
   if (!currentBook) throw new StaleManuscriptPreparationError();
 
-  const currentPlan = planObsidianManuscriptPreparation(app, currentBook);
+  const currentPlan = await validateManuscriptPreparationPreview(app, currentBook, planObsidianManuscriptPreparation(app, currentBook));
   if (!sameManuscriptPreparationPlan(currentPlan, plan)) {
     throw new StaleManuscriptPreparationError();
   }
@@ -325,8 +360,8 @@ export async function applyManuscriptPreparation(
   const states: ManuscriptPreparationUndoState[] = [];
   const writePlan = async (filePlan: ManuscriptPreparationPlan["files"][number], mutation: ManuscriptPreparationMutation) => {
     const file = currentBook.filesByPath.get(filePlan.path)
-      ?? (filePlan.path === currentBook.file.path ? currentBook.file : null);
-    if (!file) throw new StaleManuscriptPreparationError();
+      ?? (filePlan.path === currentBook.file.path ? currentBook.file : filePlan.kind === "excluded" ? app.vault.getAbstractFileByPath(filePlan.path) : null);
+    if (!(file instanceof TFile)) throw new StaleManuscriptPreparationError();
     await assertNoConflictMarkers(app, file);
     const beforeContent = await app.vault.read(file);
     const existingState = states.find((state) => state.file.path === file.path);

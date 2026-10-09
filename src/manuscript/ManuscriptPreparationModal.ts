@@ -61,7 +61,7 @@ export class ManuscriptPreparationModal extends Modal {
 
     if (this.plan.files.length > 0) {
       const summary = this.contentEl.createEl("p", {
-        text: `${this.plan.files.filter((file) => file.kind === "book").length} Book, ${this.plan.files.filter((file) => file.kind === "part").length} Parts and ${this.plan.files.filter((file) => file.kind === "scene").length} Scenes have previewed changes.`
+        text: `${this.plan.files.filter((file) => file.kind === "book").length} Book, ${this.plan.files.filter((file) => file.kind === "part").length} Parts and ${this.plan.files.filter((file) => file.kind === "scene").length} Scenes have previewed changes. ${this.plan.files.filter((file) => file.kind === "excluded").length} excluded notes receive the existing scene-draft opt-out so Writing Companion and Codex Press keep them outside the manuscript.`
       });
       summary.style.fontWeight = "600";
 
@@ -74,7 +74,7 @@ export class ManuscriptPreparationModal extends Modal {
         const details = changes.createEl("details");
         details.style.marginBottom = "8px";
         details.createEl("summary", {
-          text: `${file.title} — ${file.changes.length} ${file.changes.length === 1 ? "change" : "changes"}`
+          text: `${file.title}${file.kind === "excluded" ? " (excluded from manuscript)" : ""} — ${file.changes.length} ${file.changes.length === 1 ? "change" : "changes"}`
         });
         details.createEl("div", {
           cls: "mwc-muted",

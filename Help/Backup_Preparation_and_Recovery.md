@@ -2,7 +2,7 @@
 
 ## Prepare safely
 
-Project Readiness is read-only. When preparation is available, MWC shows the exact proposed `type`, `parent`, and `manuscript_order_key` changes before writing. A blocked preview cannot be approved. Preparation preserves prose, filenames, folders, and unrelated frontmatter.
+Project Readiness is read-only. Run **Prepare existing manuscript**, choose the existing root note or folder, and review inclusion and natural reading order. Contents, Import Guide, Conversion Report and unclassified notes start excluded (approved untyped exclusions use the shared `scene-draft` opt-out); existing structural authority is retained. Book, Part and Scene types need not be supplied manually. MWC shows the exact proposed `type`, `parent`, and `manuscript_order_key` changes before writing. A blocked preview cannot be approved. Preparation preserves prose, filenames, folders, and unrelated frontmatter.
 
 MWC verifies every write. If part of the operation fails, it rolls completed files back to their original bytes.
 

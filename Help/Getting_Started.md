@@ -7,7 +7,7 @@ MWC works with ordinary Markdown notes in an Obsidian vault. Your manuscript and
 Open **Project readiness** first. It is read-only and explains what MWC recognises.
 
 - For an empty vault, open **Manuscript**, create a Book, then add optional Parts and Scenes.
-- For an existing manuscript, choose **Prepare manuscript** only when readiness offers it. Read the exact preview before approving.
+- For an existing manuscript, run **Prepare existing manuscript** and select its existing root note or folder. Untyped manuscripts need no manual property edits. Review roles, parents, reading order and included notes, then approve the exact metadata preview.
 - If readiness reports ambiguity, correct the named note or property. MWC will not guess a hierarchy.
 
 A Book contains Parts and/or direct Scenes. A Part contains Scenes. In normal use, create and reorder them through Manuscript Navigator. `parent` establishes containment and `manuscript_order_key` orders siblings; folders and filename prefixes remain useful organisation but are not final prepared-manuscript authority.

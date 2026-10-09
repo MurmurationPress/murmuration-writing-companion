@@ -2,7 +2,7 @@
 
 ## MWC does not recognise my Book or entity
 
-A Book needs a Markdown note with `type: book`; a folder name is not enough. A Story World entity needs a non-empty scalar `world_entity`; tags, ordinary `type`, folders, backlinks, and prose do not opt in.
+For an existing untyped manuscript, run **Prepare existing manuscript** and explicitly select its root note or folder. Review inclusion, roles, parents and reading order before approval. Preparation adds the structural properties; manual tagging is not required. After preparation a Book has `type: book`. A Story World entity needs a non-empty scalar `world_entity`; tags, ordinary `type`, folders, backlinks, and prose do not opt in.
 
 ## A Story World link does not appear in World Context
 
@@ -17,6 +17,8 @@ Use a path-qualified wikilink. Aliases work only when resolution is unambiguous.
 Inspect the frontmatter between the opening and closing `---` in Source mode. Check indentation, unfinished lists/mappings, and conflict markers. Preserve unrelated properties while correcting only the reported structure.
 
 ## Preparation or Undo is blocked
+
+If a note has not been indexed or its indexed frontmatter differs from disk, wait for Obsidian indexing to finish and reopen preparation. File-specific conflicts must be resolved before approval. Select one companion note when a folder has both a sibling and inside companion.
 
 Generate a fresh preview if files changed after analysis. Undo intentionally refuses to replace later edits. Compare against a backup, preserve new prose, and follow the named stale-file diagnostic.
 

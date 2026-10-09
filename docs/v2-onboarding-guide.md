@@ -32,7 +32,7 @@ The invitation and interaction hint are remembered locally and do not repeat aft
 | Result | What MWC detected | What to do |
 |---|---|---|
 | **Ready to begin** | No Markdown notes. This is not an error. | Open **Manuscript** and use **Create book**, then create optional Parts and Scenes. |
-| **Existing notes found, but no manuscript is recognised** | Markdown exists, but no recognised Book note exists. Folder names alone are not authority. | Confirm that the material is a manuscript, identify or add a Book note with `type: book`, then recheck. |
+| **Existing notes found, but no manuscript is recognised** | Markdown exists, but no recognised Book note exists. Folder names alone are not authority. | Choose **Prepare existing manuscript**, select its root note or folder and review proposed roles and inclusion before approving. |
 | **Project already prepared** | Every recognised Book uses distributed `type`, `parent` and order-key authority. | Open Manuscript Navigator, Story World views or Continuity Review. Do not prepare again. |
 | **Preparation available** | A complete legacy `manuscript_order` or deterministic Navigator folder/filename sequence can be migrated safely. | Select the specific Book's **Prepare manuscript** action and review the exact preview. |
 | **Preparation needs attention** | Some distributed authority exists, but safe completion is blocked. | Read the Book's technical details and correct only the named conflict. |
@@ -94,7 +94,7 @@ Use Manuscript Navigator's reorder controls rather than hand-editing order keys 
 
 ## Prepare an existing manuscript
 
-Preparation starts with one recognised Book. MWC reuses the hierarchy and order already recognised by Manuscript Navigator:
+Preparation starts with an explicitly selected existing root note or folder, including untyped manuscripts. MWC proposes roles and natural reading order while preserving existing authority:
 
 - valid distributed properties remain authoritative;
 - a complete Book-level `manuscript_order` may be used once as reviewed migration evidence;
@@ -105,7 +105,9 @@ Choose the Book-specific **Prepare manuscript** button in the Navigator notice, 
 
 ### Review the exact preview
 
-The preview identifies the Book, detected structure and order source. It lists every affected note and every proposed property addition, replacement, canonicalisation or removal, plus Book, Part and Scene counts, warnings and blocking diagnostics. It also explains that prose, filenames, folders and unrelated metadata are preserved.
+**Review manuscript inclusion** first shows proposed roles, parents and natural sibling order. Untyped notes have inclusion controls; Contents, Import Guide, Conversion Report and unclassified notes start excluded (approved untyped exclusions use the shared `scene-draft` opt-out). Existing structural authority is retained. If a folder has no unique companion note, choose its existing root note. No manual frontmatter editing, POV, dates or status is required.
+
+Choose **Review structural changes**. The final preview identifies the Book, detected structure and order source. It lists every affected note and every proposed property addition, replacement, canonicalisation or removal, plus Book, Part and Scene counts, warnings and blocking diagnostics. It also explains that prose, filenames, folders and unrelated metadata are preserved.
 
 Cancel closes the preview without writing. A blocked preview has no approval action. Approval is always explicit.
 
@@ -187,7 +189,7 @@ Generated reports are disposable, reviewable Markdown projections over authorita
 
 ### No Book recognised
 
-Check that a Book note—not only a folder—exists, is Markdown and contains `type: book`. Confirm that the files really form a manuscript and follow the Book, Part and Scene model. Reopen Project Readiness after editing.
+Run **Prepare existing manuscript** and select the existing root note or folder. Review its proposed Book, Parts and Scenes; untyped notes need no manual frontmatter edits. Wait for Obsidian indexing if the preview names an unindexed or stale note. Reopen Project Readiness after preparation.
 
 ### Duplicate explicit positions
 
