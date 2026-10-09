@@ -31,3 +31,7 @@ An unsupported `world_time` mapping can be preserved and displayed without being
 Use `reference_publication` and `reference_link`. `reference_journal`, `published_in`, and `reference_url` are unsupported near-aliases.
 
 For maintainer-level compatibility details, see the [Developer and Legacy Appendix](Developer_and_Legacy_Appendix.md).
+
+### Assets during preparation
+
+Assets are expected, but belong in vault-root `Assets/`, outside the manuscript folder. A nested Assets folder may be interpreted as a Part by Codex Press. Preparation previews a move to the root and resolved Markdown link updates. If root `Assets/` already exists, preparation blocks rather than overwriting or merging it. Merge separately and update links before retrying. Frontmatter asset references, affected Canvas references and Markdown notes inside Assets need separate handling before automatic relocation. Cancel changes nothing; immediate Undo restores the approved folder move and links.

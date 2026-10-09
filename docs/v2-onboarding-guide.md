@@ -123,7 +123,7 @@ It may remove an obsolete Book-level `manuscript_order`, but only after all chil
 
 ### What preparation never changes
 
-Preparation does not edit prose, rename files, move folders, delete Scenes, remove unrelated properties, create Story World entities, alter editorial dispositions or infer missing hierarchy while ambiguity remains.
+Preparation preserves prose and manuscript note paths, retains unrelated properties and editorial dispositions, and blocks ambiguous hierarchy. Assets belong in vault-root `Assets/`, beside the Book note and manuscript folder. For an imported nested Assets folder, the final preview shows its proposed relocation and every resolved Markdown link update. Approval covers that move; asset bytes remain intact. An existing root Assets destination blocks the operation. Preview/Cancel write nothing; rollback and immediate Undo restore the original asset location and links as well as metadata. Frontmatter asset references, affected Canvas references and Markdown notes inside nested Assets require separate handling first.
 
 ## Transaction, rollback and immediate Undo
 

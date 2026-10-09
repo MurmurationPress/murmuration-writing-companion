@@ -52,8 +52,8 @@ const {preparationHarness}=require(base+'/harness.cjs');
   if(!typed)content=content.replace(/^type: (?:book|part|scene)\r?\n/m,'');
   h.contents.set(p,content);h.cache.set(p,{frontmatter:press.parseSourceFrontmatter(content)});f.stat.size=content.length;
  }
- h.contents.delete('The-Structure-of-Aikido/Assets/figure.png');
- function addAssets(dir){for(const name of fs.readdirSync(dir)){const full=path.join(dir,name);if(fs.statSync(full).isDirectory())addAssets(full);else h.contents.set(path.relative(archiveVault,full),fs.readFileSync(full));}}
+ h.contents.delete('Assets/figure.png');h.loaded.delete('Assets/figure.png');h.loaded.delete('Assets');
+ function addAssets(dir){for(const name of fs.readdirSync(dir)){const full=path.join(dir,name);if(fs.statSync(full).isDirectory())addAssets(full);else {const p=path.relative(archiveVault,full),bytes=fs.readFileSync(full);const file=h.addAsset(p,'');h.contents.set(p,bytes);file.stat.size=bytes.length;}}}
  addAssets(path.join(archiveVault,'The-Structure-of-Aikido/Assets'));
  const original=new Map(h.contents);
  h.app.fileManager.processFrontMatter=async(file,change)=>{
@@ -71,7 +71,7 @@ const {preparationHarness}=require(base+'/harness.cjs');
  const gateway={
   listMarkdownSources:async()=>[...h.loaded.values()].filter(f=>f.extension==='md').map(f=>({path:f.path,name:f.basename+'.md',basename:f.basename})),
   readSource:async p=>h.contents.get(p),readMarkdown:async p=>h.contents.get(p),
-  resolveLink:async(source,link)=>h.app.metadataCache.getFirstLinkpathDest(link)?.path||null,
+  resolveLink:async(source,link)=>h.app.metadataCache.getFirstLinkpathDest(link,source)?.path||null,
   resolveFolderForFolderNote:async source=>{const f=h.loaded.get(source.path),folder=h.api.associatedManuscriptFolderPath(h.app,f);return folder?{path:folder,name:folder.split('/').pop()}:null;},
   listMarkdownPaths:async()=>[...h.loaded.values()].filter(f=>f.extension==='md').map(f=>f.path),
   listBasePaths:async()=>[],
@@ -86,7 +86,7 @@ const {preparationHarness}=require(base+'/harness.cjs');
  console.log(JSON.stringify({typed,preparedNotes:h.writes(),projects:projects.length,manuscriptOrderSource:assembled.manuscriptOrderSource,parts:assembled.sections.filter(s=>s.role==='part').length,documents:assembled.rootDocuments.length+assembled.sections.reduce((n,s)=>n+s.documents.length,0),errors:diagnostics},null,2));
  const output=path.join(base,typed?'prepared-typed-vault':'prepared-untyped-vault');
  for(const [p,content] of h.contents){const target=path.join(output,p);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,content);}
- for(const [p,bytes] of original){if(Buffer.isBuffer(bytes) && !bytes.equals(h.contents.get(p)))throw new Error('Asset changed: '+p);}
+ for(const [p,bytes] of original){if(Buffer.isBuffer(bytes) && !bytes.equals(h.contents.get(p.replace('The-Structure-of-Aikido/Assets/','Assets/'))))throw new Error('Asset changed: '+p);}
  await h.invoke('undo-manuscript-preparation');await h.tick();console.log(JSON.stringify({notices:h.notices}));
  for(const [p,bytes] of original){const current=h.contents.get(p);if(Buffer.isBuffer(bytes)?!bytes.equals(current):bytes!==current)throw new Error('Undo mismatch: '+p);}
  console.log(JSON.stringify({typed,exactUndo:true,assetCount:[...original.values()].filter(Buffer.isBuffer).length}));

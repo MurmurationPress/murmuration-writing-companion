@@ -51,7 +51,7 @@ export class ManuscriptPreparationModal extends Modal {
 
     this.contentEl.createEl("p", {
       cls: "mwc-muted",
-      text: "Review parent and sibling keys. Prose, paths and unrelated properties stay intact. Failed writes roll back; Undo restores unedited notes."
+      text: "Review parent and sibling keys. Prose and unrelated properties stay intact. Only reviewed asset paths and links move. Failed writes roll back; Undo restores unedited notes."
     });
 
     this.reviewBody?.(this.contentEl);
@@ -66,6 +66,18 @@ export class ManuscriptPreparationModal extends Modal {
             ? `${diagnostic.path}: ${diagnostic.message}`
             : diagnostic.message
         });
+      }
+    }
+
+    if (this.plan.assets && !this.reviewBody) {
+      const assets = this.plan.assets;
+      this.contentEl.createEl("h3", { text: "Prepare assets at vault root" });
+      this.contentEl.createEl("p", { text: `Move ${assets.from}/ → ${assets.to}/ (${assets.inventory.filter(item => item.size !== undefined).length} files). Asset bytes stay intact; Undo restores paths and links.` });
+      const details = this.contentEl.createEl("details");
+      details.createEl("summary", { text: `Review ${assets.links.length} notes with asset link changes` });
+      for (const link of assets.links) {
+        details.createEl("p", { text: link.path });
+        for (const change of link.replacements) details.createEl("div", { text: `${change.before} → ${change.after}` });
       }
     }
 

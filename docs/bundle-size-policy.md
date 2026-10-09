@@ -1,6 +1,6 @@
 # Production bundle size policy
 
-Issue #199 established a minified installed `main.js` baseline of 612,890 bytes on 9 August 2026 (the preceding unminified build was 1,068,767 bytes). The release budget is 720,896 bytes (704 KiB), leaving roughly 18% headroom for normal product growth while still failing a substantial accidental dependency or debug-code regression.
+Issue #199 established a minified installed `main.js` baseline of 612,890 bytes on 9 August 2026 (the preceding unminified build was 1,068,767 bytes). The release budget is 737,280 bytes (720 KiB), leaving roughly 20% headroom for normal product growth while still failing a substantial accidental dependency or debug-code regression.
 
 The budget applies to the actual installed file, not gzip size: Obsidian loads `main.js` directly. `npm run bundle:analyze` reports both installed and informational gzip sizes plus esbuild's deterministic source-contribution analysis. Metadata stays in memory and is not written into release assets.
 
@@ -14,3 +14,5 @@ Production build and `release:check` now report raw bytes, informational gzip by
 `npm run bundle:report` prints a reproducible JSON composition report without writing build assets. `npm run benchmark:performance` prints deterministic synthetic operation counts plus informational timings; CI tests counts, never machine-dependent duration thresholds. See [the #252 measurements and remaining work](performance-252.md).
 
 Embedded CSS literals explicitly marked `/* css */` are whitespace-minified with esbuild's CSS parser during production builds. CSS syntax/identifiers and runtime injection order are preserved; development source/builds remain readable. Required styles stay inside main.js and count against the installed-byte budget.
+
+Issue #261 adds an explicit asset relocation preview, resolved Markdown link updates, destination/stale-input checks, and transactional restoration. The measured installed bundle is 726,007 bytes (202,298 gzip bytes), up 5,154 bytes from the preceding preparation implementation. The ceiling increases by 16 KiB to 737,280 bytes to accommodate this reviewed workflow without removing safeguards; the warning threshold remains 50 KiB below the ceiling. This is product code growth with no new production dependency.

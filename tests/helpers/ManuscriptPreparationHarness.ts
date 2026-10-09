@@ -31,9 +31,9 @@ export class Folder {
   constructor(path: string) { this.path = path; this.name = path.split("/").pop()!; }
 }
 export class File {
-  path: string; basename: string; extension = "md";
+  path: string; basename: string; extension: string;
   stat = { mtime: 1, size: 0 };
-  constructor(path: string, readonly parent: Folder) { this.path = path; this.basename = path.split("/").pop()!.replace(/\.md$/, ""); }
+  constructor(path: string, public parent: Folder) { this.path = path; this.extension = path.split(".").pop()!; this.basename = path.split("/").pop()!.replace(/\.[^.]+$/, ""); }
 }
 export interface TestModal { contentEl: Element; titleEl: Element; close(): void; onChooseSuggestion?(file: File | Folder): void; selectSuggestion?(file: File | Folder, event: unknown): void; }
 
@@ -58,8 +58,11 @@ export function preparationHarness(typed = true, rootPath = "/") {
     contents.set(path, content); cache.set(path, { frontmatter: structuredClone(fm) }); f.stat.size = content.length; return f;
   };
   for (const note of fixture.notes) { const fm = { ...note.frontmatter }; if (!typed) delete fm.type; add(note.path, fm); }
-  folder("The-Structure-of-Aikido/Assets");
-  contents.set("The-Structure-of-Aikido/Assets/figure.png", "original asset bytes");
+  const addAsset = (path: string, bytes = "original asset bytes") => {
+    const f = new File(path, folder(path.split("/").slice(0, -1).join("/")));
+    loaded.set(path, f); contents.set(path, bytes); f.stat.size = bytes.length; return f;
+  };
+  addAsset("Assets/figure.png");
   const parseYaml = (text: string): Record<string, unknown> => {
     if (text.trim().startsWith("{")) return JSON.parse(text);
     const fm: Record<string, unknown> = {};
@@ -74,15 +77,45 @@ export function preparationHarness(typed = true, rootPath = "/") {
   const commands = new Map<string, { callback: () => Promise<void> | void }>();
   const app = {
     vault: {
-      getMarkdownFiles: () => [...loaded.values()].filter((file): file is File => file instanceof File),
+      getMarkdownFiles: () => [...loaded.values()].filter((file): file is File => file instanceof File && file.extension === "md"),
       getAllLoadedFiles: () => [...loaded.values()],
       getAbstractFileByPath: (path: string) => loaded.get(path) ?? null,
       read: async (file: File) => contents.get(file.path)!,
+      rename: async (source: File | Folder, path: string) => {
+        if (loaded.has(path)) throw new Error("Destination exists");
+        const from = source.path;
+        for (const file of [...loaded.values()].filter(file => file.path === from || file.path.startsWith(from + "/"))) {
+          const old = file.path, next = path + old.slice(from.length);
+          loaded.delete(old); loaded.set(next, file); file.path = next;
+          if (file instanceof Folder) file.name = next.split("/").pop()!;
+          if (contents.has(old)) { contents.set(next, contents.get(old)!); contents.delete(old); }
+          if (cache.has(old)) { cache.set(next, cache.get(old)!); cache.delete(old); }
+        }
+        source.parent = folder(path.split("/").slice(0, -1).join("/"));
+      },
       modify: async (file: File, content: string) => { writes++; contents.set(file.path, content); file.stat.mtime++; file.stat.size = content.length; cache.set(file.path, { frontmatter: content.startsWith("---") ? parseYaml(content.split("---")[1]) : {} }); }
     },
     metadataCache: {
-      getFileCache: (file: File) => cache.get(file.path),
-      getFirstLinkpathDest: (link: string) => [...loaded.values()].find(file => file instanceof File && (file.path.replace(/\.md$/, "") === link || file.basename === link)) ?? null
+      getFileCache: (file: File) => {
+        const cached = cache.get(file.path); if (!cached) return;
+        const content = contents.get(file.path)!;
+        const refs = [...content.matchAll(/!?\[\[[^\]]+\]\]|!?\[[^\]]*\]\([^\n]+?\)/g)].map(match => {
+          const original = match[0];
+          const link = /^!?\[\[/.test(original) ? original.replace(/^!?\[\[|\]\]$/g, "").split("|")[0] : original.slice(original.indexOf("](") + 2, -1).replace(/^<|>$/g, "").split(/\s/)[0];
+          return { original, link, position: { start: { offset: match.index! }, end: { offset: match.index! + original.length } } };
+        });
+        return { ...cached, links: refs.filter(ref => !ref.original.startsWith("!")), embeds: refs.filter(ref => ref.original.startsWith("!")) };
+      },
+      getFirstLinkpathDest: (link: string, source = "") => {
+        link = decodeURIComponent(link).split("#")[0];
+        const segments: string[] = [];
+        for (const segment of (source.split("/").slice(0, -1).join("/") + "/" + link).split("/")) {
+          if (segment === "..") segments.pop(); else if (segment && segment !== ".") segments.push(segment);
+        }
+        const relative = loaded.get(segments.join("/"));
+        if (relative instanceof File) return relative;
+        return [...loaded.values()].find(file => file instanceof File && (file.path === link || file.path.replace(/\.md$/, "") === link || file.basename === link || file.path.split("/").pop() === link)) ?? null;
+      }
     },
     fileManager: { processFrontMatter: async (file: File, change: (fm: Record<string, unknown>) => void) => {
       if (writes + 1 === failWrite) { failWrite = -1; throw new Error("Injected write failure"); }
@@ -119,5 +152,5 @@ export function preparationHarness(typed = true, rootPath = "/") {
   const latest = () => modals[modals.length - 1];
   const choose = async (path = fixture.root) => { latest().selectSuggestion!(loaded.get(path)!, {}); await tick(); };
   const click = async (text: string) => { const button = latest().contentEl.button(text); if (button.disabled) throw new Error(`Disabled: ${text}`); button.onclick!(); await tick(); };
-  return { api, app, fixture, loaded, contents, cache, modals, notices, add, invoke, choose, click, tick, latest, writes: () => writes, failAt: (number: number) => { failWrite = number; } };
+  return { api, app, fixture, loaded, contents, cache, modals, notices, add, addAsset, folder, invoke, choose, click, tick, latest, writes: () => writes, failAt: (number: number) => { failWrite = number; } };
 }

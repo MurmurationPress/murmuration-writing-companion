@@ -46,7 +46,7 @@ export function reviewManuscriptPreparationSelection(app: App, selection: Manusc
     let book = buildSelectedManuscript(app, selection);
     const modal = new ManuscriptPreparationModal(app, planObsidianManuscriptPreparation(app, book),
       accepted => resolve(accepted ? selection : null), container => {
-        container.createEl("p", { text: "Support and unclassified notes start excluded. Exclusions use scene-draft for Codex Press; locked notes keep existing metadata." });
+        container.createEl("p", { text: "Assets belong in vault-root Assets, outside the manuscript. A nested Assets folder and its resolved Markdown links will be reviewed for relocation. Support and unclassified notes start excluded. Exclusions use scene-draft for Codex Press; locked notes keep existing metadata." });
         const candidates = manuscriptPreparationCandidates(app, selection);
         const byPath = new Map(candidates.map(candidate => [candidate.file.path, candidate]));
         const orderedPaths = [selection.rootPath, ...book.result.entries.map(entry => entry.path), ...candidates.filter(candidate => !book.filesByPath.has(candidate.file.path)).map(candidate => candidate.file.path)];

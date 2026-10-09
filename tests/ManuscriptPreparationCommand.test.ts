@@ -326,3 +326,135 @@ test("Undo refuses an authored position property edit despite cache position fil
   await rejects(h.api.undoManuscriptPreparation(h.app, token), /Undo is not safe/);
   deepEqual(h.contents, edited);
 });
+
+function nestedAssetFixture(typed = false) {
+  const h = preparationHarness(typed);
+  h.loaded.delete("Assets/figure.png"); h.loaded.delete("Assets"); h.contents.delete("Assets/figure.png");
+  h.addAsset("The-Structure-of-Aikido/Assets/figure.png");
+  h.add(h.fixture.root, typed ? { type: "book" } : {}, "\nProse. ![Image](The-Structure-of-Aikido/Assets/figure.png)\n");
+  h.add("Research.md", { custom: "retain" }, "\n![[The-Structure-of-Aikido/Assets/figure.png|100]]\n");
+  return h;
+}
+
+for (const typed of [true, false]) {
+  test(`asset preparation moves nested Assets to root with reviewed links and exact Undo (${typed})`, async () => {
+    const h = nestedAssetFixture(typed), original = new Map(h.contents);
+    const operation = h.invoke(); await h.choose();
+    match(h.latest().contentEl.textContent(), /Assets belong in vault-root Assets/);
+    await h.click("Review structural changes");
+    const preview = h.latest().contentEl.textContent();
+    match(preview, /The-Structure-of-Aikido\/Assets\/ → Assets\//);
+    match(preview, /Research.md/); match(preview, /\[\[Assets\/figure.png\|100\]\]/);
+    deepEqual(h.contents, original); equal(h.writes(), 0);
+    await h.click("Prepare manuscript"); await operation;
+    ok(h.loaded.has("Assets/figure.png")); ok(!h.loaded.has("The-Structure-of-Aikido/Assets"));
+    equal(h.contents.get("Assets/figure.png"), "original asset bytes");
+    match(h.contents.get(h.fixture.root)!, /!\[Image\]\(Assets\/figure.png\)/);
+    match(h.contents.get("Research.md")!, /!\[\[Assets\/figure.png\|100\]\]/);
+    const book = h.api.buildObsidianManuscriptLibrary(h.app).books[0];
+    equal(book.result.scenes.length, 40); equal(book.result.entries.filter((entry: any) => entry.kind === "part").length, 6);
+    const writes = h.writes();
+    const second = h.invoke(); await h.choose(); await h.click("Review structural changes"); await second;
+    equal(h.writes(), writes);
+    await h.invoke("undo-manuscript-preparation"); await h.tick();
+    deepEqual(h.contents, original); ok(h.loaded.has("The-Structure-of-Aikido/Assets/figure.png")); ok(!h.loaded.has("Assets"));
+  });
+}
+
+test("asset preview cancellation and destination conflicts make no writes", async () => {
+  const h = nestedAssetFixture(), original = new Map(h.contents);
+  const operation = h.invoke(); await h.choose(); await h.click("Review structural changes"); await h.click("Cancel"); await operation;
+  deepEqual(h.contents, original); equal(h.writes(), 0); ok(!h.loaded.has("Assets"));
+  h.addAsset("Assets/other.png", "root assets");
+  const conflict = h.invoke(); await h.choose(); await h.click("Review structural changes");
+  match(h.latest().contentEl.textContent(), /Vault-root Assets already exists/);
+  ok(!h.latest().contentEl.all().some(el => el.tag === "button" && el.text === "Prepare manuscript"));
+  await h.click("Cancel"); await conflict; equal(h.writes(), 0);
+});
+
+test("asset edits, new assets and changed external links invalidate approval; rollback restores relocated assets", async () => {
+  for (const change of ["asset", "new", "link"]) {
+    const h = nestedAssetFixture();
+    const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+    const book = h.api.buildSelectedManuscript(h.app, selection);
+    const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+    if (change === "asset") (h.loaded.get("The-Structure-of-Aikido/Assets/figure.png") as File).stat.mtime++;
+    else if (change === "new") h.addAsset("The-Structure-of-Aikido/Assets/new.png");
+    else await h.app.vault.modify(h.loaded.get("Research.md") as File, h.contents.get("Research.md")! + "Author edit\n");
+    const edited = new Map(h.contents);
+    await rejects(h.api.applyManuscriptPreparation(h.app, book, plan), /changed before preparation/);
+    deepEqual(h.contents, edited); ok(!h.loaded.has("Assets"));
+  }
+  const h = nestedAssetFixture(), original = new Map(h.contents);
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  h.failAt(4);
+  await rejects(h.api.applyManuscriptPreparation(h.app, book, plan), /Injected write failure/);
+  deepEqual(h.contents, original); ok(!h.loaded.has("Assets"));
+});
+
+test("asset Undo refuses modified assets, destination conflicts and changed external notes", async () => {
+  for (const change of ["asset", "destination", "link"]) {
+    const h = nestedAssetFixture();
+    const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+    const book = h.api.buildSelectedManuscript(h.app, selection);
+    const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+    const token = await h.api.applyManuscriptPreparation(h.app, book, plan);
+    if (change === "asset") (h.loaded.get("Assets/figure.png") as File).stat.mtime++;
+    else if (change === "destination") h.folder("The-Structure-of-Aikido/Assets");
+    else await h.app.vault.modify(h.loaded.get("Research.md") as File, h.contents.get("Research.md")! + "Edit\n");
+    const edited = new Map(h.contents);
+    await rejects(h.api.undoManuscriptPreparation(h.app, token), /Assets changed|Undo is not safe/);
+    deepEqual(h.contents, edited); ok(h.loaded.has("Assets/figure.png"));
+  }
+});
+
+test("asset relocation preserves relative Markdown destinations, fragments and wikilink aliases", async () => {
+  const h = nestedAssetFixture();
+  h.addAsset("The-Structure-of-Aikido/Assets/figure space.png", "second asset");
+  const scene = h.fixture.notes.find(note => note.frontmatter.type === "scene")!.path;
+  h.add(scene, { document_role: "chapter" }, "\nProse ![Caption](../Assets/figure%20space.png#detail) and ![[The-Structure-of-Aikido/Assets/figure.png#detail|Alias]].\n");
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  const token = await h.api.applyManuscriptPreparation(h.app, book, plan);
+  match(h.contents.get(scene)!, /!\[Caption\]\(\.\.\/\.\.\/Assets\/figure%20space.png#detail\)/);
+  match(h.contents.get(scene)!, /!\[\[Assets\/figure.png#detail\|Alias\]\]/);
+  await h.api.undoManuscriptPreparation(h.app, token);
+});
+
+test("failed folder renames and compiler rejection restore asset paths and original notes", async () => {
+  for (const failure of ["before-rename", "after-rename", "acceptance"]) {
+    const h = nestedAssetFixture(), original = new Map(h.contents);
+    const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+    const book = h.api.buildSelectedManuscript(h.app, selection);
+    const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+    const rename = h.app.vault.rename;
+    let failed = false;
+    h.app.vault.rename = async (file, destination) => {
+      if (!failed && failure !== "acceptance") {
+        failed = true;
+        if (failure === "after-rename") await rename(file, destination);
+        throw new Error("Injected rename failure");
+      }
+      await rename(file, destination);
+    };
+    await rejects(h.api.applyManuscriptPreparation(h.app, book, plan, { validate: async () => { throw new Error("Compiler rejected"); } }), /Injected rename failure|Compiler rejected/);
+    deepEqual(h.contents, original); ok(h.loaded.has("The-Structure-of-Aikido/Assets/figure.png")); ok(!h.loaded.has("Assets"));
+  }
+});
+
+test("failed Undo rolls restored links and asset location forward; moved notes block Undo", async () => {
+  const h = nestedAssetFixture();
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  const token = await h.api.applyManuscriptPreparation(h.app, book, plan), prepared = new Map(h.contents);
+  const modify = h.app.vault.modify; let count = 0;
+  h.app.vault.modify = async (file, content) => { if (++count === 2) throw new Error("Injected Undo failure"); await modify(file, content); };
+  await rejects(h.api.undoManuscriptPreparation(h.app, token), /Injected Undo failure/);
+  deepEqual(h.contents, prepared); ok(h.loaded.has("Assets/figure.png")); ok(!h.loaded.has("The-Structure-of-Aikido/Assets"));
+  await h.app.vault.rename(h.loaded.get("Research.md") as File, "Renamed Research.md");
+  await rejects(h.api.undoManuscriptPreparation(h.app, token), /Undo is not safe.*Research.md/);
+});

@@ -10,6 +10,8 @@ Open **Project readiness** first. It is read-only and explains what MWC recognis
 - For an existing manuscript, run **Prepare existing manuscript** and select its existing root note or folder. Untyped manuscripts need no manual property edits. Review roles, parents, reading order and included notes, then approve the exact metadata preview.
 - If readiness reports ambiguity, correct the named note or property. MWC will not guess a hierarchy.
 
+Keep images and other assets in vault-root `Assets/`, alongside the Book note and its manuscript folder. **Prepare existing manuscript** reviews relocation and Markdown link changes for a nested imported Assets folder before approval.
+
 A Book contains Parts and/or direct Scenes. A Part contains Scenes. In normal use, create and reorder them through Manuscript Navigator. `parent` establishes containment and `manuscript_order_key` orders siblings; folders and filename prefixes remain useful organisation but are not final prepared-manuscript authority.
 
 ## Write a Scene

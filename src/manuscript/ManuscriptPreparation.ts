@@ -65,6 +65,7 @@ export interface ManuscriptPreparationDiagnostic {
 }
 
 export interface ManuscriptPreparationPlan {
+  readonly assets?: import("./ManuscriptPreparationAssets").PreparationAssets;
   readonly selection?: ManuscriptPreparationSelection;
   readonly inputSnapshots?: readonly ManuscriptPreparationInputSnapshot[];
   readonly bookPath: string;
@@ -429,6 +430,7 @@ function stablePlanValue(plan: ManuscriptPreparationPlan): unknown {
     diagnostics: plan.diagnostics,
     selection: plan.selection,
     inputSnapshots: plan.inputSnapshots,
+    assets: plan.assets,
     files: plan.files.map((file) => ({
       path: file.path,
       changes: file.changes,
