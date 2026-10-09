@@ -37,16 +37,27 @@ export async function previewPreparationAssets(app: App, plan: ManuscriptPrepara
       if (!target?.path.startsWith(`${from}/`)) continue;
       const path = `${to}${target.path.slice(from.length)}`;
       let after: string;
-      if (/^!?\[\[/.test(ref.original)) after = ref.original.replace(/(\[\[)[^|\]#]+/, `$1${path}`);
+      if (/^!?\[\[/.test(ref.original)) after = ref.original.replace(/(\[\[)[^|\]#]+/, (_, prefix) => prefix + path);
       else {
         const marker = ref.original.indexOf("](");
         if (marker < 0) throw new Error(`Unsupported asset link; update before preparation: ${file.path}`);
         const start = marker + 2, angle = ref.original[start] === "<";
         const rest = ref.original.slice(start + (angle ? 1 : 0));
-        const destination = rest.match(angle ? /^[^>]+/ : /^[^\s)]+/)?.[0];
+        let end = 0, nesting = 0;
+        for (; end < rest.length; end++) {
+          const char = rest[end];
+          if (angle) { if (char === ">") break; }
+          else {
+            if (char === "\\") { end++; continue; }
+            if (/\s/.test(char) || char === ")" && nesting === 0) break;
+            if (char === "(") nesting++;
+            if (char === ")") nesting--;
+          }
+        }
+        const destination = rest.slice(0, end);
         if (!destination) throw new Error(`Cannot review asset link: ${file.path}`);
         const depth = file.path.split("/").length - 1;
-        const replacement = "../".repeat(depth) + path.split("/").map(encodeURIComponent).join("/") + (destination.match(/#[\s\S]*$/)?.[0] ?? "");
+        const replacement = "../".repeat(depth) + path.split("/").map(segment => encodeURIComponent(segment).replace(/[()]/g, char => char === "(" ? "%28" : "%29")).join("/") + (destination.match(/#[\s\S]*$/)?.[0] ?? "");
         after = ref.original.slice(0, start + (angle ? 1 : 0)) + replacement + rest.slice(destination.length);
       }
       if (after === ref.original) continue;

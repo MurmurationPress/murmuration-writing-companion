@@ -107,7 +107,7 @@ Choose the Book-specific **Prepare manuscript** button in the Navigator notice, 
 
 **Review manuscript inclusion** first shows proposed roles, parents and natural sibling order. Untyped notes have inclusion controls; Contents, Import Guide, Conversion Report and unclassified notes start excluded (approved untyped exclusions use the shared `scene-draft` opt-out). Existing structural authority is retained. If a folder has no unique companion note, choose its existing root note. No manual frontmatter editing, POV, dates or status is required.
 
-Choose **Review structural changes**. The final preview identifies the Book, detected structure and order source. It lists every affected note and every proposed property addition, replacement, canonicalisation or removal, plus Book, Part and Scene counts, warnings and blocking diagnostics. It also explains that prose, filenames, folders and unrelated metadata are preserved.
+Choose **Review structural changes**. The final preview identifies the Book, detected structure and order source. It lists every affected note and every proposed property addition, replacement, canonicalisation or removal, plus Book, Part and Scene counts, warnings and blocking diagnostics. It also explains that manuscript prose, note paths and unrelated metadata are preserved; any asset-folder relocation and Markdown link changes are listed explicitly.
 
 Cancel closes the preview without writing. A blocked preview has no approval action. Approval is always explicit.
 

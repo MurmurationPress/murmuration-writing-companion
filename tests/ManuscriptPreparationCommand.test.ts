@@ -458,3 +458,38 @@ test("failed Undo rolls restored links and asset location forward; moved notes b
   await h.app.vault.rename(h.loaded.get("Research.md") as File, "Renamed Research.md");
   await rejects(h.api.undoManuscriptPreparation(h.app, token), /Undo is not safe.*Research.md/);
 });
+
+test("asset link relocation preserves balanced parentheses, titles and literal dollar sequences", async () => {
+  const h = nestedAssetFixture();
+  h.addAsset("The-Structure-of-Aikido/Assets/figure(1).png");
+  h.addAsset("The-Structure-of-Aikido/Assets/figure$&.png");
+  const markdown = '![Caption](The-Structure-of-Aikido/Assets/figure(1).png#detail "Image title")';
+  const wiki = '![[The-Structure-of-Aikido/Assets/figure$&.png|Alias]]';
+  h.add(h.fixture.root, {}, `\nProse ${markdown} and ${wiki}.\n`);
+  // Use complete cached link spans as Obsidian does; the fixture's small regex
+  // scanner deliberately does not attempt to implement Markdown parsing.
+  const getCache = h.app.metadataCache.getFileCache;
+  h.app.metadataCache.getFileCache = file => {
+    const cached = getCache(file);
+    if (file.path !== h.fixture.root || !cached) return cached;
+    const content = h.contents.get(file.path)!;
+    return { ...cached, links: [], embeds: [
+      { original: markdown, link: "The-Structure-of-Aikido/Assets/figure(1).png#detail" },
+      { original: wiki, link: "The-Structure-of-Aikido/Assets/figure$&.png" }
+    ].map(ref => ({ ...ref, position: { start: { offset: content.indexOf(ref.original) }, end: { offset: content.indexOf(ref.original) + ref.original.length } } })) };
+  };
+  const original = new Map(h.contents);
+  const selection = h.api.initialManuscriptPreparationSelection(h.app, h.loaded.get(h.fixture.root));
+  const book = h.api.buildSelectedManuscript(h.app, selection);
+  const plan = await h.api.validateManuscriptPreparationPreview(h.app, book, h.api.planObsidianManuscriptPreparation(h.app, book));
+  equal(plan.canApply, true);
+  const preview = plan.assets.links.find((link: any) => link.path === h.fixture.root).after;
+  ok(preview.includes('![Caption](Assets/figure%281%29.png#detail "Image title")'));
+  ok(preview.includes('![[Assets/figure$&.png|Alias]]'));
+  equal(h.writes(), 0);
+  const token = await h.api.applyManuscriptPreparation(h.app, book, plan);
+  ok(h.contents.get(h.fixture.root)!.includes('![Caption](Assets/figure%281%29.png#detail "Image title")'));
+  ok(h.contents.get(h.fixture.root)!.includes('![[Assets/figure$&.png|Alias]]'));
+  await h.api.undoManuscriptPreparation(h.app, token);
+  deepEqual(h.contents, original);
+});
