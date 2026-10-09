@@ -17,6 +17,14 @@ import {
   manuscriptOrderKey,
   manuscriptOrderKeyBetween
 } from "./ManuscriptOrderKey";
+import type { ManuscriptPreparationSelection } from "./ManuscriptPreparationSelection";
+
+export interface ManuscriptPreparationInputSnapshot {
+  readonly path: string;
+  readonly mtime: number;
+  readonly size: number;
+  readonly frontmatter: Readonly<Record<string, unknown>>;
+}
 
 export type ManuscriptPreparationProperty =
   | "type"
@@ -44,7 +52,7 @@ export interface ManuscriptPreparationExecutionStep {
 export interface ManuscriptPreparationFilePlan {
   readonly path: string;
   readonly title: string;
-  readonly kind: "book" | "part" | "scene";
+  readonly kind: "book" | "part" | "scene" | "excluded";
   readonly beforeFrontmatter: Readonly<Record<string, unknown>>;
   readonly changes: readonly ManuscriptPreparationChange[];
   readonly mutation: ManuscriptPreparationMutation;
@@ -57,6 +65,9 @@ export interface ManuscriptPreparationDiagnostic {
 }
 
 export interface ManuscriptPreparationPlan {
+  readonly assets?: import("./ManuscriptPreparationAssets").PreparationAssets;
+  readonly selection?: ManuscriptPreparationSelection;
+  readonly inputSnapshots?: readonly ManuscriptPreparationInputSnapshot[];
   readonly bookPath: string;
   readonly bookTitle: string;
   readonly source: ManuscriptOrderResult["source"];
@@ -417,6 +428,9 @@ function stablePlanValue(plan: ManuscriptPreparationPlan): unknown {
     source: plan.source,
     state: plan.state,
     diagnostics: plan.diagnostics,
+    selection: plan.selection,
+    inputSnapshots: plan.inputSnapshots,
+    assets: plan.assets,
     files: plan.files.map((file) => ({
       path: file.path,
       changes: file.changes,

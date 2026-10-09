@@ -31,6 +31,8 @@ import { authoritativeManuscriptPaths } from "./ManuscriptIntegrity";
 import { isObsidianTrashPath } from "../ObsidianTrash";
 import { isContinuityReviewReportFrontmatter } from "../companion/ContinuityReviewReportClassification";
 import { isGeneratedReportFrontmatter } from "../reports/GeneratedReportClassification";
+import type { ManuscriptPreparationSelection } from "./ManuscriptPreparationSelection";
+import type { ManuscriptPreparationDiagnostic } from "./ManuscriptPreparation";
 
 interface RawManuscriptFile {
   readonly file: TFile;
@@ -63,6 +65,9 @@ interface PreliminaryManuscriptFile {
 }
 
 export interface ObsidianManuscriptBook {
+  readonly preparationSelection?: ManuscriptPreparationSelection;
+  readonly preparationDiagnostics?: readonly ManuscriptPreparationDiagnostic[];
+  readonly preparationFiles?: readonly TFile[];
   readonly file: TFile;
   readonly record: ManuscriptDocumentRecord;
   readonly result: ManuscriptOrderResult;
@@ -128,18 +133,19 @@ export function associatedManuscriptFolderPath(app: App, file: TFile): string | 
 export function expectedAssociatedManuscriptFolderPath(file: TFile): string | null {
   const parent = file.parent;
   if (!parent) return null;
-  if (parent.name === file.basename) return parent.path;
-  return parent.path
-    ? `${parent.path}/${file.basename}`
+  const parentPath = normalizeVaultPath(parent.path);
+  if (parentPath && parent.name === file.basename) return parentPath;
+  return parentPath
+    ? `${parentPath}/${file.basename}`
     : file.basename;
 }
 
-function rawFiles(app: App): Map<string, RawManuscriptFile> {
+function rawFiles(app: App, selectedFolders?: ReadonlyMap<string, string>, proposedFrontmatter?: ReadonlyMap<string, Record<string, unknown>>): Map<string, RawManuscriptFile> {
   const preliminary = new Map<string, PreliminaryManuscriptFile>();
 
   for (const file of app.vault.getMarkdownFiles()) {
     if (isObsidianTrashPath(file.path)) continue;
-    const frontmatter = frontmatterFor(app, file);
+    const frontmatter = proposedFrontmatter?.get(file.path) ?? frontmatterFor(app, file);
     if (isContinuityReviewReportFrontmatter(frontmatter) || isGeneratedReportFrontmatter(frontmatter)) continue;
     const hierarchy = manuscriptHierarchyReferences(frontmatter);
     preliminary.set(file.path, {
@@ -151,7 +157,7 @@ function rawFiles(app: App): Map<string, RawManuscriptFile> {
       parentReferences: hierarchy.parentReferences,
       explicitBookPath: firstResolvedPath(app, file, hierarchy.bookReferences),
       bookReferences: hierarchy.bookReferences,
-      associatedFolderPath: associatedManuscriptFolderPath(app, file),
+      associatedFolderPath: selectedFolders?.get(file.path) ?? associatedManuscriptFolderPath(app, file),
       orderKeyPresent: hasOwnProperty(frontmatter, MANUSCRIPT_ORDER_KEY_PROPERTY),
       orderKey: manuscriptOrderKey(frontmatter?.[MANUSCRIPT_ORDER_KEY_PROPERTY])
     });
@@ -280,12 +286,16 @@ function owningBookPath(
 function recordFor(
   raw: RawManuscriptFile,
   bookPath: string,
-  parentReferencedPaths: ReadonlySet<string>
+  parentReferencedPaths: ReadonlySet<string>,
+  distributed: boolean
 ): ManuscriptDocumentRecord | null {
   if (raw.explicitlyDetached) return null;
   let kind = raw.explicitKind;
 
   if (!kind) {
+    // After preparation, folder membership alone must not re-import excluded
+    // support notes. Explicit metadata remains authoritative.
+    if (distributed && !raw.explicitParent && !raw.orderKeyPresent && !raw.bookReferences.length) return null;
     if (parentReferencedPaths.has(raw.file.path)) {
       kind = "part";
     } else if (
@@ -332,8 +342,9 @@ function buildBook(
       .map((candidate) => candidate.parentPath)
       .filter((path): path is string => path !== null)
   );
+  const distributed = ownedRaw.some(raw => raw.orderKeyPresent);
   const records = ownedRaw
-    .map((candidate) => recordFor(candidate, bookPath, parentReferencedPaths))
+    .map((candidate) => recordFor(candidate, bookPath, parentReferencedPaths, distributed))
     .filter((record): record is ManuscriptDocumentRecord => record !== null);
   const bookRecord = records.find((record) => record.path === bookPath) ?? {
     path: bookPath,
@@ -394,8 +405,8 @@ function buildBook(
   };
 }
 
-export function buildObsidianManuscriptLibrary(app: App): ObsidianManuscriptLibrary {
-  const files = rawFiles(app);
+export function buildObsidianManuscriptLibrary(app: App, selectedFolders?: ReadonlyMap<string, string>, proposedFrontmatter?: ReadonlyMap<string, Record<string, unknown>>): ObsidianManuscriptLibrary {
+  const files = rawFiles(app, selectedFolders, proposedFrontmatter);
   const ownerMemo = new Map<string, string | null>();
   for (const path of files.keys()) owningBookPath(path, files, ownerMemo);
 

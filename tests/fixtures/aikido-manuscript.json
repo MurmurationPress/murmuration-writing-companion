@@ -1,0 +1,541 @@
+{
+  "root": "The-Structure-of-Aikido.md",
+  "notes": [
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/01 Title Page.md",
+      "frontmatter": {
+        "title": "Title Page",
+        "author": "Fixture Author",
+        "order": "1",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "1-1",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/02 Copyright, Safety and Liability Disclaimer.md",
+      "frontmatter": {
+        "title": "Copyright, Safety and Liability Disclaimer",
+        "author": "Fixture Author",
+        "order": "2",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "3-4",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/03 Dedication.md",
+      "frontmatter": {
+        "title": "Dedication",
+        "author": "Fixture Author",
+        "order": "3",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "6-6",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/04 Dedication - Japanese.md",
+      "frontmatter": {
+        "title": "Dedication - Japanese",
+        "author": "Fixture Author",
+        "order": "4",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "7-7",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/05 Preface.md",
+      "frontmatter": {
+        "title": "Preface",
+        "author": "Fixture Author",
+        "order": "5",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "9-9",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/06 Acknowledgements.md",
+      "frontmatter": {
+        "title": "Acknowledgements",
+        "author": "Fixture Author",
+        "order": "6",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "11-11",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/07 Introduction.md",
+      "frontmatter": {
+        "title": "Introduction",
+        "author": "Fixture Author",
+        "order": "7",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "23-36",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter/08 Overview - Synopsis of the Work.md",
+      "frontmatter": {
+        "title": "Overview - Synopsis of the Work",
+        "author": "Fixture Author",
+        "order": "8",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "37-42",
+        "document_role": "front_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/00 Front Matter.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/00 Chapter 0 - Classical Body Principles of Aikidō.md",
+      "frontmatter": {
+        "title": "Chapter 0 - Classical Body Principles of Aikidō",
+        "author": "Fixture Author",
+        "order": "9",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "45-50",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/01 Chapter 1 - Fascia, Tensegrity, and the Tensile Body.md",
+      "frontmatter": {
+        "title": "Chapter 1 - Fascia, Tensegrity, and the Tensile Body",
+        "author": "Fixture Author",
+        "order": "10",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "51-66",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/02 Chapter 2 - Breath - The Activating Force.md",
+      "frontmatter": {
+        "title": "Chapter 2 - Breath - The Activating Force",
+        "author": "Fixture Author",
+        "order": "11",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "67-74",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/03 Chapter 3 - Torifune.md",
+      "frontmatter": {
+        "title": "Chapter 3 - Torifune",
+        "author": "Fixture Author",
+        "order": "12",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "75-86",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/04 Chapter 4 - Irimi–Tenkan.md",
+      "frontmatter": {
+        "title": "Chapter 4 - Irimi–Tenkan",
+        "author": "Fixture Author",
+        "order": "13",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "87-90",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/05 Chapter 5 - Rotation.md",
+      "frontmatter": {
+        "title": "Chapter 5 - Rotation",
+        "author": "Fixture Author",
+        "order": "14",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "91-98",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/06 Chapter 6 - The Unified Internal Architecture.md",
+      "frontmatter": {
+        "title": "Chapter 6 - The Unified Internal Architecture",
+        "author": "Fixture Author",
+        "order": "15",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "99-110",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/07 Chapter 7 - The Cosmic Geometry - Triangle, Circle, Square.md",
+      "frontmatter": {
+        "title": "Chapter 7 - The Cosmic Geometry - Triangle, Circle, Square",
+        "author": "Fixture Author",
+        "order": "16",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "111-126",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations/08 Chapter 8 - The Meaning of Ai.md",
+      "frontmatter": {
+        "title": "Chapter 8 - The Meaning of Ai",
+        "author": "Fixture Author",
+        "order": "17",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "127-138",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/01 Part I - Foundations.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/02 Part II - Application/09 Chapter 9 - Kitai - The Spherical Internal Body.md",
+      "frontmatter": {
+        "title": "Chapter 9 - Kitai - The Spherical Internal Body",
+        "author": "Fixture Author",
+        "order": "18",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "141-148",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/02 Part II - Application/10 Chapter 10 - Irimi - The Architecture of Entering.md",
+      "frontmatter": {
+        "title": "Chapter 10 - Irimi - The Architecture of Entering",
+        "author": "Fixture Author",
+        "order": "19",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "149-152",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/02 Part II - Application/11 Chapter 11 - Techniques and Forms - The 18-Form Matrix and the Engine of Irimi.md",
+      "frontmatter": {
+        "title": "Chapter 11 - Techniques and Forms - The 18-Form Matrix and the Engine of Irimi",
+        "author": "Fixture Author",
+        "order": "20",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "153-158",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/02 Part II - Application/12 Chapter 12 - Grounding and Rooting - The Echo Within the Mountain.md",
+      "frontmatter": {
+        "title": "Chapter 12 - Grounding and Rooting - The Echo Within the Mountain",
+        "author": "Fixture Author",
+        "order": "21",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "159-164",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/02 Part II - Application.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/03 Part III - Cosmology/13 Chapter 13 - The Cycle of Life and Death.md",
+      "frontmatter": {
+        "title": "Chapter 13 - The Cycle of Life and Death",
+        "author": "Fixture Author",
+        "order": "22",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "167-176",
+        "document_role": "chapter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/03 Part III - Cosmology.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix A - The Elements.md",
+      "frontmatter": {
+        "title": "Appendix A - The Elements",
+        "author": "Fixture Author",
+        "order": "23",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "179-194",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix B - The Structure.md",
+      "frontmatter": {
+        "title": "Appendix B - The Structure",
+        "author": "Fixture Author",
+        "order": "24",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "195-204",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix C - The Internal Geometry of Aikidō.md",
+      "frontmatter": {
+        "title": "Appendix C - The Internal Geometry of Aikidō",
+        "author": "Fixture Author",
+        "order": "25",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "205-218",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix D - The Non-Dual Ground.md",
+      "frontmatter": {
+        "title": "Appendix D - The Non-Dual Ground",
+        "author": "Fixture Author",
+        "order": "26",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "219-226",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix E - Aikidō and the Book of Five Rings.md",
+      "frontmatter": {
+        "title": "Appendix E - Aikidō and the Book of Five Rings",
+        "author": "Fixture Author",
+        "order": "27",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "227-234",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix F - Historical Notes.md",
+      "frontmatter": {
+        "title": "Appendix F - Historical Notes",
+        "author": "Fixture Author",
+        "order": "28",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "235-242",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix G - Classical Definitions and Structural Lineage.md",
+      "frontmatter": {
+        "title": "Appendix G - Classical Definitions and Structural Lineage",
+        "author": "Fixture Author",
+        "order": "29",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "243-248",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix H - Shiho-tai - Omni-Directional Expansion.md",
+      "frontmatter": {
+        "title": "Appendix H - Shiho-tai - Omni-Directional Expansion",
+        "author": "Fixture Author",
+        "order": "30",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "249-264",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix I - The Chinkon Kishin Cycle.md",
+      "frontmatter": {
+        "title": "Appendix I - The Chinkon Kishin Cycle",
+        "author": "Fixture Author",
+        "order": "31",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "265-278",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices/Appendix J - Terminology.md",
+      "frontmatter": {
+        "title": "Appendix J - Terminology",
+        "author": "Fixture Author",
+        "order": "32",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "279-284",
+        "document_role": "appendix",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/04 Appendices.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/01 Closing Reflection.md",
+      "frontmatter": {
+        "title": "Closing Reflection",
+        "author": "Fixture Author",
+        "order": "33",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "285-285",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/02 Afterword.md",
+      "frontmatter": {
+        "title": "Afterword",
+        "author": "Fixture Author",
+        "order": "34",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "286-288",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/03 Author’s Closing Note.md",
+      "frontmatter": {
+        "title": "Author’s Closing Note",
+        "author": "Fixture Author",
+        "order": "35",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "289-290",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/04 Back-Cover Summary.md",
+      "frontmatter": {
+        "title": "Back-Cover Summary",
+        "author": "Fixture Author",
+        "order": "36",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "291-291",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/05 Epilogue - The Return to Centre.md",
+      "frontmatter": {
+        "title": "Epilogue - The Return to Centre",
+        "author": "Fixture Author",
+        "order": "37",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "292-293",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/06 Bibliography and References.md",
+      "frontmatter": {
+        "title": "Bibliography and References",
+        "author": "Fixture Author",
+        "order": "38",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "294-295",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/07 About the Author and Lineage.md",
+      "frontmatter": {
+        "title": "About the Author and Lineage",
+        "author": "Fixture Author",
+        "order": "39",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "296-297",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter/08 Back-Cover Artwork.md",
+      "frontmatter": {
+        "title": "Back-Cover Artwork",
+        "author": "Fixture Author",
+        "order": "40",
+        "source_pdf": "Fixture Source.pdf",
+        "source_pdf_pages": "298-298",
+        "document_role": "back_matter",
+        "type": "scene"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/05 Back Matter.md",
+      "frontmatter": {
+        "type": "part"
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/Contents.md",
+      "frontmatter": {
+        "type": null
+      }
+    },
+    {
+      "path": "The-Structure-of-Aikido/Conversion Report.md",
+      "frontmatter": {}
+    },
+    {
+      "path": "The-Structure-of-Aikido/Import Guide.md",
+      "frontmatter": {}
+    },
+    {
+      "path": "The-Structure-of-Aikido.md",
+      "frontmatter": {
+        "type": "book"
+      }
+    }
+  ]
+}

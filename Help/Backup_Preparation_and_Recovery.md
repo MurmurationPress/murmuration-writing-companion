@@ -2,13 +2,13 @@
 
 ## Prepare safely
 
-Project Readiness is read-only. When preparation is available, MWC shows the exact proposed `type`, `parent`, and `manuscript_order_key` changes before writing. A blocked preview cannot be approved. Preparation preserves prose, filenames, folders, and unrelated frontmatter.
+Project Readiness is read-only. Run **Prepare existing manuscript**, choose the existing root note or folder, and review inclusion and natural reading order. Contents, Import Guide, Conversion Report and unclassified notes start excluded (approved untyped exclusions use the shared `scene-draft` opt-out); existing structural authority is retained. Book, Part and Scene types need not be supplied manually. MWC shows the exact proposed `type`, `parent`, and `manuscript_order_key` changes before writing. A blocked preview cannot be approved. Preparation preserves prose, manuscript note paths and unrelated frontmatter. Assets belong in vault-root `Assets/`, outside the manuscript folder. If an import has nested assets, the final preview shows the proposed folder move and each affected Markdown link before approval. Asset bytes stay intact; an existing destination blocks the move.
 
-MWC verifies every write. If part of the operation fails, it rolls completed files back to their original bytes.
+MWC verifies every write. If part of the operation fails, it restores completed notes and the relocated Assets folder.
 
 ## Immediate Undo
 
-After successful preparation, **Undo manuscript preparation** restores the original files exactly, including absent properties, formatting, line endings, and a removed legacy order list. Undo refuses to overwrite a file changed after preparation. Preserve the later work, restore the expected post-preparation state if appropriate, and retry while the in-session Undo remains available.
+After successful preparation, **Undo manuscript preparation** restores the original files exactly, including absent properties, formatting, line endings, a removed legacy order list, and asset links/locations. Undo also refuses changed assets or a conflicting destination. Undo refuses to overwrite a file changed after preparation. Preserve the later work, restore the expected post-preparation state if appropriate, and retry while the in-session Undo remains available.
 
 Immediate Undo is not a substitute for a backup.
 

@@ -1,4 +1,5 @@
 import { App, parseYaml, TFile } from "obsidian";
+import { assertPreparationAssets, movePreparationAssets, previewPreparationAssets, PreparationAssets } from "./ManuscriptPreparationAssets";
 import {
   buildObsidianManuscriptLibrary,
   ObsidianManuscriptBook
@@ -16,12 +17,15 @@ import {
   completeExactManuscriptContentRestoration
 } from "./ManuscriptSequenceProperty";
 import { manuscriptPreparationContentMatchesUndoState } from "./ManuscriptPreparationUndoComparison";
+import { buildSelectedManuscript, manuscriptPreparationCandidates } from "./ManuscriptPreparationSelection";
+import { DETACHED_SCENE_TYPE, isExplicitlyDetachedScene } from "./ManuscriptMetadata";
 
 interface FrontmatterSnapshot {
   readonly values: Readonly<Record<string, unknown>>;
 }
 
 interface ManuscriptPreparationUndoState {
+  readonly path: string;
   readonly file: TFile;
   readonly before: FrontmatterSnapshot;
   after: FrontmatterSnapshot;
@@ -30,6 +34,7 @@ interface ManuscriptPreparationUndoState {
 }
 
 export interface ManuscriptPreparationUndoToken {
+  readonly assets?: PreparationAssets;
   readonly bookPath: string;
   readonly states: readonly ManuscriptPreparationUndoState[];
   readonly message: string;
@@ -37,7 +42,7 @@ export interface ManuscriptPreparationUndoToken {
 
 export class StaleManuscriptPreparationError extends Error {
   constructor() {
-    super("The manuscript metadata changed before preparation could be written. Review the preview again.");
+    super("The manuscript changed before preparation; review again.");
     this.name = "StaleManuscriptPreparationError";
   }
 }
@@ -45,22 +50,22 @@ export class StaleManuscriptPreparationError extends Error {
 export class StaleManuscriptPreparationUndoError extends Error {
   constructor(readonly paths: readonly string[] = []) {
     super(paths.length
-      ? `Undo is not safe because these prepared notes changed, moved or disappeared: ${paths.join(", ")}.`
-      : "The manuscript metadata changed after preparation, so Undo is no longer safe.");
+      ? `Undo is not safe: notes changed, moved or disappeared: ${paths.join(", ")}.`
+      : "Notes changed after preparation; Undo is no longer safe.");
     this.name = "StaleManuscriptPreparationUndoError";
   }
 }
 
 export class ManuscriptPreparationSyncConflictError extends Error {
   constructor(path: string) {
-    super(`Resolve sync or Git conflict markers before preparing the manuscript: ${path}`);
+    super(`Resolve conflict markers before preparation: ${path}`);
     this.name = "ManuscriptPreparationSyncConflictError";
   }
 }
 
 export class ManuscriptPreparationRollbackError extends Error {
   constructor(readonly originalError: unknown, readonly failedPaths: readonly string[]) {
-    super(`Preparation failed and exact rollback could not be verified for: ${failedPaths.join(", ")}. Restore these notes from version control or backup before continuing.`);
+    super(`Rollback could not be verified: ${failedPaths.join(", ")}. Restore from backup before continuing.`);
     this.name = "ManuscriptPreparationRollbackError";
   }
 }
@@ -131,6 +136,11 @@ function frontmatterFor(
     Record<string, unknown> | undefined;
 }
 
+function frontmatterMatch(content: string): RegExpMatchArray | null {
+  if (!/^---[ \t]*\r?\n/.test(content)) return null;
+  return content.match(/^---[ \t]*\r?\n([\s\S]*?)^---[ \t]*(?:\r?\n|$)/m);
+}
+
 export function planObsidianManuscriptPreparation(
   app: App,
   book: ObsidianManuscriptBook
@@ -154,12 +164,32 @@ export function planObsidianManuscriptPreparation(
     }
   }
 
-  return planManuscriptPreparation({
+  const plan = planManuscriptPreparation({
     book: book.record,
     result: book.result,
     frontmatterByPath,
     fileVersionByPath
   });
+  const diagnostics = [...plan.diagnostics, ...(book.preparationDiagnostics ?? [])];
+  const files = [...plan.files];
+  if (book.preparationSelection) {
+    for (const candidate of manuscriptPreparationCandidates(app, book.preparationSelection)) {
+      if (candidate.included || candidate.locked) continue;
+      const fm = captureFrontmatter(frontmatterFor(app, candidate.file) ?? {}).values;
+      if (isExplicitlyDetachedScene(fm)) continue;
+      files.push({ path: candidate.file.path, title: candidate.file.basename, kind: "excluded", beforeFrontmatter: fm,
+        expectedFileVersion: { mtime: candidate.file.stat.mtime, size: candidate.file.stat.size },
+        changes: [{ property: "type", before: fm.type, after: DETACHED_SCENE_TYPE }],
+        mutation: { set: { type: DETACHED_SCENE_TYPE }, remove: [] } });
+    }
+  }
+  return {
+    ...plan, files, selection: book.preparationSelection,
+    inputSnapshots: book.preparationFiles?.map(file => ({ path: file.path, mtime: file.stat.mtime, size: file.stat.size, frontmatter: captureFrontmatter(frontmatterFor(app, file) ?? {}).values })),
+    diagnostics, canApply: files.length > 0 && diagnostics.length === 0,
+    alreadyPrepared: files.length === 0 && diagnostics.length === 0,
+    state: book.preparationDiagnostics?.length ? "ambiguous_hierarchy" : plan.state
+  };
 }
 
 /** Adds content-level blockers that are not represented by the metadata cache. */
@@ -171,29 +201,42 @@ export async function validateManuscriptPreparationPreview(
   const diagnostics = [...plan.diagnostics];
   let malformed = false;
   let conflict = false;
-  for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path)])) {
-    const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : null);
-    if (!file) {
-      diagnostics.push({ path, message: "This recognised manuscript note is no longer available at its previewed path." });
+  for (const path of new Set([book.file.path, ...book.result.entries.map((entry) => entry.path), ...(plan.inputSnapshots?.map(input => input.path) ?? [])])) {
+    const file = book.filesByPath.get(path) ?? (path === book.file.path ? book.file : app.vault.getAbstractFileByPath(path));
+    if (!(file instanceof TFile)) {
+      diagnostics.push({ path, message: "Note moved or missing; reopen preparation." });
       continue;
     }
     const content = await app.vault.read(file);
-    if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve sync or Git conflict markers before preparation." }); }
-    const match = content.match(/^---\s*\r?\n([\s\S]*?)(?:\r?\n---(?:\s*\r?\n|$))/);
+    const cached = app.metadataCache.getFileCache(file);
+    if (!cached) {
+      diagnostics.push({ path, message: "Note not indexed; wait for indexing and reopen preparation." });
+    }
+    if (hasConflictMarkers(content)) { conflict = true; diagnostics.push({ path, message: "Resolve conflict markers before preparation." }); }
+    const match = frontmatterMatch(content);
     if (!match && content.startsWith("---")) {
       malformed = true;
-      diagnostics.push({ path, message: "Frontmatter is not closed correctly; repair it before preparation." });
+      diagnostics.push({ path, message: "Close frontmatter before preparation." });
     } else if (match) {
       try {
-        const parsed = parseYaml(match[1]);
+        const parsed = match[1].trim() ? parseYaml(match[1]) : {};
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not a mapping");
+        if (!snapshotsEqual(captureFrontmatter(parsed), captureFrontmatter(cached?.frontmatter ?? {}))) {
+          diagnostics.push({ path, message: "Frontmatter differs from Obsidian's index; wait and review again." });
+        }
       } catch {
         malformed = true;
-        diagnostics.push({ path, message: "Frontmatter is malformed; repair its YAML before preparation." });
+        diagnostics.push({ path, message: "Repair malformed YAML." });
       }
     }
+    if (!match && !content.startsWith("---") && Object.keys(captureFrontmatter(cached?.frontmatter ?? {}).values).length) {
+      diagnostics.push({ path, message: "Stale index; wait for indexing and review again." });
+    }
   }
-  if (diagnostics.length === plan.diagnostics.length) return plan;
+  let assets: PreparationAssets | undefined;
+  try { assets = await previewPreparationAssets(app, plan); }
+  catch (error) { diagnostics.push({ message: error instanceof Error ? error.message : String(error) }); }
+  if (diagnostics.length === plan.diagnostics.length) return { ...plan, assets, canApply: plan.canApply || !!assets, alreadyPrepared: plan.alreadyPrepared && !assets };
   return {
     ...plan, diagnostics, canApply: false, alreadyPrepared: false,
     state: malformed ? "malformed_or_incomplete_legacy_metadata"
@@ -213,11 +256,9 @@ async function assertNoConflictMarkers(app: App, file: TFile): Promise<void> {
 }
 
 function frontmatterFromMarkdown(content: string): Record<string, unknown> {
-  const match = content.match(
-    /^---\s*\r?\n([\s\S]*?)\r?\n---(?:\s*\r?\n|$)/
-  );
+  const match = frontmatterMatch(content);
   if (!match) return {};
-  const parsed = parseYaml(match[1]);
+  const parsed = match[1].trim() ? parseYaml(match[1]) : {};
   return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
     ? parsed as Record<string, unknown>
     : {};
@@ -234,7 +275,7 @@ async function verifyWrittenSnapshot(
   }
   const actual = captureFrontmatter(frontmatterFromMarkdown(content));
   if (!snapshotsEqual(actual, expected)) {
-    throw new Error(`Could not verify manuscript metadata after writing ${file.path}.`);
+    throw new Error(`Metadata verification failed: ${file.path}.`);
   }
 }
 
@@ -244,22 +285,22 @@ async function rollbackAppliedStates(
 ): Promise<string[]> {
   const failures: string[] = [];
   beginExactManuscriptContentRestoration(app, new Map(
-    states.map((state) => [state.file.path, state.beforeContent])
+    states.map((state) => [state.path, state.beforeContent])
   ));
   for (const state of [...states].reverse()) {
     try {
       const current = await app.vault.read(state.file);
-      if (current !== state.afterContent) throw new Error("The note changed during rollback.");
+      if (current !== state.afterContent) throw new Error("Note changed during rollback.");
       await app.vault.modify(state.file, state.beforeContent);
-      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("Exact rollback verification failed.");
+      if (await app.vault.read(state.file) !== state.beforeContent) throw new Error("Rollback verification failed.");
     } catch {
-      failures.push(state.file.path);
+      failures.push(state.path);
     }
   }
   const failed = new Set(failures);
   completeExactManuscriptContentRestoration(
     app,
-    states.filter((state) => !failed.has(state.file.path)).map((state) => state.file.path)
+    states.filter((state) => !failed.has(state.path)).map((state) => state.path)
   );
   cancelExactManuscriptContentRestoration(app, failures);
   return failures;
@@ -280,7 +321,7 @@ function withoutDerivedReporting(snapshot: FrontmatterSnapshot): FrontmatterSnap
 }
 
 function markdownBody(content: string): string | null {
-  const match = content.match(/^---\s*\r?\n[\s\S]*?\r?\n---(?:\s*\r?\n|$)/);
+  const match = frontmatterMatch(content);
   return match ? content.slice(match[0].length) : null;
 }
 
@@ -292,10 +333,9 @@ function contentMatchesPreparationUndoState(
   const currentBody = markdownBody(content);
   const preparedBody = markdownBody(state.afterContent);
   if (currentBody === null || preparedBody === null || currentBody !== preparedBody) return false;
-  const current = captureFrontmatter(frontmatterFromMarkdown(content));
   return snapshotsEqual(
-    withoutDerivedReporting(current),
-    withoutDerivedReporting(state.after)
+    withoutDerivedReporting({ values: frontmatterFromMarkdown(content) }),
+    withoutDerivedReporting({ values: frontmatterFromMarkdown(state.afterContent) })
   );
 }
 
@@ -308,16 +348,16 @@ export async function applyManuscriptPreparation(
   if (!plan.canApply) {
     throw new Error(
       plan.diagnostics[0]?.message
-      ?? "This manuscript has no preparation changes to apply."
+      ?? "No changes to apply."
     );
   }
 
-  const currentBook = buildObsidianManuscriptLibrary(app).books.find((candidate) => (
+  const currentBook = plan.selection ? buildSelectedManuscript(app, plan.selection) : buildObsidianManuscriptLibrary(app).books.find((candidate) => (
     candidate.file.path === book.file.path
   ));
   if (!currentBook) throw new StaleManuscriptPreparationError();
 
-  const currentPlan = planObsidianManuscriptPreparation(app, currentBook);
+  const currentPlan = await validateManuscriptPreparationPreview(app, currentBook, planObsidianManuscriptPreparation(app, currentBook));
   if (!sameManuscriptPreparationPlan(currentPlan, plan)) {
     throw new StaleManuscriptPreparationError();
   }
@@ -325,16 +365,16 @@ export async function applyManuscriptPreparation(
   const states: ManuscriptPreparationUndoState[] = [];
   const writePlan = async (filePlan: ManuscriptPreparationPlan["files"][number], mutation: ManuscriptPreparationMutation) => {
     const file = currentBook.filesByPath.get(filePlan.path)
-      ?? (filePlan.path === currentBook.file.path ? currentBook.file : null);
-    if (!file) throw new StaleManuscriptPreparationError();
+      ?? (filePlan.path === currentBook.file.path ? currentBook.file : filePlan.kind === "excluded" ? app.vault.getAbstractFileByPath(filePlan.path) : null);
+    if (!(file instanceof TFile)) throw new StaleManuscriptPreparationError();
     await assertNoConflictMarkers(app, file);
     const beforeContent = await app.vault.read(file);
-    const existingState = states.find((state) => state.file.path === file.path);
+    const existingState = states.find((state) => state.path === file.path);
     const version = existingState
       ? { mtime: file.stat.mtime, size: file.stat.size }
       : filePlan.expectedFileVersion ?? { mtime: file.stat.mtime, size: file.stat.size };
     if (file.stat.mtime !== version.mtime || file.stat.size !== version.size) throw new StaleManuscriptPreparationError();
-    const expectedBefore: FrontmatterSnapshot = existingState?.after ?? { values: cloneValue(filePlan.beforeFrontmatter) };
+    const expectedBefore: FrontmatterSnapshot = existingState?.after ?? captureFrontmatter(filePlan.beforeFrontmatter);
     let before: FrontmatterSnapshot | null = null;
     let after: FrontmatterSnapshot | null = null;
     await app.fileManager.processFrontMatter(file, (frontmatter) => {
@@ -343,29 +383,51 @@ export async function applyManuscriptPreparation(
       if (!snapshotsEqual(current, expectedBefore)) throw new StaleManuscriptPreparationError();
       before = current; applyMutation(frontmatter, mutation); after = captureFrontmatter(frontmatter);
     });
-    if (!before || !after) throw new Error(`Could not capture preparation changes for ${filePlan.title}.`);
+    if (!before || !after) throw new Error(`Could not capture changes: ${filePlan.title}.`);
     const afterContent = await app.vault.read(file);
     if (existingState) {
       existingState.after = after;
       existingState.afterContent = afterContent;
     } else {
-      states.push({ file, before, after, beforeContent, afterContent });
+      states.push({ path: file.path, file, before, after, beforeContent, afterContent });
     }
     await verifyWrittenSnapshot(app, file, after);
   };
+  let assetsMoved = false;
   try {
+    if (plan.assets) {
+      assertPreparationAssets(app, plan.assets);
+      for (const link of plan.assets.links) {
+        const file = app.vault.getAbstractFileByPath(link.path);
+        if (!(file instanceof TFile) || await app.vault.read(file) !== link.before) throw new StaleManuscriptPreparationError();
+        const before = captureFrontmatter(frontmatterFromMarkdown(link.before));
+        const state = { path: file.path, file, before, after: before, beforeContent: link.before, afterContent: link.after };
+        states.push(state);
+        try { await app.vault.modify(file, link.after); }
+        catch (error) { if (await app.vault.read(file) === link.before) states.pop(); throw error; }
+        if (await app.vault.read(file) !== link.after) throw new Error(`Asset link verification failed: ${link.path}`);
+      }
+      try { await movePreparationAssets(app, plan.assets); }
+      finally { assetsMoved = !!app.vault.getAbstractFileByPath(plan.assets.to) && !app.vault.getAbstractFileByPath(plan.assets.from); }
+    }
     for (const step of manuscriptPreparationExecutionSteps(plan)) await writePlan(step.file, step.mutation);
     await acceptance?.validate(plan.bookPath);
   } catch (error) {
-    const failedPaths = await rollbackAppliedStates(app, states);
+    const failedPaths: string[] = [];
+    if (assetsMoved && plan.assets) {
+      try { await movePreparationAssets(app, plan.assets, true); }
+      catch { failedPaths.push(plan.assets.to); }
+    }
+    failedPaths.push(...await rollbackAppliedStates(app, states));
     if (failedPaths.length) throw new ManuscriptPreparationRollbackError(error, failedPaths);
     throw error;
   }
 
   return {
     bookPath: plan.bookPath,
+    assets: plan.assets,
     states,
-    message: `Prepared ${plan.bookTitle}: ${states.length} ${states.length === 1 ? "note" : "notes"} updated with distributed order keys.`
+    message: `Prepared ${plan.bookTitle}: ${states.length} ${states.length === 1 ? "note" : "notes"} updated.`
   };
 }
 
@@ -373,49 +435,59 @@ export async function undoManuscriptPreparation(
   app: App,
   token: ManuscriptPreparationUndoToken
 ): Promise<void> {
+  if (token.assets) assertPreparationAssets(app, token.assets, true);
   const restored: ManuscriptPreparationUndoState[] = [];
-  const paths = token.states.map((state) => state.file.path);
+  const paths = token.states.map((state) => state.path);
   const preparedContentByPath = new Map<string, string>();
   const filesByPath = new Map<string, TFile>();
 
   const stalePaths: string[] = [];
   for (const state of token.states) {
-    const currentFile = app.vault.getAbstractFileByPath(state.file.path);
-    if (!(currentFile instanceof TFile)) { stalePaths.push(state.file.path); continue; }
-    filesByPath.set(state.file.path, currentFile);
+    const currentFile = app.vault.getAbstractFileByPath(state.path);
+    if (!(currentFile instanceof TFile) || currentFile !== state.file || state.file.path !== state.path) { stalePaths.push(state.path); continue; }
+    filesByPath.set(state.path, currentFile);
     const content = await app.vault.read(currentFile);
-    preparedContentByPath.set(state.file.path, content);
+    preparedContentByPath.set(state.path, content);
     if (!contentMatchesPreparationUndoState(content, state) || hasConflictMarkers(content)) {
-      stalePaths.push(state.file.path);
+      stalePaths.push(state.path);
     }
   }
   if (stalePaths.length) throw new StaleManuscriptPreparationUndoError(stalePaths);
 
+  let assetsRestored = false;
   beginExactManuscriptContentRestoration(app, new Map(
-    token.states.map((state) => [state.file.path, state.beforeContent])
+    token.states.map((state) => [state.path, state.beforeContent])
   ));
   try {
+    if (token.assets) {
+      try { await movePreparationAssets(app, token.assets, true); }
+      finally { assetsRestored = !!app.vault.getAbstractFileByPath(token.assets.from) && !app.vault.getAbstractFileByPath(token.assets.to); }
+    }
     for (const state of [...token.states].reverse()) {
-      const file = filesByPath.get(state.file.path) ?? state.file;
+      const file = filesByPath.get(state.path) ?? state.file;
       await assertNoConflictMarkers(app, file);
-      const preparedContent = preparedContentByPath.get(state.file.path) ?? state.afterContent;
+      const preparedContent = preparedContentByPath.get(state.path) ?? state.afterContent;
       if (await app.vault.read(file) !== preparedContent) throw new StaleManuscriptPreparationUndoError();
       await app.vault.modify(file, state.beforeContent);
       restored.push(state);
-      if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify exact Undo for ${state.file.path}.`);
+      if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify Undo: ${state.path}.`);
     }
     completeExactManuscriptContentRestoration(app, paths);
   } catch (error) {
     for (const state of [...restored].reverse()) {
       try {
-        const file = filesByPath.get(state.file.path) ?? state.file;
-        if (await app.vault.read(file) !== state.beforeContent) throw new Error("The note changed during Undo rollback.");
-        const preparedContent = preparedContentByPath.get(state.file.path) ?? state.afterContent;
+        const file = filesByPath.get(state.path) ?? state.file;
+        if (await app.vault.read(file) !== state.beforeContent) throw new Error("Note changed during Undo rollback.");
+        const preparedContent = preparedContentByPath.get(state.path) ?? state.afterContent;
         await app.vault.modify(file, preparedContent);
         if (await app.vault.read(file) !== preparedContent) throw new Error("Undo rollback verification failed.");
       } catch {
         // Do not overwrite a later edit while rolling back an unsafe Undo.
       }
+    }
+    if (assetsRestored && token.assets) {
+      try { await movePreparationAssets(app, token.assets); }
+      catch { throw new ManuscriptPreparationRollbackError(error, [token.assets.from]); }
     }
     cancelExactManuscriptContentRestoration(app, paths);
     throw error;

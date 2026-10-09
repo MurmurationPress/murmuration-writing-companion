@@ -12,7 +12,7 @@ for (const [size, expected] of [[BUNDLE_WARNING_THRESHOLD, "ok"], [BUNDLE_WARNIN
     const report = bundleReport(Buffer.alloc(size, "x"));
     equal(report.status, expected); equal(report.rawBytes, size);
     equal(report.remainingHeadroom, BUNDLE_HARD_LIMIT - size);
-    equal(report.warningThreshold, 669696); equal(report.hardLimit, 720896);
+    equal(report.warningThreshold, 686080); equal(report.hardLimit, 737280);
     ok(report.gzipBytes > 0 && report.gzipBytes < report.rawBytes);
     if (expected === "fail") throws(() => enforceBundleBudget(report), /exceeds/);
     else enforceBundleBudget(report);
@@ -58,7 +58,7 @@ test("local and CI report includes raw, gzip, thresholds and remaining headroom"
   try {
     console.log = value => output.push(value); console.warn = value => output.push(value);
     const report = bundleReport(Buffer.alloc(700000)); printBundleReport(report);
-    match(output[0], /700000 raw bytes; \d+ gzip bytes; warning above 669696; hard ceiling 720896; remaining headroom 20896 bytes/);
+    match(output[0], /700000 raw bytes; \d+ gzip bytes; warning above 686080; hard ceiling 737280; remaining headroom 37280 bytes/);
     match(output[1], /less than 50 KiB/);
   } finally { console.log = log; console.warn = warn; }
 });

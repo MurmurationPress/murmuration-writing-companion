@@ -168,6 +168,7 @@ export function projectReadiness(input: ProjectReadinessInput): ProjectReadiness
       ? { state: "unreadable", summary: "Existing editorial information could not be read. Onboarding has not modified it." }
       : { state: "absent", summary: "No editorial information is currently stored. Opening readiness does not create it." };
   const actions: ReadinessAction[] = [];
+  if (overallState === "no_manuscript") actions.push({ id: "prepare_manuscript", label: "Prepare existing manuscript" });
   if (bookCount || overallState === "ready_to_begin") actions.push({ id: "open_manuscript_navigator", label: overallState === "ready_to_begin" ? "Open Manuscript Navigator to create a Book" : "Open Manuscript Navigator" });
   if (entities) {
     actions.push({ id: "open_story_world_navigator", label: "Open Story World Navigator" });

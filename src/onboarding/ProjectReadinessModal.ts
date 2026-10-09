@@ -42,7 +42,7 @@ export class ProjectReadinessModal extends Modal {
     if (!model.manuscripts.length && model.markdownFileCount === 0) {
       this.contentEl.createEl("p", { text: "To begin, open Manuscript Navigator and choose New Book. MWC will show the normal creation form and will not add anything until you confirm it." });
     } else if (!model.manuscripts.length) {
-      this.contentEl.createEl("p", { text: "If these notes are an existing manuscript, first identify or add one note for each Book and give that note the property type: book. Then recheck readiness. MWC can recognise the existing folder sequence and offer Prepare existing manuscript with a complete preview." });
+      this.contentEl.createEl("p", { text: "Choose Prepare existing manuscript and select its existing root note or folder. Review proposed Books, Parts, Scenes, parents and reading order, including which notes to exclude, before approving the exact property changes. No manual frontmatter editing is required." });
       this.contentEl.createEl("p", { text: "Your current folders and prose will not be renamed, moved, or changed automatically." });
       if (model.unresolvedManuscriptNoteCount) this.contentEl.createEl("p", { text: `${model.unresolvedManuscriptNoteCount} manuscript-like note${model.unresolvedManuscriptNoteCount === 1 ? " has" : "s have"} unresolved structural links. The readiness guidance explains how to correct them.` });
     }
@@ -80,6 +80,7 @@ export class ProjectReadinessModal extends Modal {
     switch (action.id) {
       case "prepare_manuscript":
         if (action.bookPath) { this.close(); await this.plugin.manuscriptPreparationCommands.prepareBook(action.bookPath); }
+        else { this.close(); await this.plugin.manuscriptPreparationCommands.prepareExistingManuscript(); }
         return;
       case "view_preparation_diagnostics": await this.plugin.activateManuscriptNavigator(); return;
       case "open_manuscript_navigator": this.close(); await this.plugin.activateManuscriptNavigator(); return;

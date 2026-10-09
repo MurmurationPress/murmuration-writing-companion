@@ -23,13 +23,15 @@ test("a clean vault is ready to use and is not described as broken", () => {
   equal(result.actions.some((action) => action.id === "prepare_manuscript"), false);
 });
 
-test("an existing-note vault explains why folders alone are not a manuscript", () => {
+test("an existing-note vault offers explicit manuscript selection without manual typing", () => {
   const result = projectReadiness(input([], 0, "absent", 8));
   equal(result.overallState, "no_manuscript");
   equal(result.headline, "Existing notes found, but no manuscript is recognised");
   ok(result.summary.includes("8 Markdown notes"));
   ok(result.summary.includes("Folder names alone"));
-  equal(result.actions.some((action) => action.id === "prepare_manuscript"), false);
+  const action = result.actions.find((action) => action.id === "prepare_manuscript");
+  equal(action?.label, "Prepare existing manuscript");
+  equal(action?.bookPath, undefined);
 });
 
 test("the #91 preparation state is retained and safely actionable states open its workflow", () => {

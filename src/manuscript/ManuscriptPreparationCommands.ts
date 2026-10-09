@@ -21,6 +21,8 @@ import {
   forEachInitializedManuscriptView,
   InitializedManuscriptActionView
 } from "./ManuscriptViewActions";
+import { buildSelectedManuscript, initialManuscriptPreparationSelection } from "./ManuscriptPreparationSelection";
+import { chooseManuscriptPreparationRoot, reviewManuscriptPreparationSelection } from "./ManuscriptPreparationSelectionModal";
 
 export interface ManuscriptPreparationCommandHost extends Plugin {
   getCurrentChapter(): TFile | null;
@@ -128,26 +130,24 @@ export function installManuscriptPreparationCommands(
 
   const prepareManuscript = async (view?: InitializedManuscriptActionView, requestedBookPath?: string) => {
     if (operationRunning) return;
-    const book = selectedBook(host, view, requestedBookPath);
-    if (!book) {
-      new Notice("Open a chapter or select the manuscript you want to prepare.");
-      return;
-    }
-
-    const plan = await validateManuscriptPreparationPreview(host.app, book, planObsidianManuscriptPreparation(host.app, book));
-    if (plan.alreadyPrepared) {
-      new Notice(`${book.record.title} already uses distributed manuscript order keys.`);
-      return;
-    }
-    if (!await confirmManuscriptPreparation(host.app, plan)) return;
-
     operationRunning = true;
     installActions();
     try {
+      const selected = view || requestedBookPath ? selectedBook(host, view, requestedBookPath) : null;
+      const selection = selected ? initialManuscriptPreparationSelection(host.app, selected.file) : await chooseManuscriptPreparationRoot(host.app);
+      if (!selection) return;
+      const reviewed = await reviewManuscriptPreparationSelection(host.app, selection);
+      if (!reviewed) return;
+      const book = buildSelectedManuscript(host.app, reviewed);
+      const plan = await validateManuscriptPreparationPreview(host.app, book, planObsidianManuscriptPreparation(host.app, book));
+      if (plan.alreadyPrepared) {
+        new Notice(`${book.record.title} already uses distributed manuscript order keys.`);
+        return;
+      }
+      if (!await confirmManuscriptPreparation(host.app, plan)) return;
       undoToken = await applyManuscriptPreparation(host.app, book, plan);
       new Notice(undoToken.message, 9000);
     } catch (error) {
-      undoToken = null;
       new Notice(
         error instanceof Error ? error.message : "Could not prepare the manuscript.",
         10000
@@ -207,7 +207,7 @@ export function installManuscriptPreparationCommands(
   host.addCommand({
     id: "prepare-existing-manuscript",
     name: "Prepare existing manuscript",
-    callback: () => void prepareManuscript()
+    callback: () => prepareManuscript()
   });
   host.addCommand({
     id: "undo-manuscript-preparation",
@@ -225,10 +225,12 @@ export function installManuscriptPreparationCommands(
   );
   host.app.workspace.onLayoutReady(installActions);
   return {
+    prepareExistingManuscript: () => prepareManuscript(),
     prepareBook: (bookPath) => prepareManuscript(undefined, bookPath)
   };
 }
 
 export interface ManuscriptPreparationCommandActions {
+  prepareExistingManuscript(): Promise<void>;
   prepareBook(bookPath: string): Promise<void>;
 }
