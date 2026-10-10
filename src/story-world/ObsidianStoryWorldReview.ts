@@ -8,9 +8,12 @@ function frontmatter(app: App, file: TFile): Record<string, unknown> {
   return (app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined) ?? {};
 }
 
+export type ReviewResolutionObserver = (reference: unknown, sourcePath: string, resolution: ReturnType<ObsidianStoryWorldIndex["resolveReference"]>) => void;
+
 export function collectObsidianStoryWorldReview(
   app: App,
-  storyWorldIndex: ObsidianStoryWorldIndex
+  storyWorldIndex: ObsidianStoryWorldIndex,
+  observeResolution?: ReviewResolutionObserver
 ): StoryWorldReviewProjection {
   const files = app.vault.getMarkdownFiles().filter((file) => !isObsidianTrashPath(file.path));
   const documents = files.map((file) => ({
@@ -26,17 +29,16 @@ export function collectObsidianStoryWorldReview(
     }))
   }));
   const entities = storyWorldIndex.index.getAll();
-  const resolvePath = (reference: string, sourcePath: string): string | null => {
+  const resolve = (reference: unknown, sourcePath: string) => {
     const resolved = storyWorldIndex.resolveReference(reference, sourcePath);
-    return resolved?.path ?? null;
+    observeResolution?.(reference, sourcePath, resolved);
+    return resolved;
   };
+  const resolvePath = (reference: string, sourcePath: string) => resolve(reference, sourcePath)?.path ?? null;
   const timeline = observeTimelineAssertionContradictions(
     documents.map((document) => ({ path: document.path, name: document.basename, frontmatter: document.frontmatter })),
     entities,
     resolvePath
   );
-  return buildStoryWorldReview(documents, entities, (reference, sourcePath) => {
-    const resolved = storyWorldIndex.resolveReference(reference, sourcePath);
-    return resolved ? { path: resolved.path, indexed: resolved.indexed, excluded: resolved.excluded } : null;
-  }, timeline);
+  return buildStoryWorldReview(documents, entities, resolve, timeline);
 }

@@ -133,3 +133,29 @@ test('authoritative resolution catches late non-entity evidence and disappeared 
   f.world.rebuild(files => {evidenceChanged = f.review.reconcileMetadata(files);});
   equal(evidenceChanged, true); notEqual(f.review.get(), withEvidence);
 });
+
+test('resolved target existence changes invalidate review even when source evidence and entities are unchanged', () => {
+  const f = syntheticVault(100);
+  const source = f.files[0], target = f.files[1];
+  f.metadata.get(source.path)!.frontmatter!.world_sources = ['[[External evidence]]'];
+  const original = f.app.metadataCache.getFirstLinkpathDest.bind(f.app.metadataCache);
+  let destination: typeof target | null = null;
+  f.app.metadataCache.getFirstLinkpathDest = (link, path) => link === 'External evidence' ? destination : original(link, path);
+  f.world.rebuild();
+  const missing = f.review.get();
+  equal(missing.observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+  // Host link resolution can arrive late, or point at a non-entity/attachment.
+  // Neither the source fingerprint nor entity index changes in this transition.
+  destination = target;
+  let changed = false;
+  equal(f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); }), false);
+  equal(changed, true);
+  const resolved = f.review.get();
+  equal(resolved.observations.some(o => o.kind === 'story-world.source.unresolved'), false);
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, false); strictEqual(f.review.get(), resolved);
+  destination = null;
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+});
