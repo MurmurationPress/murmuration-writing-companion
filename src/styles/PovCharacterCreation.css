@@ -1,4 +1,3 @@
-export const POV_CHARACTER_CREATION_STYLES = /* css */ `
 .mwc-pov-character-offer {
   margin-top: 5px;
   padding: 7px 8px;
@@ -65,13 +64,4 @@ export const POV_CHARACTER_CREATION_STYLES = /* css */ `
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
-}
-`;
-
-export function installPovCharacterCreationStyles(): HTMLStyleElement {
-  const style = document.createElement("style");
-  style.dataset.mwcPovCharacterCreation = "true";
-  style.textContent = POV_CHARACTER_CREATION_STYLES;
-  document.head.appendChild(style);
-  return style;
 }

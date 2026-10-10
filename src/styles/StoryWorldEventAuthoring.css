@@ -1,4 +1,3 @@
-export const STORY_WORLD_EVENT_AUTHORING_STYLES = /* css */ `
 .mwc-story-world-event-authoring {
   margin-top: 12px;
 }
@@ -102,13 +101,4 @@ export const STORY_WORLD_EVENT_AUTHORING_STYLES = /* css */ `
 
 .mwc-event-date-custom input[type="date"] {
   max-width: 150px;
-}
-`;
-
-export function installStoryWorldEventAuthoringStyles(): HTMLStyleElement {
-  const style = document.createElement("style");
-  style.dataset.mwcStoryWorldEventAuthoring = "true";
-  style.textContent = STORY_WORLD_EVENT_AUTHORING_STYLES;
-  document.head.appendChild(style);
-  return style;
 }

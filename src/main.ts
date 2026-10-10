@@ -50,7 +50,6 @@ import {
   LocationSuggestion
 } from "./companion/LocationSuggestions";
 import { TransientAnnotationLocator } from "./companion/AnnotationLocator";
-import { installEditorialEnhancementStyles } from "./ui/EditorialEnhancementStyles";
 import {
   MANUSCRIPT_NAVIGATOR_VIEW_TYPE,
   ManuscriptNavigatorView
@@ -162,8 +161,6 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.app.workspace.iterateAllLeaves(leaf => this.interactionRefresh.observe(leaf.view.containerEl.ownerDocument));
     this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, win) => this.interactionRefresh.observe(win.document)));
     this.register(() => this.interactionRefresh.dispose());
-    const enhancementStyles = installEditorialEnhancementStyles();
-    this.register(() => enhancementStyles.remove());
     this.addSettingTab(new ContinuitySettingsTab(this.app, this));
     installAboutCommand(this, () => new AboutMurmurationPressModal(this).open());
     installHelpCommand(this, () => this.openHelp());
@@ -666,7 +663,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   getManuscriptChronology(chapter: TFile): ObsidianManuscriptChronologyResult {
-    const result = buildObsidianManuscriptChronology(this.app, chapter);
+    const result = buildObsidianManuscriptChronology(this.app, chapter, this.manuscriptProjection.get());
     this.manuscriptChronologyDependencies = new Set(result.dependencies);
     return result;
   }

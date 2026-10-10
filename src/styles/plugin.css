@@ -1,0 +1,11 @@
+/* Preserve the former base stylesheet, then onload installation order. */
+@import "./base.css";
+@import "./EditorialEnhancement.css";
+@import "./PovCharacterCreation.css";
+@import "./StoryWorldEventAuthoring.css";
+@import "./StoryWorldBuilder.css";
+@import "./StoryWorldRelationAuthoring.css";
+@import "./StoryWorldTimeline.css";
+@import "./ContinuityReview.css";
+@import "./StoryWorldReview.css";
+@import "./StoryWorldGraph.css";

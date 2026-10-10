@@ -234,6 +234,7 @@ function sameEntity(
 
 export class StoryWorldIndex {
   private readonly entitiesByPath = new Map<string, StoryWorldEntityRecord>();
+  private sortedEntities: StoryWorldEntityRecord[] | null = null;
   private readonly pathsByName = new Map<string, Set<string>>();
   private readonly pathsByType = new Map<string, Set<string>>();
 
@@ -276,6 +277,7 @@ export class StoryWorldIndex {
     if (existing) this.removeFromSecondaryIndexes(existing);
 
     this.entitiesByPath.set(path, next);
+    this.sortedEntities = null;
     this.addToSecondaryIndexes(next);
     return true;
   }
@@ -285,6 +287,7 @@ export class StoryWorldIndex {
     if (!existing) return false;
 
     this.entitiesByPath.delete(path);
+    this.sortedEntities = null;
     this.removeFromSecondaryIndexes(existing);
     return true;
   }
@@ -299,6 +302,7 @@ export class StoryWorldIndex {
 
   clear(): void {
     this.entitiesByPath.clear();
+    this.sortedEntities = null;
     this.pathsByName.clear();
     this.pathsByType.clear();
   }
@@ -323,8 +327,10 @@ export class StoryWorldIndex {
   }
 
   getAll(): StoryWorldEntityRecord[] {
-    return [...this.entitiesByPath.values()]
+    this.sortedEntities ??= [...this.entitiesByPath.values()]
       .sort((left, right) => left.path.localeCompare(right.path));
+    // Consumers own their array; sorting/splicing it cannot corrupt the index.
+    return this.sortedEntities.slice();
   }
 
   private addToSecondaryIndexes(entity: StoryWorldEntityRecord) {

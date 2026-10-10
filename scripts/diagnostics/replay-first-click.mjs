@@ -85,8 +85,8 @@ try {
       const sample=await evaluate(`({numbering:__numbering.stop(),interaction:__interaction.stop(),pending:app.plugins.plugins['murmuration-writing-companion'].manuscriptIntegrityCoordinator.timer!==null})`);
       assert.equal(sample.pending,false,'Capture ended before settlement');
       assert.equal(sample.numbering.counts['host-changed'],1,'Expected one actual prose save');
-      assert.equal(sample.numbering.counts['regeneration-pass:start'],1);
-      assert.equal(sample.numbering.counts['reporting-write-attempt:start']??0,0);
+      assert.equal(sample.numbering.counts['renumber-pass:start']??0,0);
+      assert.equal(sample.numbering.counts['renumber-request:start']??0,0);
       assert.equal(sample.interaction.dropped,0);assert.equal(sample.numbering.dropped,0);
       prose.push(sample);
     }

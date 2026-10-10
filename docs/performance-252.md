@@ -1,5 +1,7 @@
 # Performance maintenance measurements (#252)
 
+> Historical #253 measurements. See [the post-#263 follow-up](performance-252-follow-up.md) for the current baseline, reconciled ceiling and native stylesheet packaging.
+
 This is preventative maintenance. The author reported usable ordinary editing after #251, not a confirmed slowdown. Measurements below were taken before selecting changes; the before source remains `b5664383bba08e52cf307cfd16ef049413efad60` (merged #251). Version remains 0.18.0. No private vault was read by the benchmarks.
 
 ## Reproduce

@@ -29,7 +29,7 @@ test("renders only message bodies as Markdown with source-note context", () => {
 });
 
 test("constrains images responsively inside the semantic message body", () => {
-  const css = readFileSync("styles.css", "utf8");
+  const css = readFileSync("src/styles/base.css", "utf8");
   match(css, /\.mwc-manuscript-chat-body img[\s\S]*max-width:\s*100%/);
   match(css, /\.mwc-manuscript-chat-body img[\s\S]*height:\s*auto/);
 });

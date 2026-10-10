@@ -3,7 +3,7 @@
   "version": "0.18.0",
   "private": true,
   "scripts": {
-    "dev": "esbuild src/entry.ts --bundle --external:obsidian --external:node:* --format=cjs --target=es2018 --outfile=main.js --sourcemap --watch",
+    "dev": "node scripts/dev-plugin.mjs",
     "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs && node --test scripts/tests/build-tools.test.mjs scripts/tests/interaction-capture.test.mjs",
     "benchmark:performance": "node scripts/benchmark-performance.mjs",
     "test:build": "node --test scripts/tests/build-tools.test.mjs",

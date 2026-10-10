@@ -150,3 +150,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Native plugin stylesheet built from src/styles/plugin.css
+/styles.css

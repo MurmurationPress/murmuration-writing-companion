@@ -2,10 +2,6 @@ import { Editor, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "./main";
 import { installManuscriptPreparationCommands, ManuscriptPreparationCommandActions } from "./manuscript/ManuscriptPreparationCommands";
 import { installManuscriptReconciliationCommands } from "./manuscript/ManuscriptReconciliationCommands";
-import { installPovCharacterCreationStyles } from "./ui/PovCharacterCreationStyles";
-import { installStoryWorldEventAuthoringStyles } from "./ui/StoryWorldEventAuthoringStyles";
-import { installStoryWorldBuilderStyles } from "./ui/StoryWorldBuilderStyles";
-import { installStoryWorldRelationAuthoringStyles } from "./ui/StoryWorldRelationAuthoringStyles";
 import { installManuscriptChatRendering } from "./chat/ManuscriptChatPlugin";
 import { renderStoryWorldEventAuthoring } from "./ui/StoryWorldEventAuthoring";
 import { renderStoryWorldRelationAuthoring } from "./ui/StoryWorldRelationAuthoring";
@@ -21,18 +17,14 @@ import { explicitManuscriptKind, hasSceneMetadataSignal, isExplicitlyDetachedSce
 import { reconcileStoryWorldInspectorPath } from "./story-world/StoryWorldInspectorContext";
 import { STORY_WORLD_TIMELINE_VIEW_TYPE, StoryWorldTimelineView } from "./story-world/StoryWorldTimelineView";
 import { StoryWorldTimelineActivation } from "./story-world/StoryWorldTimelineActivation";
-import { installStoryWorldTimelineStyles } from "./ui/StoryWorldTimelineStyles";
 import { beginEventTimeEditing } from "./ui/EventTimeWorkspace";
 import { CONTINUITY_REVIEW_VIEW_TYPE, ContinuityReviewView } from "./companion/ContinuityReviewView";
 import { ContinuityReviewActivation } from "./companion/ContinuityReviewActivation";
-import { installContinuityReviewStyles } from "./ui/ContinuityReviewStyles";
 import { buildObsidianManuscriptLibrary } from "./manuscript/ObsidianManuscript";
 import type { ManuscriptBookSelection } from "./manuscript/ManuscriptBookSelection";
 import { classifyObsidianRename } from "./ObsidianTrash";
 import { STORY_WORLD_REVIEW_VIEW_TYPE, StoryWorldReviewView } from "./story-world/StoryWorldReviewView";
-import { installStoryWorldReviewStyles } from "./ui/StoryWorldReviewStyles";
 import { STORY_WORLD_GRAPH_VIEW_TYPE, StoryWorldGraphView } from "./story-world/StoryWorldGraphView";
-import { installStoryWorldGraphStyles } from "./ui/StoryWorldGraphStyles";
 import { EntityIndexReportModal } from "./reports/EntityIndexReportModal";
 import { ProjectReadinessModal } from "./onboarding/ProjectReadinessModal";
 import { collectObsidianProjectReadiness } from "./onboarding/ObsidianProjectReadiness";
@@ -104,22 +96,6 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       firstRunReadinessKey(this.manifest.id, this.app.vault.getName())
     );
 
-    const povCharacterStyles = installPovCharacterCreationStyles();
-    this.register(() => povCharacterStyles.remove());
-    const eventAuthoringStyles = installStoryWorldEventAuthoringStyles();
-    this.register(() => eventAuthoringStyles.remove());
-    const storyWorldBuilderStyles = installStoryWorldBuilderStyles();
-    this.register(() => storyWorldBuilderStyles.remove());
-    const relationAuthoringStyles = installStoryWorldRelationAuthoringStyles();
-    this.register(() => relationAuthoringStyles.remove());
-    const timelineStyles = installStoryWorldTimelineStyles();
-    this.register(() => timelineStyles.remove());
-    const continuityReviewStyles = installContinuityReviewStyles();
-    this.register(() => continuityReviewStyles.remove());
-    const storyWorldReviewStyles = installStoryWorldReviewStyles();
-    this.register(() => storyWorldReviewStyles.remove());
-    const storyWorldGraphStyles = installStoryWorldGraphStyles();
-    this.register(() => storyWorldGraphStyles.remove());
 
     this.registerEvent(this.app.workspace.on("editor-change", (editor, info) => this.handleStoryWorldAuthoringEditorChange(editor, info.file)));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {

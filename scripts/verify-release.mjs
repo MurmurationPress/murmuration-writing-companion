@@ -40,9 +40,13 @@ for (const asset of ["main.js", "manifest.json", "styles.css"]) {
   assert(details.isFile() && details.size > 0, `${asset} is missing or empty`);
 }
 
+const { stylesheetBytes, shippedAssetsReport } = await import("./build-styles.mjs");
+const css = await readFile(path.join(projectRoot, "styles.css"));
+assert(css.equals(Buffer.from(await stylesheetBytes(projectRoot))), "styles.css is stale; run npm run build");
 const main = await readFile(path.join(projectRoot, "main.js"), "utf8");
 const report = bundleReport(Buffer.from(main));
 printBundleReport(report);
+console.log(JSON.stringify(shippedAssetsReport(Buffer.from(main), css, await readFile(path.join(projectRoot, "manifest.json")))));
 enforceBundleBudget(report);
 assert(!main.includes("//# sourceMappingURL="), "release main.js must not reference a sourcemap");
 for (const unwanted of ["main.js.map", "meta.json", "metafile.json"]) {

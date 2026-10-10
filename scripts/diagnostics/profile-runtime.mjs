@@ -1,0 +1,46 @@
+// Real Obsidian in an explicitly marked synthetic vault. No production imports.
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const vault=path.resolve(process.argv[2]??'');
+assert.equal(await readFile(path.join(vault,'.mwc-performance-fixture'),'utf8'),'MWC disposable performance fixture\n');
+const pages=await(await fetch('http://127.0.0.1:19347/json/list')).json();
+const page=pages.find(p=>p.type==='page'&&p.url.startsWith('app://obsidian.md'));
+const ws=new WebSocket(page.webSocketDebuggerUrl);await new Promise(r=>ws.addEventListener('open',r,{once:true}));
+let seq=0;const pending=new Map();ws.addEventListener('message',e=>{const m=JSON.parse(e.data);if(pending.has(m.id)){pending.get(m.id)(m);pending.delete(m.id);}});
+async function evaluate(source){const id=++seq;const p=new Promise(r=>pending.set(id,r));ws.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:`(async()=>{if(app.vault.adapter.basePath!==${JSON.stringify(vault)})throw new Error('Wrong vault');${source}})()`,awaitPromise:true,returnByValue:true}}));const m=await p;if(m.error||m.result.exceptionDetails)throw new Error(JSON.stringify(m));return m.result.result.value;}
+try {
+await evaluate(`const trust=[...document.querySelectorAll('button')].find(e=>e.textContent.includes('Trust author'));if(trust)trust.click();await new Promise(r=>setTimeout(r,2000));return true;`);
+await evaluate(`if(!app.plugins.plugins['murmuration-writing-companion'])await app.plugins.enablePlugin('murmuration-writing-companion');globalThis.p252=app.plugins.plugins['murmuration-writing-companion'];globalThis.pause252=()=>new Promise(r=>setTimeout(r,450));await pause252();return true;`);
+await evaluate(`for(let i=0;i<600&&(app.metadataCache.inProgressTaskCount>0||p252.manuscriptIntegrityCoordinator.pendingPaths.size>0);i++)await pause252();if(app.metadataCache.inProgressTaskCount>0)throw new Error("Initial fixture metadata still indexing");await p252.manuscriptIntegrityCoordinator.whenSettled();return true;`);
+const environment=await evaluate(`if(document.querySelectorAll('.status-bar-item[title^="Scene numbers out of date"]').length>1)throw new Error("Duplicate plugin startup; restart fixture before profiling");return {userAgent:navigator.userAgent,files:app.vault.getMarkdownFiles().length,plugins:Object.keys(app.plugins.plugins)};`);
+assert.deepEqual(environment.plugins,['murmuration-writing-companion']);
+await evaluate(`globalThis.capture252=async(action)=>{const stats={},restore=[];const wrap=(obj,key,label)=>{const f=obj?.[key];if(typeof f!=='function')return;const own=Object.hasOwn(obj,key);obj[key]=function(...args){const s=performance.now();const x=stats[label]??(stats[label]={calls:0,ms:0});x.calls++;try{return f.apply(this,args)}finally{x.ms+=performance.now()-s}};restore.push(()=>{if(own)obj[key]=f;else delete obj[key]});};
+wrap(app.vault,'getMarkdownFiles','markdownScans');wrap(app.metadataCache,'getFileCache','cacheReads');wrap(app.fileManager,'processFrontMatter','frontmatterWrites');
+wrap(Element.prototype,'querySelectorAll','elementQueries');wrap(Document.prototype,'querySelectorAll','documentQueries');
+const p=p252;for(const [obj,key,label] of [[p.manuscriptProjection,'rebuild','libraryRebuild'],[p.storyWorldIndex,'rebuild','worldRebuild'],[p.storyWorldIndex.index,'getAll','entityLists'],[p.manuscriptNumbering.service,'isCurrent','numberingFreshness'],[p.manuscriptNumbering.service,'renumber','renumber'],[p,'refreshView','companionRequests'],[p,'renderCompanion','companionRender'],[p,'refreshStoryWorldInspector','inspectorRequests']])wrap(obj,key,label);
+app.workspace.iterateAllLeaves(l=>{if(l.view?.plugin===p||l.view?.getViewType?.().includes('murmuration'))wrap(l.view,'render',l.view.getViewType()+':render');});
+for(const [owner,event] of [[app.metadataCache,'changed'],[app.metadataCache,'resolved'],[app.vault,'modify']]){const ref=owner.on(event,()=>{const key='host-'+event;const x=stats[key]??(stats[key]={calls:0,ms:0});x.calls++;});restore.push(()=>owner.offref(ref));}
+const start=performance.now();try{await action();let last=-1,settled=false;for(let attempt=0;attempt<100;attempt++){await pause252();await p252.manuscriptIntegrityCoordinator.whenSettled();const count=Object.entries(stats).filter(([k])=>!["elementQueries","documentQueries","cacheReads"].includes(k)).reduce((n,[,x])=>n+x.calls,0);const busy=['navigatorRefreshTimer','continuityReviewRefreshTimer','manuscriptChronologyRefreshTimer','storyWorldMetadataRefreshTimer'].some(k=>p252[k]!=null)||p252.interactionRefresh.pending.size>0;if(count===last&&!busy){settled=true;break;}last=count;}if(!settled)throw new Error('Fixture did not settle');return {stats,settledMs:performance.now()-start};}finally{restore.reverse().forEach(r=>r());}};return true;`);
+const results=[];
+await evaluate(`const leaves=[];app.workspace.iterateAllLeaves(l=>{if(l.view?.getViewType?.().includes('murmuration'))leaves.push(l);});leaves.forEach(l=>l.detach());await app.workspace.getLeaf(false).openFile(app.vault.getAbstractFileByPath('B0S000.md'));await pause252();return true;`);
+// An actual warm plugin reload. Disk/cache state is warm; this is not cold application launch.
+results.push({stage:'plugin-reload-warm',samples:[await evaluate(`return capture252(async()=>{await app.plugins.disablePlugin('murmuration-writing-companion');await app.plugins.enablePlugin('murmuration-writing-companion');p252=app.plugins.plugins['murmuration-writing-companion'];});`)]});
+if(!process.argv.includes('--startup-only'))await evaluate(`const md=app.workspace.getLeavesOfType('markdown')[0]??app.workspace.getLeaf('tab');app.workspace.setActiveLeaf(md,{focus:true});await md.openFile(app.vault.getAbstractFileByPath('B0S001.md'));await md.openFile(app.vault.getAbstractFileByPath('B0S000.md'));await p252.activateView();await p252.activateManuscriptNavigator();await p252.activateStoryWorldNavigator();await p252.activateStoryWorldTimeline();await p252.activateContinuityReviewForBook('Book0.md','B0S000.md');await p252.activateStoryWorldGraph('Entity00000.md');app.workspace.setActiveLeaf(md,{focus:true});await md.openFile(app.vault.getAbstractFileByPath('B0S001.md'));await pause252();await md.openFile(app.vault.getAbstractFileByPath('B0S000.md'));await pause252();if(p252.getCurrentChapter()?.path!=='B0S000.md')throw new Error('Source scene context not established');return true;`);
+const stages=process.argv.includes('--startup-only')?[]:[
+ ['settled-prose',`const f=app.vault.getAbstractFileByPath('B0S000.md');await app.vault.modify(f,(await app.vault.read(f))+'Synthetic edit.\\n');`],
+ ['scene-metadata',`await app.fileManager.processFrontMatter(app.vault.getAbstractFileByPath('B0S000.md'),fm=>fm.change_summary='Synthetic '+Date.now());`],
+ ['external-entity',`await app.fileManager.processFrontMatter(app.vault.getAbstractFileByPath('Entity00000.md'),fm=>fm.world_summary='Synthetic '+Date.now());`],
+ ['companion-navigator',`p252.refreshView();p252.refreshManuscriptNavigator();`],
+ ['story-world',`p252.refreshStoryWorldNavigator();`],
+ ['timeline',`p252.refreshStoryWorldTimeline();`],
+ ['continuity',`p252.refreshContinuityReview();`],
+ ['graph',`p252.refreshStoryWorldGraph();`],
+ ['entity-inspector',`const leaf=app.workspace.getLeavesOfType('markdown')[0];await leaf.openFile(app.vault.getAbstractFileByPath('Entity00000.md'));app.workspace.setActiveLeaf(leaf,{focus:true});p252.refreshView();`],
+ ['numbering-freshness-20',`const b=p252.manuscriptProjection.get().books.find(b=>b.file.path==='Book0.md');for(let i=0;i<20;i++)p252.manuscriptNumbering.service.isCurrent(b);`],
+ ['explicit-renumber',`const leaf=app.workspace.getLeavesOfType('markdown')[0];await leaf.openFile(app.vault.getAbstractFileByPath('B0S000.md'));app.workspace.setActiveLeaf(leaf,{focus:true});await p252.manuscriptNumbering.run();`]
+];
+for(const [stage,action] of stages){console.error(stage);if(stage==='explicit-renumber')await evaluate(`const leaves=[];app.workspace.iterateAllLeaves(l=>{if(l.view?.getViewType?.().includes('murmuration'))leaves.push(l);});leaves.forEach(l=>l.detach());await pause252();return true;`);const samples=[];for(let i=0;i<6;i++){const s=await evaluate(`return capture252(async()=>{${action}});`);if(stage==='settled-prose')assert.equal(s.stats.frontmatterWrites?.calls??0,0);if(stage==='explicit-renumber'&&i>0)assert.equal(s.stats.frontmatterWrites?.calls??0,0);if(i>0||stage==='explicit-renumber')samples.push(s);}results.push({stage,samples});}
+console.log(JSON.stringify({environment,bundleSha256:createHash('sha256').update(await readFile(path.join(vault,'.obsidian/plugins/murmuration-writing-companion/main.js'))).digest('hex'),note:'Warm plugin reload (one sample); one warmup + five measured samples per stage, except renumber includes initial refresh and runs with tool panes closed (editor/status remain). Real host vault.modify simulates a saved prose edit, not a keystroke or input-to-paint test. Method timings are synchronous and nested; do not sum. Settlement requires two quiet 450ms windows and no pending MWC refreshes; these waits are excluded from synchronous method timings. No private content.',results},null,2));
+}finally{ws.close();}

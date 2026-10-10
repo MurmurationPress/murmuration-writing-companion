@@ -1,4 +1,6 @@
 import { build, version } from "esbuild";
+import { readFile } from "node:fs/promises";
+import { stylesheetBytes, shippedAssetsReport } from "./build-styles.mjs";
 import path from "node:path";
 import { productionBuildOptions } from "./production-build.mjs";
 import { bundleReport } from "./bundle-policy.mjs";
@@ -9,6 +11,7 @@ const result = await build({ ...productionBuildOptions(), absWorkingDir: path.re
 const output = Object.values(result.metafile.outputs)[0];
 console.log(JSON.stringify({ node: process.version, esbuild: version,
   ...bundleReport(result.outputFiles[0].contents),
+  shipped: shippedAssetsReport(result.outputFiles[0].contents, await stylesheetBytes(process.argv[2] ?? "."), await readFile(path.resolve(process.argv[2] ?? ".", "manifest.json"))),
   contributors: Object.entries(output.inputs).map(([path, value]) => ({ path, bytes: value.bytesInOutput }))
     .sort((a, b) => b.bytes - a.bytes || a.path.localeCompare(b.path)),
   thirdPartyInputs: Object.keys(result.metafile.inputs).filter(path => path.includes("node_modules")),
