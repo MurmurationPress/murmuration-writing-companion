@@ -1,3 +1,4 @@
+import { ManuscriptNumberingCommands } from "./manuscript/ManuscriptNumberingCommands";
 import { InteractionRefresh } from "./ui/InteractionRefresh";
 import {
   App,
@@ -118,6 +119,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   storeService!: EditorialStoreService;
   storyWorldIndex!: ObsidianStoryWorldIndex;
   manuscriptProjection!: ManuscriptProjectionService;
+  manuscriptNumbering?: ManuscriptNumberingCommands;
   storyWorldReviewProjection!: StoryWorldReviewProjectionService;
   sidebarSectionPreferences!: SidebarSectionPreferences;
   storyWorldCategoryPreferences!: StoryWorldCategoryPreferences;
@@ -230,6 +232,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       {
         activePath: () => this.getActiveChapter()?.path ?? null,
         onSettled: ({ library, affectedPaths, affectedBookPaths, revealPath, clearReveal, missingSelectedBook }) => {
+          this.manuscriptNumbering?.refresh();
           void this.settleEditorialCreates(library, affectedPaths);
           if (this.currentChapter && !this.app.vault.getAbstractFileByPath(this.currentChapter.path)) {
             this.currentChapter = this.getActiveChapter();
@@ -251,6 +254,16 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
       },
       this.manuscriptProjection
     );
+
+    this.manuscriptNumbering = new ManuscriptNumberingCommands(
+      this, () => this.manuscriptProjection.get(),
+      (signal) => this.manuscriptIntegrityCoordinator.whenSettled(signal),
+      () => this.app.workspace.activeLeaf?.view.getViewType() === MANUSCRIPT_NAVIGATOR_VIEW_TYPE
+        ? this.manuscriptBookSelection.get().contextPath ?? this.manuscriptBookSelection.get().bookPath
+        : this.app.workspace.getActiveFile()?.path ?? null
+    );
+
+    this.register(this.manuscriptBookSelection.subscribe(() => this.manuscriptNumbering?.refresh()));
 
     this.app.workspace.onLayoutReady(() => {
       this.manuscriptIntegrityCoordinator.initialise();

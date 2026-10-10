@@ -22,6 +22,8 @@ export class Element {
   setText(text: string) { this.text = text; }
   empty() { this.children = []; }
   focus() {}
+  setAttribute(key: string, value: string) { this.attr[key] = value; }
+  remove() {}
   all(): Element[] { return [this, ...this.children.flatMap(child => child.all())]; }
   textContent(): string { return this.all().map(el => el.text).join("\n"); }
   button(text: string): Element { const button = this.all().find(el => el.tag === "button" && el.text === text); if (!button) throw new Error(`Missing button: ${text}`); return button; }
@@ -137,8 +139,8 @@ export function preparationHarness(typed = true, rootPath = "/") {
     onChooseSuggestion(_file: File | Folder) {}
     selectSuggestion(file: File | Folder, _event: unknown) { this.close(); this.onChooseSuggestion(file); }
   }
-  const obsidian = { TFile: File, TFolder: Folder, Modal, SuggestModal, Notice: class { constructor(text: string) { notices.push(text); } }, parseYaml };
-  const code = buildSync({ stdin: { contents: `export * from "./src/manuscript/ManuscriptPreparationCommands"; export * from "./src/manuscript/ManuscriptPreparationSelection"; export * from "./src/manuscript/ObsidianManuscriptPreparation"; export * from "./src/manuscript/ObsidianManuscript";`, resolveDir: process.cwd(), loader: "ts" }, bundle: true, platform: "node", format: "cjs", external: ["obsidian"], write: false }).outputFiles[0].text;
+  const obsidian = { TFile: File, TFolder: Folder, Modal, SuggestModal, Notice: class { constructor(text: string) { notices.push(text); } hide() {} }, parseYaml };
+  const code = buildSync({ stdin: { contents: `export * from "./src/manuscript/ManuscriptIntegrityCoordinator"; export * from "./src/manuscript/ManuscriptBookSelection"; export * from "./src/manuscript/ManuscriptNumberingCommands"; export * from "./src/manuscript/ManuscriptSequenceProperty"; export * from "./src/manuscript/ManuscriptPreparationCommands"; export * from "./src/manuscript/ManuscriptPreparationSelection"; export * from "./src/manuscript/ObsidianManuscriptPreparation"; export * from "./src/manuscript/ObsidianManuscript";`, resolveDir: process.cwd(), loader: "ts" }, bundle: true, platform: "node", format: "cjs", external: ["obsidian"], write: false }).outputFiles[0].text;
   const module = { exports: {} }; const require = createRequire(`${process.cwd()}/package.json`);
   new Function("require", "module", "exports", code)((name: string) => name === "obsidian" ? obsidian : require(name), module, module.exports);
   // Dynamic bundle boundary deliberately executes the production modules with
@@ -152,5 +154,5 @@ export function preparationHarness(typed = true, rootPath = "/") {
   const latest = () => modals[modals.length - 1];
   const choose = async (path = fixture.root) => { latest().selectSuggestion!(loaded.get(path)!, {}); await tick(); };
   const click = async (text: string) => { const button = latest().contentEl.button(text); if (button.disabled) throw new Error(`Disabled: ${text}`); button.onclick!(); await tick(); };
-  return { api, app, fixture, loaded, contents, cache, modals, notices, add, addAsset, folder, invoke, choose, click, tick, latest, writes: () => writes, failAt: (number: number) => { failWrite = number; } };
+  return { api, host, commands, app, fixture, loaded, contents, cache, modals, notices, add, addAsset, folder, invoke, choose, click, tick, latest, writes: () => writes, failAt: (number: number) => { failWrite = number; } };
 }

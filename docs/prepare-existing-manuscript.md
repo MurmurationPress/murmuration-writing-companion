@@ -27,3 +27,5 @@ For Bases or Dataview, follow `parent` from Scene to Part and Book. Sort Book ch
 **Open project readiness** now consumes this analyser for every Book. Its Book-specific Prepare action opens this same inclusion review and exact preview; it cannot bypass confirmation or execute preparation itself. Completion and Undo are visible after reopening or rechecking readiness. See [Project readiness and first-run guidance](project-readiness.md).
 
 If indexing is unfinished or indexed properties differ from the note on disk, preparation blocks with the affected path and asks you to wait and reopen the review. It does not assume that reloading will repair a hierarchy or metadata conflict.
+
+Preparation does not populate or refresh scene reporting numbers. After preparing, use **Renumber book scenes** explicitly if you need them for Bases or another report. That reporting refresh preserves preparation Undo, including original bytes of structural notes that preparation itself did not need to change. Undo-restored content is protected from later numbering writes until an author edit changes it.

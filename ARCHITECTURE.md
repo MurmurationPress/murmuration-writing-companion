@@ -204,6 +204,20 @@ store remains authoritative. Manual changes to the property do not create,
 resolve, or otherwise modify annotations; the plugin reconciles the projection
 from stored annotation state.
 
+Scene reporting has a separate, explicitly invoked lifecycle. `ManuscriptNumberingCommands`
+owns the **Renumber book scenes** command, Book picker and active-Book status item.
+`ManuscriptSequencePropertyService` reads only the selected Book from the settled
+manuscript projection, serialises explicit runs, checks exact-content protection at
+mutation boundaries and verifies the reporting snapshot before success. Neither the
+integrity coordinator nor preparation calls it. `parent` and `manuscript_order_key`
+remain structural authority; reporting consumers receive manual snapshots.
+
+The Book's versioned `mwc_scene_numbering_snapshot` and Part/Scene
+`mwc_scene_numbering_token` properties are disposable reporting state, written only
+by this command. Stable tokens make restart membership checks independent of note
+names. The retained `manuscript_sequence` is book-local; no series projection remains.
+See [reporting contract](docs/manuscript-reporting-sequence.md).
+
 ## Annotation lifecycle
 
 Open and resolved annotations remain in the same editorial store. The Companion

@@ -12,7 +12,6 @@ import {
   validateManuscriptPreparationPreview
 } from "./ObsidianManuscriptPreparation";
 import { confirmManuscriptPreparation } from "./ManuscriptPreparationModal";
-import { ManuscriptSequenceCancelledError, ManuscriptSequencePropertyService } from "./ManuscriptSequenceProperty";
 import {
   manuscriptPreparationActionsNeedInstallation,
   manuscriptPreparationUndoNoticeVisible
@@ -67,9 +66,6 @@ export function installManuscriptPreparationCommands(
 ): ManuscriptPreparationCommandActions {
   let undoToken: ManuscriptPreparationUndoToken | null = null;
   let operationRunning = false;
-  let disposed = false;
-  const reportingSequence = new ManuscriptSequencePropertyService(host.app);
-  host.register(() => { disposed = true; reportingSequence.dispose(); });
   const actionsByView = new WeakMap<InitializedManuscriptActionView, PreparationActions>();
 
   const installUndoStatus = (view: InitializedManuscriptActionView) => {
@@ -185,25 +181,6 @@ export function installManuscriptPreparationCommands(
     }
   };
 
-  const rebuildReportingSequence = async () => {
-    if (operationRunning || disposed) return;
-    operationRunning = true;
-    installActions();
-    try {
-      const library = buildObsidianManuscriptLibrary(host.app);
-      await reportingSequence.reconcile(library);
-      if (disposed) return;
-      new Notice("Manuscript reporting sequence rebuilt.");
-    } catch (error) {
-      if (error instanceof ManuscriptSequenceCancelledError) return;
-      console.error("Writing Companion could not rebuild manuscript reporting sequence", error);
-      new Notice("Could not rebuild the manuscript reporting sequence.", 10000);
-    } finally {
-      operationRunning = false;
-      if (!disposed) refresh();
-    }
-  };
-
   host.addCommand({
     id: "prepare-existing-manuscript",
     name: "Prepare existing manuscript",
@@ -213,11 +190,6 @@ export function installManuscriptPreparationCommands(
     id: "undo-manuscript-preparation",
     name: "Undo manuscript preparation",
     callback: () => void undoPreparation()
-  });
-  host.addCommand({
-    id: "rebuild-manuscript-reporting-sequence",
-    name: "Rebuild manuscript reporting sequence",
-    callback: () => void rebuildReportingSequence()
   });
 
   host.registerEvent(

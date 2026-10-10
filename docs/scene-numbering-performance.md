@@ -1,5 +1,7 @@
 # Scene numbering performance investigation
 
+> Historical measurements of the former automatic writer. The current [manual Book reporting contract](manuscript-reporting-sequence.md) supersedes that lifecycle and series numbering.
+
 Numbering persistence is a confirmed source of write and metadata amplification in synthetic structural operations, especially membership changes in an early Book. It is **not established as the cause of the author's live slowdown or two-click defect**. Matching numbers already produce no writes during ordinary settled prose edits. Pane activation, metadata handling and save completion can rebuild controls independently of numbering.
 
 The minimal correction in this branch coalesces pending numbering requests to the latest library snapshot while allowing the active pass to finish serially. It does not remove fields, skip metadata events, change view refreshes, or migrate ordering. A controlled pending-write experiment demonstrates the benefit; it does not demonstrate how frequently that backlog occurs in Obsidian.

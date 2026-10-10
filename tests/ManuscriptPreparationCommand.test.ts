@@ -493,3 +493,17 @@ test("asset link relocation preserves balanced parentheses, titles and literal d
   await h.api.undoManuscriptPreparation(h.app, token);
   deepEqual(h.contents, original);
 });
+
+test('explicit numbering after preparation preserves immediate exact Undo and never automatically repopulates reports', async () => {
+  const h = preparationHarness(); const originals = new Map(h.contents);
+  const operation = h.invoke(); await h.choose(); await h.click('Review structural changes'); await h.click('Prepare manuscript'); await operation;
+  let library = h.api.buildObsidianManuscriptLibrary(h.app);
+  const book = library.books[0]; const service = new h.api.ManuscriptSequencePropertyService(h.app);
+  await service.renumber(book.file.path, { currentBook: () => library.books[0], whenSettled: async () => {} });
+  equal(service.isCurrent(book), true);
+  await h.invoke('undo-manuscript-preparation'); await h.tick();
+  deepEqual(h.contents, originals);
+  library = h.api.buildObsidianManuscriptLibrary(h.app);
+  equal(service.isCurrent(library.books[0]), false);
+  const writes = h.writes(); await h.tick(); equal(h.writes(), writes);
+});
