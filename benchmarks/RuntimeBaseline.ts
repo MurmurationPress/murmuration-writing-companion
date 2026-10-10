@@ -12,7 +12,7 @@ export function syntheticVault(size: number) {
   const files: TFile[] = [];
   const metadata = new Map<string, { frontmatter?: Record<string, unknown> }>();
   const paths = new Map<string, TFile>();
-  const counts = { markdownEnumerations: 0, cacheReads: 0, upserts: 0, changedUpserts: 0, entitySorts: 0 };
+  const counts = { markdownEnumerations: 0, cacheReads: 0, upserts: 0, changedUpserts: 0, entitySorts: 0, entityListReads: 0 };
   for (let i = 0; i < size; i++) {
     const basename = `Synthetic ${String(i).padStart(5, "0")}`;
     const file = { path: `Synthetic/${basename}.md`, basename, extension: "md" } as TFile;
@@ -40,7 +40,13 @@ export function syntheticVault(size: number) {
     return changed;
   };
   const getAll = world.index.getAll.bind(world.index);
-  world.index.getAll = () => { counts.entitySorts++; return getAll(); };
+  world.index.getAll = () => {
+    counts.entityListReads++;
+    // Count actual sorts during this synchronous call, not requests for a list.
+    const sort = Array.prototype.sort;
+    Array.prototype.sort = function(compare) { counts.entitySorts++; return sort.call(this, compare); };
+    try { return getAll(); } finally { Array.prototype.sort = sort; }
+  };
   const review = new StoryWorldReviewProjectionService(app, world);
   return { files, metadata, counts, app, world, review };
 }
