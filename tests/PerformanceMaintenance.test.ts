@@ -154,6 +154,14 @@ test('resolved target existence changes invalidate review even when source evide
   equal(resolved.observations.some(o => o.kind === 'story-world.source.unresolved'), false);
   f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
   equal(changed, false); strictEqual(f.review.get(), resolved);
+  destination = { ...target, path: '.trash/Evidence.md' };
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+  destination = { ...target, path: 'Evidence.pdf', extension: 'pdf' };
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), false);
   destination = null;
   f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
   equal(changed, true);

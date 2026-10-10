@@ -60,6 +60,7 @@ test("settled Story World rebuild refreshes every index-backed workspace consume
   equal(registration >= 0 && registration < asyncLoad, true);
 
   const refresh = entry.match(/protected override refreshStoryWorldIndexConsumers\(\): void \{(?<body>[\s\S]*?)\n  \}/u)?.groups?.body ?? "";
+  equal(refresh.includes("this.queueContinuityReviewRefresh()"), true);
   equal(refresh.includes("this.refreshStoryWorldNavigator()"), true);
   equal(refresh.includes("this.refreshStoryWorldGraph()"), true);
   equal(refresh.includes("this.refreshView()"), true);
