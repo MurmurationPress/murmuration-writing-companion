@@ -41,3 +41,11 @@ Live failure injection, cancellation under slow disk I/O, Windows Obsidian UI, n
 ## Deliberate limits
 
 Renumbering is not an all-or-nothing transaction: already committed reporting updates survive interruption, remain stale and can be repaired by a later explicit run. The command cannot revoke a host write already committed during unload. Previously unnumbered unassigned notes cannot be safely attributed to a Book, so they conservatively block declaring a snapshot current until resolved. Snapshot tokens are disposable reporting identities, not manuscript authority. Older MWC installations can still regenerate the former automatic fields and should be updated together.
+
+## PR #263 review follow-up
+
+Review found that an orphan with an externally replaced reporting token could be mistaken for another Book's note. The command now excludes an orphan only when its token occurs in another Book's cached, versioned snapshot. Unknown and empty tokens block refresh conservatively; matching examines token positions, not arbitrary strings such as the `scene` kind. Three regression cases cover this and retain the existing known-other-Book isolation test.
+
+The revised code passed 988 TypeScript tests plus 13 build-tool tests, build/typechecking, release checks, performance and zero-write numbering benchmarks, and the production Codex Press assembly integration. The bundle is 734,545 bytes against the unchanged 737,280-byte ceiling (2,735 bytes remaining); the headroom warning remains enabled.
+
+Additional real Linux Obsidian checks used the same disposable synthetic vault and the revised bundle. An orphan whose token was changed to `scene` left both uncertain Book contexts stale; explicit command attempts wrote zero files. Native Bases rendered a table filtered to the two Alpha Scenes, sorted by `manuscript_sequence`, with Prologue (`0000000001.0000000000`) before the Part's Scene (`0000000002.0000000001`). This closes the earlier native Bases rendering gap for that small fixture, not every query or platform. Windows UI and live PDF/EPUB export remain untested; Windows CI and the compiler assembly integration cover separate automated boundaries.

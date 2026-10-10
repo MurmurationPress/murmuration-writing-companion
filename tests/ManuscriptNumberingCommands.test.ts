@@ -52,6 +52,19 @@ test('failure feedback leaves status stale and unloading rejects late command ca
   h.cleanups.forEach(fn => fn()); const count = h.writes(); await h.invoke('renumber-book-scenes'); equal(h.writes(), count);
 });
 
+for (const token of ['externally replaced', 'scene', '']) test(`an orphan with replaced token ${JSON.stringify(token)} cannot be assumed to belong to another Book`, async () => {
+  const h = commandHarness(); await h.invoke('renumber-book-scenes');
+  h.context('Beta.md'); await h.invoke('renumber-book-scenes');
+  await h.edit('First.md', fm => {
+    fm.parent = '[[Missing Part]]'; fm.mwc_scene_numbering_token = token;
+  });
+  for (const path of ['Alpha.md', 'Beta.md']) {
+    h.context(path); equal(h.status.style.display, '');
+    const before = h.writes(); await h.invoke('renumber-book-scenes'); equal(h.writes(), before);
+    match(h.notices.join('\n'), /unassigned/); equal(h.status.style.display, '');
+  }
+});
+
 test('unload closes a pending Book picker without starting a reporting run', async () => {
   const h = commandHarness(); h.context(null);
   const pending = h.invoke('renumber-book-scenes'); await h.tick(); ok(h.latest());

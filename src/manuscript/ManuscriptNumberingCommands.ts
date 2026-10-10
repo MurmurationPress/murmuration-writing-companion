@@ -2,6 +2,17 @@ import { App, Notice, Plugin, SuggestModal } from "obsidian";
 import type { ObsidianManuscriptBook, ObsidianManuscriptLibrary } from "./ObsidianManuscript";
 import { ManuscriptSequencePropertyService, NUMBERING_SNAPSHOT, NUMBERING_TOKEN } from "./ManuscriptSequenceProperty";
 
+function snapshotContainsToken(saved: unknown, token: string): boolean {
+  if (typeof saved !== "string") return false;
+  try {
+    const [version, roots] = JSON.parse(saved);
+    const contains = (nodes: unknown): boolean => Array.isArray(nodes) && nodes.some(node =>
+      Array.isArray(node) && (node[0] === "part" || node[0] === "scene")
+      && (node[1] === token || contains(node[2])));
+    return version === 1 && contains(roots);
+  } catch { return false; }
+}
+
 class BookPicker extends SuggestModal<ObsidianManuscriptBook> {
   private chosen = false;
   constructor(app: App, private readonly books: readonly ObsidianManuscriptBook[],
@@ -75,7 +86,14 @@ export class ManuscriptNumberingCommands {
       const token = this.host.app.metadataCache.getFileCache(note.file)?.frontmatter?.[NUMBERING_TOKEN];
       // Existing snapshot tokens attribute orphaned notes without reading other
       // Books. Previously unnumbered orphans have no provable Book scope.
-      return typeof token !== "string" || typeof saved !== "string" || saved.includes(JSON.stringify(token));
+      if (typeof token !== "string" || !token || typeof saved !== "string" || snapshotContainsToken(saved, token)) return true;
+      // An externally replaced token is not proof of another Book's ownership.
+      // Consult only cached Book snapshots, never project or scan their scenes.
+      return !this.library().books.some(other => {
+        if (other.file === book.file) return false;
+        const snapshot = this.host.app.metadataCache.getFileCache(other.file)?.frontmatter?.[NUMBERING_SNAPSHOT];
+        return snapshotContainsToken(snapshot, token);
+      });
     });
   }
 

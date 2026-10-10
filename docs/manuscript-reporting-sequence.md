@@ -37,7 +37,7 @@ These properties travel with Markdown, contain no prose or editorial decisions, 
 
 A failed, cancelled, protected or concurrently changed run is not reported current. Committed partial changes are retained; the next explicit run repairs only differences. Unload prevents later mutations but cannot revoke a host write already committed. Notes protected by exact preparation Undo are left untouched. Resolve the reported issue or intentionally edit the restored note before retrying; numbering does not override restoration protection.
 
-Invalid keys, unsupported nesting and unresolved selected structure must be repaired first. An orphan with a saved reporting token can be attributed to its Book snapshot. Previously unnumbered unassigned notes have no provable Book scope, so renumbering conservatively asks you to resolve them before declaring a snapshot current. Trash is excluded. No unrelated Book is modified or projected for numbering.
+Invalid keys, unsupported nesting and unresolved selected structure must be repaired first. An orphan with a saved reporting token can be attributed to its Book snapshot. Unassigned notes with missing or unrecognised tokens have no provable Book scope, so renumbering conservatively asks you to resolve them before declaring a snapshot current. Excluding an orphan requires a matching token in another Book's cached snapshot; this reads no other Book's Scene files. Trash is excluded. No unrelated Book is modified or projected for numbering.
 
 ## Retired series fields
 
