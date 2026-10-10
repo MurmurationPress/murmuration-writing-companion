@@ -139,3 +139,16 @@ Generated reports may write `type: generated-report`, `report_type`, `report_sco
 ## Derived artefact definitions
 
 `world_entity: derived-artefact` opts a definition note into manual artefact generation. The first supported `artefact_type` is `line-chart`. Its generic fields are documented in [Derived Artefacts](Derived_Artefacts.md). Definition properties are authoritative configuration; the generated SVG is disposable and is never read as canonical data.
+
+## Manual manuscript reporting
+
+These disposable properties are written only by **Renumber book scenes**, never automatically. `parent` and `manuscript_order_key` remain authoritative.
+
+| Property | Scope | Format and purpose |
+|---|---|---|
+| `book_scene_number` | Scene | Number, starting at 1 within a Book. |
+| `manuscript_sequence` | Scene | Text, two ten-digit segments for Book root position and child Scene position; direct Scenes end in zero. Filter to one Book before sorting. |
+| `mwc_scene_numbering_token` | Part/Scene | Disposable reporting token; unchanged by neutral renames. |
+| `mwc_scene_numbering_snapshot` | Book | Versioned JSON string recording the last explicitly refreshed reporting structure. |
+
+Existing three-segment sequence snapshots are upgraded only when that Book is explicitly refreshed. See [Reviews and Reports](Reviews_and_Reports.md#book-scene-numbers).

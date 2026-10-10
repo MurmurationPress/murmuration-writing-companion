@@ -309,7 +309,9 @@ async function rollbackAppliedStates(
 const DERIVED_REPORTING_PROPERTIES = new Set([
   "manuscript_sequence",
   "book_scene_number",
-  "series_scene_number"
+  "series_scene_number",
+  "mwc_scene_numbering_token",
+  "mwc_scene_numbering_snapshot"
 ]);
 
 function withoutDerivedReporting(snapshot: FrontmatterSnapshot): FrontmatterSnapshot {
@@ -362,6 +364,18 @@ export async function applyManuscriptPreparation(
     throw new StaleManuscriptPreparationError();
   }
 
+  // Explicit reporting refresh can also touch already-prepared structural notes
+  // (especially an unchanged Book). Keep their original bytes in the Undo scope
+  // without writing them during preparation.
+  const reportingUndoStates: ManuscriptPreparationUndoState[] = [];
+  const writtenPaths = new Set(manuscriptPreparationExecutionSteps(plan).map(step => step.file.path));
+  for (const file of currentBook.filesByPath.values()) {
+    if (writtenPaths.has(file.path)) continue;
+    const beforeContent = await app.vault.read(file);
+    const before = captureFrontmatter(frontmatterFromMarkdown(beforeContent));
+    if (!snapshotsEqual(before, captureFrontmatter(frontmatterFor(app, file) ?? {}))) throw new StaleManuscriptPreparationError();
+    reportingUndoStates.push({ path: file.path, file, before, after: before, beforeContent, afterContent: beforeContent });
+  }
   const states: ManuscriptPreparationUndoState[] = [];
   const writePlan = async (filePlan: ManuscriptPreparationPlan["files"][number], mutation: ManuscriptPreparationMutation) => {
     const file = currentBook.filesByPath.get(filePlan.path)
@@ -426,7 +440,7 @@ export async function applyManuscriptPreparation(
   return {
     bookPath: plan.bookPath,
     assets: plan.assets,
-    states,
+    states: [...states, ...reportingUndoStates.filter(state => !states.some(written => written.path === state.path))],
     message: `Prepared ${plan.bookTitle}: ${states.length} ${states.length === 1 ? "note" : "notes"} updated.`
   };
 }
@@ -468,8 +482,10 @@ export async function undoManuscriptPreparation(
       await assertNoConflictMarkers(app, file);
       const preparedContent = preparedContentByPath.get(state.path) ?? state.afterContent;
       if (await app.vault.read(file) !== preparedContent) throw new StaleManuscriptPreparationUndoError();
-      await app.vault.modify(file, state.beforeContent);
-      restored.push(state);
+      if (preparedContent !== state.beforeContent) {
+        await app.vault.modify(file, state.beforeContent);
+        restored.push(state);
+      }
       if (await app.vault.read(file) !== state.beforeContent) throw new Error(`Could not verify Undo: ${state.path}.`);
     }
     completeExactManuscriptContentRestoration(app, paths);

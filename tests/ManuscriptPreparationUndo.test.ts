@@ -14,7 +14,6 @@ import {
   manuscriptPreparationActionsNeedInstallation,
   manuscriptPreparationUndoNoticeVisible
 } from "../src/manuscript/ManuscriptPreparationActions";
-import { manuscriptSequenceReconciliationScope } from "../src/manuscript/ManuscriptSequenceReconciliation";
 import { manuscriptPreparationContentMatchesUndoState } from "../src/manuscript/ManuscriptPreparationUndoComparison";
 
 const fixtureRoot = path.resolve("examples/v2-onboarding/migration-vault");
@@ -142,17 +141,6 @@ test("a reporting write queued before Undo is stopped at its mutation boundary",
   equal(hasExactContentProtection(authority, "Scene.md"), true);
 });
 
-test("startup defers reporting writes for legacy Books until preparation succeeds", () => {
-  const legacy = { id: "legacy" };
-  const distributed = { id: "distributed" };
-  const scope = manuscriptSequenceReconciliationScope([
-    { source: "legacy_array", value: legacy, paths: ["Legacy Book.md", "Legacy Scene.md"] },
-    { source: "distributed", value: distributed, paths: ["Prepared Book.md", "Prepared Scene.md"] }
-  ]);
-  deepEqual(scope.projectable, [distributed]);
-  deepEqual([...scope.deferredPaths], ["Legacy Book.md", "Legacy Scene.md"]);
-});
-
 test("Navigator reinstalls detached preparation actions and retains connected ones", () => {
   equal(manuscriptPreparationActionsNeedInstallation(undefined), true);
   equal(manuscriptPreparationActionsNeedInstallation({ prepare: { isConnected: true }, undo: { isConnected: true } }), false);
@@ -161,4 +149,10 @@ test("Navigator reinstalls detached preparation actions and retains connected on
   equal(manuscriptPreparationUndoNoticeVisible(false, false), false);
   equal(manuscriptPreparationUndoNoticeVisible(true, false), true);
   equal(manuscriptPreparationUndoNoticeVisible(true, true), true);
+});
+
+test('unowned manuscript_series_number remains an authored Undo constraint', () => {
+  const before = '---\nmanuscript_series_number: 1\n---\nProse.\n';
+  const changed = '---\nmanuscript_series_number: 2\n---\nProse.\n';
+  equal(manuscriptPreparationContentMatchesUndoState(before, changed), false);
 });

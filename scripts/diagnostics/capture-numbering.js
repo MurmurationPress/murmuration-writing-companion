@@ -1,10 +1,10 @@
 /* Paste in Obsidian DevTools in a DISPOSABLE synthetic vault. No automatic execution.
  * Supplement PR #255's pointer/DOM capture. Never deploy to an author vault.
  */
-function startMwcNumberingCapture({ disableReportingPersistence = false } = {}) {
+function startMwcNumberingCapture() {
   const plugin = app.plugins.plugins['murmuration-writing-companion'];
   const coordinator = plugin?.manuscriptIntegrityCoordinator;
-  const service = coordinator?.manuscriptSequenceProperties;
+  const service = plugin?.manuscriptNumbering?.service;
   if (!service) throw new Error('MWC numbering service not available');
   const trace = [], counts = {}, restores = [];
   let dropped = 0, stopped = false;
@@ -31,18 +31,8 @@ function startMwcNumberingCapture({ disableReportingPersistence = false } = {}) 
     object[key] = wrapped;
     restores.push(() => { if (object[key] === wrapped) { if (owned) object[key] = original; else delete object[key]; } });
   };
-  // This suppresses ONLY this service's writes, including manuscript_sequence.
-  // It is a temporary counterfactual, not a supported runtime setting.
-  if (disableReportingPersistence) {
-    const original = service.sync;
-    const owned = Object.prototype.hasOwnProperty.call(service, 'sync');
-    const disabled = async () => { record('reporting-write:suppressed'); };
-    service.sync = disabled;
-    restores.push(() => { if (service.sync === disabled) { if (owned) service.sync = original; else delete service.sync; } });
-  }
-  wrap(service, 'reconcile', 'regeneration-request', true);
-  wrap(service, 'reconcileNow', 'regeneration-pass', true);
-  wrap(service, 'sync', 'reporting-write-attempt', true);
+  wrap(service, 'renumber', 'renumber-request', true);
+  wrap(service, 'renumberNow', 'renumber-pass', true);
   wrap(coordinator?.projection, 'rebuild', 'library-rebuild');
   for (const key of ['refreshView', 'refreshManuscriptNavigator', 'refreshStoryWorldGraph', 'refreshStoryWorldNavigator', 'refreshContinuityReview']) wrap(plugin, key, key);
   let viewId = 0;
@@ -57,7 +47,7 @@ function startMwcNumberingCapture({ disableReportingPersistence = false } = {}) 
   }
   return { stop() {
     if (!stopped) { stopped = true; restores.reverse().forEach(restore => restore()); }
-    return { disableReportingPersistence, counts: { ...counts }, dropped, trace: trace.slice(),
-      caveat: 'Host events include other writers. Write attempts are not confirmed disk writes. Views opened after capture are not wrapped. Async durations overlap; do not sum.' };
+    return { counts: { ...counts }, dropped, trace: trace.slice(),
+      caveat: 'Host events include other writers. Renumber passes include verification and may perform zero writes. Views opened after capture are not wrapped. Async durations overlap; do not sum.' };
   } };
 }

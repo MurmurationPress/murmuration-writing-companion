@@ -1,5 +1,7 @@
 # Review of pending numbering reconciliation
 
+> Historical measurements of the former automatic writer. The current [manual Book reporting contract](manuscript-reporting-sequence.md) supersedes that lifecycle and series numbering.
+
 Review follows draft #256 at `545eb79` against main `ac0c39b`. #252 remains open and #255 remains an unmerged draft. The coalescing change is sound for complete library snapshots, but the first head lacked cancellation on plugin unload. That lifecycle defect is corrected before merge.
 
 ## Queue invariants

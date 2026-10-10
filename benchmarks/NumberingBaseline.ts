@@ -5,11 +5,10 @@ import { ManuscriptIntegrityCoordinator } from '../src/manuscript/ManuscriptInte
 import { ManuscriptProjectionService } from '../src/manuscript/ManuscriptProjection';
 import { ManuscriptBookSelectionService } from '../src/manuscript/ManuscriptBookSelection';
 import { buildObsidianManuscriptLibrary } from '../src/manuscript/ObsidianManuscript';
-import { ManuscriptSequencePropertyService } from '../src/manuscript/ManuscriptSequenceProperty';
 import { evenlySpacedManuscriptOrderKeys } from '../src/manuscript/ManuscriptOrderKey';
 
 /** Synthetic host only: never opens a vault or loads the plugin's DOM views. */
-export async function numberingBaseline(size: number, mode: 'persist' | 'no-numbers' | 'no-reporting') {
+export async function numberingBaseline(size: number, mode = 'manual') {
   const files: TFile[] = [];
   const paths = new Map<string, TFile>();
   const metadata = new Map<string, { frontmatter: Record<string, unknown> }>();
@@ -58,9 +57,6 @@ export async function numberingBaseline(size: number, mode: 'persist' | 'no-numb
   const coordinator = new ManuscriptIntegrityCoordinator(app, selection, {
     activePath: () => 'B0S0.md', onSettled: () => { counts.settledRefreshes++; }
   }, projection);
-  const service = (coordinator as any).manuscriptSequenceProperties;
-  const reconcileNow = service.reconcileNow.bind(service);
-  service.reconcileNow = async (library: unknown) => { counts.regenerationPasses++; return reconcileNow(library); };
   const deliver = (path: string) => {
     counts.metadataEvents++;
     const file = paths.get(path)!;
@@ -100,31 +96,4 @@ export async function numberingBaseline(size: number, mode: 'persist' | 'no-numb
     await measure('book-switch', () => selection.select('Book1.md', 'Book1.md', 'manuscript-navigator'));
     return { scenesPerBook: size, books: 3, mode, samples };
   } finally { coordinator.dispose(); globalThis.window = previousWindow; }
-}
-
-/** Slow writer + several settled authoritative snapshots, without a DOM or disk delay. */
-export async function numberingBacklog(size: number) {
-  const fm = new Map<string, Record<string, unknown>>();
-  const files = Array.from({ length: size }, (_, i) => ({ path: `S${i}.md` } as TFile));
-  for (const file of files) fm.set(file.path, {});
-  let release!: () => void;
-  const gate = new Promise<void>(resolve => { release = resolve; });
-  let entered!: () => void;
-  const started = new Promise<void>(resolve => { entered = resolve; });
-  let passes = 0, writes = 0;
-  const app = { vault: { getMarkdownFiles: () => { passes++; return files; } },
-    metadataCache: { getFileCache: (file: TFile) => ({ frontmatter: fm.get(file.path) }) },
-    fileManager: { processFrontMatter: async (file: TFile, mutate: (fm: Record<string, unknown>) => void) => {
-      if (writes++ === 0) { entered(); await gate; } mutate(fm.get(file.path)!);
-    } } } as unknown as App;
-  const service = new ManuscriptSequencePropertyService(app);
-  const library = (offset: number) => ({ books: [{ file: { path: 'Book.md' }, filesByPath: new Map(files.map(file => [file.path, file])),
-    result: { source: 'distributed', roots: files.map((_, i) => ({ entry: { path: files[(i + offset) % size].path, kind: 'scene' }, children: [] })) }
-  }] }) as any;
-  const start = performance.now();
-  const requests = [service.reconcile(library(0))]; await started;
-  for (let i = 1; i <= 10; i++) requests.push(service.reconcile(library(i)));
-  release(); await Promise.all(requests);
-  if (fm.get(files[10 % size].path)!.book_scene_number !== 1) throw new Error('Latest snapshot lost');
-  return { size, requests: requests.length, regenerationPasses: passes, writes, filesWritten: size, metadataEvents: 0, viewRebuilds: null, elapsedMs: +(performance.now() - start).toFixed(3) };
 }

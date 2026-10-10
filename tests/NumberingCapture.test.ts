@@ -10,11 +10,11 @@ function fixture() {
   const result = Promise.resolve();
   class Service {
     sync() { writes++; return result; }
-    reconcileNow() { return this.sync(); }
-    reconcile() { return this.reconcileNow(); }
+    renumberNow() { return this.sync(); }
+    renumber() { return this.renumberNow(); }
   }
   const service = new Service();
-  const plugin = { manuscriptIntegrityCoordinator: { manuscriptSequenceProperties: service, projection: { rebuild() {} } } };
+  const plugin = { manuscriptNumbering: { service }, manuscriptIntegrityCoordinator: { projection: { rebuild() {} } } };
   const start = runInNewContext(readFileSync('scripts/diagnostics/capture-numbering.js', 'utf8') + '\nstartMwcNumberingCapture;', {
     app: { plugins: { plugins: { 'murmuration-writing-companion': plugin } },
       workspace: { iterateAllLeaves() {} }, metadataCache: events, vault: events }, performance
@@ -24,19 +24,11 @@ function fixture() {
 
 test('numbering capture forwards original promises and restores inherited methods and event refs', async () => {
   const f = fixture(); const before = Object.keys(f.service); const capture = f.start();
-  equal(f.service.reconcile(), f.result); await f.result;
+  equal(f.service.renumber(), f.result); await f.result;
   equal(f.writes(), 1); equal(f.refs.size, 3);
   const report = capture.stop(); equal(f.refs.size, 0);
   deepEqual(Object.keys(f.service), before);
-  equal(report.counts['regeneration-pass:start'], 1);
-  equal(report.counts['reporting-write-attempt:end'], 1);
+  equal(report.counts['renumber-pass:start'], 1);
+  equal(report.counts['renumber-pass:end'], 1);
   capture.stop(); equal(f.service.sync(), f.result); equal(f.writes(), 2);
-});
-
-test('explicit experimental suppression only lasts until stop and restores an existing own method', async () => {
-  const f = fixture(); const original = f.service.sync.bind(f.service); f.service.sync = original;
-  const capture = f.start({ disableReportingPersistence: true });
-  await f.service.reconcile(); equal(f.writes(), 0);
-  equal(capture.stop().counts['reporting-write:suppressed'], 1);
-  equal(f.service.sync, original); f.service.sync(); equal(f.writes(), 1);
 });

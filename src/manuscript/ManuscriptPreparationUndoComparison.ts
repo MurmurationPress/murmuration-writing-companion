@@ -1,7 +1,9 @@
 const DERIVED_REPORTING_PROPERTIES = new Set([
   "manuscript_sequence",
   "book_scene_number",
-  "series_scene_number"
+  "series_scene_number",
+  "mwc_scene_numbering_token",
+  "mwc_scene_numbering_snapshot"
 ]);
 
 function withoutDerivedReportingLines(content: string): string {
