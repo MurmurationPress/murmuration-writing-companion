@@ -18,10 +18,11 @@ export class ObsidianStoryWorldIndex {
 
   constructor(private readonly app: App) {}
 
-  rebuild(): boolean {
-    const documents = this.app.vault.getMarkdownFiles()
-      .filter((file) => !isObsidianTrashPath(file.path))
-      .map((file) => this.documentFor(file));
+  rebuild(inspectFiles?: (files: readonly TFile[]) => void): boolean {
+    const files = this.app.vault.getMarkdownFiles().filter(file => !isObsidianTrashPath(file.path));
+    // Let other read-only projections reconcile the same authoritative file set.
+    inspectFiles?.(files);
+    const documents = files.map(file => this.documentFor(file));
     const beforeModels = JSON.stringify(this.getSupportingModels());
     this.supportingModelsByPath.clear();
     for (const document of documents) this.upsertSupportingModel(document);

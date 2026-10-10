@@ -1,3 +1,4 @@
+import { ReconciliationQueue } from "./projections/ReconciliationQueue";
 import { ManuscriptNumberingCommands } from "./manuscript/ManuscriptNumberingCommands";
 import { InteractionRefresh } from "./ui/InteractionRefresh";
 import {
@@ -131,6 +132,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   readonly vaultBackupRemotePreference: VaultBackupRemotePreference;
   private manuscriptChronologyDependencies = new Set<string>();
   private manuscriptChronologyRefreshTimer: number | null = null;
+  private storyWorldConsumersDirty = false;
+  protected unloaded = false;
   private storyWorldMetadataRefreshTimer: number | null = null;
   private readonly pendingStoryWorldMetadataPaths = new Set<string>();
   private readonly pendingEditorialCreates = new Map<string, TFile>();
@@ -157,6 +160,8 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async onload() {
+    this.unloaded = false;
+    this.register(() => { this.unloaded = true; });
     this.interactionRefresh.observe(document);
     this.app.workspace.iterateAllLeaves(leaf => this.interactionRefresh.observe(leaf.view.containerEl.ownerDocument));
     this.registerEvent(this.app.workspace.on("window-open", (_workspaceWindow, win) => this.interactionRefresh.observe(win.document)));
@@ -197,8 +202,15 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.storyWorldIndex = new ObsidianStoryWorldIndex(this.app);
     this.storyWorldStartup = new StoryWorldStartup(
-      () => this.storyWorldIndex.rebuild(),
       () => {
+        let evidenceChanged = false;
+        const changed = this.storyWorldIndex.rebuild(files => {
+          evidenceChanged = this.storyWorldReviewProjection?.reconcileMetadata(files) ?? false;
+        });
+        return changed || evidenceChanged;
+      },
+      (changed) => {
+        if (!changed) return;
         this.storyWorldReviewProjection.invalidate();
         this.refreshStoryWorldIndexConsumers();
       }
@@ -208,7 +220,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.storyWorldReviewProjection = new StoryWorldReviewProjectionService(this.app, this.storyWorldIndex);
     // Register before asynchronous store loading: the initial resolved event can
     // otherwise pass while only part of the frontmatter cache has been indexed.
-    this.registerEvent(this.app.metadataCache.on("resolved", () => this.storyWorldStartup.metadataResolved()));
+    const worldResolution = new ReconciliationQueue(() => this.storyWorldStartup.metadataResolved());
+    this.register(() => worldResolution.dispose());
+    this.registerEvent(this.app.metadataCache.on("resolved", () => worldResolution.request()));
 
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => {
@@ -222,6 +236,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     };
 
     await this.storeService.load();
+    if (this.unloaded) return;
 
     this.manuscriptIntegrityCoordinator = new ManuscriptIntegrityCoordinator(
       this.app,
@@ -263,6 +278,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.register(this.manuscriptBookSelection.subscribe(() => this.manuscriptNumbering?.refresh()));
 
     this.app.workspace.onLayoutReady(() => {
+      if (this.unloaded) return;
       this.manuscriptIntegrityCoordinator.initialise();
       this.storyWorldStartup.settle();
       this.refreshManuscriptNavigator();
@@ -391,22 +407,25 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
-        if (this.manuscriptProjection.affectsMetadata(file)) this.manuscriptIntegrityCoordinator.queue(file.path);
+        const settledManuscript = this.manuscriptProjection.affectsMetadata(file);
+        if (settledManuscript) this.manuscriptIntegrityCoordinator.queue(file.path);
         const worldChanged = this.storyWorldIndex.handleMetadataChanged(file);
-        this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
+        const evidenceChanged = this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
+        this.storyWorldConsumersDirty = evidenceChanged || this.storyWorldConsumersDirty;
         const currentChapter = this.getCurrentChapter();
         const currentChapterChanged = file.path === currentChapter?.path;
-        const currentBookChanged = currentChapter
+        const currentBookChanged = !settledManuscript && currentChapter
           ? file.path === this.getOwningBook(currentChapter)?.path
           : false;
         const decision = metadataContinuityRefreshDecision({
           changedPath: file.path,
+          settledManuscript,
           manuscriptDependencies: this.manuscriptChronologyDependencies,
           worldChanged,
           currentChapterChanged,
           currentBookChanged
         });
-        if (decision.companion) this.refreshView();
+        if (decision.companion && !worldChanged) this.refreshView();
         if (file.extension === "md") this.scheduleStoryWorldMetadataRefresh(file.path);
         if (decision.deferredChronology) this.scheduleManuscriptChronologyRefresh();
         if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
@@ -722,7 +741,11 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         const file = this.app.vault.getAbstractFileByPath(changedPath);
         return file instanceof TFile ? [file] : [];
       });
-      if (this.storyWorldReviewProjection.refreshMetadata(files)) this.refreshStoryWorldIndexConsumers();
+      const changed = this.storyWorldReviewProjection.refreshMetadata(files);
+      if (changed || this.storyWorldConsumersDirty) {
+        this.storyWorldConsumersDirty = false;
+        this.refreshStoryWorldIndexConsumers();
+      }
     }, 50);
   }
 

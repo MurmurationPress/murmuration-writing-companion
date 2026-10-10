@@ -24,5 +24,14 @@ export class DisposableProjection<T> {
     for (const [path, fingerprint] of entries) this.dependencies.set(path, fingerprint);
   }
 
+  retainDependencies(paths: ReadonlySet<string>): boolean {
+    let changed = false;
+    for (const path of this.dependencies.keys()) {
+      if (!paths.has(path)) { this.dependencies.delete(path); changed = true; }
+    }
+    if (changed) this.invalidate();
+    return changed;
+  }
+
   hasDependency(path: string): boolean { return this.dependencies.has(path); }
 }

@@ -43,6 +43,14 @@ export class StoryWorldReviewProjectionService {
   private fingerprintsCaptured = false;
   invalidate(): void { this.projection.invalidate(); this.fingerprintsCaptured = false; }
 
+  /** Resolution can expose late evidence even without another changed event. */
+  reconcileMetadata(files: readonly TFile[]): boolean {
+    let changed = this.projection.retainDependencies(new Set(files.map(file => file.path)));
+    for (const file of files) changed = this.invalidateMetadata(file, false) || changed;
+    if (changed) this.fingerprintsCaptured = false;
+    return changed;
+  }
+
   /** Drain coalesced paths; only fresh index or review evidence needs a view refresh. */
   refreshMetadata(files: Iterable<TFile>): boolean {
     let changed = false;

@@ -57,6 +57,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   async onload() {
     await super.onload();
+    if (this.unloaded) return;
     installManuscriptChatRendering(this);
     this.register(this.manuscriptBookSelection.subscribe((selection) => {
       this.synchroniseContinuityReviewScope(selection);
@@ -138,10 +139,11 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.queueContinuityReviewRefresh();
     }));
     this.app.workspace.onLayoutReady(() => {
+      if (this.unloaded) return;
       this.seedActiveEditor();
       this.refreshStoryWorldNavigator();
       this.refreshStoryWorldGraph(true);
-      window.setTimeout(() => void this.showFirstRunReadinessInvitation(), 500);
+      window.setTimeout(() => { if (!this.unloaded) void this.showFirstRunReadinessInvitation(); }, 500);
     });
     this.registerEvent(this.app.metadataCache.on("changed", (file) => {
       this.queueNavigatorRefresh();
@@ -564,7 +566,6 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     if (this.navigatorRefreshTimer !== null) window.clearTimeout(this.navigatorRefreshTimer);
     this.navigatorRefreshTimer = window.setTimeout(() => {
       this.navigatorRefreshTimer = null;
-      this.refreshManuscriptNavigator();
       this.refreshStoryWorldNavigator();
       this.refreshStoryWorldGraph();
       if (this.storyWorldInspectorRefreshPending) {
