@@ -1,18 +1,21 @@
 # Production bundle size policy
 
-Issue #199 established a minified installed `main.js` baseline of 612,890 bytes on 9 August 2026 (the preceding unminified build was 1,068,767 bytes). The release budget is 737,280 bytes (720 KiB), leaving roughly 20% headroom for normal product growth while still failing a substantial accidental dependency or debug-code regression.
+The enforced raw `main.js` ceiling is **720,896 bytes**. The early warning and maintenance target is **669,696 bytes**, leaving at least 51,200 bytes (50 KiB). Production build and `release:check` fail above the ceiling and warn above the target. Gzip remains informational: Obsidian loads the installed files directly.
 
-The budget applies to the actual installed file, not gzip size: Obsidian loads `main.js` directly. `npm run bundle:analyze` reports both installed and informational gzip sizes plus esbuild's deterministic source-contribution analysis. Metadata stays in memory and is not written into release assets.
+## Reconciled history
 
-Raise the budget only as an intentional, reviewed change accompanied by a new measured baseline and explanation.
+- #199/#201 established a 612,890-byte minified `main.js` baseline (formerly 1,068,767 unminified).
+- #252/#253 used 720,896 as the hard limit and 669,696 as the warning threshold.
+- #261 raised the ceiling by 16 KiB to 737,280, with a 686,080 warning, to accommodate preparation and restoration safeguards.
+- #263 actually measured **734,545 raw / 205,236 gzip**, leaving 2,735 bytes under **737,280**, not 720,896. The later #252 comment inferred 718,161 from the wrong ceiling. That inferred size is not a measured baseline.
+- This #252 follow-up restores the explicitly requested **720,896 / 669,696** policy. Its measured 685,795-byte bundle remains **16,099 bytes above the target**. The target is not lowered and #252 stays open.
 
+See [measurements and remaining work](performance-252-follow-up.md) for configuration, composition, individual changes and runtime evidence. Changes to the budget require an explicit decision, not suppression of the warning.
 
-## Early warning and measurement
+## Packaging and development
 
-Production build and `release:check` now report raw bytes, informational gzip bytes, the 669,696-byte warning threshold, the unchanged 720,896-byte hard ceiling, and remaining headroom. Above 669,696 bytes warns that less than 50 KiB remains; above 720,896 bytes fails. Warnings do not fail the build, including while the maintenance target remains outstanding.
+Static styles live in readable files under `src/styles/`; `src/styles/plugin.css` declares their order: the former base stylesheet, then the former onload installation order. `npm run build` and `npm run dev` generate Obsidian's native `styles.css` as well as `main.js`. Install/release **main.js, styles.css and manifest.json together**. `release:check` rejects an out-of-date stylesheet. Generated files are not committed.
 
-`npm run bundle:report` prints a reproducible JSON composition report without writing build assets. `npm run benchmark:performance` prints deterministic synthetic operation counts plus informational timings; CI tests counts, never machine-dependent duration thresholds. See [the #252 measurements and remaining work](performance-252.md).
+`npm run bundle:report` reports each installed asset and combined raw/gzip bytes as well as the main.js budget and source composition. No JavaScript is deferred, split, fetched or excluded from that report. Moving CSS out of JavaScript reduces JS parsing and startup style installation; it is not equivalent removal of total shipped content. Native styles follow Obsidian's plugin stylesheet lifecycle, including popout windows and user snippet overrides. Feature selectors and their internal order are preserved. Arbitrary third-party theme/snippet combinations remain a live acceptance concern.
 
-Embedded CSS literals explicitly marked `/* css */` are whitespace-minified with esbuild's CSS parser during production builds. CSS syntax/identifiers and runtime injection order are preserved; development source/builds remain readable. Required styles stay inside main.js and count against the installed-byte budget.
-
-Issue #261 adds an explicit asset relocation preview, resolved Markdown link updates, destination/stale-input checks, and transactional restoration. The measured installed bundle is 726,176 bytes (202,398 gzip bytes), up 5,323 bytes from the preceding preparation implementation. The ceiling increases by 16 KiB to 737,280 bytes to accommodate this reviewed workflow without removing safeguards; the warning threshold remains 50 KiB below the ceiling. This is product code growth with no new production dependency.
+The JavaScript target remains ES2018, CommonJS, with `obsidian` and `node:*` external. Native CSS uses whitespace-only minification; syntax and identifiers are not minified. The earlier embedded-CSS helper remains a build-only facility for reproducing historical source reports; current runtime code contains no style literals. Metadata and instrumentation are never release assets.

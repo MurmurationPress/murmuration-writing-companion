@@ -89,3 +89,31 @@ test("unchanged-document check preserves YAML Date versus string identity semant
   equal(index.getByPath(document.path)?.name, date.toISOString());
   equal(index.findByNameOrAlias(date.toISOString()).length, 1);
 });
+
+test('entity list consumers share one sort per changed index while retaining private arrays', () => {
+  const f = syntheticVault(100); f.world.rebuild();
+  const original = Array.prototype.sort; let sorts = 0;
+  Array.prototype.sort = function(compare) { sorts++; return original.call(this, compare); };
+  try {
+    const first = f.world.index.getAll(); const expected = first.map(e => e.path);
+    first.reverse(); first.pop();
+    for (let i = 0; i < 20; i++) deepEqual(f.world.index.getAll().map(e => e.path), expected);
+    equal(sorts, 1);
+    f.world.index.rebuild(f.files.map(file => ({ path: file.path, basename: file.basename, frontmatter: f.metadata.get(file.path)?.frontmatter }))); f.world.index.getAll(); equal(sorts, 1); // unchanged resolution retains sorted snapshot
+    const file = f.files[0]; f.metadata.get(file.path)!.frontmatter!.world_name = 'External edit';
+    f.world.handleMetadataChanged(file); equal(f.world.index.getAll()[0].name, 'External edit'); equal(sorts, 2);
+    f.world.index.rename(file.path, {path:'ZZ.md',basename:'ZZ',frontmatter:{world_entity:'character'}});
+    equal(f.world.index.getAll().at(-1)!.path,'ZZ.md'); equal(sorts,3);
+    f.world.index.remove('ZZ.md'); equal(f.world.index.getAll().length,19); equal(sorts,4);
+    f.world.index.clear(); deepEqual(f.world.index.getAll(),[]); equal(sorts,5);
+  } finally { Array.prototype.sort = original; }
+});
+
+test('repeated entity consumers stop sorting while metadata changes still invalidate the list', () => {
+  const f=syntheticVault(1000); f.world.rebuild();
+  for(let i=0;i<20;i++) f.world.index.getAll();
+  equal(f.counts.entityListReads,20); equal(f.counts.entitySorts,1);
+  const file=f.files[0]; f.metadata.get(file.path)!.frontmatter!.world_name='Changed externally';
+  equal(f.world.handleMetadataChanged(file),true); f.world.index.getAll();
+  equal(f.counts.entitySorts,2);
+});

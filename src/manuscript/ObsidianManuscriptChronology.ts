@@ -105,9 +105,9 @@ function sceneInput(
 
 export function buildObsidianManuscriptChronology(
   app: App,
-  activeFile: TFile
+  activeFile: TFile,
+  library = buildObsidianManuscriptLibrary(app)
 ): ObsidianManuscriptChronologyResult {
-  const library = buildObsidianManuscriptLibrary(app);
   const bookPath = library.owningBookPathByFile.get(activeFile.path);
   const book = library.books.find((candidate) => candidate.file.path === bookPath) ?? null;
   if (!book) return { book: null, observations: [], dependencies: new Set([activeFile.path]) };

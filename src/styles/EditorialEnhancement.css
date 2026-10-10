@@ -1,4 +1,3 @@
-export const EDITORIAL_ENHANCEMENT_STYLES = /* css */ `
 .mwc-book-review {
   margin-top: 12px;
 }
@@ -624,63 +623,4 @@ export const EDITORIAL_ENHANCEMENT_STYLES = /* css */ `
 .mwc-annotation-locator-active .cm-selectionLayer .cm-selectionBackground {
   background: var(--text-highlight-bg) !important;
   outline: 1px solid var(--interactive-accent);
-}
-`;
-
-export interface EditorialEnhancementInstallation {
-  remove(): void;
-}
-
-let nextAccessibleLabelId = 0;
-
-function suppressNavigatorMoveTooltips(root: ParentNode) {
-  const selector = '.mwc-manuscript-navigator button[aria-label^="Move "]';
-  const buttons: HTMLButtonElement[] = [];
-
-  if (root instanceof HTMLButtonElement && root.matches(selector)) {
-    buttons.push(root);
-  }
-  for (const button of Array.from(
-    root.querySelectorAll<HTMLButtonElement>(selector)
-  )) {
-    buttons.push(button);
-  }
-
-  for (const button of buttons) {
-    const label = button.getAttribute("aria-label");
-    if (!label || button.dataset.mwcAccessibleLabel === "true") continue;
-
-    const hidden = document.createElement("span");
-    hidden.id = `mwc-accessible-label-${++nextAccessibleLabelId}`;
-    hidden.className = "mwc-visually-hidden";
-    hidden.textContent = label;
-    button.appendChild(hidden);
-    button.removeAttribute("aria-label");
-    button.setAttribute("aria-labelledby", hidden.id);
-    button.dataset.mwcAccessibleLabel = "true";
-  }
-}
-
-export function installEditorialEnhancementStyles(): EditorialEnhancementInstallation {
-  const style = document.createElement("style");
-  style.dataset.mwcEditorialEnhancements = "true";
-  style.textContent = EDITORIAL_ENHANCEMENT_STYLES;
-  document.head.appendChild(style);
-
-  suppressNavigatorMoveTooltips(document);
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of Array.from(mutation.addedNodes)) {
-        if (node instanceof Element) suppressNavigatorMoveTooltips(node);
-      }
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  return {
-    remove() {
-      observer.disconnect();
-      style.remove();
-    }
-  };
 }

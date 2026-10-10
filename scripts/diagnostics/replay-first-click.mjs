@@ -43,7 +43,7 @@ try {
     {name:'native',type:'file-explorer',selector:'.nav-folder-title[data-path="Control"]',state:`document.querySelector('.nav-folder-title[data-path="Control"]')?.closest('.nav-folder').classList.contains('is-collapsed')`}
   ];
   for(const item of cases) for(const active of [true,false]) for(let repeat=0;repeat<5;repeat++) {
-    await evaluate(`(async()=>{document.querySelector('.modal-close-button')?.click();const leaf=app.workspace.getLeavesOfType(${quote(item.type)})[0];await app.workspace.revealLeaf(leaf);})()`);
+    await evaluate(`(async()=>{(document.querySelector('.modal-close-button') ?? [...document.querySelectorAll('.modal-container button')].find(b=>b.textContent==='Cancel'))?.click();const leaf=app.workspace.getLeavesOfType(${quote(item.type)})[0];await app.workspace.revealLeaf(leaf);})()`);
     await wait(120);
     await evaluate(`(()=>{const leaf=app.workspace.getLeavesOfType(${quote(active?item.type:'markdown')})[0];app.workspace.setActiveLeaf(leaf,{focus:true});})()`);
     await wait(300);
@@ -85,14 +85,14 @@ try {
       const sample=await evaluate(`({numbering:__numbering.stop(),interaction:__interaction.stop(),pending:app.plugins.plugins['murmuration-writing-companion'].manuscriptIntegrityCoordinator.timer!==null})`);
       assert.equal(sample.pending,false,'Capture ended before settlement');
       assert.equal(sample.numbering.counts['host-changed'],1,'Expected one actual prose save');
-      assert.equal(sample.numbering.counts['regeneration-pass:start'],1);
-      assert.equal(sample.numbering.counts['reporting-write-attempt:start']??0,0);
+      assert.equal(sample.numbering.counts['renumber-pass:start']??0,0);
+      assert.equal(sample.numbering.counts['renumber-request:start']??0,0);
       assert.equal(sample.interaction.dropped,0);assert.equal(sample.numbering.dropped,0);
       prose.push(sample);
     }
   }
   console.log(JSON.stringify({environment,pluginHash,instrumented,note:'Real Obsidian/Electron on a synthetic disposable vault; CDP mouse input is trusted. 35 ms requested hold; observed event intervals include main-thread blocking. Handler wrappers are restored between trials. This is not Ted\'s vault, Windows, or physical OS focus switching.',results,prose},null,2));
 } finally {
-  await evaluate(`(()=>{globalThis.__numbering?.stop();globalThis.__interaction?.stop();globalThis.__clickProbe?.watched?.forEach(({b,f,w})=>{if(b.onclick===w)b.onclick=f});document.querySelector('.modal-close-button')?.click();})()`).catch(()=>{});
+  await evaluate(`(()=>{globalThis.__numbering?.stop();globalThis.__interaction?.stop();globalThis.__clickProbe?.watched?.forEach(({b,f,w})=>{if(b.onclick===w)b.onclick=f});(document.querySelector('.modal-close-button') ?? [...document.querySelectorAll('.modal-container button')].find(b=>b.textContent==='Cancel'))?.click();})()`).catch(()=>{});
   socket.close();
 }

@@ -1,0 +1,94 @@
+{
+  "first-click": {
+    "environment": {
+      "title": "B0S000 - mwc-252-small - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless is-focused obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "pluginHash": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+    "instrumented": true,
+    "note": "Real Obsidian/Electron on a synthetic disposable vault; CDP mouse input is trusted. 35 ms requested hold; observed event intervals include main-thread blocking. Handler wrappers are restored between trials. This is not Ted's vault, Windows, or physical OS focus switching.",
+    "passingCases": {
+      "results": 30,
+      "prose": 0
+    }
+  },
+  "blur": {
+    "environment": {
+      "title": "B0S000 - mwc-252-small - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ]
+    },
+    "pluginHash": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+    "instrumented": true,
+    "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification.",
+    "passingCases": {
+      "results": 35,
+      "keyboard": 10,
+      "keyboardTitle": 5,
+      "compactEnter": 10,
+      "external": 2,
+      "failures": 1
+    }
+  },
+  "blur-uninstrumented": {
+    "environment": {
+      "title": "B0S000 - mwc-252-small - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ]
+    },
+    "pluginHash": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+    "instrumented": false,
+    "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification.",
+    "passingCases": {
+      "results": 5,
+      "keyboard": 0,
+      "keyboardTitle": 0,
+      "compactEnter": 0,
+      "external": 0,
+      "failures": 0
+    }
+  },
+  "prose": {
+    "environment": {
+      "title": "B0S000 - mwc-252-small - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "theme": "mod-linux is-frameless is-hidden-frameless is-focused obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+    },
+    "pluginHash": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+    "instrumented": true,
+    "note": "Real Obsidian/Electron on a synthetic disposable vault; CDP mouse input is trusted. 35 ms requested hold; observed event intervals include main-thread blocking. Handler wrappers are restored between trials. This is not Ted's vault, Windows, or physical OS focus switching.",
+    "passingCases": {
+      "results": 0,
+      "prose": 5
+    }
+  },
+  "css": {
+    "equalRules": 548,
+    "nativeStylesLoaded": true,
+    "comparison": "548 CSSOM rules in identical order; four differences were whitespace after commas in functions, normalised for comparison."
+  },
+  "fixtureSetup": "100 synthetic notes; B0S001 title set to Scene 0 001 for the existing replay selectors. Failed setup attempts (modal close selector, legacy fixture title and retained capture) discarded; clean page reload before successful serial runs."
+}

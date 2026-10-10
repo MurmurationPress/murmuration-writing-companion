@@ -1,7 +1,7 @@
 import { gzipSync } from "node:zlib";
 
-export const BUNDLE_HARD_LIMIT = 737_280;
-export const BUNDLE_WARNING_THRESHOLD = 686_080;
+export const BUNDLE_HARD_LIMIT = 720_896;
+export const BUNDLE_WARNING_THRESHOLD = 669_696;
 
 export function bundleReport(bundle) {
   const bytes = Buffer.from(bundle);

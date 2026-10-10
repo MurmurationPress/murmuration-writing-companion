@@ -43,7 +43,7 @@ const key=async(key,code,num,modifiers=0)=>{
   await send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:num,modifiers});
 };
 const prepare=async()=>{
-  await evaluate(`(async()=>{document.querySelector('.modal-close-button')?.click();const p=${plugin};await app.workspace.getLeavesOfType('markdown')[0].openFile(app.vault.getAbstractFileByPath(${quote(destination)}),{active:true});await app.workspace.getLeavesOfType('markdown')[0].openFile(app.vault.getAbstractFileByPath(${quote(source)}),{active:true});p.sidebarSectionPreferences.setExpanded('chapterContext',true);p.refreshView();})()`);
+  await evaluate(`(async()=>{(document.querySelector('.modal-close-button') ?? [...document.querySelectorAll('.modal-container button')].find(b=>b.textContent==='Cancel'))?.click();const p=${plugin};await app.workspace.getLeavesOfType('markdown')[0].openFile(app.vault.getAbstractFileByPath(${quote(destination)}),{active:true});await app.workspace.getLeavesOfType('markdown')[0].openFile(app.vault.getAbstractFileByPath(${quote(source)}),{active:true});p.sidebarSectionPreferences.setExpanded('chapterContext',true);p.refreshView();})()`);
   await wait(500);
   await evaluate(`(async()=>{await app.workspace.revealLeaf(app.workspace.getLeavesOfType('murmuration-writing-companion-view')[0]);})()`);
   await wait(150);
@@ -83,7 +83,7 @@ try {
     const otherBefore=await evaluate(`app.metadataCache.getFileCache(app.vault.getAbstractFileByPath(${quote(destination)}))?.frontmatter?.[${quote(property)}]??null`);
     await click(selector,repeat===4?180:35);await wait(800);
     const outcome=await evaluate(`(async()=>{const q=__blurProbe;return {before:q.before,after:document.querySelector(${quote(selector)})?.getAttribute('aria-expanded'),calls:${instrumented?'q.calls':'null'},writes:q.writes,actionAt:q.actionAt,current:${plugin}.getCurrentChapter()?.path,modals:document.querySelectorAll('.modal-container').length,cache:app.metadataCache.getFileCache(app.vault.getAbstractFileByPath(${quote(source)}))?.frontmatter?.[${quote(property)}],disk:(await app.vault.read(app.vault.getAbstractFileByPath(${quote(source)}))).includes(${quote(value)}),other:app.metadataCache.getFileCache(app.vault.getAbstractFileByPath(${quote(destination)}))?.frontmatter?.[${quote(property)}]??null,...(${instrumented}?{capture:__blurCapture.stop()}:{})}})()`);
-    await evaluate(`(()=>{const q=__blurProbe;q.button.onclick=q.original;${plugin}.updateChapterContextProperty=q.fn;app.fileManager.processFrontMatter=q.host;document.querySelector('.modal-close-button')?.click();})()`);
+    await evaluate(`(()=>{const q=__blurProbe;q.button.onclick=q.original;${plugin}.updateChapterContextProperty=q.fn;app.fileManager.processFrontMatter=q.host;(document.querySelector('.modal-close-button') ?? [...document.querySelectorAll('.modal-container button')].find(b=>b.textContent==='Cancel'))?.click();})()`);
     const worked=name.endsWith('scene')?outcome.current===destination:name.endsWith('modal')?outcome.modals===1:typeof outcome.after==='string' && outcome.after!==outcome.before;
     results.push({name,repeat,holdMs:repeat===4?180:35,worked,...outcome});
     assert.equal(outcome.disk,true,`${name}: missing disk edit`);
@@ -153,6 +153,6 @@ try {
   }
   console.log(JSON.stringify({environment,pluginHash,instrumented,results,keyboard,keyboardTitle,compactEnter,external,failures,note:'Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification.'},null,2));
 }finally{
-  await evaluate(`(()=>{globalThis.__blurCapture?.stop();if(globalThis.__keyProbe)__keyProbe.button.onclick=__keyProbe.fn;if(globalThis.__titleKey)__titleKey.button.onkeydown=__titleKey.fn;if(globalThis.__enterSave)${plugin}.updateChapterContextProperty=__enterSave.fn;if(globalThis.__failureProbe)app.fileManager.processFrontMatter=__failureProbe.fn;const q=globalThis.__blurProbe;if(q){q.button.onclick=q.original;${plugin}.updateChapterContextProperty=q.fn;app.fileManager.processFrontMatter=q.host;}document.querySelector('.modal-close-button')?.click()})()`).catch(()=>{});
+  await evaluate(`(()=>{globalThis.__blurCapture?.stop();if(globalThis.__keyProbe)__keyProbe.button.onclick=__keyProbe.fn;if(globalThis.__titleKey)__titleKey.button.onkeydown=__titleKey.fn;if(globalThis.__enterSave)${plugin}.updateChapterContextProperty=__enterSave.fn;if(globalThis.__failureProbe)app.fileManager.processFrontMatter=__failureProbe.fn;const q=globalThis.__blurProbe;if(q){q.button.onclick=q.original;${plugin}.updateChapterContextProperty=q.fn;app.fileManager.processFrontMatter=q.host;}(document.querySelector('.modal-close-button') ?? [...document.querySelectorAll('.modal-container button')].find(b=>b.textContent==='Cancel'))?.click()})()`).catch(()=>{});
   socket.close();
 }
