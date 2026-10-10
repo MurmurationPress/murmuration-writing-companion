@@ -55,11 +55,12 @@ test("Story World startup converges after frontmatter becomes fully available an
 test("settled Story World rebuild refreshes every index-backed workspace consumer", () => {
   const main = readFileSync("src/main.ts", "utf8");
   const entry = readFileSync("src/entry.ts", "utf8");
-  const registration = main.indexOf('metadataCache.on("resolved", () => this.storyWorldStartup.metadataResolved())');
+  const registration = main.indexOf('metadataCache.on("resolved", () => worldResolution.request())');
   const asyncLoad = main.indexOf("await this.storeService.load()");
   equal(registration >= 0 && registration < asyncLoad, true);
 
   const refresh = entry.match(/protected override refreshStoryWorldIndexConsumers\(\): void \{(?<body>[\s\S]*?)\n  \}/u)?.groups?.body ?? "";
+  equal(refresh.includes("this.queueContinuityReviewRefresh()"), true);
   equal(refresh.includes("this.refreshStoryWorldNavigator()"), true);
   equal(refresh.includes("this.refreshStoryWorldGraph()"), true);
   equal(refresh.includes("this.refreshView()"), true);

@@ -1,0 +1,1241 @@
+{
+  "safety": {
+    "initial": {
+      "writes": [
+        "Part0.md",
+        "B0S023.md",
+        "B0S022.md",
+        "B0S021.md",
+        "B0S020.md",
+        "B0S019.md",
+        "B0S018.md",
+        "B0S017.md",
+        "B0S016.md",
+        "B0S015.md",
+        "B0S014.md",
+        "B0S013.md",
+        "B0S012.md",
+        "B0S010.md",
+        "B0S011.md",
+        "B0S009.md",
+        "B0S008.md",
+        "B0S007.md",
+        "B0S006.md",
+        "B0S005.md",
+        "B0S004.md",
+        "B0S003.md",
+        "B0S002.md",
+        "B0S001.md",
+        "B0S000.md",
+        "Book0.md"
+      ],
+      "current": true,
+      "alias": "authored alias",
+      "status": "none"
+    },
+    "repeat": [],
+    "external": {
+      "writes": [],
+      "books": [
+        [
+          "Book0.md",
+          false
+        ],
+        [
+          "Book1.md",
+          false
+        ]
+      ],
+      "owner": "Book1.md",
+      "status": "",
+      "tooltip": "Scene numbers out of date — Book1 (Book1.md). Click to renumber this Book."
+    },
+    "cancellation": {
+      "lateRebuilds": 0,
+      "context": "B1S000.md",
+      "status": "",
+      "writes": [],
+      "cssLoaded": true
+    }
+  },
+  "uninstrumented": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ]
+    },
+    "pluginHash": "8b9971957a696fb408153427a9cb8ff991114ff8ec824cd6230b3c4219e133d8",
+    "instrumented": false,
+    "results": [
+      {
+        "name": "summary-toggle",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": null,
+        "writes": [],
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-0-1791638933677",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": null,
+        "writes": [],
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-1-1791638935268",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": null,
+        "writes": [],
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-2-1791638936822",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": null,
+        "writes": [],
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-3-1791638938460",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": null,
+        "writes": [],
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-4-1791638940099",
+        "disk": true,
+        "other": null
+      }
+    ],
+    "keyboard": [],
+    "keyboardTitle": [],
+    "compactEnter": [],
+    "external": [],
+    "failures": [],
+    "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification."
+  },
+  "nativeReplay": {
+    "environment": {
+      "title": "B0S000 - vault - Obsidian 1.14.4",
+      "electron": "43.3.0",
+      "chrome": "150.0.7871.212",
+      "platform": "linux",
+      "notes": 100,
+      "plugins": [
+        "murmuration-writing-companion"
+      ]
+    },
+    "pluginHash": "8b9971957a696fb408153427a9cb8ff991114ff8ec824cd6230b3c4219e133d8",
+    "instrumented": true,
+    "results": [
+      {
+        "name": "summary-toggle",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-toggle-0-1791638959145",
+            "done": true,
+            "completedAt": 66109.89999999851
+          }
+        ],
+        "actionAt": 66144.59999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-0-1791638959145",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-toggle-1-1791638960800",
+            "done": true,
+            "completedAt": 67777.69999999925
+          }
+        ],
+        "actionAt": 67812.39999999851,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-1-1791638960800",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-toggle-2-1791638962469",
+            "done": true,
+            "completedAt": 69442.79999999702
+          }
+        ],
+        "actionAt": 69479.09999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-2-1791638962469",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-toggle-3-1791638964135",
+            "done": true,
+            "completedAt": 71077.29999999702
+          }
+        ],
+        "actionAt": 71112.5,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-3-1791638964135",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-toggle",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-toggle-4-1791638965771",
+            "done": true,
+            "completedAt": 72744.09999999776
+          }
+        ],
+        "actionAt": 72923.69999999925,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-summary-toggle-4-1791638965771",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-scene",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-scene-0-1791638967583",
+            "done": true,
+            "completedAt": 74546.09999999776
+          }
+        ],
+        "actionAt": 74581.29999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-summary-scene-0-1791638967583",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-scene",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-scene-1-1791638969189",
+            "done": true,
+            "completedAt": 76145.29999999702
+          }
+        ],
+        "actionAt": 76179.79999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-summary-scene-1-1791638969189",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-scene",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-scene-2-1791638970788",
+            "done": true,
+            "completedAt": 77749.89999999851
+          }
+        ],
+        "actionAt": 77782.59999999776,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-summary-scene-2-1791638970788",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-scene",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-scene-3-1791638972389",
+            "done": true,
+            "completedAt": 79344.5
+          }
+        ],
+        "actionAt": 79379.39999999851,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-summary-scene-3-1791638972389",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-scene",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-scene-4-1791638973985",
+            "done": true,
+            "completedAt": 80944.29999999702
+          }
+        ],
+        "actionAt": 81125.5,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-summary-scene-4-1791638973985",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-modal",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-modal-0-1791638975736",
+            "done": true,
+            "completedAt": 82712.59999999776
+          }
+        ],
+        "actionAt": 82754.09999999776,
+        "current": "B0S000.md",
+        "modals": 1,
+        "cache": "fixture-summary-modal-0-1791638975736",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-modal",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-modal-1-1791638977453",
+            "done": true,
+            "completedAt": 84411.19999999925
+          }
+        ],
+        "actionAt": 84445.69999999925,
+        "current": "B0S000.md",
+        "modals": 1,
+        "cache": "fixture-summary-modal-1-1791638977453",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-modal",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-modal-2-1791638979102",
+            "done": true,
+            "completedAt": 86049.5
+          }
+        ],
+        "actionAt": 86084.39999999851,
+        "current": "B0S000.md",
+        "modals": 1,
+        "cache": "fixture-summary-modal-2-1791638979102",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-modal",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-modal-3-1791638980732",
+            "done": true,
+            "completedAt": 87710.59999999776
+          }
+        ],
+        "actionAt": 87745.59999999776,
+        "current": "B0S000.md",
+        "modals": 1,
+        "cache": "fixture-summary-modal-3-1791638980732",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "summary-modal",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-summary-modal-4-1791638982422",
+            "done": true,
+            "completedAt": 89379.59999999776
+          }
+        ],
+        "actionAt": 89559.59999999776,
+        "current": "B0S000.md",
+        "modals": 1,
+        "cache": "fixture-summary-modal-4-1791638982422",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "title-toggle",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "title",
+            "value": "fixture-title-toggle-0-1791638984234",
+            "done": true,
+            "completedAt": 91188.19999999925
+          }
+        ],
+        "actionAt": 91223.59999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-title-toggle-0-1791638984234",
+        "disk": true,
+        "other": "Scene 0 001"
+      },
+      {
+        "name": "title-toggle",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "title",
+            "value": "fixture-title-toggle-1-1791638985887",
+            "done": true,
+            "completedAt": 92877.19999999925
+          }
+        ],
+        "actionAt": 92912.09999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-title-toggle-1-1791638985887",
+        "disk": true,
+        "other": "Scene 0 001"
+      },
+      {
+        "name": "title-toggle",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "title",
+            "value": "fixture-title-toggle-2-1791638987565",
+            "done": true,
+            "completedAt": 94548.59999999776
+          }
+        ],
+        "actionAt": 94583.79999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-title-toggle-2-1791638987565",
+        "disk": true,
+        "other": "Scene 0 001"
+      },
+      {
+        "name": "title-toggle",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "title",
+            "value": "fixture-title-toggle-3-1791638989247",
+            "done": true,
+            "completedAt": 96211.69999999925
+          }
+        ],
+        "actionAt": 96246.29999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-title-toggle-3-1791638989247",
+        "disk": true,
+        "other": "Scene 0 001"
+      },
+      {
+        "name": "title-toggle",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "title",
+            "value": "fixture-title-toggle-4-1791638990930",
+            "done": true,
+            "completedAt": 97912
+          }
+        ],
+        "actionAt": 98091.69999999925,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-title-toggle-4-1791638990930",
+        "disk": true,
+        "other": "Scene 0 001"
+      },
+      {
+        "name": "pov-toggle",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "pov",
+            "value": "[[fixture-pov-toggle-0-1791638992818]]",
+            "done": true,
+            "completedAt": 99782.29999999702
+          }
+        ],
+        "actionAt": 99816.79999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "[[fixture-pov-toggle-0-1791638992818]]",
+        "disk": true,
+        "other": "[[Entity00000]]"
+      },
+      {
+        "name": "pov-toggle",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "pov",
+            "value": "[[fixture-pov-toggle-1-1791638994563]]",
+            "done": true,
+            "completedAt": 101518.5
+          }
+        ],
+        "actionAt": 101552.59999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "[[fixture-pov-toggle-1-1791638994563]]",
+        "disk": true,
+        "other": "[[Entity00000]]"
+      },
+      {
+        "name": "pov-toggle",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "pov",
+            "value": "[[fixture-pov-toggle-2-1791638996288]]",
+            "done": true,
+            "completedAt": 103251.79999999702
+          }
+        ],
+        "actionAt": 103285.29999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "[[fixture-pov-toggle-2-1791638996288]]",
+        "disk": true,
+        "other": "[[Entity00000]]"
+      },
+      {
+        "name": "pov-toggle",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "pov",
+            "value": "[[fixture-pov-toggle-3-1791638998019]]",
+            "done": true,
+            "completedAt": 104981.39999999851
+          }
+        ],
+        "actionAt": 105016.39999999851,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "[[fixture-pov-toggle-3-1791638998019]]",
+        "disk": true,
+        "other": "[[Entity00000]]"
+      },
+      {
+        "name": "pov-toggle",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "pov",
+            "value": "[[fixture-pov-toggle-4-1791638999763]]",
+            "done": true,
+            "completedAt": 106719.29999999702
+          }
+        ],
+        "actionAt": 106897.59999999776,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "[[fixture-pov-toggle-4-1791638999763]]",
+        "disk": true,
+        "other": "[[Entity00000]]"
+      },
+      {
+        "name": "location-toggle",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "location",
+            "value": "fixture-location-toggle-0-1791639001625",
+            "done": true,
+            "completedAt": 108582
+          }
+        ],
+        "actionAt": 108616.79999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-location-toggle-0-1791639001625",
+        "disk": true,
+        "other": "[[Entity00001]]"
+      },
+      {
+        "name": "location-toggle",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "location",
+            "value": "fixture-location-toggle-1-1791639003314",
+            "done": true,
+            "completedAt": 110249.69999999925
+          }
+        ],
+        "actionAt": 110283.79999999702,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-location-toggle-1-1791639003314",
+        "disk": true,
+        "other": "[[Entity00001]]"
+      },
+      {
+        "name": "location-toggle",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "location",
+            "value": "fixture-location-toggle-2-1791639005016",
+            "done": true,
+            "completedAt": 111989.5
+          }
+        ],
+        "actionAt": 112022,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-location-toggle-2-1791639005016",
+        "disk": true,
+        "other": "[[Entity00001]]"
+      },
+      {
+        "name": "location-toggle",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": "false",
+        "after": "true",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "location",
+            "value": "fixture-location-toggle-3-1791639006753",
+            "done": true,
+            "completedAt": 113722.59999999776
+          }
+        ],
+        "actionAt": 113755,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-location-toggle-3-1791639006753",
+        "disk": true,
+        "other": "[[Entity00001]]"
+      },
+      {
+        "name": "location-toggle",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": "true",
+        "after": "false",
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "location",
+            "value": "fixture-location-toggle-4-1791639008483",
+            "done": true,
+            "completedAt": 115454.79999999702
+          }
+        ],
+        "actionAt": 115634.39999999851,
+        "current": "B0S000.md",
+        "modals": 0,
+        "cache": "fixture-location-toggle-4-1791639008483",
+        "disk": true,
+        "other": "[[Entity00001]]"
+      },
+      {
+        "name": "slow-summary-scene",
+        "repeat": 0,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-slow-summary-scene-0-1791639010218",
+            "done": true,
+            "completedAt": 117453
+          }
+        ],
+        "actionAt": 117184.79999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-slow-summary-scene-0-1791639010218",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "slow-summary-scene",
+        "repeat": 1,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-slow-summary-scene-1-1791639011790",
+            "done": true,
+            "completedAt": 119053.89999999851
+          }
+        ],
+        "actionAt": 118786.89999999851,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-slow-summary-scene-1-1791639011790",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "slow-summary-scene",
+        "repeat": 2,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-slow-summary-scene-2-1791639013391",
+            "done": true,
+            "completedAt": 120654.59999999776
+          }
+        ],
+        "actionAt": 120389.29999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-slow-summary-scene-2-1791639013391",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "slow-summary-scene",
+        "repeat": 3,
+        "holdMs": 35,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-slow-summary-scene-3-1791639014995",
+            "done": true,
+            "completedAt": 122255.29999999702
+          }
+        ],
+        "actionAt": 121988.79999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-slow-summary-scene-3-1791639014995",
+        "disk": true,
+        "other": null
+      },
+      {
+        "name": "slow-summary-scene",
+        "repeat": 4,
+        "holdMs": 180,
+        "worked": true,
+        "before": null,
+        "after": null,
+        "calls": 1,
+        "writes": [
+          {
+            "path": "B0S000.md",
+            "field": "change_summary",
+            "value": "fixture-slow-summary-scene-4-1791639016600",
+            "done": true,
+            "completedAt": 123879.89999999851
+          }
+        ],
+        "actionAt": 123763.29999999702,
+        "current": "B0S001.md",
+        "modals": 0,
+        "cache": "fixture-slow-summary-scene-4-1791639016600",
+        "disk": true,
+        "other": null
+      }
+    ],
+    "keyboard": [
+      {
+        "activation": "Space",
+        "repeat": 0,
+        "key": "section:worldContext",
+        "before": "false",
+        "calls": 1,
+        "after": "true",
+        "disk": true
+      },
+      {
+        "activation": "Space",
+        "repeat": 1,
+        "key": "section:worldContext",
+        "before": "true",
+        "calls": 1,
+        "after": "false",
+        "disk": true
+      },
+      {
+        "activation": "Space",
+        "repeat": 2,
+        "key": "section:worldContext",
+        "before": "false",
+        "calls": 1,
+        "after": "true",
+        "disk": true
+      },
+      {
+        "activation": "Space",
+        "repeat": 3,
+        "key": "section:worldContext",
+        "before": "true",
+        "calls": 1,
+        "after": "false",
+        "disk": true
+      },
+      {
+        "activation": "Space",
+        "repeat": 4,
+        "key": "section:worldContext",
+        "before": "false",
+        "calls": 1,
+        "after": "true",
+        "disk": true
+      },
+      {
+        "activation": "Enter",
+        "repeat": 0,
+        "key": "section:worldContext",
+        "before": "true",
+        "calls": 1,
+        "after": "false",
+        "disk": true
+      },
+      {
+        "activation": "Enter",
+        "repeat": 1,
+        "key": "section:worldContext",
+        "before": "false",
+        "calls": 1,
+        "after": "true",
+        "disk": true
+      },
+      {
+        "activation": "Enter",
+        "repeat": 2,
+        "key": "section:worldContext",
+        "before": "true",
+        "calls": 1,
+        "after": "false",
+        "disk": true
+      },
+      {
+        "activation": "Enter",
+        "repeat": 3,
+        "key": "section:worldContext",
+        "before": "false",
+        "calls": 1,
+        "after": "true",
+        "disk": true
+      },
+      {
+        "activation": "Enter",
+        "repeat": 4,
+        "key": "section:worldContext",
+        "before": "true",
+        "calls": 1,
+        "after": "false",
+        "disk": true
+      }
+    ],
+    "keyboardTitle": [
+      {
+        "repeat": 0,
+        "calls": 1,
+        "editors": 1,
+        "disk": true
+      },
+      {
+        "repeat": 1,
+        "calls": 1,
+        "editors": 1,
+        "disk": true
+      },
+      {
+        "repeat": 2,
+        "calls": 1,
+        "editors": 1,
+        "disk": true
+      },
+      {
+        "repeat": 3,
+        "calls": 1,
+        "editors": 1,
+        "disk": true
+      },
+      {
+        "repeat": 4,
+        "calls": 1,
+        "editors": 1,
+        "disk": true
+      }
+    ],
+    "compactEnter": [
+      {
+        "property": "pov",
+        "repeat": 0,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-0-1791639041620]]"
+      },
+      {
+        "property": "pov",
+        "repeat": 1,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-1-1791639043048]]"
+      },
+      {
+        "property": "pov",
+        "repeat": 2,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-2-1791639044480]]"
+      },
+      {
+        "property": "pov",
+        "repeat": 3,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-3-1791639045916]]"
+      },
+      {
+        "property": "pov",
+        "repeat": 4,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-4-1791639047349]]"
+      },
+      {
+        "property": "location",
+        "repeat": 0,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-0-1791639048785"
+      },
+      {
+        "property": "location",
+        "repeat": 1,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-1-1791639050250"
+      },
+      {
+        "property": "location",
+        "repeat": 2,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-2-1791639051718"
+      },
+      {
+        "property": "location",
+        "repeat": 3,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-3-1791639053184"
+      },
+      {
+        "property": "location",
+        "repeat": 4,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-4-1791639054649"
+      }
+    ],
+    "external": [
+      {
+        "dirty": false,
+        "title": "external-title-1791639057995",
+        "summary": "external-title-1791639057995"
+      },
+      {
+        "dirty": true,
+        "title": "external-title-1791639059802",
+        "summary": "local-draft-1791639059802"
+      }
+    ],
+    "failures": [
+      {
+        "attempts": 2,
+        "firstActionCalls": 1,
+        "disk": true
+      }
+    ],
+    "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification."
+  },
+  "note": "Repetitive native event capture arrays omitted; all outcome/persistence assertions retained. Timings here are safety replay diagnostics, not the controlled performance comparison."
+}

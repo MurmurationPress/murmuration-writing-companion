@@ -117,3 +117,53 @@ test('repeated entity consumers stop sorting while metadata changes still invali
   equal(f.world.handleMetadataChanged(file),true); f.world.index.getAll();
   equal(f.counts.entitySorts,2);
 });
+
+test('authoritative resolution catches late non-entity evidence and disappeared source notes using one file scan', () => {
+  const f = syntheticVault(100); f.world.rebuild();
+  const before = f.review.get(); const file = f.files[1];
+  // The host can expose fresh cache only at resolved, after changed/drain ran.
+  f.metadata.set(file.path, {frontmatter: {world_context: ['[[Unknown late reference]]']}});
+  let evidenceChanged = false; const scans = f.counts.markdownEnumerations;
+  equal(f.world.rebuild(files => {evidenceChanged = f.review.reconcileMetadata(files);}), false);
+  equal(f.counts.markdownEnumerations - scans, 1); equal(evidenceChanged, true);
+  const withEvidence = f.review.get(); notEqual(withEvidence, before);
+  f.world.rebuild(files => {evidenceChanged = f.review.reconcileMetadata(files);});
+  equal(evidenceChanged, false); strictEqual(f.review.get(), withEvidence);
+  f.files.splice(1,1); // A missed delete callback must not retain review evidence.
+  f.world.rebuild(files => {evidenceChanged = f.review.reconcileMetadata(files);});
+  equal(evidenceChanged, true); notEqual(f.review.get(), withEvidence);
+});
+
+test('resolved target existence changes invalidate review even when source evidence and entities are unchanged', () => {
+  const f = syntheticVault(100);
+  const source = f.files[0], target = f.files[1];
+  f.metadata.get(source.path)!.frontmatter!.world_sources = ['[[External evidence]]'];
+  const original = f.app.metadataCache.getFirstLinkpathDest.bind(f.app.metadataCache);
+  let destination: typeof target | null = null;
+  f.app.metadataCache.getFirstLinkpathDest = (link, path) => link === 'External evidence' ? destination : original(link, path);
+  f.world.rebuild();
+  const missing = f.review.get();
+  equal(missing.observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+  // Host link resolution can arrive late, or point at a non-entity/attachment.
+  // Neither the source fingerprint nor entity index changes in this transition.
+  destination = target;
+  let changed = false;
+  equal(f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); }), false);
+  equal(changed, true);
+  const resolved = f.review.get();
+  equal(resolved.observations.some(o => o.kind === 'story-world.source.unresolved'), false);
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, false); strictEqual(f.review.get(), resolved);
+  destination = { ...target, path: '.trash/Evidence.md' };
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+  destination = { ...target, path: 'Evidence.pdf', extension: 'pdf' };
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), false);
+  destination = null;
+  f.world.rebuild(files => { changed = f.review.reconcileMetadata(files); });
+  equal(changed, true);
+  equal(f.review.get().observations.some(o => o.kind === 'story-world.source.unresolved'), true);
+});

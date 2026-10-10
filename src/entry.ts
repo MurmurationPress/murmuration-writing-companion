@@ -57,6 +57,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
 
   async onload() {
     await super.onload();
+    if (this.unloaded) return;
     installManuscriptChatRendering(this);
     this.register(this.manuscriptBookSelection.subscribe((selection) => {
       this.synchroniseContinuityReviewScope(selection);
@@ -138,17 +139,18 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       this.queueContinuityReviewRefresh();
     }));
     this.app.workspace.onLayoutReady(() => {
+      if (this.unloaded) return;
       this.seedActiveEditor();
       this.refreshStoryWorldNavigator();
       this.refreshStoryWorldGraph(true);
-      window.setTimeout(() => void this.showFirstRunReadinessInvitation(), 500);
+      window.setTimeout(() => { if (!this.unloaded) void this.showFirstRunReadinessInvitation(); }, 500);
     });
     this.registerEvent(this.app.metadataCache.on("changed", (file) => {
       this.queueNavigatorRefresh();
       if (this.storyWorldInspectorPath) this.storyWorldInspectorRefreshPending = true;
       if (this.continuityReviewDependsOn(file.path)) this.queueContinuityReviewRefresh();
     }));
-    this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(); }));
+    this.registerEvent(this.app.vault.on("create", () => this.queueContinuityReviewRefresh()));
     this.register(() => {
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);
@@ -411,7 +413,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     }
     this.continuityReviewRefreshTimer = window.setTimeout(() => {
       this.continuityReviewRefreshTimer = null;
-      this.reloadContinuityReview();
+      if (!this.unloaded) this.reloadContinuityReview();
     }, 50);
   }
 
@@ -449,6 +451,9 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
   }
 
   protected override refreshStoryWorldIndexConsumers(): void {
+    // Continuity Review retains a collection; rendering alone cannot refresh
+    // late metadata/link evidence discovered by authoritative reconciliation.
+    this.queueContinuityReviewRefresh();
     this.refreshStoryWorldNavigator();
     this.refreshStoryWorldGraph();
     this.refreshView();
@@ -564,7 +569,6 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
     if (this.navigatorRefreshTimer !== null) window.clearTimeout(this.navigatorRefreshTimer);
     this.navigatorRefreshTimer = window.setTimeout(() => {
       this.navigatorRefreshTimer = null;
-      this.refreshManuscriptNavigator();
       this.refreshStoryWorldNavigator();
       this.refreshStoryWorldGraph();
       if (this.storyWorldInspectorRefreshPending) {

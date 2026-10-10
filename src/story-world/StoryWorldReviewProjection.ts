@@ -1,6 +1,6 @@
 import { App, TFile } from "obsidian";
 import { isObsidianTrashPath } from "../ObsidianTrash";
-import { collectObsidianStoryWorldReview } from "./ObsidianStoryWorldReview";
+import { collectObsidianStoryWorldReview, ReviewResolutionObserver } from "./ObsidianStoryWorldReview";
 import { ObsidianStoryWorldIndex } from "./ObsidianStoryWorldIndex";
 import {
   storyWorldReviewEvidenceFingerprint,
@@ -8,7 +8,7 @@ import {
 } from "./StoryWorldReview";
 import { DisposableProjection } from "../projections/DisposableProjection";
 
-type Collector = (app: App, index: ObsidianStoryWorldIndex) => StoryWorldReviewProjection;
+type Collector = (app: App, index: ObsidianStoryWorldIndex, observe?: ReviewResolutionObserver) => StoryWorldReviewProjection;
 
 function evidenceFingerprint(app: App, file: TFile): string | null {
   if (file.extension !== "md" || isObsidianTrashPath(file.path)) return null;
@@ -24,12 +24,20 @@ function evidenceFingerprint(app: App, file: TFile): string | null {
 /** Lazy, disposable Story World review projection. Closed views do not warm it. */
 export class StoryWorldReviewProjectionService {
   private readonly projection: DisposableProjection<StoryWorldReviewProjection>;
+  private readonly resolutions = new Map<string, { reference: unknown; sourcePath: string; fingerprint: string }>();
 
   constructor(
     private readonly app: App,
     private readonly index: ObsidianStoryWorldIndex,
     private readonly collect: Collector = collectObsidianStoryWorldReview
-  ) { this.projection = new DisposableProjection(() => this.collect(this.app, this.index)); }
+  ) {
+    this.projection = new DisposableProjection(() => {
+      this.resolutions.clear();
+      return this.collect(this.app, this.index, (reference, sourcePath, resolution) => {
+        this.resolutions.set(JSON.stringify([reference, sourcePath]), { reference, sourcePath, fingerprint: JSON.stringify(resolution) });
+      });
+    });
+  }
 
   get(): StoryWorldReviewProjection {
     const value = this.projection.get();
@@ -42,6 +50,25 @@ export class StoryWorldReviewProjectionService {
 
   private fingerprintsCaptured = false;
   invalidate(): void { this.projection.invalidate(); this.fingerprintsCaptured = false; }
+
+  /** Resolution can expose late evidence even without another changed event. */
+  reconcileMetadata(files: readonly TFile[]): boolean {
+    let changed = this.projection.retainDependencies(new Set(files.map(file => file.path)));
+    for (const file of files) changed = this.invalidateMetadata(file, false) || changed;
+    // A plain target (including an attachment) can appear/disappear or resolve
+    // differently without changing source metadata or the entity index. Compare
+    // only dependencies actually consulted by the cached review, at resolution.
+    for (const dependency of this.resolutions.values()) {
+      const next = JSON.stringify(this.index.resolveReference(dependency.reference, dependency.sourcePath));
+      if (next !== dependency.fingerprint) {
+        dependency.fingerprint = next;
+        this.projection.invalidate();
+        changed = true;
+      }
+    }
+    if (changed) this.fingerprintsCaptured = false;
+    return changed;
+  }
 
   /** Drain coalesced paths; only fresh index or review evidence needs a view refresh. */
   refreshMetadata(files: Iterable<TFile>): boolean {

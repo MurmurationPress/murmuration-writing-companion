@@ -1,19 +1,12 @@
-import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import { Annotation, PageEditorialNotes } from "../editorial/EditorialNote";
 import { renderAnnotationCard } from "../ui/AnnotationCard";
-import { renderEditorialPassChecklist } from "../ui/EditorialPassChecklist";
-import {
-  EDITABLE_CHAPTER_CONTEXT_FIELDS,
-  getChapterContextInputType,
-  getChapterContextSelectOptions,
-  getEditableChapterContextValue
-} from "./ChapterContext";
 import { inspectorPanelLabel, InspectorPanelRole } from "../ui/PanelLabels";
 
 export const VIEW_TYPE = "murmuration-writing-companion-view";
 
-export class WritingCompanionView extends ItemView {
+export abstract class WritingCompanionView extends ItemView {
   plugin: MurmurationWritingCompanionPlugin;
   private pendingReviewScrollNoteId: string | null = null;
   private showResolvedAnnotations = false;
@@ -46,157 +39,10 @@ export class WritingCompanionView extends ItemView {
     this.render();
   }
 
-  render() {
-    const container = this.containerEl.children[1];
-    container.empty();
-    container.addClass("mwc-container");
-
-    const file = this.plugin.getCurrentChapter();
-    const focusNoteId = this.plugin.getPendingFocusNoteId();
-
-    container.createEl("h2", { text: "Writing Companion" });
-
-    if (!file) {
-      container.createEl("p", {
-        cls: "mwc-muted",
-        text: "Open a Markdown chapter to view its notes."
-      });
-      return;
-    }
-
-    const page = this.plugin.storeService.getPage(file);
-
-    this.renderChapterContext(container, file);
-    renderEditorialPassChecklist(
-      container,
-      file.basename,
-      this.plugin.storeService.getEditorialPassChecklist(file),
-      (pass, completed) =>
-        this.plugin.storeService.setEditorialPassCompleted(file, pass, completed)
-    );
-    this.renderChapterNote(container, file, page);
-    this.renderAnnotations(container, file, page, focusNoteId);
-  }
-
-  renderChapterContext(container: Element, file: TFile) {
-    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-    const section = container.createDiv("mwc-section mwc-chapter-context");
-    section.createEl("h3", { text: "Chapter Context" });
-
-    const list = section.createEl("dl", {
-      cls: "mwc-context-list",
-      attr: { "aria-label": `Chapter context for ${file.basename}` }
-    });
-
-    for (const field of EDITABLE_CHAPTER_CONTEXT_FIELDS) {
-      const contextValue = getEditableChapterContextValue(frontmatter, field);
-      const row = list.createDiv("mwc-context-row mwc-context-row--editable");
-      row.createEl("dt", {
-        cls: "mwc-context-label",
-        text: field.label
-      });
-      const value = row.createEl("dd", {
-        cls: "mwc-context-value mwc-context-value--editable",
-        attr: { title: `Markdown property: ${contextValue.property}` }
-      });
-
-      const save = async (nextValue: string) => {
-        const normalizedCurrent = contextValue.value.trim();
-        const normalizedNext = nextValue.trim();
-        if (normalizedCurrent === normalizedNext) return;
-
-        await this.plugin.updateChapterContextProperty(file, field, normalizedNext);
-      };
-
-      const placeholder = field.key === "title" ? file.basename : field.placeholder;
-      const selectOptions = getChapterContextSelectOptions(field, contextValue.value);
-
-      if (selectOptions) {
-        const editor = value.createEl("select", {
-          cls: "mwc-context-input mwc-context-select",
-          attr: { "aria-label": field.label }
-        });
-
-        for (const option of selectOptions) {
-          const optionEl = editor.createEl("option", { text: option.label });
-          optionEl.value = option.value;
-        }
-
-        editor.value = contextValue.value;
-        editor.onchange = () => {
-          void save(editor.value);
-        };
-      } else if (field.multiline) {
-        const editor = value.createEl("textarea", {
-          cls: "mwc-context-input mwc-context-input--multiline",
-          attr: {
-            placeholder,
-            "aria-label": field.label
-          }
-        });
-        editor.value = contextValue.value;
-        editor.onblur = () => {
-          void save(editor.value);
-        };
-      } else {
-        const editor = value.createEl("input", {
-          cls: "mwc-context-input",
-          type: getChapterContextInputType(field, contextValue.value),
-          attr: {
-            placeholder,
-            "aria-label": field.label
-          }
-        });
-        editor.value = contextValue.value;
-        editor.onchange = () => {
-          void save(editor.value);
-        };
-        editor.onkeydown = (event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          editor.blur();
-        };
-      }
-
-      if (field.renderMarkdownPreview && contextValue.value.length > 0) {
-        const preview = value.createDiv({
-          cls: "mwc-context-preview",
-          attr: { "aria-label": `${field.label} link preview` }
-        });
-        this.renderMarkdownValue(preview, contextValue.value, file);
-      }
-    }
-  }
-
-  private renderMarkdownValue(container: HTMLElement, markdown: string, file: TFile) {
-    void MarkdownRenderer.render(
-      this.app,
-      markdown,
-      container,
-      file.path,
-      this
-    );
-
-    container.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-
-      const link = target.closest<HTMLAnchorElement>("a.internal-link");
-      if (!link || !container.contains(link)) return;
-
-      const destination = link.dataset.href ?? link.getAttribute("href");
-      if (!destination) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      void this.app.workspace.openLinkText(
-        destination,
-        file.path,
-        event.metaKey || event.ctrlKey
-      );
-    });
-  }
+  // The concrete collapsible view owns rendering. Legacy non-collapsible
+  // implementations were always overridden and must not ship alongside it.
+  abstract render(): void;
+  abstract renderChapterContext(container: Element, file: TFile): void;
 
   renderChapterNote(
     container: Element,

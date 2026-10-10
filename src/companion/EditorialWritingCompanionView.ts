@@ -1,5 +1,5 @@
 import { ChapterContextEdit } from "./ChapterContextEdit";
-import { MarkdownRenderer, Notice, TFile, WorkspaceLeaf } from "obsidian";
+import { Notice, TFile, WorkspaceLeaf } from "obsidian";
 import MurmurationWritingCompanionPlugin from "../main";
 import {
   BOOK_REVIEW_MODE_LABELS,
@@ -55,7 +55,7 @@ let nextPovSuggestionListId = 0;
 let nextLocationSuggestionListId = 0;
 let nextBookReviewContentId = 0;
 
-export class WritingCompanionView extends BaseWritingCompanionView {
+export abstract class WritingCompanionView extends BaseWritingCompanionView {
   private readonly contextEdits = new WeakMap<TFile, Map<string, ChapterContextEdit>>();
   private readonly dismissedPovCharacterOffers = new Set<string>();
 
@@ -797,24 +797,4 @@ export class WritingCompanionView extends BaseWritingCompanionView {
     };
   }
 
-  private renderCompactMarkdownValue(container: HTMLElement, markdown: string, file: TFile) {
-    void MarkdownRenderer.render(this.app, markdown, container, file.path, this);
-
-    container.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const link = target.closest<HTMLAnchorElement>("a.internal-link");
-      if (!link || !container.contains(link)) return;
-      const destination = link.dataset.href ?? link.getAttribute("href");
-      if (!destination) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      void this.app.workspace.openLinkText(
-        destination,
-        file.path,
-        event.metaKey || event.ctrlKey
-      );
-    });
-  }
 }

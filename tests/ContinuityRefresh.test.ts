@@ -46,3 +46,7 @@ test("changing a disposition refreshes the Companion immediately", () => {
     deferredChronology: false
   });
 });
+
+test('settled manuscript reconciliation owns metadata pane refresh and supersedes the early chronology timer', () => {
+  deepEqual(metadataContinuityRefreshDecision({changedPath:'Scene.md',settledManuscript:true,manuscriptDependencies:new Set(['Scene.md']),worldChanged:false,currentChapterChanged:true,currentBookChanged:false}),{companion:false,manuscriptNavigator:false,deferredChronology:false});
+});

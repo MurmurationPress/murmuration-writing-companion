@@ -8,7 +8,8 @@ The enforced raw `main.js` ceiling is **720,896 bytes**. The early warning and m
 - #252/#253 used 720,896 as the hard limit and 669,696 as the warning threshold.
 - #261 raised the ceiling by 16 KiB to 737,280, with a 686,080 warning, to accommodate preparation and restoration safeguards.
 - #263 actually measured **734,545 raw / 205,236 gzip**, leaving 2,735 bytes under **737,280**, not 720,896. The later #252 comment inferred 718,161 from the wrong ceiling. That inferred size is not a measured baseline.
-- This #252 follow-up restores the explicitly requested **720,896 / 669,696** policy. Its measured 685,795-byte bundle remains **16,099 bytes above the target**. The target is not lowered and #252 stays open.
+- #264 restored the explicitly requested **720,896 / 669,696** policy, measuring 685,795 bytes (**16,099 above target**).
+- The subsequent render/startup follow-up measures **682,657 bytes** after the review convergence fix, leaving **38,239 headroom** and a **12,961-byte gap**. The target is not lowered and #252 stays open. See [reviewed measurements](performance-265-review.md).
 
 See [measurements and remaining work](performance-252-follow-up.md) for configuration, composition, individual changes and runtime evidence. Changes to the budget require an explicit decision, not suppression of the warning.
 
