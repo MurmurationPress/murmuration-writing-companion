@@ -1,0 +1,94 @@
+[
+  {
+    "step": "baseline",
+    "rawBytes": 685795,
+    "gzipBytes": 193821,
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 685795,
+          "gzipBytes": 193821
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 749627,
+      "totalGzipBytes": 204223
+    }
+  },
+  {
+    "step": "remove-overridden-renderers",
+    "rawBytes": 682870,
+    "gzipBytes": 193095,
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682870,
+          "gzipBytes": 193095
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746702,
+      "totalGzipBytes": 203497
+    }
+  },
+  {
+    "step": "group-timezone-prefixes",
+    "rawBytes": 680754,
+    "gzipBytes": 192903,
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 680754,
+          "gzipBytes": 192903
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 744586,
+      "totalGzipBytes": 203305
+    }
+  },
+  {
+    "step": "runtime-reconciliation",
+    "rawBytes": 682307,
+    "gzipBytes": 193386,
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682307,
+          "gzipBytes": 193386
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746139,
+      "totalGzipBytes": 203788
+    }
+  }
+]

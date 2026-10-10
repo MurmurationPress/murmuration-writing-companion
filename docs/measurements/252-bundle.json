@@ -1,0 +1,1770 @@
+{
+  "baselineCommit": "92ace1a122e8e456d03feeeb154cf53e5962651c",
+  "afterProductionCommit": "d7a67099da9bb4edefb789c84b6f7a2a8f9a10f6",
+  "before": {
+    "node": "v24.19.0",
+    "esbuild": "0.23.1",
+    "rawBytes": 685795,
+    "gzipBytes": 193821,
+    "warningThreshold": 669696,
+    "hardLimit": 720896,
+    "remainingHeadroom": 35101,
+    "status": "warning",
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 685795,
+          "gzipBytes": 193821
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 749627,
+      "totalGzipBytes": 204223
+    },
+    "contributors": [
+      {
+        "path": "src/main.ts",
+        "bytes": 24378
+      },
+      {
+        "path": "src/manuscript/ManuscriptNavigatorView.ts",
+        "bytes": 21087
+      },
+      {
+        "path": "src/entry.ts",
+        "bytes": 16914
+      },
+      {
+        "path": "src/story-world/StoryWorldReview.ts",
+        "bytes": 16909
+      },
+      {
+        "path": "src/story-world/StoryWorldGraphView.ts",
+        "bytes": 16468
+      },
+      {
+        "path": "src/companion/EditorialWritingCompanionView.ts",
+        "bytes": 15285
+      },
+      {
+        "path": "src/ui/StoryWorldEntityCreationModal.ts",
+        "bytes": 12684
+      },
+      {
+        "path": "src/companion/ContinuityReviewView.ts",
+        "bytes": 12181
+      },
+      {
+        "path": "src/story-world/StoryWorldTimelineView.ts",
+        "bytes": 11182
+      },
+      {
+        "path": "src/ui/EntityRelationshipWorkspace.ts",
+        "bytes": 10599
+      },
+      {
+        "path": "src/editorial/PortableEditorialStorage.ts",
+        "bytes": 10218
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPreparation.ts",
+        "bytes": 9687
+      },
+      {
+        "path": "src/story-world/StoryWorldGraph.ts",
+        "bytes": 9675
+      },
+      {
+        "path": "src/observations/ChapterContextContinuity.ts",
+        "bytes": 9164
+      },
+      {
+        "path": "src/companion/CollapsibleWritingCompanionView.ts",
+        "bytes": 8809
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliation.ts",
+        "bytes": 8706
+      },
+      {
+        "path": "src/backup/VaultBackupService.ts",
+        "bytes": 7551
+      },
+      {
+        "path": "src/story-world/StoryWorldReviewView.ts",
+        "bytes": 7304
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneCreation.ts",
+        "bytes": 6815
+      },
+      {
+        "path": "src/observations/TemporalInterval.ts",
+        "bytes": 6727
+      },
+      {
+        "path": "src/manuscript/ManuscriptOrder.ts",
+        "bytes": 6571
+      },
+      {
+        "path": "src/companion/ContinuityReviewReport.ts",
+        "bytes": 6504
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneCreationModal.ts",
+        "bytes": 6450
+      },
+      {
+        "path": "src/companion/ContinuityReviewPresentation.ts",
+        "bytes": 6198
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscript.ts",
+        "bytes": 6127
+      },
+      {
+        "path": "src/ui/StoryWorldRelationAuthoring.ts",
+        "bytes": 6097
+      },
+      {
+        "path": "src/ui/StoryWorldEventAuthoring.ts",
+        "bytes": 6083
+      },
+      {
+        "path": "src/editorial/EditorialStore.ts",
+        "bytes": 6022
+      },
+      {
+        "path": "src/observations/ContinuityObservation.ts",
+        "bytes": 5872
+      },
+      {
+        "path": "src/manuscript/ManuscriptSequenceProperty.ts",
+        "bytes": 5855
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptReorder.ts",
+        "bytes": 5853
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparation.ts",
+        "bytes": 5842
+      },
+      {
+        "path": "src/onboarding/ProjectReadiness.ts",
+        "bytes": 5832
+      },
+      {
+        "path": "src/story-world/IanaTimezoneFallback.ts",
+        "bytes": 5808
+      },
+      {
+        "path": "src/companion/ProseWikilinkChanges.ts",
+        "bytes": 5682
+      },
+      {
+        "path": "src/ui/StoryWorldEntityInspector.ts",
+        "bytes": 5655
+      },
+      {
+        "path": "src/companion/WritingCompanionView.ts",
+        "bytes": 5583
+      },
+      {
+        "path": "src/story-world/StoryWorldNavigatorView.ts",
+        "bytes": 5469
+      },
+      {
+        "path": "src/companion/StoryWorldRelationAuthoring.ts",
+        "bytes": 5349
+      },
+      {
+        "path": "src/story-world/StoryWorldEventSceneGraph.ts",
+        "bytes": 5108
+      },
+      {
+        "path": "src/story-world/StoryWorldIndex.ts",
+        "bytes": 5098
+      },
+      {
+        "path": "src/ui/EventTimeWorkspace.ts",
+        "bytes": 5025
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartCreationModal.ts",
+        "bytes": 5014
+      },
+      {
+        "path": "src/story-world/TypedEntityProperties.ts",
+        "bytes": 4738
+      },
+      {
+        "path": "src/onboarding/ProjectReadinessModal.ts",
+        "bytes": 4632
+      },
+      {
+        "path": "src/ui/WorldContext.ts",
+        "bytes": 4523
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliationModal.ts",
+        "bytes": 4521
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptSceneDetachment.ts",
+        "bytes": 4513
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationSelection.ts",
+        "bytes": 4477
+      },
+      {
+        "path": "src/story-world/EntityRelationships.ts",
+        "bytes": 4445
+      },
+      {
+        "path": "src/manuscript/ManuscriptNumberingCommands.ts",
+        "bytes": 4368
+      },
+      {
+        "path": "src/story-world/WorldTime.ts",
+        "bytes": 4361
+      },
+      {
+        "path": "src/companion/ObsidianStoryWorldRelationAuthoring.ts",
+        "bytes": 4220
+      },
+      {
+        "path": "src/observations/ManuscriptChronology.ts",
+        "bytes": 4219
+      },
+      {
+        "path": "src/story-world/TemporalGraphEvidence.ts",
+        "bytes": 4180
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactDefinition.ts",
+        "bytes": 4135
+      },
+      {
+        "path": "src/manuscript/ManuscriptReorder.ts",
+        "bytes": 4086
+      },
+      {
+        "path": "src/references/CitationParser.ts",
+        "bytes": 4085
+      },
+      {
+        "path": "src/story-world/StoryWorldEntityCreation.ts",
+        "bytes": 4055
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreationModal.ts",
+        "bytes": 3973
+      },
+      {
+        "path": "src/story-world/WorldBuilder.ts",
+        "bytes": 3924
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneDetachmentModal.ts",
+        "bytes": 3916
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptReconciliation.ts",
+        "bytes": 3869
+      },
+      {
+        "path": "src/derived-artefacts/LineChartSvg.ts",
+        "bytes": 3788
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationModal.ts",
+        "bytes": 3725
+      },
+      {
+        "path": "src/companion/ContinuitySettingsTab.ts",
+        "bytes": 3669
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportModal.ts",
+        "bytes": 3607
+      },
+      {
+        "path": "src/companion/StoryWorldEventCreation.ts",
+        "bytes": 3588
+      },
+      {
+        "path": "src/manuscript/ManuscriptIntegrityCoordinator.ts",
+        "bytes": 3584
+      },
+      {
+        "path": "src/reports/EntityIndexReportModal.ts",
+        "bytes": 3573
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartCreation.ts",
+        "bytes": 3489
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationAssets.ts",
+        "bytes": 3436
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneDetachment.ts",
+        "bytes": 3436
+      },
+      {
+        "path": "src/observations/ContinuityReview.ts",
+        "bytes": 3358
+      },
+      {
+        "path": "src/story-world/TemporalStoryWorldGraph.ts",
+        "bytes": 3340
+      },
+      {
+        "path": "src/reports/EntityIndexReport.ts",
+        "bytes": 3297
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliationCommands.ts",
+        "bytes": 3187
+      },
+      {
+        "path": "src/companion/ObsidianStoryWorldEventCreation.ts",
+        "bytes": 3127
+      },
+      {
+        "path": "src/story-world/WorldContext.ts",
+        "bytes": 3100
+      },
+      {
+        "path": "src/editorial/EditorialPass.ts",
+        "bytes": 3078
+      },
+      {
+        "path": "src/story-world/WorldRelativeTime.ts",
+        "bytes": 3048
+      },
+      {
+        "path": "src/ui/InteractionRefresh.ts",
+        "bytes": 2986
+      },
+      {
+        "path": "src/story-world/EventTimeEditing.ts",
+        "bytes": 2888
+      },
+      {
+        "path": "src/companion/StoryWorldEventCreationModal.ts",
+        "bytes": 2872
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationCommands.ts",
+        "bytes": 2854
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptSceneCreation.ts",
+        "bytes": 2789
+      },
+      {
+        "path": "src/companion/StoryWorldRelationAuthoringSession.ts",
+        "bytes": 2784
+      },
+      {
+        "path": "src/companion/PovCharacterCreation.ts",
+        "bytes": 2774
+      },
+      {
+        "path": "src/companion/ChapterContext.ts",
+        "bytes": 2724
+      },
+      {
+        "path": "src/companion/SidebarSections.ts",
+        "bytes": 2664
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPartCreation.ts",
+        "bytes": 2649
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactService.ts",
+        "bytes": 2634
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldManuscriptImpact.ts",
+        "bytes": 2623
+      },
+      {
+        "path": "src/chat/ManuscriptChat.ts",
+        "bytes": 2596
+      },
+      {
+        "path": "src/companion/ContinuityDispositionControls.ts",
+        "bytes": 2582
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationSelectionModal.ts",
+        "bytes": 2549
+      },
+      {
+        "path": "src/manuscript/ManuscriptIntegrity.ts",
+        "bytes": 2425
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldIndex.ts",
+        "bytes": 2421
+      },
+      {
+        "path": "src/companion/StoryWorldEventAuthoringSession.ts",
+        "bytes": 2416
+      },
+      {
+        "path": "src/story-world/StoryWorldTimeline.ts",
+        "bytes": 2415
+      },
+      {
+        "path": "src/manuscript/ManuscriptNoteCreation.ts",
+        "bytes": 2323
+      },
+      {
+        "path": "src/manuscript/ObsidianContinuityReview.ts",
+        "bytes": 2308
+      },
+      {
+        "path": "src/manuscript/ManuscriptNameAlignment.ts",
+        "bytes": 2299
+      },
+      {
+        "path": "src/story-world/PovProfile.ts",
+        "bytes": 2281
+      },
+      {
+        "path": "src/companion/WorldContextEntityPickerModal.ts",
+        "bytes": 2271
+      },
+      {
+        "path": "src/ui/EditorialPassChecklist.ts",
+        "bytes": 2164
+      },
+      {
+        "path": "src/ui/ReferenceCitationImportModal.ts",
+        "bytes": 2086
+      },
+      {
+        "path": "src/about/AboutMurmurationPress.ts",
+        "bytes": 2060
+      },
+      {
+        "path": "src/ui/AnnotationCard.ts",
+        "bytes": 2028
+      },
+      {
+        "path": "src/manuscript/ManuscriptStoryDateOffer.ts",
+        "bytes": 1994
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldGraph.ts",
+        "bytes": 1906
+      },
+      {
+        "path": "src/editorial/BookReview.ts",
+        "bytes": 1879
+      },
+      {
+        "path": "src/reports/ObsidianEntityIndexReport.ts",
+        "bytes": 1839
+      },
+      {
+        "path": "src/story-world/StoryWorldObservations.ts",
+        "bytes": 1787
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookRemoval.ts",
+        "bytes": 1758
+      },
+      {
+        "path": "src/manuscript/ManuscriptMetadata.ts",
+        "bytes": 1754
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartRemoval.ts",
+        "bytes": 1701
+      },
+      {
+        "path": "src/story-world/EntityRelationshipFormValues.ts",
+        "bytes": 1651
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptChronology.ts",
+        "bytes": 1639
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookSelection.ts",
+        "bytes": 1603
+      },
+      {
+        "path": "src/story-world/WorldContextAuthoring.ts",
+        "bytes": 1603
+      },
+      {
+        "path": "src/companion/ManuscriptHierarchy.ts",
+        "bytes": 1594
+      },
+      {
+        "path": "src/story-world/StoryWorldGraphNavigation.ts",
+        "bytes": 1522
+      },
+      {
+        "path": "src/companion/ObsidianPovCharacterCreation.ts",
+        "bytes": 1518
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptStoryDateOffer.ts",
+        "bytes": 1512
+      },
+      {
+        "path": "src/manuscript/ManuscriptNoteCreationExecution.ts",
+        "bytes": 1459
+      },
+      {
+        "path": "src/companion/StoryWorldEntityTypeChooserModal.ts",
+        "bytes": 1451
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptNameAlignment.ts",
+        "bytes": 1435
+      },
+      {
+        "path": "src/ui/PersistedCollapsibleSection.ts",
+        "bytes": 1431
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptBookRemoval.ts",
+        "bytes": 1422
+      },
+      {
+        "path": "src/story-world/StoryWorldReviewProjection.ts",
+        "bytes": 1402
+      },
+      {
+        "path": "src/observations/ContinuityDisposition.ts",
+        "bytes": 1382
+      },
+      {
+        "path": "src/editorial/OpenAnnotationProperty.ts",
+        "bytes": 1358
+      },
+      {
+        "path": "src/story-world/EventTimeWriting.ts",
+        "bytes": 1353
+      },
+      {
+        "path": "src/companion/PovSuggestions.ts",
+        "bytes": 1347
+      },
+      {
+        "path": "src/companion/PovCharacterCreationModal.ts",
+        "bytes": 1296
+      },
+      {
+        "path": "src/story-world/WikilinkPresentation.ts",
+        "bytes": 1278
+      },
+      {
+        "path": "src/chat/ManuscriptChatRendering.ts",
+        "bytes": 1256
+      },
+      {
+        "path": "src/derived-artefacts/LineChartData.ts",
+        "bytes": 1246
+      },
+      {
+        "path": "src/story-world/StoryWorldManuscriptImpact.ts",
+        "bytes": 1227
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptBookCreation.ts",
+        "bytes": 1187
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookRemovalModal.ts",
+        "bytes": 1184
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartRemovalModal.ts",
+        "bytes": 1180
+      },
+      {
+        "path": "src/derived-artefacts/StateTableData.ts",
+        "bytes": 1176
+      },
+      {
+        "path": "src/story-world/EntityRelationshipWriting.ts",
+        "bytes": 1161
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactCommands.ts",
+        "bytes": 1081
+      },
+      {
+        "path": "src/story-world/StoryWorldCategoryPreferences.ts",
+        "bytes": 1081
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPartRemoval.ts",
+        "bytes": 1058
+      },
+      {
+        "path": "src/companion/LocationSuggestions.ts",
+        "bytes": 1044
+      },
+      {
+        "path": "src/companion/ContinuityCardPresentation.ts",
+        "bytes": 1012
+      },
+      {
+        "path": "src/story-world/ObsidianEventTimeWriting.ts",
+        "bytes": 975
+      },
+      {
+        "path": "src/manuscript/ManuscriptOrderKey.ts",
+        "bytes": 966
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptNoteCreation.ts",
+        "bytes": 956
+      },
+      {
+        "path": "src/companion/WorldContextTimePreferences.ts",
+        "bytes": 951
+      },
+      {
+        "path": "src/story-world/StoryWorldScopeCandidates.ts",
+        "bytes": 933
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreation.ts",
+        "bytes": 926
+      },
+      {
+        "path": "src/manuscript/VisibleManuscriptOrder.ts",
+        "bytes": 918
+      },
+      {
+        "path": "src/story-world/ObsidianEntityRelationshipWriting.ts",
+        "bytes": 912
+      },
+      {
+        "path": "src/onboarding/FirstRunReadiness.ts",
+        "bytes": 887
+      },
+      {
+        "path": "src/companion/StoryWorldSourceOfferModal.ts",
+        "bytes": 864
+      },
+      {
+        "path": "src/derived-artefacts/ObsidianDerivedArtefactService.ts",
+        "bytes": 852
+      },
+      {
+        "path": "src/chat/ManuscriptChatBody.ts",
+        "bytes": 819
+      },
+      {
+        "path": "src/manuscript/ManuscriptInsertion.ts",
+        "bytes": 819
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreationExecution.ts",
+        "bytes": 813
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldReview.ts",
+        "bytes": 805
+      },
+      {
+        "path": "src/about/AboutMurmurationPressModal.ts",
+        "bytes": 804
+      },
+      {
+        "path": "src/onboarding/ObsidianProjectReadiness.ts",
+        "bytes": 803
+      },
+      {
+        "path": "src/manuscript/LegacyManuscriptHierarchy.ts",
+        "bytes": 784
+      },
+      {
+        "path": "src/ui/WikilinkPresentation.ts",
+        "bytes": 782
+      },
+      {
+        "path": "src/companion/AnnotationNavigation.ts",
+        "bytes": 773
+      },
+      {
+        "path": "src/manuscript/ManuscriptSequenceProjection.ts",
+        "bytes": 729
+      },
+      {
+        "path": "src/companion/BookReviewContinuityDisclosure.ts",
+        "bytes": 717
+      },
+      {
+        "path": "src/companion/ContinuityDiagnostics.ts",
+        "bytes": 674
+      },
+      {
+        "path": "src/references/ReferenceMetadata.ts",
+        "bytes": 661
+      },
+      {
+        "path": "src/companion/ContinuityReviewActivation.ts",
+        "bytes": 630
+      },
+      {
+        "path": "src/projections/DisposableProjection.ts",
+        "bytes": 623
+      },
+      {
+        "path": "src/story-world/StoryWorldRelink.ts",
+        "bytes": 605
+      },
+      {
+        "path": "src/companion/ChapterContextEdit.ts",
+        "bytes": 592
+      },
+      {
+        "path": "src/backup/VaultBackupRemotePreference.ts",
+        "bytes": 559
+      },
+      {
+        "path": "src/editorial/ObsidianEditorialFileSystem.ts",
+        "bytes": 550
+      },
+      {
+        "path": "src/manuscript/ManuscriptFileMove.ts",
+        "bytes": 550
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationUndoComparison.ts",
+        "bytes": 539
+      },
+      {
+        "path": "src/manuscript/ManuscriptCompanionFolder.ts",
+        "bytes": 518
+      },
+      {
+        "path": "src/help/Help.ts",
+        "bytes": 496
+      },
+      {
+        "path": "src/manuscript/ManuscriptProjection.ts",
+        "bytes": 494
+      },
+      {
+        "path": "src/story-world/StoryWorldStartup.ts",
+        "bytes": 487
+      },
+      {
+        "path": "src/companion/AnnotationLocator.ts",
+        "bytes": 484
+      },
+      {
+        "path": "src/companion/ContinuityReviewEntryPoint.ts",
+        "bytes": 477
+      },
+      {
+        "path": "src/companion/ObsidianWorldContextAuthoring.ts",
+        "bytes": 458
+      },
+      {
+        "path": "src/manuscript/ExactContentProtection.ts",
+        "bytes": 455
+      },
+      {
+        "path": "src/companion/WritingCompanionActivation.ts",
+        "bytes": 408
+      },
+      {
+        "path": "src/derived-artefacts/StateTableMarkdown.ts",
+        "bytes": 405
+      },
+      {
+        "path": "src/manuscript/PrecedingStoryDate.ts",
+        "bytes": 404
+      },
+      {
+        "path": "src/story-world/StoryWorldNavigatorPresentation.ts",
+        "bytes": 398
+      },
+      {
+        "path": "src/story-world/StoryWorldTimelineActivation.ts",
+        "bytes": 387
+      },
+      {
+        "path": "src/manuscript/ManuscriptTreeFilter.ts",
+        "bytes": 383
+      },
+      {
+        "path": "src/companion/StoryWorldSourceAuthoring.ts",
+        "bytes": 369
+      },
+      {
+        "path": "src/story-world/TimelineSelectionNavigation.ts",
+        "bytes": 322
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportActions.ts",
+        "bytes": 299
+      },
+      {
+        "path": "src/companion/ContinuityRefresh.ts",
+        "bytes": 269
+      },
+      {
+        "path": "src/ObsidianTrash.ts",
+        "bytes": 231
+      },
+      {
+        "path": "src/chat/ManuscriptChatPlugin.ts",
+        "bytes": 230
+      },
+      {
+        "path": "src/manuscript/ManuscriptViewActions.ts",
+        "bytes": 196
+      },
+      {
+        "path": "src/manuscript/ManuscriptContainerRemoval.ts",
+        "bytes": 185
+      },
+      {
+        "path": "src/reports/GeneratedReportClassification.ts",
+        "bytes": 164
+      },
+      {
+        "path": "src/ui/PanelLabels.ts",
+        "bytes": 131
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportClassification.ts",
+        "bytes": 130
+      },
+      {
+        "path": "src/editorial/Categories.ts",
+        "bytes": 120
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationActions.ts",
+        "bytes": 98
+      },
+      {
+        "path": "src/story-world/StoryWorldInspectorContext.ts",
+        "bytes": 59
+      },
+      {
+        "path": "src/manuscript/NavigatorViewState.ts",
+        "bytes": 46
+      }
+    ],
+    "thirdPartyInputs": [],
+    "externalImports": [
+      "node:child_process",
+      "node:fs/promises",
+      "node:path",
+      "obsidian"
+    ]
+  },
+  "after": {
+    "node": "v24.19.0",
+    "esbuild": "0.23.1",
+    "rawBytes": 682307,
+    "gzipBytes": 193386,
+    "warningThreshold": 669696,
+    "hardLimit": 720896,
+    "remainingHeadroom": 38589,
+    "status": "warning",
+    "shipped": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682307,
+          "gzipBytes": 193386
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746139,
+      "totalGzipBytes": 203788
+    },
+    "contributors": [
+      {
+        "path": "src/main.ts",
+        "bytes": 24884
+      },
+      {
+        "path": "src/manuscript/ManuscriptNavigatorView.ts",
+        "bytes": 21087
+      },
+      {
+        "path": "src/story-world/StoryWorldReview.ts",
+        "bytes": 16909
+      },
+      {
+        "path": "src/entry.ts",
+        "bytes": 16867
+      },
+      {
+        "path": "src/story-world/StoryWorldGraphView.ts",
+        "bytes": 16468
+      },
+      {
+        "path": "src/companion/EditorialWritingCompanionView.ts",
+        "bytes": 14883
+      },
+      {
+        "path": "src/ui/StoryWorldEntityCreationModal.ts",
+        "bytes": 12684
+      },
+      {
+        "path": "src/companion/ContinuityReviewView.ts",
+        "bytes": 12181
+      },
+      {
+        "path": "src/story-world/StoryWorldTimelineView.ts",
+        "bytes": 11182
+      },
+      {
+        "path": "src/ui/EntityRelationshipWorkspace.ts",
+        "bytes": 10599
+      },
+      {
+        "path": "src/editorial/PortableEditorialStorage.ts",
+        "bytes": 10218
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPreparation.ts",
+        "bytes": 9687
+      },
+      {
+        "path": "src/story-world/StoryWorldGraph.ts",
+        "bytes": 9675
+      },
+      {
+        "path": "src/observations/ChapterContextContinuity.ts",
+        "bytes": 9164
+      },
+      {
+        "path": "src/companion/CollapsibleWritingCompanionView.ts",
+        "bytes": 8809
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliation.ts",
+        "bytes": 8706
+      },
+      {
+        "path": "src/backup/VaultBackupService.ts",
+        "bytes": 7551
+      },
+      {
+        "path": "src/story-world/StoryWorldReviewView.ts",
+        "bytes": 7304
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneCreation.ts",
+        "bytes": 6815
+      },
+      {
+        "path": "src/observations/TemporalInterval.ts",
+        "bytes": 6727
+      },
+      {
+        "path": "src/manuscript/ManuscriptOrder.ts",
+        "bytes": 6571
+      },
+      {
+        "path": "src/companion/ContinuityReviewReport.ts",
+        "bytes": 6504
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneCreationModal.ts",
+        "bytes": 6450
+      },
+      {
+        "path": "src/companion/ContinuityReviewPresentation.ts",
+        "bytes": 6198
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscript.ts",
+        "bytes": 6127
+      },
+      {
+        "path": "src/ui/StoryWorldRelationAuthoring.ts",
+        "bytes": 6097
+      },
+      {
+        "path": "src/ui/StoryWorldEventAuthoring.ts",
+        "bytes": 6083
+      },
+      {
+        "path": "src/editorial/EditorialStore.ts",
+        "bytes": 6022
+      },
+      {
+        "path": "src/observations/ContinuityObservation.ts",
+        "bytes": 5872
+      },
+      {
+        "path": "src/manuscript/ManuscriptSequenceProperty.ts",
+        "bytes": 5855
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptReorder.ts",
+        "bytes": 5853
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparation.ts",
+        "bytes": 5842
+      },
+      {
+        "path": "src/onboarding/ProjectReadiness.ts",
+        "bytes": 5832
+      },
+      {
+        "path": "src/companion/ProseWikilinkChanges.ts",
+        "bytes": 5682
+      },
+      {
+        "path": "src/ui/StoryWorldEntityInspector.ts",
+        "bytes": 5655
+      },
+      {
+        "path": "src/story-world/StoryWorldNavigatorView.ts",
+        "bytes": 5469
+      },
+      {
+        "path": "src/companion/StoryWorldRelationAuthoring.ts",
+        "bytes": 5349
+      },
+      {
+        "path": "src/story-world/StoryWorldEventSceneGraph.ts",
+        "bytes": 5108
+      },
+      {
+        "path": "src/story-world/StoryWorldIndex.ts",
+        "bytes": 5098
+      },
+      {
+        "path": "src/ui/EventTimeWorkspace.ts",
+        "bytes": 5025
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartCreationModal.ts",
+        "bytes": 5014
+      },
+      {
+        "path": "src/story-world/TypedEntityProperties.ts",
+        "bytes": 4738
+      },
+      {
+        "path": "src/onboarding/ProjectReadinessModal.ts",
+        "bytes": 4632
+      },
+      {
+        "path": "src/ui/WorldContext.ts",
+        "bytes": 4523
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliationModal.ts",
+        "bytes": 4521
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptSceneDetachment.ts",
+        "bytes": 4513
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationSelection.ts",
+        "bytes": 4477
+      },
+      {
+        "path": "src/story-world/EntityRelationships.ts",
+        "bytes": 4445
+      },
+      {
+        "path": "src/manuscript/ManuscriptNumberingCommands.ts",
+        "bytes": 4368
+      },
+      {
+        "path": "src/story-world/WorldTime.ts",
+        "bytes": 4361
+      },
+      {
+        "path": "src/companion/ObsidianStoryWorldRelationAuthoring.ts",
+        "bytes": 4220
+      },
+      {
+        "path": "src/observations/ManuscriptChronology.ts",
+        "bytes": 4219
+      },
+      {
+        "path": "src/story-world/TemporalGraphEvidence.ts",
+        "bytes": 4180
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactDefinition.ts",
+        "bytes": 4135
+      },
+      {
+        "path": "src/manuscript/ManuscriptReorder.ts",
+        "bytes": 4086
+      },
+      {
+        "path": "src/references/CitationParser.ts",
+        "bytes": 4085
+      },
+      {
+        "path": "src/story-world/StoryWorldEntityCreation.ts",
+        "bytes": 4055
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreationModal.ts",
+        "bytes": 3973
+      },
+      {
+        "path": "src/story-world/WorldBuilder.ts",
+        "bytes": 3924
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneDetachmentModal.ts",
+        "bytes": 3916
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptReconciliation.ts",
+        "bytes": 3869
+      },
+      {
+        "path": "src/derived-artefacts/LineChartSvg.ts",
+        "bytes": 3788
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationModal.ts",
+        "bytes": 3725
+      },
+      {
+        "path": "src/story-world/IanaTimezoneFallback.ts",
+        "bytes": 3692
+      },
+      {
+        "path": "src/companion/ContinuitySettingsTab.ts",
+        "bytes": 3669
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportModal.ts",
+        "bytes": 3607
+      },
+      {
+        "path": "src/companion/StoryWorldEventCreation.ts",
+        "bytes": 3588
+      },
+      {
+        "path": "src/manuscript/ManuscriptIntegrityCoordinator.ts",
+        "bytes": 3584
+      },
+      {
+        "path": "src/reports/EntityIndexReportModal.ts",
+        "bytes": 3573
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartCreation.ts",
+        "bytes": 3489
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationAssets.ts",
+        "bytes": 3436
+      },
+      {
+        "path": "src/manuscript/ManuscriptSceneDetachment.ts",
+        "bytes": 3436
+      },
+      {
+        "path": "src/observations/ContinuityReview.ts",
+        "bytes": 3358
+      },
+      {
+        "path": "src/story-world/TemporalStoryWorldGraph.ts",
+        "bytes": 3340
+      },
+      {
+        "path": "src/reports/EntityIndexReport.ts",
+        "bytes": 3297
+      },
+      {
+        "path": "src/manuscript/ManuscriptReconciliationCommands.ts",
+        "bytes": 3187
+      },
+      {
+        "path": "src/companion/ObsidianStoryWorldEventCreation.ts",
+        "bytes": 3127
+      },
+      {
+        "path": "src/story-world/WorldContext.ts",
+        "bytes": 3100
+      },
+      {
+        "path": "src/editorial/EditorialPass.ts",
+        "bytes": 3078
+      },
+      {
+        "path": "src/companion/WritingCompanionView.ts",
+        "bytes": 3060
+      },
+      {
+        "path": "src/story-world/WorldRelativeTime.ts",
+        "bytes": 3048
+      },
+      {
+        "path": "src/ui/InteractionRefresh.ts",
+        "bytes": 2986
+      },
+      {
+        "path": "src/story-world/EventTimeEditing.ts",
+        "bytes": 2888
+      },
+      {
+        "path": "src/companion/StoryWorldEventCreationModal.ts",
+        "bytes": 2872
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationCommands.ts",
+        "bytes": 2854
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptSceneCreation.ts",
+        "bytes": 2789
+      },
+      {
+        "path": "src/companion/StoryWorldRelationAuthoringSession.ts",
+        "bytes": 2784
+      },
+      {
+        "path": "src/companion/PovCharacterCreation.ts",
+        "bytes": 2774
+      },
+      {
+        "path": "src/companion/ChapterContext.ts",
+        "bytes": 2724
+      },
+      {
+        "path": "src/companion/SidebarSections.ts",
+        "bytes": 2664
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPartCreation.ts",
+        "bytes": 2649
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactService.ts",
+        "bytes": 2634
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldManuscriptImpact.ts",
+        "bytes": 2623
+      },
+      {
+        "path": "src/chat/ManuscriptChat.ts",
+        "bytes": 2596
+      },
+      {
+        "path": "src/companion/ContinuityDispositionControls.ts",
+        "bytes": 2582
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationSelectionModal.ts",
+        "bytes": 2549
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldIndex.ts",
+        "bytes": 2444
+      },
+      {
+        "path": "src/manuscript/ManuscriptIntegrity.ts",
+        "bytes": 2425
+      },
+      {
+        "path": "src/companion/StoryWorldEventAuthoringSession.ts",
+        "bytes": 2416
+      },
+      {
+        "path": "src/story-world/StoryWorldTimeline.ts",
+        "bytes": 2415
+      },
+      {
+        "path": "src/manuscript/ManuscriptNoteCreation.ts",
+        "bytes": 2323
+      },
+      {
+        "path": "src/manuscript/ObsidianContinuityReview.ts",
+        "bytes": 2308
+      },
+      {
+        "path": "src/manuscript/ManuscriptNameAlignment.ts",
+        "bytes": 2299
+      },
+      {
+        "path": "src/story-world/PovProfile.ts",
+        "bytes": 2281
+      },
+      {
+        "path": "src/companion/WorldContextEntityPickerModal.ts",
+        "bytes": 2271
+      },
+      {
+        "path": "src/ui/EditorialPassChecklist.ts",
+        "bytes": 2164
+      },
+      {
+        "path": "src/ui/ReferenceCitationImportModal.ts",
+        "bytes": 2086
+      },
+      {
+        "path": "src/about/AboutMurmurationPress.ts",
+        "bytes": 2060
+      },
+      {
+        "path": "src/ui/AnnotationCard.ts",
+        "bytes": 2028
+      },
+      {
+        "path": "src/manuscript/ManuscriptStoryDateOffer.ts",
+        "bytes": 1994
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldGraph.ts",
+        "bytes": 1906
+      },
+      {
+        "path": "src/editorial/BookReview.ts",
+        "bytes": 1879
+      },
+      {
+        "path": "src/reports/ObsidianEntityIndexReport.ts",
+        "bytes": 1839
+      },
+      {
+        "path": "src/story-world/StoryWorldObservations.ts",
+        "bytes": 1787
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookRemoval.ts",
+        "bytes": 1758
+      },
+      {
+        "path": "src/manuscript/ManuscriptMetadata.ts",
+        "bytes": 1754
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartRemoval.ts",
+        "bytes": 1701
+      },
+      {
+        "path": "src/story-world/EntityRelationshipFormValues.ts",
+        "bytes": 1651
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptChronology.ts",
+        "bytes": 1639
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookSelection.ts",
+        "bytes": 1603
+      },
+      {
+        "path": "src/story-world/WorldContextAuthoring.ts",
+        "bytes": 1603
+      },
+      {
+        "path": "src/companion/ManuscriptHierarchy.ts",
+        "bytes": 1594
+      },
+      {
+        "path": "src/story-world/StoryWorldReviewProjection.ts",
+        "bytes": 1584
+      },
+      {
+        "path": "src/story-world/StoryWorldGraphNavigation.ts",
+        "bytes": 1522
+      },
+      {
+        "path": "src/companion/ObsidianPovCharacterCreation.ts",
+        "bytes": 1518
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptStoryDateOffer.ts",
+        "bytes": 1512
+      },
+      {
+        "path": "src/manuscript/ManuscriptNoteCreationExecution.ts",
+        "bytes": 1459
+      },
+      {
+        "path": "src/companion/StoryWorldEntityTypeChooserModal.ts",
+        "bytes": 1451
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptNameAlignment.ts",
+        "bytes": 1435
+      },
+      {
+        "path": "src/ui/PersistedCollapsibleSection.ts",
+        "bytes": 1431
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptBookRemoval.ts",
+        "bytes": 1422
+      },
+      {
+        "path": "src/observations/ContinuityDisposition.ts",
+        "bytes": 1382
+      },
+      {
+        "path": "src/editorial/OpenAnnotationProperty.ts",
+        "bytes": 1358
+      },
+      {
+        "path": "src/story-world/EventTimeWriting.ts",
+        "bytes": 1353
+      },
+      {
+        "path": "src/companion/PovSuggestions.ts",
+        "bytes": 1347
+      },
+      {
+        "path": "src/companion/PovCharacterCreationModal.ts",
+        "bytes": 1296
+      },
+      {
+        "path": "src/story-world/WikilinkPresentation.ts",
+        "bytes": 1278
+      },
+      {
+        "path": "src/chat/ManuscriptChatRendering.ts",
+        "bytes": 1256
+      },
+      {
+        "path": "src/derived-artefacts/LineChartData.ts",
+        "bytes": 1246
+      },
+      {
+        "path": "src/story-world/StoryWorldManuscriptImpact.ts",
+        "bytes": 1227
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptBookCreation.ts",
+        "bytes": 1187
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookRemovalModal.ts",
+        "bytes": 1184
+      },
+      {
+        "path": "src/manuscript/ManuscriptPartRemovalModal.ts",
+        "bytes": 1180
+      },
+      {
+        "path": "src/derived-artefacts/StateTableData.ts",
+        "bytes": 1176
+      },
+      {
+        "path": "src/story-world/EntityRelationshipWriting.ts",
+        "bytes": 1161
+      },
+      {
+        "path": "src/derived-artefacts/DerivedArtefactCommands.ts",
+        "bytes": 1081
+      },
+      {
+        "path": "src/story-world/StoryWorldCategoryPreferences.ts",
+        "bytes": 1081
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptPartRemoval.ts",
+        "bytes": 1058
+      },
+      {
+        "path": "src/companion/LocationSuggestions.ts",
+        "bytes": 1044
+      },
+      {
+        "path": "src/companion/ContinuityCardPresentation.ts",
+        "bytes": 1012
+      },
+      {
+        "path": "src/story-world/ObsidianEventTimeWriting.ts",
+        "bytes": 975
+      },
+      {
+        "path": "src/manuscript/ManuscriptOrderKey.ts",
+        "bytes": 966
+      },
+      {
+        "path": "src/manuscript/ObsidianManuscriptNoteCreation.ts",
+        "bytes": 956
+      },
+      {
+        "path": "src/companion/WorldContextTimePreferences.ts",
+        "bytes": 951
+      },
+      {
+        "path": "src/story-world/StoryWorldScopeCandidates.ts",
+        "bytes": 933
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreation.ts",
+        "bytes": 926
+      },
+      {
+        "path": "src/manuscript/VisibleManuscriptOrder.ts",
+        "bytes": 918
+      },
+      {
+        "path": "src/story-world/ObsidianEntityRelationshipWriting.ts",
+        "bytes": 912
+      },
+      {
+        "path": "src/onboarding/FirstRunReadiness.ts",
+        "bytes": 887
+      },
+      {
+        "path": "src/companion/StoryWorldSourceOfferModal.ts",
+        "bytes": 864
+      },
+      {
+        "path": "src/derived-artefacts/ObsidianDerivedArtefactService.ts",
+        "bytes": 852
+      },
+      {
+        "path": "src/chat/ManuscriptChatBody.ts",
+        "bytes": 819
+      },
+      {
+        "path": "src/manuscript/ManuscriptInsertion.ts",
+        "bytes": 819
+      },
+      {
+        "path": "src/manuscript/ManuscriptBookCreationExecution.ts",
+        "bytes": 813
+      },
+      {
+        "path": "src/story-world/ObsidianStoryWorldReview.ts",
+        "bytes": 805
+      },
+      {
+        "path": "src/about/AboutMurmurationPressModal.ts",
+        "bytes": 804
+      },
+      {
+        "path": "src/onboarding/ObsidianProjectReadiness.ts",
+        "bytes": 803
+      },
+      {
+        "path": "src/manuscript/LegacyManuscriptHierarchy.ts",
+        "bytes": 784
+      },
+      {
+        "path": "src/ui/WikilinkPresentation.ts",
+        "bytes": 782
+      },
+      {
+        "path": "src/companion/AnnotationNavigation.ts",
+        "bytes": 773
+      },
+      {
+        "path": "src/projections/DisposableProjection.ts",
+        "bytes": 767
+      },
+      {
+        "path": "src/manuscript/ManuscriptSequenceProjection.ts",
+        "bytes": 729
+      },
+      {
+        "path": "src/companion/BookReviewContinuityDisclosure.ts",
+        "bytes": 717
+      },
+      {
+        "path": "src/companion/ContinuityDiagnostics.ts",
+        "bytes": 674
+      },
+      {
+        "path": "src/references/ReferenceMetadata.ts",
+        "bytes": 661
+      },
+      {
+        "path": "src/projections/ReconciliationQueue.ts",
+        "bytes": 656
+      },
+      {
+        "path": "src/companion/ContinuityReviewActivation.ts",
+        "bytes": 630
+      },
+      {
+        "path": "src/story-world/StoryWorldRelink.ts",
+        "bytes": 605
+      },
+      {
+        "path": "src/companion/ChapterContextEdit.ts",
+        "bytes": 592
+      },
+      {
+        "path": "src/backup/VaultBackupRemotePreference.ts",
+        "bytes": 559
+      },
+      {
+        "path": "src/editorial/ObsidianEditorialFileSystem.ts",
+        "bytes": 550
+      },
+      {
+        "path": "src/manuscript/ManuscriptFileMove.ts",
+        "bytes": 550
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationUndoComparison.ts",
+        "bytes": 539
+      },
+      {
+        "path": "src/manuscript/ManuscriptCompanionFolder.ts",
+        "bytes": 518
+      },
+      {
+        "path": "src/help/Help.ts",
+        "bytes": 496
+      },
+      {
+        "path": "src/manuscript/ManuscriptProjection.ts",
+        "bytes": 494
+      },
+      {
+        "path": "src/story-world/StoryWorldStartup.ts",
+        "bytes": 487
+      },
+      {
+        "path": "src/companion/AnnotationLocator.ts",
+        "bytes": 484
+      },
+      {
+        "path": "src/companion/ContinuityReviewEntryPoint.ts",
+        "bytes": 477
+      },
+      {
+        "path": "src/companion/ObsidianWorldContextAuthoring.ts",
+        "bytes": 458
+      },
+      {
+        "path": "src/manuscript/ExactContentProtection.ts",
+        "bytes": 455
+      },
+      {
+        "path": "src/companion/WritingCompanionActivation.ts",
+        "bytes": 408
+      },
+      {
+        "path": "src/derived-artefacts/StateTableMarkdown.ts",
+        "bytes": 405
+      },
+      {
+        "path": "src/manuscript/PrecedingStoryDate.ts",
+        "bytes": 404
+      },
+      {
+        "path": "src/story-world/StoryWorldNavigatorPresentation.ts",
+        "bytes": 398
+      },
+      {
+        "path": "src/story-world/StoryWorldTimelineActivation.ts",
+        "bytes": 387
+      },
+      {
+        "path": "src/manuscript/ManuscriptTreeFilter.ts",
+        "bytes": 383
+      },
+      {
+        "path": "src/companion/StoryWorldSourceAuthoring.ts",
+        "bytes": 369
+      },
+      {
+        "path": "src/companion/ContinuityRefresh.ts",
+        "bytes": 358
+      },
+      {
+        "path": "src/story-world/TimelineSelectionNavigation.ts",
+        "bytes": 322
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportActions.ts",
+        "bytes": 299
+      },
+      {
+        "path": "src/ObsidianTrash.ts",
+        "bytes": 231
+      },
+      {
+        "path": "src/chat/ManuscriptChatPlugin.ts",
+        "bytes": 230
+      },
+      {
+        "path": "src/manuscript/ManuscriptViewActions.ts",
+        "bytes": 196
+      },
+      {
+        "path": "src/manuscript/ManuscriptContainerRemoval.ts",
+        "bytes": 185
+      },
+      {
+        "path": "src/reports/GeneratedReportClassification.ts",
+        "bytes": 164
+      },
+      {
+        "path": "src/ui/PanelLabels.ts",
+        "bytes": 131
+      },
+      {
+        "path": "src/companion/ContinuityReviewReportClassification.ts",
+        "bytes": 130
+      },
+      {
+        "path": "src/editorial/Categories.ts",
+        "bytes": 120
+      },
+      {
+        "path": "src/manuscript/ManuscriptPreparationActions.ts",
+        "bytes": 98
+      },
+      {
+        "path": "src/story-world/StoryWorldInspectorContext.ts",
+        "bytes": 59
+      },
+      {
+        "path": "src/manuscript/NavigatorViewState.ts",
+        "bytes": 46
+      }
+    ],
+    "thirdPartyInputs": [],
+    "externalImports": [
+      "node:child_process",
+      "node:fs/promises",
+      "node:path",
+      "obsidian"
+    ]
+  }
+}

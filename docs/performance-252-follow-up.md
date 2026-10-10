@@ -1,5 +1,7 @@
 # Post-#263 performance and headroom (#252)
 
+Subsequent measurements: [repeated renders and cold startup](performance-252-startup-renders.md). This document records the #264 baseline.
+
 This is a partial delivery of #252, not a closing reference. It preserves #258's native gesture/blur-save implementation and #263's manual numbering writer. No preparation, persistence, numbering, selection or interaction-queue implementation is changed. No private manuscript was read or copied.
 
 ## Baseline and build conditions
