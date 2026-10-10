@@ -86,6 +86,7 @@ export function runtimeBaseline(size: number) {
     if (drainMetadata(f, [file])) refreshRequests++;
     lifecycle.metadataResolved();
   });
+  measure("entity-list-20", () => { for (let i = 0; i < 20; i++) f.world.index.getAll(); });
   const targets = new EntityRelationshipTargets(() => f.world.index.getAll(), () => f.files.map(file => file.path));
   measure("relationship-candidates-10", () => { for (let i = 0; i < 10; i++) { targets.suggestions(); targets.resolve("Synthetic import"); } });
   measure("graph-projection", () => { buildStoryWorldGraph({ selectedPath: f.files[0].path, entities: f.world.index.getAll(),

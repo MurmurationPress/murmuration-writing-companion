@@ -1,0 +1,1234 @@
+{
+  "before": {
+    "index": {
+      "repetitions": 5,
+      "warmups": 1,
+      "node": "v24.19.0",
+      "note": "Synthetic adapter/projection timings; not Obsidian DOM or end-to-end editor timings. Counts are deterministic; durations are informational.",
+      "fixtures": [
+        {
+          "markdownFiles": 100,
+          "initialEntities": 20,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 20,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.301,
+              "maxMs": 0.588
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.146,
+              "maxMs": 0.162
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.136,
+              "maxMs": 0.33
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 300,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 1.903,
+              "maxMs": 2.378
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.003,
+              "maxMs": 0.005
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.105,
+              "maxMs": 0.174
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.086,
+              "maxMs": 0.1
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 103,
+                "upserts": 102,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 0.134,
+              "maxMs": 0.147
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.044,
+              "maxMs": 0.206
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 1.056,
+              "maxMs": 1.271
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.203,
+              "maxMs": 0.34
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.03,
+              "maxMs": 0.06
+            }
+          ]
+        },
+        {
+          "markdownFiles": 1000,
+          "initialEntities": 200,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 200,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 2.003,
+              "maxMs": 2.445
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.778,
+              "maxMs": 1.407
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 1.047,
+              "maxMs": 1.151
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 3000,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 13.875,
+              "maxMs": 15.39
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.003,
+              "maxMs": 0.005
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.857,
+              "maxMs": 1.159
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.08,
+              "maxMs": 0.136
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1003,
+                "upserts": 1002,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 1.112,
+              "maxMs": 1.648
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.281,
+              "maxMs": 0.571
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 9,
+              "maxMs": 17.83
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 1.178,
+              "maxMs": 1.471
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.184,
+              "maxMs": 0.306
+            }
+          ]
+        },
+        {
+          "markdownFiles": 10000,
+          "initialEntities": 2000,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 2000,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 15.598,
+              "maxMs": 19.858
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 7.358,
+              "maxMs": 8.351
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 7.024,
+              "maxMs": 13.527
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 30000,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 82.078,
+              "maxMs": 100.279
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.004,
+              "maxMs": 0.017
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 7.015,
+              "maxMs": 7.572
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.072,
+              "maxMs": 0.136
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10003,
+                "upserts": 10002,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 6.795,
+              "maxMs": 9.365
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 2.773,
+              "maxMs": 2.983
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 20,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 83.875,
+              "maxMs": 98.74
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 7.147,
+              "maxMs": 9.355
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.491,
+              "maxMs": 0.712
+            }
+          ]
+        }
+      ]
+    },
+    "chronology": {
+      "settled": false,
+      "note": "One warmup and five samples; ten synchronous chronology consumers; synthetic cached frontmatter, no DOM or disk.",
+      "output": [
+        {
+          "scenesPerBook": 30,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 10,
+              "ms": 33.022681000000006
+            },
+            {
+              "scans": 10,
+              "ms": 29.955873000000025
+            },
+            {
+              "scans": 10,
+              "ms": 29.252631000000008
+            },
+            {
+              "scans": 10,
+              "ms": 29.546712999999954
+            },
+            {
+              "scans": 10,
+              "ms": 30.102876000000037
+            }
+          ]
+        },
+        {
+          "scenesPerBook": 300,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 10,
+              "ms": 777.0983550000001
+            },
+            {
+              "scans": 10,
+              "ms": 732.3235940000002
+            },
+            {
+              "scans": 10,
+              "ms": 725.1602809999999
+            },
+            {
+              "scans": 10,
+              "ms": 752.9422320000003
+            },
+            {
+              "scans": 10,
+              "ms": 726.2351470000003
+            }
+          ]
+        },
+        {
+          "scenesPerBook": 1000,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 10,
+              "ms": 6374.623540000002
+            },
+            {
+              "scans": 10,
+              "ms": 6339.352266999998
+            },
+            {
+              "scans": 10,
+              "ms": 6338.844821999999
+            },
+            {
+              "scans": 10,
+              "ms": 6344.493000000002
+            },
+            {
+              "scans": 10,
+              "ms": 6317.625454000001
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "index": {
+      "repetitions": 5,
+      "warmups": 1,
+      "node": "v24.19.0",
+      "note": "Synthetic adapter/projection timings; not Obsidian DOM or end-to-end editor timings. Counts are deterministic; durations are informational.",
+      "fixtures": [
+        {
+          "markdownFiles": 100,
+          "initialEntities": 20,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 20,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.306,
+              "maxMs": 0.537
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.173,
+              "maxMs": 0.424
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.113,
+              "maxMs": 0.308
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 300,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 2.018,
+              "maxMs": 2.869
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.004,
+              "maxMs": 0.007
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 100,
+                "upserts": 100,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.093,
+              "maxMs": 0.156
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.086,
+              "maxMs": 0.274
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 103,
+                "upserts": 102,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 0.152,
+              "maxMs": 0.177
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.014,
+              "maxMs": 0.017
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 1.086,
+              "maxMs": 1.137
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.199,
+              "maxMs": 0.376
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.023,
+              "maxMs": 0.231
+            }
+          ]
+        },
+        {
+          "markdownFiles": 1000,
+          "initialEntities": 200,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 200,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 1.304,
+              "maxMs": 2.506
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.709,
+              "maxMs": 1.456
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.588,
+              "maxMs": 1.052
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 3000,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 12.368,
+              "maxMs": 19.893
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.003,
+              "maxMs": 0.004
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1000,
+                "upserts": 1000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 0.607,
+              "maxMs": 1.394
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.067,
+              "maxMs": 0.281
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 1003,
+                "upserts": 1002,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 0.567,
+              "maxMs": 1.735
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.028,
+              "maxMs": 0.052
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 9.21,
+              "maxMs": 15.165
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.832,
+              "maxMs": 1.142
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.096,
+              "maxMs": 0.266
+            }
+          ]
+        },
+        {
+          "markdownFiles": 10000,
+          "initialEntities": 2000,
+          "samples": [
+            {
+              "stage": "startup-initial",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 2000,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 12.156,
+              "maxMs": 15.313
+            },
+            {
+              "stage": "startup-layout",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 7.555,
+              "maxMs": 11.408
+            },
+            {
+              "stage": "metadata-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 6.574,
+              "maxMs": 14.681
+            },
+            {
+              "stage": "review-cold",
+              "counts": {
+                "markdownEnumerations": 2,
+                "cacheReads": 30000,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 83.629,
+              "maxMs": 108.379
+            },
+            {
+              "stage": "review-warm-10-consumers",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.004,
+              "maxMs": 0.004
+            },
+            {
+              "stage": "unchanged-resolved",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10000,
+                "upserts": 10000,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 1,
+              "medianMs": 6.375,
+              "maxMs": 7.291
+            },
+            {
+              "stage": "ordinary-metadata-burst-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 42,
+                "upserts": 21,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.066,
+              "maxMs": 0.07
+            },
+            {
+              "stage": "delayed-import",
+              "counts": {
+                "markdownEnumerations": 1,
+                "cacheReads": 10003,
+                "upserts": 10002,
+                "changedUpserts": 1,
+                "entitySorts": 0,
+                "entityListReads": 0
+              },
+              "refreshRequests": 2,
+              "medianMs": 6.756,
+              "maxMs": 7.609
+            },
+            {
+              "stage": "entity-list-20",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 1,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.286,
+              "maxMs": 0.377
+            },
+            {
+              "stage": "relationship-candidates-10",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 20
+              },
+              "refreshRequests": 0,
+              "medianMs": 79.832,
+              "maxMs": 82.996
+            },
+            {
+              "stage": "graph-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 6.548,
+              "maxMs": 7.464
+            },
+            {
+              "stage": "timeline-projection",
+              "counts": {
+                "markdownEnumerations": 0,
+                "cacheReads": 0,
+                "upserts": 0,
+                "changedUpserts": 0,
+                "entitySorts": 0,
+                "entityListReads": 1
+              },
+              "refreshRequests": 0,
+              "medianMs": 0.415,
+              "maxMs": 0.454
+            }
+          ]
+        }
+      ]
+    },
+    "chronology": {
+      "settled": true,
+      "note": "One warmup and five samples; ten synchronous chronology consumers; synthetic cached frontmatter, no DOM or disk.",
+      "output": [
+        {
+          "scenesPerBook": 30,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 0,
+              "ms": 3.570584999999994
+            },
+            {
+              "scans": 0,
+              "ms": 2.6882109999999955
+            },
+            {
+              "scans": 0,
+              "ms": 2.0757049999999992
+            },
+            {
+              "scans": 0,
+              "ms": 2.208684000000005
+            },
+            {
+              "scans": 0,
+              "ms": 2.923928000000018
+            }
+          ]
+        },
+        {
+          "scenesPerBook": 300,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 0,
+              "ms": 24.10036299999996
+            },
+            {
+              "scans": 0,
+              "ms": 21.29435799999999
+            },
+            {
+              "scans": 0,
+              "ms": 31.57434699999999
+            },
+            {
+              "scans": 0,
+              "ms": 22.627539999999954
+            },
+            {
+              "scans": 0,
+              "ms": 19.315330999999958
+            }
+          ]
+        },
+        {
+          "scenesPerBook": 1000,
+          "books": 3,
+          "samples": [
+            {
+              "scans": 0,
+              "ms": 74.68565599999988
+            },
+            {
+              "scans": 0,
+              "ms": 69.86307999999985
+            },
+            {
+              "scans": 0,
+              "ms": 77.42946699999993
+            },
+            {
+              "scans": 0,
+              "ms": 63.07193899999993
+            },
+            {
+              "scans": 0,
+              "ms": 63.16634900000008
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
