@@ -138,3 +138,13 @@ test('a host that skips a write cannot falsely report current', async () => {
   const h = numberingHarness(); h.app.fileManager.processFrontMatter = async () => {};
   await rejects(h.renumber(), /verified/); equal(h.service.isCurrent(h.book()), false);
 });
+
+test('deleting the only Scene leaves a stale empty Book that can be explicitly refreshed', async () => {
+  const h = numberingHarness(); await h.renumber('Beta.md');
+  h.loaded.delete('Other.md'); h.settle();
+  equal(h.service.isCurrent(h.book('Beta.md')), false);
+  const alpha = h.contents.get('Alpha.md');
+  equal(await h.renumber('Beta.md'), 1);
+  equal(h.service.isCurrent(h.book('Beta.md')), true);
+  equal(await h.renumber('Beta.md'), 0); equal(h.contents.get('Alpha.md'), alpha);
+});

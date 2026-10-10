@@ -14,12 +14,12 @@ Navigator, hierarchy and compiler ordering still use the authoritative structura
 
 ## Automated validation
 
-- `npm test`: 984 TypeScript regression tests plus 13 build-tool/interaction-capture tests passed; includes production/test TypeScript checking.
+- `npm test`: 985 TypeScript regression tests plus 13 build-tool/interaction-capture tests passed; includes production/test TypeScript checking.
 - `npm run build`, `npm run release:check`, `npm run bundle:analyze`, `npm run bundle:report`, `npm run benchmark:performance` and `git diff --check` passed. The existing bundle headroom warning remains; no ceiling or version was changed.
 - `node scripts/benchmark-numbering.mjs`: synthetic three-Book fixtures of 30, 300 and 1,000 Scenes per Book; five measured runs after warmup. Startup, repeated startup, prose/context edits, reorder, detach, restore, cross-Book reparent and Book switch all produced **zero reporting write attempts and zero reporting writes**. Existing library/index reconciliation still runs and converges.
 - `node scripts/validate-manual-numbering-compiler.mjs ../codex-press`: a separate unmodified Codex Press checkout assembles the synthetic mixed hierarchy in explicit order. Stale reporting values and refreshed values produce identical ordered manuscript paths and prose. A detached Scene with an old reporting snapshot stays excluded. The script asserts explicit (not fallback) compiler order.
 
-Focused tests cover single-Book isolation without vault enumeration, idempotence even with lagging reporting cache values, series cleanup/alias preservation, restart freshness, tail deletion/restoration, cross-Book moves, structural and neutral renames, external values, missing tokens, unsupported/invalid hierarchy, Trash exclusion, protected writes, skipped host writes, partial failure, repair, concurrent changes during mutation/verification, cancellation, unload and pending picker closure. The actual command registration and status owner are exercised with a shared host harness. Exact preparation Undo is tested after manual numbering.
+Focused tests cover single-Book isolation without vault enumeration, idempotence even with lagging reporting cache values, series cleanup/alias preservation, restart freshness, tail deletion/restoration (including an empty Book after its only Scene is deleted), cross-Book moves, structural and neutral renames, external values, missing tokens, unsupported/invalid hierarchy, Trash exclusion, protected writes, skipped host writes, partial failure, repair, concurrent changes during mutation/verification, cancellation, unload and pending picker closure. The actual command registration and status owner are exercised with a shared host harness. Exact preparation Undo is tested after manual numbering.
 
 GitHub's Build and test workflow runs the required Ubuntu/Windows matrix with Node 22 on this PR. Local runs used Node 24 on Linux; CI results are reported by the PR checks.
 

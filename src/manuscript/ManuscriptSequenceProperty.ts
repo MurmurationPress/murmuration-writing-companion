@@ -66,7 +66,8 @@ function nodes(book: ObsidianManuscriptBook): ManuscriptOrderNode[] {
 }
 
 function assertProjectable(book: ObsidianManuscriptBook): void {
-  if (book.result.source !== "distributed" || book.result.diagnostics.some(d => d.kind !== "obsolete_order_array")) {
+  const emptyBook = book.result.source === "none" && book.result.roots.length === 0 && book.filesByPath.size === 1;
+  if ((!emptyBook && book.result.source !== "distributed") || book.result.diagnostics.some(d => d.kind !== "obsolete_order_array")) {
     throw new Error("Prepare or repair this Book's unresolved manuscript structure before renumbering.");
   }
   const all = nodes(book);
