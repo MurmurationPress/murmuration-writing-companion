@@ -72,9 +72,9 @@ Separate measured boundaries (ranges in ms):
 | 100 | 15.2–17.8 → 16.7–20.4 | 15.4–17.9 → 3.4–4.2 | 1,532–1,738 → 910–1,008 |
 | 1,000 | 11.1–42.3 → 8.2–55.9 | 1,118–1,200 → 29.4–31.3 | 24,792–30,354 → 2,752–2,938 |
 
-No improvement to the short, variable `onload` boundary is claimed. The larger benefit is reduced work during host metadata discovery/reconciliation. At 10,000 notes the after run performs more manuscript index construction because it advances much further through metadata discovery; comparing that partial work as a completed-index speedup would be misleading.
+No improvement to the short, variable `onload` boundary is claimed. The larger benefit is reduced work during host metadata discovery/reconciliation. At 10,000 notes both builds time out in different partial states. Their observed work counts do not establish relative startup performance, complete-index correctness or equivalence. A completed, comparably bounded measurement is still required.
 
-All completed cold trials preserve initial `B0S000.md` context and make zero frontmatter writes. At 10,000 notes the baseline still has 9,421–9,429 pending metadata tasks; after has 1,998–2,074. This shows progress within a bounded observation window, **not a completed-startup speedup ratio**. Two after trials show contextual controls at 45.81 / 50.34 s; the third does not before timeout. No partial-index edit samples are compared.
+All completed cold trials preserve initial `B0S000.md` context and make zero frontmatter writes. At 10,000 notes the baseline still has 9,421–9,429 pending metadata tasks; after has 1,998–2,074. These are **incomplete observations, not evidence of startup improvement or equivalence**. Two after trials show contextual controls at 45.81 / 50.34 s; the third does not before timeout. No partial-index edit samples are compared.
 
 Cold Companion renders fall from 110–115 to 6 (100 notes) and 1,085–1,160 to 6 (1,000). Navigator renders remain 28 and 208 respectively, including entity-related metadata updates. Those remaining renders and the large-vault host/index interaction need further investigation. Plugin `onload`, index construction and reconciliation counts/times are separately recorded in the JSON; they must not be equated with the process boundary or first usable views.
 
