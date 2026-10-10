@@ -25,3 +25,19 @@ test('continuous imports cannot starve reconciliation; disposal cancels trailing
 test('cancelled callbacks cannot run after unload even if the host already queued them',()=>{
   const f=fixture();f.queue.request();const late=[...f.timers.values()].map(t=>t.callback);f.queue.dispose();late.forEach(fn=>fn());equal(f.passes(),0);
 });
+
+test('metadata-driven Navigator batches use the latest state, including later removals and context changes', () => {
+  let callback: (() => void) | undefined;
+  const entries = new Set<string>();
+  let context = 'first';
+  const renders: { entries: number; context: string }[] = [];
+  const queue = new ReconciliationQueue(() => renders.push({ entries: entries.size, context }), {
+    schedule(fn) { callback = fn; return 1; }, cancel() {}
+  });
+  for (let i = 0; i < 2000; i++) { entries.add(String(i)); queue.request(); }
+  context = 'last'; entries.delete('0');
+  equal(renders.length, 0);
+  callback!();
+  equal(renders.length, 1); equal(renders[0].entries, 1999); equal(renders[0].context, 'last');
+  queue.request(); queue.dispose(); callback!(); equal(renders.length, 1);
+});

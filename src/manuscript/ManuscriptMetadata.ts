@@ -153,6 +153,8 @@ export function manuscriptHierarchyReferences(
   return getBookHierarchyReferences(frontmatter);
 }
 
+let navigatorDateFormatter: Intl.DateTimeFormat | undefined;
+
 export function formatNavigatorStoryDate(value: string | null): string | null {
   if (!value) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
@@ -168,11 +170,11 @@ export function formatNavigatorStoryDate(value: string | null): string | null {
     || date.getUTCDate() !== day
   ) return value.trim();
 
-  return new Intl.DateTimeFormat("en-GB", {
+  return (navigatorDateFormatter ??= new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "UTC"
-  }).format(date);
+  })).format(date);
 }

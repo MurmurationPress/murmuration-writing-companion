@@ -6,7 +6,8 @@ import {
   ManuscriptStoryDateOfferSnapshot,
   manuscriptStoryDateOffer,
   sameManuscriptStoryDateOffer,
-  applyManuscriptStoryDateOffer
+  applyManuscriptStoryDateOffer,
+  targetIsGenuinelyUndated
 } from "./ManuscriptStoryDateOffer";
 
 export interface ManuscriptStoryDateOfferHost {
@@ -69,6 +70,9 @@ export function getObsidianManuscriptStoryDateOffer(
   host: ManuscriptStoryDateOfferHost,
   target: TFile
 ): ManuscriptStoryDateOffer | null {
+  // Eligibility is local. Do not build an entire library for a dated Scene.
+  // Acceptance still takes a fresh structural snapshot below.
+  if (!targetIsGenuinelyUndated(frontmatter(host.app, target))) return null;
   const snapshot = snapshotObsidianManuscriptStoryDateOffer(host, target);
   return snapshot ? manuscriptStoryDateOffer(snapshot) : null;
 }

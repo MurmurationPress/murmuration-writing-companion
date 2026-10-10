@@ -20,9 +20,12 @@ function frontmatter(host: ManuscriptSceneCreationAuthority, file: TFile): Recor
   return host.app.metadataCache.getFileCache(file)?.frontmatter as Record<string, unknown> | undefined;
 }
 
-export function snapshotManuscriptSceneCreation(host: ManuscriptSceneCreationAuthority): ManuscriptSceneCreationSnapshot {
+/** The Navigator may supply its settled library for display; mutation callers rebuild. */
+export function snapshotManuscriptSceneCreation(
+  host: ManuscriptSceneCreationAuthority,
+  library = buildObsidianManuscriptLibrary(host.app)
+): ManuscriptSceneCreationSnapshot {
   const selection = host.manuscriptBookSelection.get();
-  const library = buildObsidianManuscriptLibrary(host.app);
   const book = library.books.find((candidate) => candidate.file.path === selection.bookPath) ?? null;
   const parents = book ? [
     { path: book.file.path, title: book.record.title, kind: "book" as const, associatedFolder: associatedManuscriptFolderPath(host.app, book.file) },
