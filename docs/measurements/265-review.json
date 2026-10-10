@@ -1,0 +1,5946 @@
+{
+  "note": "Independent PR review reproductions. Cold driver additionally asserts full index counts/context. Timed-out 10,000-note trials are not reused as comparative evidence.",
+  "cold": {
+    "baseline": {
+      "sourceCommit": "92ace1a122e8e456d03feeeb154cf53e5962651c",
+      "bundleSha256": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+      "coldLimitMs": 60000,
+      "note": "Fresh process and empty host profile/database for each trial. OS file cache not flushed. Instrumented plugin onload to settlement; process-launch boundary includes host boot and trust interaction. Polling cadence 200 ms. Two animation frames from pointerdown are a responsiveness proxy, not physical input-to-photon latency. Five prose samples after one warmup; Companion/Navigator open. Timed-out cold trials do not run edit/interaction trials.",
+      "results": [
+        {
+          "size": 1000,
+          "trial": 0,
+          "interactionPointerDownToTwoFramesMs": [
+            11.4,
+            17,
+            19.7,
+            29.5,
+            43.2
+          ],
+          "cold": {
+            "elapsedMs": 31191.8,
+            "counts": {
+              "vault.scan": {
+                "calls": 6500,
+                "ms": 366.9
+              },
+              "storyWorldIndex.rebuild": {
+                "calls": 932,
+                "ms": 1204.5
+              },
+              "storyWorldStartup.initialise": {
+                "calls": 1,
+                "ms": 0.2
+              },
+              "plugin.loaded": {
+                "calls": 1,
+                "ms": 48.4
+              },
+              "metadata.changed": {
+                "calls": 2000,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.queue": {
+                "calls": 798,
+                "ms": 9.7
+              },
+              "cache.read": {
+                "calls": 6618829,
+                "ms": 3407.8
+              },
+              "scheduleStoryWorldMetadataRefresh": {
+                "calls": 1000,
+                "ms": 11.7
+              },
+              "renderManuscriptNavigator": {
+                "calls": 1008,
+                "ms": 375.3
+              },
+              "refreshManuscriptNavigator": {
+                "calls": 1008,
+                "ms": 394.6
+              },
+              "metadata.resolved": {
+                "calls": 1862,
+                "ms": 0
+              },
+              "renderCompanion": {
+                "calls": 1136,
+                "ms": 20508.6
+              },
+              "refreshView": {
+                "calls": 1136,
+                "ms": 20527.1
+              },
+              "refreshStoryWorldIndexConsumers": {
+                "calls": 931,
+                "ms": 16274.5
+              },
+              "storyWorldStartup.metadataResolved": {
+                "calls": 931,
+                "ms": 17483.5
+              },
+              "manuscriptIntegrityCoordinator.settle": {
+                "calls": 2,
+                "ms": 4.3
+              },
+              "manuscriptProjection.rebuild": {
+                "calls": 3,
+                "ms": 62.4
+              },
+              "layout.ready": {
+                "calls": 1,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.initialise": {
+                "calls": 1,
+                "ms": 14.3
+              },
+              "storyWorldStartup.settle": {
+                "calls": 1,
+                "ms": 0
+              }
+            },
+            "pending": 0,
+            "current": "B0S000.md",
+            "instance": 1,
+            "firstUsableAtMs": 30089.4,
+            "pendingAtStart": 0,
+            "context": "B0S000.md",
+            "active": "B0S000.md",
+            "navigatorPresent": true,
+            "title": "B0S000 - vault - Obsidian 1.13.7",
+            "indexAudit": {
+              "entities": 200,
+              "books": 3,
+              "scenes": 792,
+              "owned": 798,
+              "unresolved": 0
+            },
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+            "launchToObservationMs": 32524.85,
+            "settled": true
+          },
+          "edits": [
+            {
+              "elapsedMs": 35872.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 52120,
+                  "ms": 29.5
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.6
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 185.7
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 185.7
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 292.1
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 292.1
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 61.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 63.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 19.9
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 37397.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 52120,
+                  "ms": 34
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 1.1
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 202.4
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 202.6
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 288.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 288.2
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.8
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 60.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 62.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 22.1
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 38920,
+              "counts": {
+                "cache.read": {
+                  "calls": 52120,
+                  "ms": 30.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 1
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 191.8
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 191.8
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 275
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 275.1
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 3
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 58.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 61.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 21.8
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 40442.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 52120,
+                  "ms": 29.9
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.9
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 187.5
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 187.5
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 276.9
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 277
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.8
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 57
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 58.8
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 21.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 41965.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 52120,
+                  "ms": 28.3
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 1
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 181.8
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 181.8
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 281.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 281.3
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.7
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 57.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 59.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 20.1
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            }
+          ]
+        }
+      ]
+    },
+    "reportedHead": {
+      "sourceCommit": "29f6b60c9a804aca8ae9d521aa00c9b909b89430",
+      "bundleSha256": "8b9971957a696fb408153427a9cb8ff991114ff8ec824cd6230b3c4219e133d8",
+      "coldLimitMs": 60000,
+      "note": "Fresh process and empty host profile/database for each trial. OS file cache not flushed. Instrumented plugin onload to settlement; process-launch boundary includes host boot and trust interaction. Polling cadence 200 ms. Two animation frames from pointerdown are a responsiveness proxy, not physical input-to-photon latency. Five prose samples after one warmup; Companion/Navigator open. Timed-out cold trials do not run edit/interaction trials.",
+      "results": [
+        {
+          "size": 1000,
+          "trial": 0,
+          "interactionPointerDownToTwoFramesMs": [
+            29.4,
+            36.5,
+            51.6,
+            28.9,
+            43.5
+          ],
+          "cold": {
+            "elapsedMs": 4084.3,
+            "counts": {
+              "vault.scan": {
+                "calls": 47,
+                "ms": 4.2
+              },
+              "cache.read": {
+                "calls": 76230,
+                "ms": 55.4
+              },
+              "storyWorldIndex.rebuild": {
+                "calls": 4,
+                "ms": 30.9
+              },
+              "storyWorldStartup.initialise": {
+                "calls": 1,
+                "ms": 3.4
+              },
+              "plugin.loaded": {
+                "calls": 1,
+                "ms": 14.3
+              },
+              "metadata.changed": {
+                "calls": 2000,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.queue": {
+                "calls": 798,
+                "ms": 8.7
+              },
+              "scheduleStoryWorldMetadataRefresh": {
+                "calls": 1000,
+                "ms": 7.4
+              },
+              "metadata.resolved": {
+                "calls": 1468,
+                "ms": 0
+              },
+              "renderCompanion": {
+                "calls": 6,
+                "ms": 159
+              },
+              "refreshView": {
+                "calls": 6,
+                "ms": 159.3
+              },
+              "renderManuscriptNavigator": {
+                "calls": 208,
+                "ms": 280.6
+              },
+              "refreshManuscriptNavigator": {
+                "calls": 208,
+                "ms": 284.2
+              },
+              "refreshStoryWorldIndexConsumers": {
+                "calls": 2,
+                "ms": 62.6
+              },
+              "storyWorldStartup.metadataResolved": {
+                "calls": 3,
+                "ms": 27.6
+              },
+              "manuscriptIntegrityCoordinator.settle": {
+                "calls": 2,
+                "ms": 1.5
+              },
+              "manuscriptProjection.rebuild": {
+                "calls": 3,
+                "ms": 37.3
+              },
+              "layout.ready": {
+                "calls": 1,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.initialise": {
+                "calls": 1,
+                "ms": 18.7
+              },
+              "storyWorldStartup.settle": {
+                "calls": 1,
+                "ms": 0.2
+              }
+            },
+            "pending": 0,
+            "current": "B0S000.md",
+            "instance": 1,
+            "firstUsableAtMs": 2980.7,
+            "pendingAtStart": 0,
+            "context": "B0S000.md",
+            "active": "B0S000.md",
+            "navigatorPresent": true,
+            "title": "B0S000 - vault - Obsidian 1.13.7",
+            "indexAudit": {
+              "entities": 200,
+              "books": 3,
+              "scenes": 792,
+              "owned": 798,
+              "unresolved": 0
+            },
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+            "launchToObservationMs": 5317.31,
+            "settled": true
+          },
+          "edits": [
+            {
+              "elapsedMs": 8630,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 11.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 30.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40.8
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40.9
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.6
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 10143,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 13.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.4
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 45.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 45.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 28.5
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 99.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 99.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 11665.5,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 14.4
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.4
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 32.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 32.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 28.4
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.6
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.7
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 13186.5,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 12.5
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.3
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 32.3
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 32.3
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 30.4
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 41.4
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 41.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.6
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 14709.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 10.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 1.4
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 27.8
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 27.8
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.4
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 41.2
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 41.3
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 91
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 91
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            }
+          ]
+        }
+      ]
+    },
+    "corrected": {
+      "sourceCommit": "b8877c3cddb800bd0db34b31cc040cb8f24dab7f",
+      "bundleSha256": "3c1815b1f5a54a300ed3e0aef02a47c88c43a5669bd7a4417086a72442f379ef",
+      "coldLimitMs": 60000,
+      "note": "Fresh process and empty host profile/database for each trial. OS file cache not flushed. Instrumented plugin onload to settlement; process-launch boundary includes host boot and trust interaction. Polling cadence 200 ms. Two animation frames from pointerdown are a responsiveness proxy, not physical input-to-photon latency. Five prose samples after one warmup; Companion/Navigator open. Timed-out cold trials do not run edit/interaction trials.",
+      "results": [
+        {
+          "size": 1000,
+          "trial": 0,
+          "interactionPointerDownToTwoFramesMs": [
+            14.6,
+            46.3,
+            25.7,
+            41.4,
+            20.9
+          ],
+          "cold": {
+            "elapsedMs": 4192.6,
+            "counts": {
+              "vault.scan": {
+                "calls": 48,
+                "ms": 4.6
+              },
+              "storyWorldIndex.rebuild": {
+                "calls": 4,
+                "ms": 29.5
+              },
+              "storyWorldStartup.initialise": {
+                "calls": 1,
+                "ms": 0.3
+              },
+              "plugin.loaded": {
+                "calls": 1,
+                "ms": 69.7
+              },
+              "metadata.changed": {
+                "calls": 2000,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.queue": {
+                "calls": 798,
+                "ms": 9.1
+              },
+              "cache.read": {
+                "calls": 76524,
+                "ms": 47.9
+              },
+              "scheduleStoryWorldMetadataRefresh": {
+                "calls": 1000,
+                "ms": 7.3
+              },
+              "metadata.resolved": {
+                "calls": 1470,
+                "ms": 0
+              },
+              "renderCompanion": {
+                "calls": 7,
+                "ms": 177.8
+              },
+              "refreshView": {
+                "calls": 7,
+                "ms": 178.1
+              },
+              "renderManuscriptNavigator": {
+                "calls": 208,
+                "ms": 293.6
+              },
+              "refreshManuscriptNavigator": {
+                "calls": 208,
+                "ms": 298.6
+              },
+              "refreshStoryWorldIndexConsumers": {
+                "calls": 3,
+                "ms": 84.7
+              },
+              "storyWorldStartup.metadataResolved": {
+                "calls": 3,
+                "ms": 59.1
+              },
+              "manuscriptIntegrityCoordinator.settle": {
+                "calls": 2,
+                "ms": 1.9
+              },
+              "manuscriptProjection.rebuild": {
+                "calls": 3,
+                "ms": 33.8
+              },
+              "layout.ready": {
+                "calls": 1,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.initialise": {
+                "calls": 1,
+                "ms": 14.1
+              },
+              "storyWorldStartup.settle": {
+                "calls": 1,
+                "ms": 0.1
+              }
+            },
+            "pending": 0,
+            "current": "B0S000.md",
+            "instance": 1,
+            "firstUsableAtMs": 3089,
+            "pendingAtStart": 0,
+            "context": "B0S000.md",
+            "active": "B0S000.md",
+            "navigatorPresent": true,
+            "title": "B0S000 - vault - Obsidian 1.13.7",
+            "indexAudit": {
+              "entities": 200,
+              "books": 3,
+              "scenes": 792,
+              "owned": 798,
+              "unresolved": 0
+            },
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+            "launchToObservationMs": 5909.68,
+            "settled": true
+          },
+          "edits": [
+            {
+              "elapsedMs": 8745.5,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 13.2
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 37.2
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 37.2
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.8
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 38.6
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 38.6
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 103.1
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 103.1
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 10268.5,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 11.1
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.8
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 37.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 37.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 41.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 41.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 105.8
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 105.8
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 11791.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 11.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 34.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 34.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40.8
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40.8
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 13304.8,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 14.4
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.5
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 44.8
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 44.8
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40.7
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40.7
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 98.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 98.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 14825.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 11.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 1.5
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 38.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 38.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 26.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 41.6
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 41.6
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 106.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 106.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            }
+          ]
+        }
+      ]
+    },
+    "final": {
+      "sourceCommit": "23c5db77fc6ce79b9d79ca12a11ff7eedbd8cc9c",
+      "bundleSha256": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "coldLimitMs": 60000,
+      "note": "Fresh process and empty host profile/database for each trial. OS file cache not flushed. Instrumented plugin onload to settlement; process-launch boundary includes host boot and trust interaction. Polling cadence 200 ms. Two animation frames from pointerdown are a responsiveness proxy, not physical input-to-photon latency. Five prose samples after one warmup; Companion/Navigator open. Timed-out cold trials do not run edit/interaction trials.",
+      "results": [
+        {
+          "size": 1000,
+          "trial": 0,
+          "interactionPointerDownToTwoFramesMs": [
+            6.6,
+            51.5,
+            27.8,
+            41.2,
+            24.8
+          ],
+          "cold": {
+            "elapsedMs": 4098.4,
+            "counts": {
+              "vault.scan": {
+                "calls": 48,
+                "ms": 4.9
+              },
+              "cache.read": {
+                "calls": 77524,
+                "ms": 46.8
+              },
+              "storyWorldIndex.rebuild": {
+                "calls": 4,
+                "ms": 31.8
+              },
+              "storyWorldStartup.initialise": {
+                "calls": 1,
+                "ms": 4.1
+              },
+              "plugin.loaded": {
+                "calls": 1,
+                "ms": 16.8
+              },
+              "metadata.changed": {
+                "calls": 2000,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.queue": {
+                "calls": 798,
+                "ms": 7.5
+              },
+              "scheduleStoryWorldMetadataRefresh": {
+                "calls": 1000,
+                "ms": 7.3
+              },
+              "metadata.resolved": {
+                "calls": 1478,
+                "ms": 0
+              },
+              "renderCompanion": {
+                "calls": 7,
+                "ms": 181.6
+              },
+              "refreshView": {
+                "calls": 7,
+                "ms": 181.8
+              },
+              "renderManuscriptNavigator": {
+                "calls": 208,
+                "ms": 282.1
+              },
+              "refreshManuscriptNavigator": {
+                "calls": 208,
+                "ms": 286.3
+              },
+              "refreshStoryWorldIndexConsumers": {
+                "calls": 3,
+                "ms": 84.5
+              },
+              "storyWorldStartup.metadataResolved": {
+                "calls": 3,
+                "ms": 56.9
+              },
+              "manuscriptIntegrityCoordinator.settle": {
+                "calls": 2,
+                "ms": 1.9
+              },
+              "manuscriptProjection.rebuild": {
+                "calls": 3,
+                "ms": 31.4
+              },
+              "layout.ready": {
+                "calls": 1,
+                "ms": 0
+              },
+              "manuscriptIntegrityCoordinator.initialise": {
+                "calls": 1,
+                "ms": 17.8
+              },
+              "storyWorldStartup.settle": {
+                "calls": 1,
+                "ms": 0.1
+              }
+            },
+            "pending": 0,
+            "current": "B0S000.md",
+            "instance": 1,
+            "firstUsableAtMs": 2995.8,
+            "pendingAtStart": 0,
+            "context": "B0S000.md",
+            "active": "B0S000.md",
+            "navigatorPresent": true,
+            "title": "B0S000 - vault - Obsidian 1.13.7",
+            "indexAudit": {
+              "entities": 200,
+              "books": 3,
+              "scenes": 792,
+              "owned": 798,
+              "unresolved": 0
+            },
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+            "launchToObservationMs": 5300.61,
+            "settled": true
+          },
+          "edits": [
+            {
+              "elapsedMs": 8687.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 12.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.8
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 41.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 41.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.5
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.4
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.4
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 10208.4,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 11.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 40.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 40.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.5
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 101.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 11732.1,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 12
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.5
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 19.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 19.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.8
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.2
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.2
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 100.8
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 100.8
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 13244.8,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 10.2
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 14.9
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 14.9
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 37.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 41.8
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 41.9
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 109.1
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 109.1
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            },
+            {
+              "elapsedMs": 14768.2,
+              "counts": {
+                "cache.read": {
+                  "calls": 17403,
+                  "ms": 12.2
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 1
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 31.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 31.7
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.9
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "bundle": {
+    "baseline": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 685795,
+          "gzipBytes": 193821
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 749627,
+      "totalGzipBytes": 204223
+    },
+    "reported": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682307,
+          "gzipBytes": 193386
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746139,
+      "totalGzipBytes": 203788
+    },
+    "referenceCacheCorrection": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682606,
+          "gzipBytes": 193480
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746438,
+      "totalGzipBytes": 203882
+    },
+    "final": {
+      "assets": {
+        "main.js": {
+          "rawBytes": 682657,
+          "gzipBytes": 193487
+        },
+        "styles.css": {
+          "rawBytes": 63555,
+          "gzipBytes": 10217
+        },
+        "manifest.json": {
+          "rawBytes": 277,
+          "gzipBytes": 185
+        }
+      },
+      "totalRawBytes": 746489,
+      "totalGzipBytes": 203889
+    }
+  },
+  "warm": {
+    "baseline": {
+      "bundleSha256": "31c83a3697e278122af370e96b9aca0e27ed0ea95cb3605f6e70a61f182f2eb4",
+      "environment": {
+        "files": 1000,
+        "title": "B0S000 - vault - Obsidian 1.14.4",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+        "plugins": [
+          "murmuration-writing-companion"
+        ],
+        "context": "B0S000.md",
+        "entities": 200,
+        "books": 3
+      },
+      "note": "Previously indexed synthetic fixture; Companion and Navigator only. One warmup and five measured prose/metadata samples, two quiet 450ms windows. Synchronous method times are nested and must not be added together. Interaction samples assert one successful native toggle; click-to-two-animation-frames is a renderer responsiveness proxy, not physical input-to-photon latency. Pointerdown metric includes requested 35ms hold and CDP round trips.",
+      "results": [
+        {
+          "stage": "prose",
+          "samples": [
+            {
+              "elapsedMs": 5722.3,
+              "counts": {
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 29.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.7
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 172.4
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 172.5
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 373
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 373
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 3.6
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 58
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 61.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 18.7
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1212.8
+            },
+            {
+              "elapsedMs": 6813.2,
+              "counts": {
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 25.7
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.9
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 169.2
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 169.2
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 267.9
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 268
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.9
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 56.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 58.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 19.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1088.1
+            },
+            {
+              "elapsedMs": 7975.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 31.3
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.8
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 203.5
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 203.6
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 284.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 284.4
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2.1
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 54.8
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 56.9
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 30.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1157.9
+            },
+            {
+              "elapsedMs": 9033.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 25.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.8
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 163.9
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 164
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 260
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 260
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.8
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 55.7
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 57.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 18.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1056.3
+            },
+            {
+              "elapsedMs": 10115.6,
+              "counts": {
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 26.3
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.3
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 169.5
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 169.5
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 270.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 270.5
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.7
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 56.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 58.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 20.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1080
+            }
+          ]
+        },
+        {
+          "stage": "metadata",
+          "samples": [
+            {
+              "elapsedMs": 12334,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 29.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 1.2
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 177.5
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 177.6
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 263.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 263.6
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 53.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 55.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 20.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1103.4
+            },
+            {
+              "elapsedMs": 13460.3,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 25.2
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.8
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 164.1
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 164.3
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 289.9
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 289.9
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 1.6
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 60.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 61.7
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 18.8
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1124.1
+            },
+            {
+              "elapsedMs": 14660.6,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 32.3
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.6
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 185.1
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 185.3
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 345.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 345.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 16.7
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2.1
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 61.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 63.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1198.5
+            },
+            {
+              "elapsedMs": 15828.8,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 33.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.9
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 177.8
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 177.8
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 329.9
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 330
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2.4
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 62.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 65
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 18.7
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1166.4
+            },
+            {
+              "elapsedMs": 16916.2,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 52117,
+                  "ms": 25.4
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 14,
+                  "ms": 0.7
+                },
+                "renderCompanion": {
+                  "calls": 4,
+                  "ms": 167.5
+                },
+                "refreshView": {
+                  "calls": 4,
+                  "ms": 167.5
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "scheduleManuscriptChronologyRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 257.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 3,
+                  "ms": 257.5
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 2.1
+                },
+                "refreshStoryWorldIndexConsumers": {
+                  "calls": 1,
+                  "ms": 52.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 54.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 19.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 1082.6
+            }
+          ]
+        }
+      ],
+      "interactions": [
+        {
+          "scenario": "clean",
+          "downToFramesMs": 87.9,
+          "clickToFramesMs": 48.2,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 77.1,
+          "clickToFramesMs": 38.8,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 89.5,
+          "clickToFramesMs": 50.6,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 81.4,
+          "clickToFramesMs": 41.8,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 80.9,
+          "clickToFramesMs": 41.8,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 257.9,
+          "clickToFramesMs": 218.5,
+          "connected": false,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 253.7,
+          "clickToFramesMs": 215.9,
+          "connected": false,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 262.3,
+          "clickToFramesMs": 223.1,
+          "connected": false,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 261.3,
+          "clickToFramesMs": 223.4,
+          "connected": false,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 274.1,
+          "clickToFramesMs": 236.7,
+          "connected": false,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        }
+      ]
+    },
+    "corrected": {
+      "bundleSha256": "3c1815b1f5a54a300ed3e0aef02a47c88c43a5669bd7a4417086a72442f379ef",
+      "environment": {
+        "files": 1000,
+        "title": "B0S000 - vault - Obsidian 1.14.4",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+        "plugins": [
+          "murmuration-writing-companion"
+        ],
+        "context": "B0S000.md",
+        "entities": 200,
+        "books": 3
+      },
+      "note": "Previously indexed synthetic fixture; Companion and Navigator only. One warmup and five measured prose/metadata samples, two quiet 450ms windows. Synchronous method times are nested and must not be added together. Interaction samples assert one successful native toggle; click-to-two-animation-frames is a renderer responsiveness proxy, not physical input-to-photon latency. Pointerdown metric includes requested 35ms hold and CDP round trips.",
+      "results": [
+        {
+          "stage": "prose",
+          "samples": [
+            {
+              "elapsedMs": 4978.1,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 14.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.9
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 36.1
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 36.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 109
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 109
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 918.3
+            },
+            {
+              "elapsedMs": 5901.9,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.1
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.4
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 42.8
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 42.9
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 30.3
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 38.4
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 38.4
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 919.4
+            },
+            {
+              "elapsedMs": 6814.8,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.9
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 32.2
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 32.2
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 29.7
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.8
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.9
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.1
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 909.9
+            },
+            {
+              "elapsedMs": 7722.9,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 9.9
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 33
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 33
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 26.3
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.3
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.3
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 94.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 94.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 906.3
+            },
+            {
+              "elapsedMs": 8634.5,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 11.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 33.7
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 33.7
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 30
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 39.1
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 39.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.7
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.7
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 909.6
+            }
+          ]
+        },
+        {
+          "stage": "metadata",
+          "samples": [
+            {
+              "elapsedMs": 10462.8,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.7
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 34.7
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 34.7
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 38.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 38.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 902.7
+            },
+            {
+              "elapsedMs": 11368.6,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 10.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 33.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 33.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 26.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.9
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.9
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 90.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 903.6
+            },
+            {
+              "elapsedMs": 12274.9,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.1
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.5
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 35.5
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40.3
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40.3
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 904
+            },
+            {
+              "elapsedMs": 13187.4,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 10.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.3
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 10.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 10.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 40.1
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 40.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.6
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 908.1
+            },
+            {
+              "elapsedMs": 14091.9,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 15.3
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 42.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 42.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 36.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 36.6
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 102.6
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 902.6
+            }
+          ]
+        }
+      ],
+      "interactions": [
+        {
+          "scenario": "clean",
+          "downToFramesMs": 102.6,
+          "clickToFramesMs": 56.6,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 87.8,
+          "clickToFramesMs": 48.2,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 84.2,
+          "clickToFramesMs": 46.7,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 86.4,
+          "clickToFramesMs": 49.4,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 88.3,
+          "clickToFramesMs": 48.4,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 84.3,
+          "clickToFramesMs": 45.6,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 94.3,
+          "clickToFramesMs": 54.3,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 70.7,
+          "clickToFramesMs": 32.7,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 69.2,
+          "clickToFramesMs": 32.2,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 95.1,
+          "clickToFramesMs": 57.6,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        }
+      ]
+    },
+    "final": {
+      "bundleSha256": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "environment": {
+        "files": 1000,
+        "title": "B0S000 - vault - Obsidian 1.14.4",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+        "plugins": [
+          "murmuration-writing-companion"
+        ],
+        "context": "B0S000.md",
+        "entities": 200,
+        "books": 3
+      },
+      "note": "Previously indexed synthetic fixture; Companion and Navigator only. One warmup and five measured prose/metadata samples, two quiet 450ms windows. Synchronous method times are nested and must not be added together. Interaction samples assert one successful native toggle; click-to-two-animation-frames is a renderer responsiveness proxy, not physical input-to-photon latency. Pointerdown metric includes requested 35ms hold and CDP round trips.",
+      "results": [
+        {
+          "stage": "prose",
+          "samples": [
+            {
+              "elapsedMs": 5027.7,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.1
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 37.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 37.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 43.5
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 43.5
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 110.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 110.2
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 918.2
+            },
+            {
+              "elapsedMs": 5950,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 11.2
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 35.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 35.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.8
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 36.7
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 36.7
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 918.2
+            },
+            {
+              "elapsedMs": 6870.2,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 13.8
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.5
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 39.6
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 39.6
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 28.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 47.4
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 47.4
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.5
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 89.5
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 916.6
+            },
+            {
+              "elapsedMs": 7788.8,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 12.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 34.8
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 34.8
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.7
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.4
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 92.4
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 914.4
+            },
+            {
+              "elapsedMs": 8708.3,
+              "counts": {
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 11.6
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.8
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 35.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 35.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.5
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.6
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.6
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 87.9
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 88
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 914.9
+            }
+          ]
+        },
+        {
+          "stage": "metadata",
+          "samples": [
+            {
+              "elapsedMs": 10528.2,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 11.7
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 32.7
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 32.7
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 25.2
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 88.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 88.7
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 904.3
+            },
+            {
+              "elapsedMs": 11438.6,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 10.5
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 27.2
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 27.2
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 27.3
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 38.9
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 38.9
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.6
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 906.7
+            },
+            {
+              "elapsedMs": 12350.4,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 13.7
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 1.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 38.1
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 38.1
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.9
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 38.3
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 38.4
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 94.2
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 94.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 907.8
+            },
+            {
+              "elapsedMs": 13260.4,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 14.9
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.6
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 22.4
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 22.4
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 40.9
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 65.4
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 65.4
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 108.3
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 108.3
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 906
+            },
+            {
+              "elapsedMs": 14170.3,
+              "counts": {
+                "frontmatter.write": {
+                  "calls": 1,
+                  "ms": 0.1
+                },
+                "cache.read": {
+                  "calls": 17400,
+                  "ms": 10.7
+                },
+                "metadata.changed": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "manuscriptIntegrityCoordinator.queue": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "scheduleStoryWorldMetadataRefresh": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "metadata.resolved": {
+                  "calls": 2,
+                  "ms": 0
+                },
+                "vault.scan": {
+                  "calls": 5,
+                  "ms": 0.7
+                },
+                "storyWorldIndex.rebuild": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "storyWorldStartup.metadataResolved": {
+                  "calls": 1,
+                  "ms": 34.2
+                },
+                "manuscriptIntegrityCoordinator.settle": {
+                  "calls": 1,
+                  "ms": 0
+                },
+                "manuscriptProjection.rebuild": {
+                  "calls": 1,
+                  "ms": 24.1
+                },
+                "renderCompanion": {
+                  "calls": 1,
+                  "ms": 34.1
+                },
+                "refreshView": {
+                  "calls": 1,
+                  "ms": 34.1
+                },
+                "renderManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.6
+                },
+                "refreshManuscriptNavigator": {
+                  "calls": 1,
+                  "ms": 93.7
+                }
+              },
+              "pending": 0,
+              "current": "B0S000.md",
+              "settledWallMs": 906.1
+            }
+          ]
+        }
+      ],
+      "interactions": [
+        {
+          "scenario": "clean",
+          "downToFramesMs": 89.7,
+          "clickToFramesMs": 46.8,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 97.1,
+          "clickToFramesMs": 60.2,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 69.6,
+          "clickToFramesMs": 32.9,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 67.7,
+          "clickToFramesMs": 28.7,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 0
+        },
+        {
+          "scenario": "clean",
+          "downToFramesMs": 86.8,
+          "clickToFramesMs": 48.9,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 0
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 86.6,
+          "clickToFramesMs": 48.5,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 72.4,
+          "clickToFramesMs": 33.2,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 95.6,
+          "clickToFramesMs": 56,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 91.5,
+          "clickToFramesMs": 51.9,
+          "connected": true,
+          "calls": 1,
+          "after": "false",
+          "writes": 1
+        },
+        {
+          "scenario": "blur-save",
+          "downToFramesMs": 73.8,
+          "clickToFramesMs": 33.2,
+          "connected": true,
+          "calls": 1,
+          "after": "true",
+          "writes": 1
+        }
+      ]
+    }
+  },
+  "live": {
+    "safety": {
+      "initial": {
+        "writes": [],
+        "current": true,
+        "alias": "authored alias",
+        "status": "none"
+      },
+      "repeat": [],
+      "external": {
+        "writes": [],
+        "books": [
+          [
+            "Book0.md",
+            false
+          ],
+          [
+            "Book1.md",
+            false
+          ]
+        ],
+        "owner": "Book1.md",
+        "status": "",
+        "tooltip": "Scene numbers out of date — Book1 (Book1.md). Click to renumber this Book."
+      },
+      "cancellation": {
+        "lateRebuilds": 0,
+        "context": "B1S000.md",
+        "status": "",
+        "writes": [],
+        "cssLoaded": true
+      },
+      "plainTarget": {
+        "before": true,
+        "created": false,
+        "deleted": true,
+        "writes": []
+      }
+    },
+    "lateCollectionBefore": {
+      "before": {
+        "review": true,
+        "collection": true
+      },
+      "after": {
+        "review": false,
+        "collection": true
+      }
+    },
+    "lateCollectionFinal": {
+      "before": {
+        "review": true,
+        "collection": true
+      },
+      "after": {
+        "review": false,
+        "collection": false
+      }
+    },
+    "referenceCacheBlur": {
+      "environment": {
+        "title": "B1S000 - vault - Obsidian 1.14.4",
+        "electron": "43.3.0",
+        "chrome": "150.0.7871.212",
+        "platform": "linux",
+        "notes": 100,
+        "plugins": [
+          "murmuration-writing-companion"
+        ]
+      },
+      "pluginHash": "3c1815b1f5a54a300ed3e0aef02a47c88c43a5669bd7a4417086a72442f379ef",
+      "instrumented": true,
+      "results": [
+        {
+          "name": "summary-toggle",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-toggle-0-1791640192541",
+              "done": true,
+              "completedAt": 41965.3
+            }
+          ],
+          "actionAt": 41998,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-0-1791640192541",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-toggle-1-1791640194212",
+              "done": true,
+              "completedAt": 43628
+            }
+          ],
+          "actionAt": 43662,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-1-1791640194212",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-toggle-2-1791640195833",
+              "done": true,
+              "completedAt": 45232.8
+            }
+          ],
+          "actionAt": 45273.9,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-2-1791640195833",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-toggle-3-1791640197535",
+              "done": true,
+              "completedAt": 47008.5
+            }
+          ],
+          "actionAt": 47040.6,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-3-1791640197535",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-toggle-4-1791640199285",
+              "done": true,
+              "completedAt": 48696.1
+            }
+          ],
+          "actionAt": 48875.8,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-4-1791640199285",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-scene",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-scene-0-1791640201046",
+              "done": true,
+              "completedAt": 50466.1
+            }
+          ],
+          "actionAt": 50500.7,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-summary-scene-0-1791640201046",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-scene",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-scene-1-1791640202642",
+              "done": true,
+              "completedAt": 52062.4
+            }
+          ],
+          "actionAt": 52098.2,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-summary-scene-1-1791640202642",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-scene",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-scene-2-1791640204240",
+              "done": true,
+              "completedAt": 53694
+            }
+          ],
+          "actionAt": 53729.2,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-summary-scene-2-1791640204240",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-scene",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-scene-3-1791640205873",
+              "done": true,
+              "completedAt": 55296.5
+            }
+          ],
+          "actionAt": 55331,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-summary-scene-3-1791640205873",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-scene",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-scene-4-1791640207475",
+              "done": true,
+              "completedAt": 56896.6
+            }
+          ],
+          "actionAt": 57077.4,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-summary-scene-4-1791640207475",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-modal",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-modal-0-1791640209197",
+              "done": true,
+              "completedAt": 58633.8
+            }
+          ],
+          "actionAt": 58668,
+          "current": "B0S000.md",
+          "modals": 1,
+          "cache": "fixture-summary-modal-0-1791640209197",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-modal",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-modal-1-1791640210902",
+              "done": true,
+              "completedAt": 60329.9
+            }
+          ],
+          "actionAt": 60364.1,
+          "current": "B0S000.md",
+          "modals": 1,
+          "cache": "fixture-summary-modal-1-1791640210902",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-modal",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-modal-2-1791640212561",
+              "done": true,
+              "completedAt": 61994.9
+            }
+          ],
+          "actionAt": 62030.1,
+          "current": "B0S000.md",
+          "modals": 1,
+          "cache": "fixture-summary-modal-2-1791640212561",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-modal",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-modal-3-1791640214191",
+              "done": true,
+              "completedAt": 63595.2
+            }
+          ],
+          "actionAt": 63630.1,
+          "current": "B0S000.md",
+          "modals": 1,
+          "cache": "fixture-summary-modal-3-1791640214191",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-modal",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-summary-modal-4-1791640215793",
+              "done": true,
+              "completedAt": 65235.2
+            }
+          ],
+          "actionAt": 65412.3,
+          "current": "B0S000.md",
+          "modals": 1,
+          "cache": "fixture-summary-modal-4-1791640215793",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "title-toggle",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "title",
+              "value": "fixture-title-toggle-0-1791640217636",
+              "done": true,
+              "completedAt": 67063.8
+            }
+          ],
+          "actionAt": 67098,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-title-toggle-0-1791640217636",
+          "disk": true,
+          "other": "Scene 0 001"
+        },
+        {
+          "name": "title-toggle",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "title",
+              "value": "fixture-title-toggle-1-1791640219250",
+              "done": true,
+              "completedAt": 68668.6
+            }
+          ],
+          "actionAt": 68702.7,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-title-toggle-1-1791640219250",
+          "disk": true,
+          "other": "Scene 0 001"
+        },
+        {
+          "name": "title-toggle",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "title",
+              "value": "fixture-title-toggle-2-1791640220895",
+              "done": true,
+              "completedAt": 70327.4
+            }
+          ],
+          "actionAt": 70362.3,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-title-toggle-2-1791640220895",
+          "disk": true,
+          "other": "Scene 0 001"
+        },
+        {
+          "name": "title-toggle",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "title",
+              "value": "fixture-title-toggle-3-1791640222559",
+              "done": true,
+              "completedAt": 71977.4
+            }
+          ],
+          "actionAt": 72012,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-title-toggle-3-1791640222559",
+          "disk": true,
+          "other": "Scene 0 001"
+        },
+        {
+          "name": "title-toggle",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "title",
+              "value": "fixture-title-toggle-4-1791640224204",
+              "done": true,
+              "completedAt": 73628.5
+            }
+          ],
+          "actionAt": 73808.2,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-title-toggle-4-1791640224204",
+          "disk": true,
+          "other": "Scene 0 001"
+        },
+        {
+          "name": "pov-toggle",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "pov",
+              "value": "[[fixture-pov-toggle-0-1791640226061]]",
+              "done": true,
+              "completedAt": 75472.4
+            }
+          ],
+          "actionAt": 75507.2,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "[[fixture-pov-toggle-0-1791640226061]]",
+          "disk": true,
+          "other": "[[Entity00000]]"
+        },
+        {
+          "name": "pov-toggle",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "pov",
+              "value": "[[fixture-pov-toggle-1-1791640227741]]",
+              "done": true,
+              "completedAt": 77164.4
+            }
+          ],
+          "actionAt": 77199.3,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "[[fixture-pov-toggle-1-1791640227741]]",
+          "disk": true,
+          "other": "[[Entity00000]]"
+        },
+        {
+          "name": "pov-toggle",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "pov",
+              "value": "[[fixture-pov-toggle-2-1791640229441]]",
+              "done": true,
+              "completedAt": 78863.7
+            }
+          ],
+          "actionAt": 78898.5,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "[[fixture-pov-toggle-2-1791640229441]]",
+          "disk": true,
+          "other": "[[Entity00000]]"
+        },
+        {
+          "name": "pov-toggle",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "pov",
+              "value": "[[fixture-pov-toggle-3-1791640231125]]",
+              "done": true,
+              "completedAt": 80529
+            }
+          ],
+          "actionAt": 80564.1,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "[[fixture-pov-toggle-3-1791640231125]]",
+          "disk": true,
+          "other": "[[Entity00000]]"
+        },
+        {
+          "name": "pov-toggle",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "pov",
+              "value": "[[fixture-pov-toggle-4-1791640232847]]",
+              "done": true,
+              "completedAt": 82268.6
+            }
+          ],
+          "actionAt": 82447.3,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "[[fixture-pov-toggle-4-1791640232847]]",
+          "disk": true,
+          "other": "[[Entity00000]]"
+        },
+        {
+          "name": "location-toggle",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "location",
+              "value": "fixture-location-toggle-0-1791640234703",
+              "done": true,
+              "completedAt": 84138
+            }
+          ],
+          "actionAt": 84171,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-location-toggle-0-1791640234703",
+          "disk": true,
+          "other": "[[Entity00001]]"
+        },
+        {
+          "name": "location-toggle",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "location",
+              "value": "fixture-location-toggle-1-1791640236409",
+              "done": true,
+              "completedAt": 85842
+            }
+          ],
+          "actionAt": 85875.6,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-location-toggle-1-1791640236409",
+          "disk": true,
+          "other": "[[Entity00001]]"
+        },
+        {
+          "name": "location-toggle",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "location",
+              "value": "fixture-location-toggle-2-1791640238173",
+              "done": true,
+              "completedAt": 87602.7
+            }
+          ],
+          "actionAt": 87635.9,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-location-toggle-2-1791640238173",
+          "disk": true,
+          "other": "[[Entity00001]]"
+        },
+        {
+          "name": "location-toggle",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "location",
+              "value": "fixture-location-toggle-3-1791640239907",
+              "done": true,
+              "completedAt": 89335.3
+            }
+          ],
+          "actionAt": 89368.9,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-location-toggle-3-1791640239907",
+          "disk": true,
+          "other": "[[Entity00001]]"
+        },
+        {
+          "name": "location-toggle",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "location",
+              "value": "fixture-location-toggle-4-1791640241577",
+              "done": true,
+              "completedAt": 91002.3
+            }
+          ],
+          "actionAt": 91181.5,
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-location-toggle-4-1791640241577",
+          "disk": true,
+          "other": "[[Entity00001]]"
+        },
+        {
+          "name": "slow-summary-scene",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-slow-summary-scene-0-1791640243310",
+              "done": true,
+              "completedAt": 93036.2
+            }
+          ],
+          "actionAt": 92768.5,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-slow-summary-scene-0-1791640243310",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "slow-summary-scene",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-slow-summary-scene-1-1791640244910",
+              "done": true,
+              "completedAt": 94630.8
+            }
+          ],
+          "actionAt": 94363.9,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-slow-summary-scene-1-1791640244910",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "slow-summary-scene",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-slow-summary-scene-2-1791640246508",
+              "done": true,
+              "completedAt": 96232.4
+            }
+          ],
+          "actionAt": 95965.6,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-slow-summary-scene-2-1791640246508",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "slow-summary-scene",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-slow-summary-scene-3-1791640248107",
+              "done": true,
+              "completedAt": 97831.1
+            }
+          ],
+          "actionAt": 97564.2,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-slow-summary-scene-3-1791640248107",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "slow-summary-scene",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": null,
+          "after": null,
+          "calls": 1,
+          "writes": [
+            {
+              "path": "B0S000.md",
+              "field": "change_summary",
+              "value": "fixture-slow-summary-scene-4-1791640249712",
+              "done": true,
+              "completedAt": 99430.7
+            }
+          ],
+          "actionAt": 99311.7,
+          "current": "B0S001.md",
+          "modals": 0,
+          "cache": "fixture-slow-summary-scene-4-1791640249712",
+          "disk": true,
+          "other": null
+        }
+      ],
+      "keyboard": [
+        {
+          "activation": "Space",
+          "repeat": 0,
+          "key": "section:worldContext",
+          "before": "false",
+          "calls": 1,
+          "after": "true",
+          "disk": true
+        },
+        {
+          "activation": "Space",
+          "repeat": 1,
+          "key": "section:worldContext",
+          "before": "true",
+          "calls": 1,
+          "after": "false",
+          "disk": true
+        },
+        {
+          "activation": "Space",
+          "repeat": 2,
+          "key": "section:worldContext",
+          "before": "false",
+          "calls": 1,
+          "after": "true",
+          "disk": true
+        },
+        {
+          "activation": "Space",
+          "repeat": 3,
+          "key": "section:worldContext",
+          "before": "true",
+          "calls": 1,
+          "after": "false",
+          "disk": true
+        },
+        {
+          "activation": "Space",
+          "repeat": 4,
+          "key": "section:worldContext",
+          "before": "false",
+          "calls": 1,
+          "after": "true",
+          "disk": true
+        },
+        {
+          "activation": "Enter",
+          "repeat": 0,
+          "key": "section:worldContext",
+          "before": "true",
+          "calls": 1,
+          "after": "false",
+          "disk": true
+        },
+        {
+          "activation": "Enter",
+          "repeat": 1,
+          "key": "section:worldContext",
+          "before": "false",
+          "calls": 1,
+          "after": "true",
+          "disk": true
+        },
+        {
+          "activation": "Enter",
+          "repeat": 2,
+          "key": "section:worldContext",
+          "before": "true",
+          "calls": 1,
+          "after": "false",
+          "disk": true
+        },
+        {
+          "activation": "Enter",
+          "repeat": 3,
+          "key": "section:worldContext",
+          "before": "false",
+          "calls": 1,
+          "after": "true",
+          "disk": true
+        },
+        {
+          "activation": "Enter",
+          "repeat": 4,
+          "key": "section:worldContext",
+          "before": "true",
+          "calls": 1,
+          "after": "false",
+          "disk": true
+        }
+      ],
+      "keyboardTitle": [
+        {
+          "repeat": 0,
+          "calls": 1,
+          "editors": 1,
+          "disk": true
+        },
+        {
+          "repeat": 1,
+          "calls": 1,
+          "editors": 1,
+          "disk": true
+        },
+        {
+          "repeat": 2,
+          "calls": 1,
+          "editors": 1,
+          "disk": true
+        },
+        {
+          "repeat": 3,
+          "calls": 1,
+          "editors": 1,
+          "disk": true
+        },
+        {
+          "repeat": 4,
+          "calls": 1,
+          "editors": 1,
+          "disk": true
+        }
+      ],
+      "compactEnter": [
+        {
+          "property": "pov",
+          "repeat": 0,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:pov-display",
+          "stored": "[[enter-pov-0-1791640274644]]"
+        },
+        {
+          "property": "pov",
+          "repeat": 1,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:pov-display",
+          "stored": "[[enter-pov-1-1791640276104]]"
+        },
+        {
+          "property": "pov",
+          "repeat": 2,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:pov-display",
+          "stored": "[[enter-pov-2-1791640277539]]"
+        },
+        {
+          "property": "pov",
+          "repeat": 3,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:pov-display",
+          "stored": "[[enter-pov-3-1791640278973]]"
+        },
+        {
+          "property": "pov",
+          "repeat": 4,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:pov-display",
+          "stored": "[[enter-pov-4-1791640280437]]"
+        },
+        {
+          "property": "location",
+          "repeat": 0,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:location-display",
+          "stored": "enter-location-0-1791640281872"
+        },
+        {
+          "property": "location",
+          "repeat": 1,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:location-display",
+          "stored": "enter-location-1-1791640283338"
+        },
+        {
+          "property": "location",
+          "repeat": 2,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:location-display",
+          "stored": "enter-location-2-1791640284771"
+        },
+        {
+          "property": "location",
+          "repeat": 3,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:location-display",
+          "stored": "enter-location-3-1791640286205"
+        },
+        {
+          "property": "location",
+          "repeat": 4,
+          "calls": 1,
+          "editors": 0,
+          "focus": "context:location-display",
+          "stored": "enter-location-4-1791640287674"
+        }
+      ],
+      "external": [
+        {
+          "dirty": false,
+          "title": "external-title-1791640290992",
+          "summary": "external-title-1791640290992"
+        },
+        {
+          "dirty": true,
+          "title": "external-title-1791640292845",
+          "summary": "local-draft-1791640292845"
+        }
+      ],
+      "failures": [
+        {
+          "attempts": 2,
+          "firstActionCalls": 1,
+          "disk": true
+        }
+      ],
+      "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification."
+    },
+    "finalFirstClick": {
+      "environment": {
+        "title": "B0S000 - vault - Obsidian 1.14.4",
+        "electron": "43.3.0",
+        "chrome": "150.0.7871.212",
+        "platform": "linux",
+        "notes": 100,
+        "plugins": [
+          "murmuration-writing-companion"
+        ],
+        "theme": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars theme-light show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+      },
+      "pluginHash": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "instrumented": true,
+      "note": "Real Obsidian/Electron on a synthetic disposable vault; CDP mouse input is trusted. 35 ms requested hold; observed event intervals include main-thread blocking. Handler wrappers are restored between trials. This is not Ted's vault, Windows, or physical OS focus switching.",
+      "results": [
+        {
+          "control": "manuscript",
+          "active": true,
+          "repeat": 0,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": true,
+          "repeat": 1,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": true,
+          "repeat": 2,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": true,
+          "repeat": 3,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": true,
+          "repeat": 4,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": false,
+          "repeat": 0,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": false,
+          "repeat": 1,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": false,
+          "repeat": 2,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": false,
+          "repeat": 3,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "manuscript",
+          "active": false,
+          "repeat": 4,
+          "initial": 0,
+          "clicks": [
+            {
+              "state": 1,
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": true,
+          "repeat": 0,
+          "initial": "false",
+          "clicks": [
+            {
+              "state": "true",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": true,
+          "repeat": 1,
+          "initial": "true",
+          "clicks": [
+            {
+              "state": "false",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": true,
+          "repeat": 2,
+          "initial": "false",
+          "clicks": [
+            {
+              "state": "true",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": true,
+          "repeat": 3,
+          "initial": "true",
+          "clicks": [
+            {
+              "state": "false",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": true,
+          "repeat": 4,
+          "initial": "false",
+          "clicks": [
+            {
+              "state": "true",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": false,
+          "repeat": 0,
+          "initial": "true",
+          "clicks": [
+            {
+              "state": "false",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": false,
+          "repeat": 1,
+          "initial": "false",
+          "clicks": [
+            {
+              "state": "true",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": false,
+          "repeat": 2,
+          "initial": "true",
+          "clicks": [
+            {
+              "state": "false",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": false,
+          "repeat": 3,
+          "initial": "false",
+          "clicks": [
+            {
+              "state": "true",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "companion",
+          "active": false,
+          "repeat": 4,
+          "initial": "true",
+          "clicks": [
+            {
+              "state": "false",
+              "handlerCalls": 1,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": true,
+          "repeat": 0,
+          "initial": true,
+          "clicks": [
+            {
+              "state": false,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": true,
+          "repeat": 1,
+          "initial": false,
+          "clicks": [
+            {
+              "state": true,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": true,
+          "repeat": 2,
+          "initial": true,
+          "clicks": [
+            {
+              "state": false,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": true,
+          "repeat": 3,
+          "initial": false,
+          "clicks": [
+            {
+              "state": true,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": true,
+          "repeat": 4,
+          "initial": true,
+          "clicks": [
+            {
+              "state": false,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": false,
+          "repeat": 0,
+          "initial": false,
+          "clicks": [
+            {
+              "state": true,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": false,
+          "repeat": 1,
+          "initial": true,
+          "clicks": [
+            {
+              "state": false,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": false,
+          "repeat": 2,
+          "initial": false,
+          "clicks": [
+            {
+              "state": true,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": false,
+          "repeat": 3,
+          "initial": true,
+          "clicks": [
+            {
+              "state": false,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        },
+        {
+          "control": "native",
+          "active": false,
+          "repeat": 4,
+          "initial": false,
+          "clicks": [
+            {
+              "state": true,
+              "handlerCalls": 0,
+              "downConnected": true
+            }
+          ]
+        }
+      ],
+      "prose": []
+    },
+    "finalCleanBlur": {
+      "environment": {
+        "title": "B0S000 - vault - Obsidian 1.14.4",
+        "electron": "43.3.0",
+        "chrome": "150.0.7871.212",
+        "platform": "linux",
+        "notes": 100,
+        "plugins": [
+          "murmuration-writing-companion"
+        ]
+      },
+      "pluginHash": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "instrumented": false,
+      "results": [
+        {
+          "name": "summary-toggle",
+          "repeat": 0,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": null,
+          "writes": [],
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-0-1791640558296",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 1,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": null,
+          "writes": [],
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-1-1791640559970",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 2,
+          "holdMs": 35,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": null,
+          "writes": [],
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-2-1791640561614",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 3,
+          "holdMs": 35,
+          "worked": true,
+          "before": "false",
+          "after": "true",
+          "calls": null,
+          "writes": [],
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-3-1791640563278",
+          "disk": true,
+          "other": null
+        },
+        {
+          "name": "summary-toggle",
+          "repeat": 4,
+          "holdMs": 180,
+          "worked": true,
+          "before": "true",
+          "after": "false",
+          "calls": null,
+          "writes": [],
+          "current": "B0S000.md",
+          "modals": 0,
+          "cache": "fixture-summary-toggle-4-1791640564939",
+          "disk": true,
+          "other": null
+        }
+      ],
+      "keyboard": [],
+      "keyboardTitle": [],
+      "compactEnter": [],
+      "external": [],
+      "failures": [],
+      "note": "Actual isolated Obsidian; trusted CDP input. Slow cases inject 300 ms host latency. Five repetitions per case, last pointer hold 180 ms. No physical OS focus or Windows live verification."
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # #252: repeated renders and cold-start follow-up
 
+The original-head measurements below are superseded for current bundle accounting by the [review correction and reruns](performance-265-review.md).
+
 This is a partial delivery after #264, not completion of #252. The 50 KiB headroom target remains unmet. Large cold startup and wider live acceptance remain open.
 
 ## Reproduction and boundaries
@@ -63,7 +65,7 @@ Three fresh-profile trials per size and build; ranges below. These are process-l
 | --- | --- | --- | --- | --- |
 | 100 | 4.00–4.17 s | 3.11–3.23 s | 578–621 → 44 | 86–93 → 3 |
 | 1,000 | 31.87–57.47 s | 5.03–5.21 s | 6,148–7,308 → 47 | 881–956 → 4 |
-| 10,000 | censored at 60 s | censored at 60 s | 4,401–4,549 → 278–380 within observed windows | 545–565 → 33–36 within observed windows |
+| 10,000 | censored at 60 s | censored at 60 s | not comparable: partial states | not comparable: partial states |
 
 Separate measured boundaries (ranges in ms):
 
