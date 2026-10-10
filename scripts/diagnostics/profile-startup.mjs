@@ -30,6 +30,7 @@ for(const size of sizes)for(let trial=0;trial<repeats;trial++){
   const cold=await ev(`const p=app.plugins.plugins['murmuration-writing-companion'];return {...__startupProbe.sample(),instance:__startupProbe.instance,firstUsableAtMs:__startupProbe.firstUsableAt??null,pendingAtStart:__startupProbe.pendingAtStart,context:p.getCurrentChapter()?.path??null,active:app.workspace.getActiveFile()?.path??null,companionText:document.querySelector('.mwc-container')?.textContent.slice(0,160),navigatorPresent:!!document.querySelector('.mwc-manuscript-entry'),userAgent:navigator.userAgent};`);
   cold.launchToObservationMs=performance.now()-launched;
   cold.settled=ready;
+  assert.equal(cold.counts['frontmatter.write']?.calls??0,0,'Fresh synthetic startup must not write frontmatter');
   assert.equal(cold.instance,1,'Duplicate startup invalidates measurement');
   if(!ready){results.push({fixtureRoot:parent,size,trial,cold,edits:[],interactionPointerDownToTwoFramesMs:[]});console.error(size,trial,'cold limit',cold.pending);await persist();await ev(`setTimeout(()=>window.close(),100);return true;`);continue;}
   // Preserve observed cold context first; establish equal source context for editing trials.

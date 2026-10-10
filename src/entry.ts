@@ -150,7 +150,7 @@ export default class MurmurationWritingCompanionEntry extends MurmurationWriting
       if (this.storyWorldInspectorPath) this.storyWorldInspectorRefreshPending = true;
       if (this.continuityReviewDependsOn(file.path)) this.queueContinuityReviewRefresh();
     }));
-    this.registerEvent(this.app.vault.on("create", () => { this.queueContinuityReviewRefresh(); this.refreshStoryWorldNavigator(); this.refreshStoryWorldGraph(); }));
+    this.registerEvent(this.app.vault.on("create", () => this.queueContinuityReviewRefresh()));
     this.register(() => {
       if (this.navigatorRefreshTimer !== null) {
         window.clearTimeout(this.navigatorRefreshTimer);

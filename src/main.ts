@@ -442,13 +442,13 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
 
         const worldChanged = this.storyWorldIndex.handleCreate(file);
         this.scheduleStoryWorldMetadataRefresh(file.path);
-        this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged);
+        this.storyWorldConsumersDirty = this.storyWorldReviewProjection.invalidateMetadata(file, worldChanged) || this.storyWorldConsumersDirty;
         this.manuscriptIntegrityCoordinator.queue(file.path);
         this.pendingEditorialCreates.set(file.path, file);
 
-        // A new scene or part may not yet be in the active book's prior dependency set.
-        this.refreshView();
-        this.refreshManuscriptNavigator();
+        // The queued integrity pass includes new notes even when they were not
+        // in the previous dependency set. Rendering here repeats that work for
+        // every file-create notification during cold host discovery.
       })
     );
 
