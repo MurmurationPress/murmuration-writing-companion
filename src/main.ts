@@ -113,7 +113,7 @@ export interface EditorialPassViewState {
   projection: EditorialPassProjection;
 }
 
-export default class MurmurationWritingCompanionPlugin extends Plugin {
+export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
   protected readonly interactionRefresh = new InteractionRefresh();
   readonly manuscriptBookSelection: ManuscriptBookSelectionService;
   storeService!: EditorialStoreService;
@@ -130,6 +130,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
   readonly continuityDiagnosticPreference: ContinuityDiagnosticPreference;
   readonly vaultBackupRemotePreference: VaultBackupRemotePreference;
+  private readonly manuscriptMetadataRefresh = new ReconciliationQueue(() => this.refreshManuscriptNavigator());
   private manuscriptChronologyDependencies = new Set<string>();
   private manuscriptChronologyRefreshTimer: number | null = null;
   private storyWorldConsumersDirty = false;
@@ -160,6 +161,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async onload() {
+    this.register(() => this.manuscriptMetadataRefresh.dispose());
     this.unloaded = false;
     this.register(() => { this.unloaded = true; });
     this.interactionRefresh.observe(document);
@@ -428,7 +430,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
         if (decision.companion && !worldChanged) this.refreshView();
         if (file.extension === "md") this.scheduleStoryWorldMetadataRefresh(file.path);
         if (decision.deferredChronology) this.scheduleManuscriptChronologyRefresh();
-        if (decision.manuscriptNavigator) this.refreshManuscriptNavigator();
+        // Non-manuscript imports can arrive by the thousand during discovery.
+        // Keep the latest metadata, but render their review count once per batch.
+        if (decision.manuscriptNavigator) this.manuscriptMetadataRefresh.request();
       })
     );
 
@@ -712,10 +716,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
   }
 
-  async activateContinuityReviewForBook(bookPath: string, contextPath: string): Promise<void> {
-    this.manuscriptBookSelection.select(bookPath, contextPath, "continuity-review-activation");
-    new Notice("Continuity Review is unavailable in this plugin entry point.");
-  }
+  abstract activateContinuityReviewForBook(bookPath: string, contextPath: string): Promise<void>;
 
   private scheduleManuscriptChronologyRefresh() {
     if (this.manuscriptChronologyRefreshTimer !== null) {
@@ -973,13 +974,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     this.app.workspace.revealLeaf(leaf);
   }
 
-  protected onMwcUserInteraction(): void {
-    // The full plugin entry point supplies first-use readiness guidance.
-  }
+  protected abstract onMwcUserInteraction(): void;
 
-  openProjectReadiness(): void {
-    new Notice("Project readiness is unavailable in this plugin entry point.");
-  }
+  abstract openProjectReadiness(): void;
 
   rebuildStoryWorldIndexFromMetadataCache(): number {
     this.storyWorldIndex.rebuild();
@@ -988,9 +985,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     return this.storyWorldIndex.index.getAll().length;
   }
 
-  protected refreshStoryWorldIndexConsumers(): void {
-    this.refreshView();
-  }
+  protected abstract refreshStoryWorldIndexConsumers(): void;
 
   openHelp(): void {
     openHelp(
@@ -999,10 +994,7 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     );
   }
 
-  prepareExistingManuscript(_bookPath: string): Promise<void> {
-    new Notice("Manuscript preparation is unavailable in this plugin entry point.");
-    return Promise.resolve();
-  }
+  abstract prepareExistingManuscript(bookPath: string): Promise<void>;
 
   refreshView() {
     this.interactionRefresh.request("companion", () => this.renderCompanion());
@@ -1040,13 +1032,9 @@ export default class MurmurationWritingCompanionPlugin extends Plugin {
     }
   }
 
-  refreshContinuityReview() {
-    // The full plugin entry point overrides this hook.
-  }
+  abstract refreshContinuityReview(): void;
 
-  recollectContinuityReview() {
-    // The full plugin entry point overrides this hook.
-  }
+  abstract recollectContinuityReview(): void;
 
   private clearManuscriptReveal(fallbackPath: string | null) {
     const leaves = this.app.workspace.getLeavesOfType(MANUSCRIPT_NAVIGATOR_VIEW_TYPE);

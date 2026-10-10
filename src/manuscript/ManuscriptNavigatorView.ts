@@ -393,7 +393,7 @@ export class ManuscriptNavigatorView extends ItemView {
     if (!selected) { this.finishRender(); return; }
     const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(selected.file.path);
     const reviewActions = container.createDiv("mwc-manuscript-review-actions");
-    const partAvailability = manuscriptPartCreationAvailability(snapshotManuscriptPartCreation(this.plugin));
+    const partAvailability = manuscriptPartCreationAvailability(snapshotManuscriptPartCreation(this.plugin, library));
     const createPart = reviewActions.createEl("button", {
       cls: "mwc-manuscript-create-part",
       text: "Create part",
@@ -405,7 +405,7 @@ export class ManuscriptNavigatorView extends ItemView {
     });
     createPart.disabled = partAvailability.length > 0;
     createPart.onclick = () => new ManuscriptPartCreationModal(this.plugin).open();
-    const sceneSnapshot = snapshotManuscriptSceneCreation(this.plugin);
+    const sceneSnapshot = snapshotManuscriptSceneCreation(this.plugin, library);
     const sceneParentPath = defaultManuscriptSceneParent(sceneSnapshot);
     const sceneParent = sceneSnapshot.parents.find((parent) => parent.path === sceneParentPath);
     const sceneAvailability = manuscriptSceneCreationAvailability(sceneSnapshot, sceneParentPath);

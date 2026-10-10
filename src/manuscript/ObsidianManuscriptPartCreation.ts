@@ -22,9 +22,12 @@ function directChildren(book: ReturnType<typeof buildObsidianManuscriptLibrary>[
   )).map((entry) => ({ path: entry.path, title: entry.title, kind: entry.kind, parentPath: entry.parentPath, orderKey: entry.orderKey ?? null }));
 }
 
-export function snapshotManuscriptPartCreation(host: ManuscriptPartCreationAuthority): ManuscriptPartCreationSnapshot {
+/** The Navigator may supply its settled library for display; mutation callers rebuild. */
+export function snapshotManuscriptPartCreation(
+  host: ManuscriptPartCreationAuthority,
+  library = buildObsidianManuscriptLibrary(host.app)
+): ManuscriptPartCreationSnapshot {
   const selection = host.manuscriptBookSelection.get();
-  const library = buildObsidianManuscriptLibrary(host.app);
   const book = library.books.find((candidate) => candidate.file.path === selection.bookPath) ?? null;
   return {
     selectedBookPath: selection.bookPath,

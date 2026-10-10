@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev-plugin.mjs",
-    "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs && node --test scripts/tests/build-tools.test.mjs scripts/tests/interaction-capture.test.mjs",
+    "test": "tsc -p tsconfig.tests.json --noEmit --skipLibCheck && node scripts/run-tests.mjs && node --test scripts/tests/build-tools.test.mjs scripts/tests/interaction-capture.test.mjs scripts/tests/render-projections.test.mjs",
     "benchmark:performance": "node scripts/benchmark-performance.mjs",
     "test:build": "node --test scripts/tests/build-tools.test.mjs",
     "test:watch": "node scripts/run-tests.mjs --watch",

@@ -198,3 +198,19 @@ test("excludes manuscript templates from book selection without configuration", 
   equal(isTemplateManuscriptPath("PRIME Trilogy/Templates/Book Template.md"), true);
   equal(isTemplateManuscriptPath("PRIME Trilogy/BOOK 2 - PLURALITY.md"), false);
 });
+
+test("Navigator reuses a fixed UTC formatter across rows without caching date values", () => {
+  const original = Intl.DateTimeFormat;
+  let constructions = 0;
+  Intl.DateTimeFormat = new Proxy(original, {
+    construct(target, args) { constructions++; return Reflect.construct(target, args); }
+  });
+  try {
+    for (let i = 0; i < 100; i++) {
+      equal(formatNavigatorStoryDate("2024-02-29"), "Thursday, 29 February 2024");
+      equal(formatNavigatorStoryDate("2026-07-16"), "Thursday, 16 July 2026");
+      equal(formatNavigatorStoryDate("2026-02-29"), "2026-02-29");
+    }
+    equal(constructions <= 1, true);
+  } finally { Intl.DateTimeFormat = original; }
+});
