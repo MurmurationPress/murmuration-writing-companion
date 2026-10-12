@@ -245,4 +245,4 @@ truth.
 
 ## Dataset reporting transition
 
-Dataset charts and state tables live in Murmuration Reports. `ReportsCommandBridge` retains old command IDs for one release and resolves a versioned app-scoped capability when invoked. No dataset parser, renderer or fallback writer is shipped in MWC. All manuscript-aware reporting remains here. See [transition contract and removal plan](docs/murmuration-reports-transition.md).
+Dataset charts and state tables live in [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). `ReportsCommandBridge` retains old command IDs for one release and resolves a versioned app-scoped capability when invoked. No dataset parser, renderer or fallback writer is shipped in MWC. All manuscript-aware reporting remains here. See [transition contract and removal plan](docs/murmuration-reports-transition.md) and the [completion inventory and residual bridge measurement](docs/reporting-extraction-completion.md).
