@@ -1,6 +1,8 @@
 # Derived Artefacts
 
-Derived artefacts are portable files generated from authoritative Markdown properties. The Markdown notes remain canonical; generated files are disposable projections that can be regenerated or deleted without losing source data. MWC supports `line-chart` SVG projections and `state-table` Markdown projections. It does not read either format back as canonical data.
+Derived artefacts are portable files generated from authoritative Markdown properties. The Markdown notes remain canonical; generated files are disposable projections that can be regenerated or deleted without losing source data. Dataset chart and state-table generation now belongs to [Murmuration Reports](https://github.com/MurmurationPress/murmuration-reports). Enable that plugin to generate or regenerate. MWC retains its two command aliases for one transition release, with no fallback generator.
+
+Existing schemas, assets and links remain unchanged. Saved outputs display and compile with both plugins disabled. Nothing is migrated or regenerated automatically. Legacy SVGs without receipts need explicit adoption; definition moves need explicit ownership repair. See [transition and hotkey migration](../docs/murmuration-reports-transition.md).
 
 ## Define a line chart
 
@@ -31,13 +33,13 @@ The source must be a vault folder. Every Markdown file below it is one observati
 
 `title`, `source`, `x`, `series`, and an `.svg` `output` path are required. `subtitle`, `x_axis_label`, `y_axis_label`, `start`, `end`, and `window` are optional. A window is a positive number of `months` or `years`, such as `12 months`.
 
-MWC rejects the whole definition if a source observation is incomplete or malformed. It does not skip points, interpolate, aggregate, sample, or smooth them.
+Reports rejects the whole definition if a source observation is incomplete or malformed. It does not skip points, interpolate, aggregate, sample, or smooth them.
 
 ## Dates and rolling windows
 
 Observations are sorted by their x date, with source path as the stable tie-break for equal dates. Their horizontal positions reflect real elapsed time, so irregular event-driven observations remain visible.
 
-The rolling window ends at `end`. If `end` is omitted, it ends at the latest source observation. Window boundaries are inclusive and use calendar month/year subtraction. If `start` is also present, MWC uses the later of the explicit start and rolling-window start; `end` remains the upper bound. This intersects the configured constraints without sampling the observations.
+The rolling window ends at `end`. If `end` is omitted, it ends at the latest source observation. Window boundaries are inclusive and use calendar month/year subtraction. If `start` is also present, Reports uses the later of the explicit start and rolling-window start; `end` remains the upper bound. This intersects the configured constraints without sampling the observations.
 
 Use explicit `end` and dated output filenames for stable historical snapshots.
 
@@ -61,11 +63,11 @@ output: "Visualisations/River state — 2029-05-29.md"
 ---
 ```
 
-`source`, `x`, `parameters`, and a `.md` `output` path are required. Each parameter has a unique property and a label. Declared parameter order becomes table row order. `end` is optional for consistency with line charts; when omitted, MWC uses the latest valid canonical observation.
+`source`, `x`, `parameters`, and a `.md` `output` path are required. Each parameter has a unique property and a label. Declared parameter order becomes table row order. `end` is optional for consistency with line charts; when omitted, Reports uses the latest valid canonical observation.
 
-MWC sorts every Markdown observation below `source` by the `x` date, using source path as the stable tie-break for equal dates. Current means the latest observation on or before `end`. Previous means the immediately preceding observation in that canonical sequence—not the previous chapter and not a sampled or aggregated value. Adding an intermediate observation therefore changes previous and delta on regeneration.
+Reports sorts every Markdown observation below `source` by the `x` date, using source path as the stable tie-break for equal dates. Current means the latest observation on or before `end`. Previous means the immediately preceding observation in that canonical sequence—not the previous chapter and not a sampled or aggregated value. Adding an intermediate observation therefore changes previous and delta on regeneration.
 
-For every parameter, delta is `current - previous`. Values use deterministic signed two-decimal formatting: positive values and zero include `+`, negative values retain `-`. If current is the first observation, previous and delta are em dashes because MWC does not invent history.
+For every parameter, delta is `current - previous`. Values use deterministic signed two-decimal formatting: positive values and zero include `+`, negative values retain `-`. If current is the first observation, previous and delta are em dashes because Reports does not invent history.
 
 Generated state tables are ordinary portable Markdown:
 
@@ -76,7 +78,7 @@ Generated state tables are ordinary portable Markdown:
 |Flow rate|+0.33|+0.37|-0.04|
 ```
 
-MWC adds a deterministic HTML ownership comment to the generated file. This allows safe regeneration without treating an unrelated Markdown note as disposable output. A state-table output may not collide with a source note, definition note, folder, or unrelated Markdown file.
+Reports retains a deterministic HTML ownership comment to the generated file. This allows safe regeneration without treating an unrelated Markdown note as disposable output. A state-table output may not collide with a source note, definition note, folder, or unrelated Markdown file.
 
 ## Generate and embed
 

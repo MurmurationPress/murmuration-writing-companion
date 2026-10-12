@@ -242,3 +242,7 @@ for Obsidian links. Story date uses an ISO date control when the stored value is
 compatible and falls back to text editing for existing non-ISO values. Metadata
 cache changes refresh the displayed values without introducing a second source of
 truth.
+
+## Dataset reporting transition
+
+Dataset charts and state tables live in Murmuration Reports. `ReportsCommandBridge` retains old command IDs for one release and resolves a versioned app-scoped capability when invoked. No dataset parser, renderer or fallback writer is shipped in MWC. All manuscript-aware reporting remains here. See [transition contract and removal plan](docs/murmuration-reports-transition.md).

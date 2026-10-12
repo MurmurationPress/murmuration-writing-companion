@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — dataset reporting transition
+
+Dataset charts and state tables move to Murmuration Reports. Existing MWC command IDs remain for one transition release and delegate at invocation. No automatic vault migration; standalone ownership receipts and explicit adoption protect saved outputs. See [migration and release order](docs/murmuration-reports-transition.md).
+
+
 ## 0.18.0 — 2026-08-17
 
 ### Performance
