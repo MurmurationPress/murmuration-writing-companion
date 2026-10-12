@@ -138,7 +138,7 @@ Generated reports may write `type: generated-report`, `report_type`, `report_sco
 
 ## Derived artefact definitions
 
-`world_entity: derived-artefact` opts a definition note into manual artefact generation. The first supported `artefact_type` is `line-chart`. Its generic fields are documented in [Derived Artefacts](Derived_Artefacts.md). Definition properties are authoritative configuration; the generated SVG is disposable and is never read as canonical data.
+`world_entity: derived-artefact` identifies a chart or state-table definition managed by the standalone Murmuration Reports plugin. Definition properties remain authoritative configuration; saved SVG/Markdown assets are projections, not canonical observations. MWC does not parse or generate these definitions. See [dataset reports and migration](Derived_Artefacts.md) and the standalone schema reference linked there.
 
 ## Manual manuscript reporting
 

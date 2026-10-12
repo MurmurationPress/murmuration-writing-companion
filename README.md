@@ -212,3 +212,11 @@ Markdown property `mwc_open_annotations`. Chapters with no open annotations do
 not retain the property. This makes it possible to filter and sort chapters in
 Obsidian Bases without duplicating the annotation data or adding a separate
 reporting interface.
+
+## Dataset reports and the compatibility transition
+
+Dataset chart and state-table generation is provided by [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). Install that plugin and use **Open Reports** for creation, editing, saved previews and explicit regeneration. MWC has no dataset-generation implementation or reporting settings to migrate.
+
+The two existing MWC generation commands remain as deprecated aliases for **one transition release**, preserving current hotkeys. They resolve Reports when invoked, with no hard dependency or fallback writer. Both plugins can coexist in either loading order; absent Reports produces an enable-Reports notice. Rebind shortcuts to Reports before the following MWC release, when the aliases will be removed. [Migration and command mappings](docs/murmuration-reports-transition.md).
+
+Existing definitions, assets, links, hotkey files and unrelated settings are untouched. Saved charts and tables display and compile with both plugins disabled. Manuscript numbering, annotation counts, continuity and entity-index reporting stay in MWC.

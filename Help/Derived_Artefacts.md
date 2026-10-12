@@ -1,93 +1,26 @@
-# Derived Artefacts
+# Dataset charts and state tables
 
-Derived artefacts are portable files generated from authoritative Markdown properties. The Markdown notes remain canonical; generated files are disposable projections that can be regenerated or deleted without losing source data. Dataset chart and state-table generation now belongs to [Murmuration Reports](https://github.com/MurmurationPress/murmuration-reports). Enable that plugin to generate or regenerate. MWC retains its two command aliases for one transition release, with no fallback generator.
+Dataset reporting has moved to [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). It works independently in ordinary Obsidian vaults. MWC contains no dataset parser, renderer, generation view, settings or fallback writer.
 
-Existing schemas, assets and links remain unchanged. Saved outputs display and compile with both plugins disabled. Nothing is migrated or regenerated automatically. Legacy SVGs without receipts need explicit adoption; definition moves need explicit ownership repair. See [transition and hotkey migration](../docs/murmuration-reports-transition.md).
+Install and enable Murmuration Reports, then use its **Open Reports** command or ribbon action to find, create, edit and preview reports by name. **Save definition** writes only the Markdown definition; **Save and generate**, **Generate** and **Generate all** explicitly request generation. Nothing generates when a file opens or the vault changes.
 
-## Define a line chart
+Report definitions retain `world_entity: derived-artefact` and the existing chart/table schemas. See the standalone [definition reference](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/definitions.md), [manager guide](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/manager.md) and [ownership/recovery policy](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/ownership.md).
 
-Create a Markdown note with frontmatter like this generic example:
+## Existing installations and hotkeys
 
-```yaml
----
-world_entity: derived-artefact
-artefact_type: line-chart
-source: "Research/Measurements"
-x: measured_on
-series:
-  - property: water_level
-    label: Water level
-  - property: flow_rate
-    label: Flow rate
-window: 12 months
-end: 2029-05-29
-title: River measurements — rolling twelve months
-subtitle: Field observations
-x_axis_label: Measurement date
-y_axis_label: Recorded value
-output: "Visualisations/River measurements — 2029-05-29.svg"
----
-```
+MWC keeps **Generate derived artefact** and **Generate all derived artefacts** for one transition release. They delegate to Reports when invoked; when Reports is absent or incompatible they explain how to enable it. No file or setting is migrated and no fallback generation occurs. MWC and Reports can coexist in either loading order.
 
-The source must be a vault folder. Every Markdown file below it is one observation and must contain a valid `YYYY-MM-DD` value for the property named by `x`, plus a YAML number for every declared series. A series requires unique `property` and human-readable `label` values. One to four series are supported.
+These aliases are deprecated. They will be removed in the **MWC release immediately following the transition release**. Before that upgrade, rebind shortcuts in Obsidian's Hotkeys settings to Reports' **Generate active report definition** and **Generate all report definitions**. Neither plugin edits your hotkey file. See [the command mapping and removal plan](../docs/murmuration-reports-transition.md).
 
-`title`, `source`, `x`, `series`, and an `.svg` `output` path are required. `subtitle`, `x_axis_label`, `y_axis_label`, `start`, `end`, and `window` are optional. A window is a positive number of `months` or `years`, such as `12 months`.
+## Saved assets remain portable
 
-Reports rejects the whole definition if a source observation is incomplete or malformed. It does not skip points, interpolate, aggregate, sample, or smooth them.
-
-## Dates and rolling windows
-
-Observations are sorted by their x date, with source path as the stable tie-break for equal dates. Their horizontal positions reflect real elapsed time, so irregular event-driven observations remain visible.
-
-The rolling window ends at `end`. If `end` is omitted, it ends at the latest source observation. Window boundaries are inclusive and use calendar month/year subtraction. If `start` is also present, Reports uses the later of the explicit start and rolling-window start; `end` remains the upper bound. This intersects the configured constraints without sampling the observations.
-
-Use explicit `end` and dated output filenames for stable historical snapshots.
-
-## Define a state table
-
-A state table compares the current observation at an endpoint with the immediately preceding canonical observation. Define one with generic frontmatter like this:
-
-```yaml
----
-world_entity: derived-artefact
-artefact_type: state-table
-source: "Research/Measurements"
-x: measured_on
-end: 2029-05-29
-parameters:
-  - property: water_level
-    label: Water level
-  - property: flow_rate
-    label: Flow rate
-output: "Visualisations/River state — 2029-05-29.md"
----
-```
-
-`source`, `x`, `parameters`, and a `.md` `output` path are required. Each parameter has a unique property and a label. Declared parameter order becomes table row order. `end` is optional for consistency with line charts; when omitted, Reports uses the latest valid canonical observation.
-
-Reports sorts every Markdown observation below `source` by the `x` date, using source path as the stable tie-break for equal dates. Current means the latest observation on or before `end`. Previous means the immediately preceding observation in that canonical sequence—not the previous chapter and not a sampled or aggregated value. Adding an intermediate observation therefore changes previous and delta on regeneration.
-
-For every parameter, delta is `current - previous`. Values use deterministic signed two-decimal formatting: positive values and zero include `+`, negative values retain `-`. If current is the first observation, previous and delta are em dashes because Reports does not invent history.
-
-Generated state tables are ordinary portable Markdown:
+Existing definitions, output destinations, embeds, legacy ownership markers and user settings remain unchanged. Saved SVG and Markdown tables display and compile with both plugins disabled. For example:
 
 ```markdown
-|parameter|current|previous|Δ|
-|---|---:|---:|---:|
-|Water level|+0.94|+0.92|+0.02|
-|Flow rate|+0.33|+0.37|-0.04|
+![[Reports/Outputs/Trend.svg]]
+![[Reports/Outputs/State.md]]
 ```
 
-Reports retains a deterministic HTML ownership comment to the generated file. This allows safe regeneration without treating an unrelated Markdown note as disposable output. A state-table output may not collide with a source note, definition note, folder, or unrelated Markdown file.
+Reports requires explicit validated adoption for unowned legacy SVGs and explicit ownership repair after definition moves. Changing a destination leaves the previous asset untouched. Do not use older MWC versions' original dataset commands to overwrite outputs now managed by Reports.
 
-## Generate and embed
-
-To generate one projection, open its definition note and run **Generate derived artefact** from the Command Palette. Run **Generate all derived artefacts** to regenerate every note marked `world_entity: derived-artefact`. Generate-all dispatches each mixed `line-chart` or `state-table` definition to its renderer; one invalid definition is reported without preventing valid definitions from being generated.
-
-Generation creates missing parent folders and replaces an owned existing projection at the output path. Invalid definitions or malformed source observations do not write output or modify source/definition notes. Generated files do not require MWC to remain active. Embed one with normal Obsidian syntax:
-
-```text
-![[Visualisations/River measurements — 2029-05-29.svg]]
-```
-
-Markdown state tables can be embedded the same way, using their `.md` path.
+Manuscript scene numbering, open-annotation counts, Continuity Review and Entity Index remain in MWC; they require manuscript/editorial context and are not provided by the standalone dataset plugin.
