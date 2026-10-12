@@ -105,7 +105,7 @@ import {
   createStoryWorldCategoryPreferenceKey,
   StoryWorldCategoryPreferences
 } from "./story-world/StoryWorldCategoryPreferences";
-import { installDerivedArtefactCommands } from "./derived-artefacts/DerivedArtefactCommands";
+import { installReportsCommandBridge } from "./reports/ReportsCommandBridge";
 
 export interface EditorialPassViewState {
   items: EditorialPassChecklistItem[];
@@ -171,7 +171,7 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     this.addSettingTab(new ContinuitySettingsTab(this.app, this));
     installAboutCommand(this, () => new AboutMurmurationPressModal(this).open());
     installHelpCommand(this, () => this.openHelp());
-    installDerivedArtefactCommands(this);
+    installReportsCommandBridge(this, (message) => { new Notice(message, 10000); });
 
     const vaultName = this.app.vault.getName();
     let resourceRoot = vaultName;
