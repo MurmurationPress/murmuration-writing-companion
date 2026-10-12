@@ -1,0 +1,198 @@
+{
+  "classification": "Verified archived #266 evidence; not new v0.19.0 timings",
+  "sourceUnchanged": "git diff d7c2e6e625e98fade7004a064ab081670e607d4e HEAD -- src shows only dataset removal and command bridge/main registration",
+  "environment": {
+    "os": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel i7-6700, 4 cores / 8 threads",
+    "node": "24.19.0",
+    "esbuild": "0.23.1",
+    "electron": "43.3.0",
+    "chromium": "150.0.7871.212",
+    "coldApplication": "1.13.7",
+    "warmApplication": "1.14.4",
+    "gpu": "disabled",
+    "osCachesFlushed": false
+  },
+  "cold": {
+    "baseline-first": {
+      "sourceCommit": "9b5568306cedc858983c081370bf1b294ffdc28d",
+      "bundleSha256": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "results": [
+        {
+          "size": 10000,
+          "trial": 0,
+          "settled": false,
+          "launchToObservationMs": 302290.799801,
+          "audit": {
+            "entities": 116,
+            "books": 3,
+            "scenes": 3996,
+            "owned": 3999,
+            "unresolved": 3996
+          },
+          "writes": 0
+        }
+      ]
+    },
+    "baseline-repeat": {
+      "sourceCommit": "9b5568306cedc858983c081370bf1b294ffdc28d",
+      "bundleSha256": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+      "results": [
+        {
+          "size": 100,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 3316.779294,
+          "audit": {
+            "entities": 20,
+            "books": 3,
+            "scenes": 72,
+            "owned": 78,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 1000,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 5442.176153,
+          "audit": {
+            "entities": 200,
+            "books": 3,
+            "scenes": 792,
+            "owned": 798,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 10000,
+          "trial": 0,
+          "settled": false,
+          "launchToObservationMs": 301893.815702,
+          "audit": {
+            "entities": 121,
+            "books": 3,
+            "scenes": 3996,
+            "owned": 3999,
+            "unresolved": 3996
+          },
+          "writes": 0
+        }
+      ]
+    },
+    "final": {
+      "sourceCommit": "ca1e71d4fd11a83b1a9c2352c624b0ebe09bd3dc",
+      "bundleSha256": "2d1466becd5c458b493b1a68fd8f619d3d25e5989a14a8b4320a607e615fc828",
+      "results": [
+        {
+          "size": 100,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 3354.5186240000003,
+          "audit": {
+            "entities": 20,
+            "books": 3,
+            "scenes": 72,
+            "owned": 78,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 100,
+          "trial": 1,
+          "settled": true,
+          "launchToObservationMs": 3841.4961620000004,
+          "audit": {
+            "entities": 20,
+            "books": 3,
+            "scenes": 72,
+            "owned": 78,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 1000,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 5069.411643000001,
+          "audit": {
+            "entities": 200,
+            "books": 3,
+            "scenes": 792,
+            "owned": 798,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 1000,
+          "trial": 1,
+          "settled": true,
+          "launchToObservationMs": 4973.388142,
+          "audit": {
+            "entities": 200,
+            "books": 3,
+            "scenes": 792,
+            "owned": 798,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 10000,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 94808.316684,
+          "audit": {
+            "entities": 2000,
+            "books": 3,
+            "scenes": 7992,
+            "owned": 7998,
+            "unresolved": 0
+          },
+          "writes": 0
+        },
+        {
+          "size": 10000,
+          "trial": 1,
+          "settled": true,
+          "launchToObservationMs": 97922.01615099999,
+          "audit": {
+            "entities": 2000,
+            "books": 3,
+            "scenes": 7992,
+            "owned": 7998,
+            "unresolved": 0
+          },
+          "writes": 0
+        }
+      ]
+    },
+    "host-only": {
+      "sourceCommit": "ca1e71d4fd11a83b1a9c2352c624b0ebe09bd3dc",
+      "bundleSha256": "2d1466becd5c458b493b1a68fd8f619d3d25e5989a14a8b4320a607e615fc828",
+      "results": [
+        {
+          "size": 10000,
+          "trial": 0,
+          "settled": true,
+          "launchToObservationMs": 24714.269200000002,
+          "audit": null,
+          "writes": 0
+        },
+        {
+          "size": 10000,
+          "trial": 1,
+          "settled": true,
+          "launchToObservationMs": 24802.345548000005,
+          "audit": null,
+          "writes": 0
+        }
+      ]
+    }
+  }
+}

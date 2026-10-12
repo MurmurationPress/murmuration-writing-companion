@@ -1,52 +1,35 @@
-# Murmuration Writing Companion 0.18.0
+# Murmuration Writing Companion 0.19.0
 
-## Highlights
+Prepared release; not yet published. This release improves performance and interaction stability and completes the handoff of dataset reports to Murmuration Reports.
 
-MWC 0.18.0 makes editing and navigation noticeably faster in large manuscripts, connects manuscript context more coherently with Story World, renders manuscript chat itself, makes author Help easy to find, and introduces a safer self-configuring Git vault backup.
+## Performance and stability
 
-## Writing and manuscript workflow
+- Pending manuscript-numbering requests coalesce to the latest state; queued work cancels on unload (#256).
+- Companion and Navigator preserve first clicks, keyboard focus and unsaved drafts through pane activation, metadata changes and blur saves (#258).
+- Cold Navigator updates are batched, and warmed views reuse display projections and date formatting while mutations still read fresh authority (#266).
+- The production JavaScript bundle meets the existing 50 KiB headroom target. This does not resolve all remaining startup, layout and platform acceptance work under #252.
 
-- Long Scenes stay more responsive because ordinary keystrokes perform less companion work.
-- Chapter Context now presents resolved POV and Scene Location as semantic Story World links without exposing raw wikilinks or paths.
-- Selecting a recognised Story World Location keeps `location` as the sole authored Scene property and derives World Context without duplicating it into `world_context`.
-- Continuity Review keeps persisted findings inspectable and now presents the correct action for findings already marked Intentional.
+The accumulated release also includes manuscript preparation for untyped projects, explicit Book-scoped scene numbering, stale-numbering status and subsequent review/index convergence fixes. Read the task guides before using preparation or numbering; neither runs silently during ordinary edits.
 
-## Story World
+## Dataset reporting transition
 
-- The focused Graph gains an evidence-based temporal mode for exploring what changes, when it changes, and what a reader or entity can know.
-- References have a dedicated Navigator category, local citation/DOI import and reusable vault- or Book-scoped projections.
-- Newly authored unresolved manuscript links can create the appropriate Story World entity type with explicit provenance and collision safeguards.
-- MWC-owned context, impact, inspector and selection surfaces consistently show clean semantic names and resolved navigation.
+Install [Murmuration Reports 0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0) for dataset charts and state tables. Its **Open Reports** manager provides creation, source-preserving editing, saved previews and explicit generation. Reports supports desktop Obsidian only; MWC has no hard dependency on it. Manuscript-aware continuity, entity indexes and annotation reporting remain in MWC.
 
-## Performance
+MWC **0.19.0 retains both deprecated command aliases**, preserving existing hotkeys. They delegate only when invoked and explain how to enable Reports when unavailable. Removal is proposed for **0.20.0**, the immediately following MWC release. Before upgrading to that release, rebind shortcuts in **Obsidian Settings → Hotkeys**:
 
-MWC performs less work on ordinary keystrokes, behaves better in long Scenes, and reuses settled manuscript and Story World projections across navigation and review surfaces. Startup and runtime avoid duplicated work, while the production bundle is minified and kept within an enforced release budget.
+| Existing MWC command | Reports replacement |
+| --- | --- |
+| Generate derived artefact (`murmuration-writing-companion:generate-derived-artefact`) | Generate active report definition (`murmuration-reports:generate-derived-artefact`) |
+| Generate all derived artefacts (`murmuration-writing-companion:generate-all-derived-artefacts`) | Generate all report definitions (`murmuration-reports:generate-all-derived-artefacts`) |
 
-## Manuscript chat
+Neither plugin edits hotkey files or automatically moves, deletes or regenerates existing definitions/assets. Saved SVG and Markdown outputs remain displayable and compilable with both plugins disabled. Legacy SVG adoption and ownership repair after definition moves require explicit validated consent in Reports. Avoid using older MWC dataset writers on Reports-managed assets.
 
-MWC now renders canonical manuscript chat blocks itself; the external Chat View plugin is no longer required. Chat bodies support Markdown, wikilinks and local embedded images while retaining the same authored block syntax. Arbitrary transclusion and unrelated plugin rendering inside chat bodies are not implied.
+## Installation and requirements
 
-## Help
+Install `main.js`, `manifest.json` and `styles.css` together in `.obsidian/plugins/murmuration-writing-companion/`, then enable MWC. Obsidian 1.5.0 remains the declared minimum; the qualification report names versions actually exercised. Back up the vault and its editorial store before upgrading. Install Reports separately if dataset generation is needed; existing outputs require neither plugin.
 
-Task-oriented author Help and detailed property/reference material are available through:
+## Known limitations and release qualification
 
-- **Command Palette → Open Help**
-- **Settings → Murmuration Writing Companion → Help → Open Help**
+Large-vault cold startup, full-book projections and DOM/layout costs still need work. Native Windows acceptance and wider Linux theme/plugin, physical-focus, multi-window and IME acceptance are distinct from automated CI. See [the release-readiness report](docs/release-readiness-0.19.0.md) for actual passed checks and unresolved gates. #252 remains open.
 
-## Vault backup
-
-Desktop Linux and Windows authors can back up a Git-managed vault without maintaining a Bash script. MWC detects the current vault repository and branch, selects `origin` or the sole remote automatically, and lets you choose when several non-`origin` remotes are available. **Check backup configuration** verifies readiness before backup.
-
-MWC uses the machine's existing Git authentication and never stores credentials. It will not install Git, create accounts or remote repositories, create SSH keys, or manage credentials. For safety it refuses automatic pull, merge, rebase, branch switching, force-push and conflict resolution; remote-ahead or divergent histories must be resolved with Git outside MWC. Existing vault-local backup scripts remain untouched.
-
-## Fixed
-
-- Continuity Review no longer shows an active **Mark intentional** action for an already-Intentional finding; the existing **Return to unresolved** action is shown instead.
-
-## Upgrade
-
-For a manual upgrade, replace all three plugin files together:
-
-- `main.js`
-- `manifest.json`
-- `styles.css`
+Reports ownership receipts are safety metadata, not display dependencies. Obsidian's SDK does not provide crash-atomic multi-file transactions; conditional checks, verification and recovery reduce write risk but cannot guarantee atomic output/receipt updates or revoke an already-committed host write. The existing [Reports ownership policy](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/ownership.md) remains authoritative.

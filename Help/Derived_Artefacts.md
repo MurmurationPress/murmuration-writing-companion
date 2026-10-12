@@ -10,7 +10,7 @@ Report definitions retain `world_entity: derived-artefact` and the existing char
 
 MWC keeps **Generate derived artefact** and **Generate all derived artefacts** for one transition release. They delegate to Reports when invoked; when Reports is absent or incompatible they explain how to enable it. No file or setting is migrated and no fallback generation occurs. MWC and Reports can coexist in either loading order.
 
-These aliases are deprecated. They will be removed in the **MWC release immediately following the transition release**. Before that upgrade, rebind shortcuts in Obsidian's Hotkeys settings to Reports' **Generate active report definition** and **Generate all report definitions**. Neither plugin edits your hotkey file. See [the command mapping and removal plan](../docs/murmuration-reports-transition.md).
+These aliases are deprecated. They will be removed in the **proposed 0.20.0 release, immediately following 0.19.0**. Before that upgrade, rebind shortcuts in Obsidian's Hotkeys settings to Reports' **Generate active report definition** and **Generate all report definitions**. Neither plugin edits your hotkey file. See [the command mapping and removal plan](../docs/murmuration-reports-transition.md).
 
 ## Saved assets remain portable
 

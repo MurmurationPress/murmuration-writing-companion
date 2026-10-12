@@ -1,0 +1,20 @@
+{
+  "codexPressSource": "93af44922cdb1b83b6166c4f8429d7d9f5b32c07",
+  "outputs": [
+    "Output/Persistent Reports Fixture - Draft KDP.pdf",
+    "Output/Persistent Reports Fixture - Draft.epub",
+    "Output/Persistent Reports Fixture - Draft.docx"
+  ],
+  "checks": [
+    "PDF vector chart text and numeric table",
+    "EPUB SVG and table",
+    "DOCX drawing and table",
+    "missing chart blocks all three plans",
+    "missing table blocks transclusion",
+    "Unicode and spaces",
+    "all original sources/assets/receipts byte-preserved",
+    "no plugins loaded"
+  ],
+  "root": "/tmp/murmuration-reports-exports-4lf1oS"
+}
+

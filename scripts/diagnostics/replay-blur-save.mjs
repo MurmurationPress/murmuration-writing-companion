@@ -22,6 +22,18 @@ socket.onmessage = ({data}) => { const m=JSON.parse(data); if(!m.id)return; cons
 const send = (method,params={}) => new Promise((resolve,reject) => { pending.set(++nextId,{resolve,reject}); socket.send(JSON.stringify({id:nextId,method,params})); });
 const evaluate = async expression => { const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true}); if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails)); return r.result.value; };
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms));
+// Native metadata and deferred view commits need not settle within a fixed 600 ms.
+// Poll read-only semantic state with a bound; never replay keys or repair UI state.
+const waitForOutcome = async (read, ready) => {
+  const started = performance.now();
+  let outcome;
+  do {
+    outcome = await read();
+    if (ready(outcome)) return { ...outcome, settlementWaitMs: performance.now() - started };
+    await wait(100);
+  } while (performance.now() - started < 5000);
+  return { ...outcome, settlementWaitMs: performance.now() - started };
+};
 const quote = JSON.stringify;
 const normalize = p => process.platform === 'win32' ? p.replaceAll('\\','/').toLowerCase() : p;
 const instrumented = !args.has('--uninstrumented');
@@ -120,7 +132,7 @@ try {
       await prepare();await click(`[aria-label="${editLabel}"]`);const value=`enter-${property}-${repeat}-${Date.now()}`;await edit(label,value);
       await evaluate(`(()=>{globalThis.__enterSave={fn:${plugin}.updateChapterContextProperty,calls:0};const q=__enterSave;${plugin}.updateChapterContextProperty=async function(...args){q.calls++;return q.fn.apply(this,args)}})()`);
       await key('Enter','Enter',13);await wait(600);
-      const outcome=await evaluate(`({calls:__enterSave.calls,editors:document.querySelectorAll('input[aria-label='+${quote(JSON.stringify(label))}+']').length,focus:document.activeElement.getAttribute('data-mwc-focus-key'),stored:app.metadataCache.getFileCache(app.vault.getAbstractFileByPath(${quote(source)})).frontmatter[${quote(property)}]})`);
+      const outcome=await waitForOutcome(() => evaluate(`({calls:__enterSave.calls,editors:document.querySelectorAll('input[aria-label='+${quote(JSON.stringify(label))}+']').length,focus:document.activeElement.getAttribute('data-mwc-focus-key'),stored:app.metadataCache.getFileCache(app.vault.getAbstractFileByPath(${quote(source)})).frontmatter[${quote(property)}]})`), outcome => outcome.calls === 1 && outcome.editors === 0 && outcome.focus === `context:${property}-display` && outcome.stored === (property === 'pov' ? `[[${value}]]` : value));
       await evaluate(`${plugin}.updateChapterContextProperty=__enterSave.fn`);
       assert.equal(outcome.calls,1);assert.equal(outcome.editors,0);assert.equal(outcome.focus,`context:${property}-display`);assert.equal(outcome.stored,property==='pov'?`[[${value}]]`:value);compactEnter.push({property,repeat,...outcome});
     }

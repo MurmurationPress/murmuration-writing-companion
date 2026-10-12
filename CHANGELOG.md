@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased — dataset reporting transition
+## 0.19.0 — release candidate (not published)
 
 Dataset charts and state tables have moved to [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). Use its **Open Reports** manager for creation, editing, saved previews and explicit regeneration. Existing MWC command IDs remain as deprecated aliases for this transition release and delegate at invocation, with no hard dependency or fallback writer. They will be removed in the immediately following MWC release; rebind hotkeys through Obsidian before then. No vault files, generated assets or unrelated settings are migrated or deleted. Manuscript numbering, annotation counts, continuity and entity-index reporting remain in MWC. See [migration, command mappings and release order](docs/murmuration-reports-transition.md).
 
+Performance and stability: coalesce pending numbering work and cancel queued mutations on unload (#256); preserve first clicks, focus and drafts through pane activation and blur saves (#258); batch cold Navigator display updates and reduce warmed render work (#266). Manuscript preparation, explicit Book-scoped numbering and settled review convergence fixes accumulated since 0.18.0 are also included. The complete release is qualified separately from the individual performance experiments; #252 remains open.
+
+The two dataset aliases remain in **0.19.0**, with removal proposed in **0.20.0**, the immediately following release. No hotkey file is edited. See [release notes](RELEASE_NOTES.md) and [qualification and remaining gates](docs/release-readiness-0.19.0.md).
 
 ## 0.18.0 — 2026-08-17
 

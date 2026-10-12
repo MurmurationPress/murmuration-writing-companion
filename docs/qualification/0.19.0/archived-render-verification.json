@@ -1,0 +1,96 @@
+{
+  "before": {
+    "size": 10000,
+    "bundleSha256": "41cab277e9700b781f1c4ebc7c353e8065cc7821f7e5bb6400291d367d37f201",
+    "environment": {
+      "files": 10000,
+      "title": "B0S000 - vault - Obsidian 1.14.4",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "context": "B0S000.md",
+      "entities": 2000,
+      "books": 3
+    },
+    "prose": {
+      "renderCompanion": {
+        "calls": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "medianMs": 348
+      },
+      "renderManuscriptNavigator": {
+        "calls": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "medianMs": 957.5
+      },
+      "vault.scan": {
+        "calls": [
+          5,
+          5,
+          6,
+          5,
+          5
+        ],
+        "medianMs": 2.2999999970197678
+      }
+    }
+  },
+  "after": {
+    "size": 10000,
+    "bundleSha256": "2d1466becd5c458b493b1a68fd8f619d3d25e5989a14a8b4320a607e615fc828",
+    "environment": {
+      "files": 10000,
+      "title": "B0S000 - vault - Obsidian 1.14.4",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+      "plugins": [
+        "murmuration-writing-companion"
+      ],
+      "context": "B0S000.md",
+      "entities": 2000,
+      "books": 3
+    },
+    "prose": {
+      "renderCompanion": {
+        "calls": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "medianMs": 148.19999999925494
+      },
+      "renderManuscriptNavigator": {
+        "calls": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "medianMs": 319.6000000014901
+      },
+      "vault.scan": {
+        "calls": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "medianMs": 1.5999999977648258
+      }
+    }
+  }
+}

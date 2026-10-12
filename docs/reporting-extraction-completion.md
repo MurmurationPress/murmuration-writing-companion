@@ -21,7 +21,7 @@ PR #267 already removed dataset generation. This follow-up audits that boundary,
 
 ## Upgrade and coexistence
 
-The first MWC release containing the bridge is the transition release. The latest published MWC release (0.18.0) predates it, so removing the aliases now would break the promised hotkey period. Remove the aliases, registration and bridge tests in the **immediately following MWC release**, documenting the version numbers once scheduled.
+The first MWC release containing the bridge is the transition release. The latest published MWC release (0.18.0) predates it, so removing the aliases now would break the promised hotkey period. Remove the aliases, registration and bridge tests in the **immediately following MWC release**, with **0.19.0** as the prepared transition release and **0.20.0** proposed for removal in the immediately following release.
 
 Neither this PR nor the bridge migrates/deletes files, regenerates on startup/events, prunes unrelated settings or edits hotkeys. Existing definitions, charts, tables, receipts, backups, destinations and links remain untouched. Rebind shortcuts through Obsidian before the removal release, using the [old-to-new IDs](murmuration-reports-transition.md).
 

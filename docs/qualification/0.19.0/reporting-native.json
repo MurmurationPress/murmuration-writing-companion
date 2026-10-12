@@ -1,0 +1,29 @@
+{
+  "checks": [
+    "Reports-only startup performs no regeneration",
+    "standalone active command and structured result",
+    "native XML parser rejects malformed adoption candidates",
+    "native adoption Cancel preserves legacy output",
+    "concurrent change expires native adoption consent",
+    "native adoption regenerates byte-compatible SVG with receipt and recovery",
+    "saved source change while native write awaits its callback invalidates generation",
+    "unload during native conditional write cancels its callback; re-enabled generation waits for the old barrier",
+    "Reports-first then MWC bridge",
+    "MWC-only unavailable capability notice",
+    "MWC-first then Reports re-enable and batch bridge",
+    "observed definition move preserves assets until explicit path repair",
+    "move while disabled is discovered on re-enable without guessing ownership",
+    "both plugins disabled: native SVG/table embeds render",
+    "disabled restart preserves sources and assets"
+  ],
+  "environment": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+  "bundles": {
+    "reports": "3b427af82300c08de03eb115684b81f80f76c51269f7311206cf13b25effedb2",
+    "mwc": "c9075b64c8072ceece140ceb482ee765a9fee2c376c471c799cc7e5159d22604"
+  },
+  "apiEvidence": {
+    "create": "function(e,t,n){return y(this,void 0,Promise,(function(){var i,r;return b(this,(function(o){switch(o.label){case 0:return i=Nl(e),this.checkPath(i),[4,this.adapter.exists(i)];case 1:if(o.sent())throw new Error(\"File already exists.\");return[4,this.adapter.write(i,t,n)];case 2:return o.sent(),(r=this.getAbstractFileByPath(i))instanceof GD?[2,r]:[2,null]}}))}))}",
+    "process": "function(e,t,n){return y(this,void 0,Promise,(function(){var i;return b(this,(function(r){switch(r.label){case 0:e.saving++,r.label=1;case 1:return r.trys.push([1,,3,4]),(n=n||{}).immediate=function(){return e.cache(null)},[4,this.adapter.process(e.path,t,n)];case 2:return i=r.sent(),e.cache(i),[2,i];case 3:return e.saving--,[7];case 4:return[2]}}))}))}"
+  },
+  "root": "/tmp/murmuration-reports-live-RwgERm"
+}

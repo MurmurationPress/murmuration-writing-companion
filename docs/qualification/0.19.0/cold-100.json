@@ -1,0 +1,484 @@
+{
+  "hostOnly": false,
+  "sourceCommit": "eb25238e56a39987444cc5c108b909e5f45919fb",
+  "bundleSha256": "c9075b64c8072ceece140ceb482ee765a9fee2c376c471c799cc7e5159d22604",
+  "coldLimitMs": 300000,
+  "note": "Fresh process and empty host profile/database for each trial. OS file cache not flushed. Instrumented plugin onload to settlement; process-launch boundary includes host boot and trust interaction. Polling cadence 200 ms. Companion/Navigator open. First contextual controls are distinct from complete indexes. Each completed trial asserts 3 Books, all Scenes/entities, no unresolved structure, initial context and zero writes. Timeouts are incomplete observations.",
+  "results": [
+    {
+      "fixtureRoot": "/tmp/mwc-startup-XB9jVM",
+      "size": 100,
+      "trial": 0,
+      "cold": {
+        "elapsedMs": 2957.800000000745,
+        "counts": {
+          "vault.scan": {
+            "calls": 34,
+            "ms": 1.499999988824129
+          },
+          "cache.read": {
+            "calls": 6262,
+            "ms": 9.200000006705523
+          },
+          "storyWorldIndex.rebuild": {
+            "calls": 3,
+            "ms": 8.199999999254942
+          },
+          "storyWorldStartup.initialise": {
+            "calls": 1,
+            "ms": 1.5
+          },
+          "plugin.loaded": {
+            "calls": 1,
+            "ms": 10
+          },
+          "metadata.changed": {
+            "calls": 200,
+            "ms": 0
+          },
+          "manuscriptIntegrityCoordinator.queue": {
+            "calls": 78,
+            "ms": 1.8999999947845936
+          },
+          "scheduleStoryWorldMetadataRefresh": {
+            "calls": 100,
+            "ms": 1.0000000074505806
+          },
+          "metadata.resolved": {
+            "calls": 190,
+            "ms": 0
+          },
+          "renderCompanion": {
+            "calls": 6,
+            "ms": 72.40000000596046
+          },
+          "refreshView": {
+            "calls": 6,
+            "ms": 72.80000000074506
+          },
+          "renderManuscriptNavigator": {
+            "calls": 7,
+            "ms": 52.49999999254942
+          },
+          "refreshManuscriptNavigator": {
+            "calls": 7,
+            "ms": 53
+          },
+          "refreshStoryWorldIndexConsumers": {
+            "calls": 2,
+            "ms": 24.099999997764826
+          },
+          "storyWorldStartup.metadataResolved": {
+            "calls": 2,
+            "ms": 6.800000000745058
+          },
+          "manuscriptIntegrityCoordinator.settle": {
+            "calls": 2,
+            "ms": 0.5999999977648258
+          },
+          "manuscriptProjection.rebuild": {
+            "calls": 3,
+            "ms": 19.899999998509884
+          },
+          "layout.ready": {
+            "calls": 1,
+            "ms": 0
+          },
+          "manuscriptIntegrityCoordinator.initialise": {
+            "calls": 1,
+            "ms": 6.899999998509884
+          },
+          "storyWorldStartup.settle": {
+            "calls": 1,
+            "ms": 0
+          }
+        },
+        "events": [
+          {
+            "name": "vault.scan",
+            "at": 3,
+            "ms": 0.09999999776482582,
+            "cause": "plugin.onload/storyWorldStartup.initialise/storyWorldIndex.rebuild/vault.scan"
+          },
+          {
+            "name": "storyWorldIndex.rebuild",
+            "at": 4,
+            "ms": 1.3999999985098839,
+            "cause": "plugin.onload/storyWorldStartup.initialise/storyWorldIndex.rebuild"
+          },
+          {
+            "name": "storyWorldStartup.initialise",
+            "at": 4.100000001490116,
+            "ms": 1.5,
+            "cause": "plugin.onload/storyWorldStartup.initialise"
+          },
+          {
+            "name": "plugin.loaded",
+            "at": 10,
+            "ms": 10,
+            "cause": "plugin.onload"
+          },
+          {
+            "name": "manuscriptIntegrityCoordinator.queue",
+            "at": 616.6000000014901,
+            "ms": 0.19999999925494194,
+            "cause": "metadata.changed/manuscriptIntegrityCoordinator.queue"
+          },
+          {
+            "name": "scheduleStoryWorldMetadataRefresh",
+            "at": 617.3000000007451,
+            "ms": 0,
+            "cause": "metadata.changed/scheduleStoryWorldMetadataRefresh"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 624,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 624.1000000014901,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "vault.scan",
+            "at": 706.3000000007451,
+            "ms": 0,
+            "cause": "idle/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1043.300000000745,
+            "ms": 0.09999999776482582,
+            "cause": "idle/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1048.9000000022352,
+            "ms": 0.10000000149011612,
+            "cause": "idle/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1049.2000000029802,
+            "ms": 0,
+            "cause": "idle/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1054.2000000029802,
+            "ms": 0.10000000149011612,
+            "cause": "idle/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1064.300000000745,
+            "ms": 0.19999999925494194,
+            "cause": "idle/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "renderCompanion",
+            "at": 1069.5,
+            "ms": 27.400000002235174,
+            "cause": "idle/refreshView/renderCompanion"
+          },
+          {
+            "name": "refreshView",
+            "at": 1069.5,
+            "ms": 27.599999997764826,
+            "cause": "idle/refreshView"
+          },
+          {
+            "name": "renderManuscriptNavigator",
+            "at": 1070.300000000745,
+            "ms": 0.5999999977648258,
+            "cause": "idle/refreshManuscriptNavigator/renderManuscriptNavigator"
+          },
+          {
+            "name": "refreshManuscriptNavigator",
+            "at": 1070.300000000745,
+            "ms": 0.8000000007450581,
+            "cause": "idle/refreshManuscriptNavigator"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1078.5,
+            "ms": 0.09999999776482582,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1080.5,
+            "ms": 0,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1080.9000000022352,
+            "ms": 0,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1083.1000000014901,
+            "ms": 0,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1084.6000000014901,
+            "ms": 0,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion/vault.scan"
+          },
+          {
+            "name": "renderCompanion",
+            "at": 1086.5,
+            "ms": 8.5,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion"
+          },
+          {
+            "name": "refreshView",
+            "at": 1086.5,
+            "ms": 8.5,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView"
+          },
+          {
+            "name": "refreshStoryWorldIndexConsumers",
+            "at": 1086.5,
+            "ms": 8.799999997019768,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1087,
+            "ms": 0.09999999776482582,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved/storyWorldIndex.rebuild/vault.scan"
+          },
+          {
+            "name": "storyWorldIndex.rebuild",
+            "at": 1088.5,
+            "ms": 1.5999999977648258,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved/storyWorldIndex.rebuild"
+          },
+          {
+            "name": "storyWorldStartup.metadataResolved",
+            "at": 1088.6000000014901,
+            "ms": 1.5999999977648258,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved"
+          },
+          {
+            "name": "manuscriptIntegrityCoordinator.settle",
+            "at": 1164.1000000014901,
+            "ms": 0.29999999701976776,
+            "cause": "timer(metadata.resolved)/manuscriptIntegrityCoordinator.settle"
+          },
+          {
+            "name": "manuscriptIntegrityCoordinator.queue",
+            "at": 1564.9000000022352,
+            "ms": 0,
+            "cause": "metadata.changed/manuscriptIntegrityCoordinator.queue"
+          },
+          {
+            "name": "scheduleStoryWorldMetadataRefresh",
+            "at": 1565.2000000029802,
+            "ms": 0,
+            "cause": "metadata.changed/scheduleStoryWorldMetadataRefresh"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1566.1000000014901,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1566.1000000014901,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "scheduleStoryWorldMetadataRefresh",
+            "at": 1569.5,
+            "ms": 0,
+            "cause": "metadata.changed/scheduleStoryWorldMetadataRefresh"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1570.2000000029802,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1570.2000000029802,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "scheduleStoryWorldMetadataRefresh",
+            "at": 1572.800000000745,
+            "ms": 0,
+            "cause": "metadata.changed/scheduleStoryWorldMetadataRefresh"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1573.300000000745,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "metadata.resolved",
+            "at": 1573.300000000745,
+            "ms": 0,
+            "cause": "metadata.resolved"
+          },
+          {
+            "name": "renderCompanion",
+            "at": 1641.6000000014901,
+            "ms": 15.100000001490116,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView/renderCompanion"
+          },
+          {
+            "name": "refreshView",
+            "at": 1641.6000000014901,
+            "ms": 15.199999999254942,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers/refreshView"
+          },
+          {
+            "name": "refreshStoryWorldIndexConsumers",
+            "at": 1641.6000000014901,
+            "ms": 15.300000000745058,
+            "cause": "timer(metadata.changed/scheduleStoryWorldMetadataRefresh)/refreshStoryWorldIndexConsumers"
+          },
+          {
+            "name": "renderManuscriptNavigator",
+            "at": 1673.800000000745,
+            "ms": 0.5999999977648258,
+            "cause": "timer(metadata.changed)/refreshManuscriptNavigator/renderManuscriptNavigator"
+          },
+          {
+            "name": "refreshManuscriptNavigator",
+            "at": 1673.800000000745,
+            "ms": 0.8000000007450581,
+            "cause": "timer(metadata.changed)/refreshManuscriptNavigator"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1674,
+            "ms": 0,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved/storyWorldIndex.rebuild/vault.scan"
+          },
+          {
+            "name": "storyWorldIndex.rebuild",
+            "at": 1679.2000000029802,
+            "ms": 5.200000002980232,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved/storyWorldIndex.rebuild"
+          },
+          {
+            "name": "storyWorldStartup.metadataResolved",
+            "at": 1679.2000000029802,
+            "ms": 5.200000002980232,
+            "cause": "timer(metadata.resolved)/storyWorldStartup.metadataResolved"
+          },
+          {
+            "name": "manuscriptIntegrityCoordinator.settle",
+            "at": 1679.6000000014901,
+            "ms": 0.30000000074505806,
+            "cause": "timer(metadata.resolved)/manuscriptIntegrityCoordinator.settle"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1679.7000000029802,
+            "ms": 0,
+            "cause": "idle/manuscriptProjection.rebuild/vault.scan"
+          },
+          {
+            "name": "manuscriptProjection.rebuild",
+            "at": 1696.2000000029802,
+            "ms": 16.5,
+            "cause": "idle/manuscriptProjection.rebuild"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1699.6000000014901,
+            "ms": 0,
+            "cause": "idle/refreshManuscriptNavigator/renderManuscriptNavigator/vault.scan"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1712.1000000014901,
+            "ms": 0,
+            "cause": "idle/refreshManuscriptNavigator/renderManuscriptNavigator/vault.scan"
+          },
+          {
+            "name": "renderManuscriptNavigator",
+            "at": 1737.1000000014901,
+            "ms": 38.69999999925494,
+            "cause": "idle/refreshManuscriptNavigator/renderManuscriptNavigator"
+          },
+          {
+            "name": "refreshManuscriptNavigator",
+            "at": 1737.1000000014901,
+            "ms": 38.80000000074506,
+            "cause": "idle/refreshManuscriptNavigator"
+          },
+          {
+            "name": "renderCompanion",
+            "at": 1751.1000000014901,
+            "ms": 9.899999998509884,
+            "cause": "idle/refreshView/renderCompanion"
+          },
+          {
+            "name": "refreshView",
+            "at": 1751.1000000014901,
+            "ms": 9.899999998509884,
+            "cause": "idle/refreshView"
+          },
+          {
+            "name": "renderManuscriptNavigator",
+            "at": 1763.1000000014901,
+            "ms": 12,
+            "cause": "idle/refreshManuscriptNavigator/renderManuscriptNavigator"
+          },
+          {
+            "name": "refreshManuscriptNavigator",
+            "at": 1763.1000000014901,
+            "ms": 12,
+            "cause": "idle/refreshManuscriptNavigator"
+          },
+          {
+            "name": "vault.scan",
+            "at": 1903,
+            "ms": 0,
+            "cause": "idle/vault.scan"
+          }
+        ],
+        "pending": 0,
+        "current": "B0S000.md",
+        "instance": 1,
+        "firstUsableAtMs": 1854.4000000022352,
+        "pendingAtStart": 0,
+        "metadataReadyAtMs": 1651.4000000022352,
+        "context": "B0S000.md",
+        "active": "B0S000.md",
+        "companionText": "Writing Companion›Book ReviewContinuity 1Book0Open bookOpen Continuity Review · 1Review mode—DraftStructureCharacterDialogueContinuityStyleProofReview status—No",
+        "navigatorPresent": true,
+        "title": "B0S000 - vault - Obsidian 1.13.7",
+        "indexAudit": {
+          "entities": 20,
+          "books": 3,
+          "scenes": 72,
+          "owned": 78,
+          "unresolved": 0
+        },
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+        "launchToObservationMs": 4857.718038999999,
+        "settlementObservedMs": 3745.6118290000004,
+        "progress": [],
+        "settled": true
+      }
+    }
+  ]
+}
