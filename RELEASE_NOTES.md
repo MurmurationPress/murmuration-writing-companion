@@ -1,6 +1,6 @@
 # Murmuration Writing Companion 0.19.0
 
-Prepared release; not yet published. This release improves performance and interaction stability and completes the handoff of dataset reports to Murmuration Reports.
+This release improves performance and interaction stability and completes the handoff of dataset reports to Murmuration Reports.
 
 ## Performance and stability
 
@@ -30,6 +30,6 @@ Install `main.js`, `manifest.json` and `styles.css` together in `.obsidian/plugi
 
 ## Known limitations and release qualification
 
-Large-vault cold startup, full-book projections and DOM/layout costs still need work. Native Windows acceptance and wider Linux theme/plugin, physical-focus, multi-window and IME acceptance are distinct from automated CI. See [the release-readiness report](docs/release-readiness-0.19.0.md) for actual passed checks and unresolved gates. #252 remains open.
+Large-vault cold startup, full-book projections and DOM/layout costs still need work. Native Windows acceptance and wider Linux theme/plugin, physical-focus, multi-window and IME acceptance are distinct from automated CI. See [the release-readiness report](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.19.0/docs/release-readiness-0.19.0.md) for passed checks and follow-up qualification. #252 remains open.
 
 Reports ownership receipts are safety metadata, not display dependencies. Obsidian's SDK does not provide crash-atomic multi-file transactions; conditional checks, verification and recovery reduce write risk but cannot guarantee atomic output/receipt updates or revoke an already-committed host write. The existing [Reports ownership policy](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/ownership.md) remains authoritative.
