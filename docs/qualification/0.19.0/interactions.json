@@ -1,0 +1,125 @@
+{
+  "environment": {
+    "title": "B0S000 - vault - Obsidian 1.14.4",
+    "electron": "43.3.0",
+    "chrome": "150.0.7871.212",
+    "platform": "linux",
+    "notes": 100,
+    "plugins": [
+      "murmuration-writing-companion"
+    ]
+  },
+  "bundleSha256": "c9075b64c8072ceece140ceb482ee765a9fee2c376c471c799cc7e5159d22604",
+  "blurPointer": 35,
+  "summaryKeyboard": 10,
+  "titleKeyboard": 5,
+  "compactEnter": 10,
+  "externalUpdates": 2,
+  "failedSaveRetry": [
+    {
+      "attempts": 2,
+      "firstActionCalls": 1,
+      "disk": true
+    }
+  ],
+  "firstClick": 30,
+  "uninstrumentedBlur": 5,
+  "notes": "Trusted CDP input; no physical application switching, Windows, multi-window or IME qualification. Initial harness failures are not counted. Full pass then a focused final compact-Enter replay retain the original 600 ms observation plus bounded polling.",
+  "finalCompactEnter": {
+    "cases": 10,
+    "initialWaitMs": 600,
+    "maxAdditionalSettlementWaitMs": 4.759388999999828,
+    "outcomes": [
+      {
+        "property": "pov",
+        "repeat": 0,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-0-1791826304276]]",
+        "settlementWaitMs": 3.8255440000002636
+      },
+      {
+        "property": "pov",
+        "repeat": 1,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-1-1791826305681]]",
+        "settlementWaitMs": 2.4564479999999094
+      },
+      {
+        "property": "pov",
+        "repeat": 2,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-2-1791826307108]]",
+        "settlementWaitMs": 2.9382580000001326
+      },
+      {
+        "property": "pov",
+        "repeat": 3,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-3-1791826308574]]",
+        "settlementWaitMs": 4.759388999999828
+      },
+      {
+        "property": "pov",
+        "repeat": 4,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:pov-display",
+        "stored": "[[enter-pov-4-1791826310006]]",
+        "settlementWaitMs": 2.5557759999992413
+      },
+      {
+        "property": "location",
+        "repeat": 0,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-0-1791826311448",
+        "settlementWaitMs": 2.0157639999997627
+      },
+      {
+        "property": "location",
+        "repeat": 1,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-1-1791826312837",
+        "settlementWaitMs": 1.0944390000004205
+      },
+      {
+        "property": "location",
+        "repeat": 2,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-2-1791826314274",
+        "settlementWaitMs": 3.508491000000504
+      },
+      {
+        "property": "location",
+        "repeat": 3,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-3-1791826315671",
+        "settlementWaitMs": 1.3884480000015174
+      },
+      {
+        "property": "location",
+        "repeat": 4,
+        "calls": 1,
+        "editors": 0,
+        "focus": "context:location-display",
+        "stored": "enter-location-4-1791826317114",
+        "settlementWaitMs": 2.956932000000961
+      }
+    ]
+  }
+}

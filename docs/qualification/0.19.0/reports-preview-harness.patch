@@ -1,0 +1,21 @@
+--- a/scripts/verify-live.mjs
++++ b/scripts/verify-live.mjs
+@@ -397,12 +397,12 @@
+   await ev(
+     `await app.workspace.getMostRecentLeaf().setViewState({type:'markdown',state:{file:'Book/Report.md',mode:'preview'}});return true;`,
+   );
+-  await pause(700);
+-  assert(
+-    await ev(
+-      `return !!document.querySelector('.markdown-preview-view img')&&document.querySelector('.markdown-preview-view')?.textContent.includes('Measured value');`,
+-    ),
+-  );
++  let previewReady = false;
++  for (let attempt = 0; attempt < 100 && !previewReady; attempt++) {
++    previewReady = await ev(`const leaf=app.workspace.getLeavesOfType('markdown').find(l=>l.view.file?.path==='Book/Report.md');const el=leaf?.view.containerEl;const preview=el?.querySelector('.markdown-preview-view');if(preview){preview.scrollTop=preview.scrollHeight;preview.dispatchEvent(new Event('scroll'));}return !!el?.textContent.includes('Measured value')&&[...el?.querySelectorAll('img')??[]].some(img=>img.complete&&img.naturalWidth>0);`);
++    if (!previewReady) await pause(100);
++  }
++  assert(previewReady, 'Saved SVG/table must render in the actual report leaf');
+   checks.push("both plugins disabled: native SVG/table embeds render");
+   let savedDisabled = false;
+   for (let i = 0; i < 50; i++) {

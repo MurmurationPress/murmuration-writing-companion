@@ -1,0 +1,29 @@
+{
+  "root": "/tmp/murmuration-reports-live-LTygjW",
+  "prepared": {
+    "Draft/Draft.md": {
+      "type": "book"
+    },
+    "Draft/01 Opening.md": {
+      "aliases": [
+        "Opening alias"
+      ],
+      "custom": "preserve",
+      "type": "scene",
+      "parent": "[[Draft/Draft]]",
+      "manuscript_order_key": "BZZZZZZZZZ"
+    },
+    "Draft/02 Ending.md": {
+      "type": "scene",
+      "parent": "[[Draft/Draft]]",
+      "manuscript_order_key": "NZZZZZZZZY"
+    }
+  },
+  "checks": [
+    "Native root selection",
+    "Reviewed untyped manuscript preparation",
+    "Prose and unrelated properties preserved",
+    "Explicit Undo restores exact original bytes"
+  ],
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+}
