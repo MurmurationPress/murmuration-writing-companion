@@ -1,3 +1,4 @@
+import { createAnnotationExportAnchor } from "./editorial/AnnotationExportAnchor";
 import { ReconciliationQueue } from "./projections/ReconciliationQueue";
 import { ManuscriptNumberingCommands } from "./manuscript/ManuscriptNumberingCommands";
 import { InteractionRefresh } from "./ui/InteractionRefresh";
@@ -872,14 +873,12 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
       return;
     }
 
+    const anchor = await createAnnotationExportAnchor(editor.getValue(), editor.posToOffset(editor.getCursor("from")), editor.posToOffset(editor.getCursor("to")));
     this.currentChapter = chapter;
 
     const annotationId = await this.storeService.addAnnotation(
       chapter,
-      {
-        text: selected,
-        line: editor.getCursor("from").line + 1
-      },
+      anchor,
       "",
       "Editorial"
     );

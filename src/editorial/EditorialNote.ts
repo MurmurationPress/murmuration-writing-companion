@@ -22,6 +22,8 @@ export interface ChapterNote {
 export interface AnnotationAnchor {
   text: string;
   line?: number;
+  /** UTF-16 offsets in the exact UTF-8-hashed source snapshot; additive export evidence. */
+  range?: { from: number; to: number; sourceSha256: string; basis: "markdown-body-v1" };
   [key: string]: unknown;
 }
 
