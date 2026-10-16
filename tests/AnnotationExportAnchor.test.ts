@@ -25,3 +25,7 @@ test("derived annotation-count frontmatter edits do not invalidate the body snap
   const second = await createAnnotationExportAnchor(changed, changed.lastIndexOf("same"), changed.length);
   deepEqual(first.range, second.range);
 });
+
+test("keeps metadata selections usable as legacy MWC annotations", async () => {
+  deepEqual(await createAnnotationExportAnchor("---\ntitle: Test\n---\nBody", 4, 9), { text: "title", line: 2 });
+});

@@ -6,7 +6,7 @@ Offsets are UTF-16 code units, half-open, relative to the source after its openi
 YAML frontmatter (including the closing delimiter's newline). No whitespace or
 line ending normalization occurs. The SHA-256 is lowercase hexadecimal over the
 UTF-8 encoding of that exact body. Selections are trimmed and offsets adjusted to
-the trimmed selection. YAML selections are rejected before saving a note.
+the trimmed selection. YAML selections retain legacy anchors without a body export range.
 
 Body-relative snapshots tolerate MWC's derived `mwc_open_annotations` YAML write.
 Any body change invalidates strict export evidence. No existing annotation is
