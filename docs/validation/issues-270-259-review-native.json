@@ -1,0 +1,245 @@
+{
+  "fixture": "/tmp/mwc-reading-acceptance-RrhKXQ",
+  "bundleSha256": "7419a044222e8c1f9bcf7ac28edbc242ef59a440697f012a9e51a4e095c93b28",
+  "results": {
+    "contextMenu": {
+      "selected": {
+        "from": 219,
+        "to": 236,
+        "text": "Repeated passage."
+      },
+      "savedAnchor": {
+        "text": "Repeated passage.",
+        "line": 13,
+        "range": {
+          "from": 94,
+          "to": 111,
+          "sourceSha256": "21575feaa39d5c349c8f464375984f38085d29bb7f3b2839a5111e68364feaa5",
+          "basis": "markdown-body-v1"
+        }
+      },
+      "singleActivation": true,
+      "bodyFocus": true
+    },
+    "shortcutCancel": {
+      "selected": {
+        "from": 145,
+        "to": 217,
+        "text": "A **bold** word and an *italic* word with a [link](https://example.org)."
+      },
+      "storedCount": 1
+    },
+    "paletteAndAssociation": {
+      "original": [
+        {
+          "body": "Native context-menu annotation.",
+          "text": "Repeated passage."
+        },
+        {
+          "body": "Original-note association.",
+          "text": "First paragraph of a longer selection.\n\nSecond paragraph with **formatting** here."
+        }
+      ],
+      "other": 0,
+      "mode": "preview"
+    },
+    "navigation": {
+      "mode": "preview",
+      "file": "Scene.md",
+      "selection": "Repeated passage.",
+      "scroll": 3.2578125
+    },
+    "competingEditableLeaf": {
+      "readingMode": "preview",
+      "readingFile": "Scene.md",
+      "otherMode": "source"
+    },
+    "lifecycle": {
+      "mode": "preview",
+      "statuses": [
+        "open",
+        "open"
+      ],
+      "bodies": [
+        "Native context-menu annotation.Edited review body.",
+        "Original-note association."
+      ]
+    },
+    "stale": {
+      "count": 2,
+      "modal": true,
+      "notices": [
+        "The selected note has changed. Cancel and select the passage again; no annotation was saved."
+      ],
+      "mode": "preview"
+    },
+    "editMode": {
+      "focus": "mwc-annotation-body",
+      "mode": "source",
+      "modals": 0,
+      "count": 3,
+      "scroll": 0
+    },
+    "scrollRetention": {
+      "before": 70,
+      "afterCancel": 70,
+      "afterSave": 70
+    },
+    "settingControl": {
+      "description": "Show filename/title mismatch indicators while browsing this vault. Turning this off does not rename files, change titles, or affect preparation and export.",
+      "enabled": false
+    },
+    "preferenceRestart": {
+      "defaults": {
+        "enabled": true,
+        "indicators": 2
+      },
+      "restarted": {
+        "enabled": false,
+        "indicators": 0,
+        "count": 4,
+        "mode": "preview"
+      },
+      "restored": true
+    },
+    "manuscriptIntegrity": {
+      "exactExceptDerivedCount": true,
+      "unrelatedNoteUnchanged": true,
+      "beforeSha256": "76051d08d5909131726aafb36604a3ff087371723ce1e97d14de38804a8eb970",
+      "afterSha256": "4b463daadc91989a40f3694ffd2c6313149a5f21b382573da1f455f267fb83f3"
+    },
+    "review": {
+      "complexProse": [
+        {
+          "rendered": "Ordinary paragraph.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 0,
+            "to": 19,
+            "text": "Ordinary paragraph."
+          }
+        },
+        {
+          "rendered": "The price is $5 and a < b | c.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 21,
+            "to": 51,
+            "text": "The price is $5 and a < b | c."
+          }
+        },
+        {
+          "rendered": "Ordinary opening with inline code and ordinary closing.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 53,
+            "to": 110,
+            "text": "Ordinary opening with `inline code` and ordinary closing."
+          }
+        },
+        {
+          "rendered": "Repeated callout paragraph.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 142,
+            "to": 169,
+            "text": "Repeated callout paragraph."
+          }
+        },
+        {
+          "rendered": "Repeated callout paragraph.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 174,
+            "to": 201,
+            "text": "Repeated callout paragraph."
+          }
+        },
+        {
+          "rendered": "Text around alias here.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 203,
+            "to": 236,
+            "text": "Text around [[Other|alias]] here."
+          }
+        },
+        {
+          "rendered": "Ordinary final paragraph.",
+          "capture": {
+            "path": "Complex.md",
+            "from": 269,
+            "to": 294,
+            "text": "Ordinary final paragraph."
+          }
+        }
+      ],
+      "unsupported": {
+        "modal": false,
+        "notices": [
+          "This rendered selection cannot be mapped reliably to Markdown. Select ordinary prose, or annotate it in edit mode."
+        ]
+      },
+      "deselection": {
+        "cached": false,
+        "modal": false,
+        "notices": [
+          "This rendered selection cannot be mapped reliably to Markdown. Select ordinary prose, or annotate it in edit mode.",
+          "Select text first."
+        ]
+      },
+      "busySave": {
+        "singleRecord": true
+      },
+      "saveRetry": {
+        "failedSave": {
+          "records": 1,
+          "modal": true
+        },
+        "afterRetry": 2
+      },
+      "changedDuplicate": {
+        "selection": "same",
+        "notices": [
+          "Annotation added.",
+          "The passage has changed; moved to its original line."
+        ],
+        "mode": "preview"
+      },
+      "unload": {
+        "modal": false,
+        "listeners": 0,
+        "cached": false
+      },
+      "popout": {
+        "capture": {
+          "path": "Complex.md",
+          "from": 301,
+          "to": 326,
+          "text": "Ordinary final paragraph."
+        },
+        "menu": {
+          "count": 1,
+          "extract": "Ordinary final paragraph.",
+          "focus": "mwc-annotation-body"
+        },
+        "navigation": {
+          "mode": "preview",
+          "file": "Complex.md",
+          "selection": "Ordinary final paragraph."
+        }
+      },
+      "integrity": {
+        "exactExceptDerivedCount": true
+      },
+      "popoutCleanup": {
+        "retained": false,
+        "cachedClosedDocument": false
+      }
+    }
+  },
+  "environment": {
+    "title": "Scene - vault - Obsidian 1.13.7",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+  }
+}

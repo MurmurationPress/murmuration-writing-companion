@@ -102,3 +102,25 @@ function getLineEndOffset(content: string, lineStart: number): number {
   const newline = content.indexOf("\n", lineStart);
   return newline === -1 ? content.length : newline;
 }
+
+/** Prefer the exact stored occurrence, including duplicates on the same line. */
+export async function resolveAnnotationSourceRange(content: string, anchor: AnnotationAnchor): Promise<AnnotationTextRange | null> {
+  if (anchor.range?.basis !== "markdown-body-v1") return resolveAnnotationRange(content, anchor);
+  const bodyStart = content.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0].length || 0;
+  const body = content.slice(bodyStart);
+  const { from, to, sourceSha256 } = anchor.range;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body));
+  const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+  if (hash === sourceSha256 && Number.isSafeInteger(from) && Number.isSafeInteger(to) && from >= 0 && to > from && to <= body.length && body.slice(from, to) === anchor.text) {
+    return { fromOffset: bodyStart + from, toOffset: bodyStart + to, exact: true };
+  }
+  const unique = anchor.text ? body.indexOf(anchor.text) : -1;
+  if (unique >= 0 && body.indexOf(anchor.text, unique + 1) === -1) {
+    return { fromOffset: bodyStart + unique, toOffset: bodyStart + unique + anchor.text.length, exact: true };
+  }
+  // Changed snapshots cannot disambiguate duplicates by line alone. Only legacy
+  // anchors retain nearest-line matching; modern ambiguity is reported honestly.
+  const position = Number.isSafeInteger(from) && from >= 0 ? Math.min(bodyStart + from, content.length) : null;
+  const line = position === null ? anchor.line : content.slice(0, position).split("\n").length;
+  return resolveAnnotationRange(content, { text: "", line });
+}

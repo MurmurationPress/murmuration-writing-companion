@@ -1,3 +1,8 @@
+import { ReadingAnnotationSession } from "./companion/ReadingAnnotationSession";
+import { ReadingAnnotationCapture, ReadingSelection } from "./companion/ReadingAnnotationCapture";
+import { ReadingAnnotationComposer } from "./companion/ReadingAnnotationComposer";
+import { validateReadingSelection } from "./companion/ReadingAnnotationSelection";
+import { FilenameTitlePreference, filenameTitlePreferenceKey } from "./companion/FilenameTitlePreference";
 import { createAnnotationExportAnchor } from "./editorial/AnnotationExportAnchor";
 import { ReconciliationQueue } from "./projections/ReconciliationQueue";
 import { ManuscriptNumberingCommands } from "./manuscript/ManuscriptNumberingCommands";
@@ -20,7 +25,7 @@ import {
 } from "./companion/CollapsibleWritingCompanionView";
 import { Annotation } from "./editorial/EditorialNote";
 import { EditorialStoreService } from "./editorial/EditorialStore";
-import { resolveAnnotationRange } from "./companion/AnnotationNavigation";
+import { resolveAnnotationSourceRange } from "./companion/AnnotationNavigation";
 import {
   EditableChapterContextField,
   getChapterContextField,
@@ -126,9 +131,16 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
   storyWorldCategoryPreferences!: StoryWorldCategoryPreferences;
   currentChapter: TFile | null = null;
   pendingFocusNoteId: string | null = null;
+  private readonly readingAnnotationCapture = new ReadingAnnotationCapture();
+  private readingSession: ReadingAnnotationSession<TFile> | null = null;
+  private get readingSelection() { return this.readingSession?.get() ?? null; }
+  private readingComposer: ReadingAnnotationComposer | null = null;
+  private readingComposerOpen = false;
+  private readingNavigationGeneration = 0;
   private readonly annotationLocator = new TransientAnnotationLocator();
   private readonly writingCompanionActivation = new WritingCompanionActivation();
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
+  readonly filenameTitlePreference: FilenameTitlePreference;
   readonly continuityDiagnosticPreference: ContinuityDiagnosticPreference;
   readonly vaultBackupRemotePreference: VaultBackupRemotePreference;
   private readonly manuscriptMetadataRefresh = new ReconciliationQueue(() => this.refreshManuscriptNavigator());
@@ -150,6 +162,11 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     this.manuscriptBookSelection = new ManuscriptBookSelectionService(
       storage,
       `${manifest.id}:${app.vault.getName()}:manuscript-navigator-book`
+    );
+    let preferenceRoot = app.vault.getName();
+    try { preferenceRoot = app.vault.adapter.getResourcePath(""); } catch { /* Vault-name fallback. */ }
+    this.filenameTitlePreference = new FilenameTitlePreference(
+      storage, filenameTitlePreferenceKey(manifest.id, preferenceRoot)
     );
     this.continuityDiagnosticPreference = new ContinuityDiagnosticPreference(
       storage,
@@ -345,26 +362,59 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
       callback: () => void this.activateManuscriptNavigator()
     });
 
+    this.registerMarkdownPostProcessor((element, context) => this.readingAnnotationCapture.register(element, context));
+    this.register(() => this.readingAnnotationCapture.dispose());
+    this.app.workspace.onLayoutReady(() => {
+      if (this.unloaded) return;
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        if (leaf.view instanceof MarkdownView && leaf.view.getMode() === "preview") leaf.view.previewMode.rerender(true);
+      }
+    });
+    this.readingSession = new ReadingAnnotationSession(this.readingAnnotationCapture, (document) =>
+      this.app.workspace.getLeavesOfType("markdown").flatMap(({ view }) =>
+        view instanceof MarkdownView && view.getMode() === "preview" && view.file && view.contentEl.ownerDocument === document
+          ? [{ file: view.file, root: view.contentEl }] : []), (event, captured) => {
+      const doc = (event.target as Node | null)?.ownerDocument ?? document;
+      const sharedMenu = typeof Menu.forEvent === "function";
+      const menu = sharedMenu ? Menu.forEvent(event) : new Menu();
+      if (!sharedMenu) {
+        event.preventDefault(); event.stopPropagation();
+        const text = doc.getSelection()?.toString() ?? "";
+        menu.addItem(item => item.setTitle("Copy").setIcon("copy").onClick(() => doc.defaultView!.navigator.clipboard.writeText(text)));
+        menu.addSeparator();
+      }
+      menu.addItem(item => item.setTitle("Annotate").setIcon("message-square-plus")
+        .onClick(() => void this.createAnnotationFromReading(captured)));
+      if (!sharedMenu) menu.showAtMouseEvent(event);
+    });
+    this.readingSession.observe(document);
+    this.app.workspace.iterateAllLeaves(leaf => this.readingSession?.observe(leaf.view.containerEl.ownerDocument));
+    this.registerEvent(this.app.workspace.on("window-open", (_window, win) => this.readingSession?.observe(win.document)));
+    this.registerEvent(this.app.workspace.on("window-close", (_window, win) => this.readingSession?.forget(win.document)));
+    this.register(() => { this.readingSession?.dispose(); this.readingComposer?.dispose(); });
+
     this.addCommand({
       id: "annotate",
       name: "Annotate",
-      editorCallback: async (editor, view) => {
-        await this.createAnnotationFromEditor(editor, view.file);
+      callback: async () => {
+        if (this.readingComposerOpen) return;
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (view?.getMode() === "source") await this.createAnnotationFromEditor(view.editor, view.file);
+        else if (this.readingSelection) await this.createAnnotationFromReading(this.readingSelection);
+        else new Notice("Select text first.");
       }
     });
 
     this.registerEvent(
       this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => {
-        if (!editor.getSelection().trim()) return;
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Annotate")
-            .setIcon("message-square-plus")
-            .onClick(async () => {
-              await this.createAnnotationFromEditor(editor, view.file);
-            });
-        });
+        if (view.getMode() !== "source" || !editor.getSelection().trim()) return;
+        // Capture before a native menu or a different pane takes focus.
+        const source = editor.getValue();
+        const from = editor.posToOffset(editor.getCursor("from"));
+        const to = editor.posToOffset(editor.getCursor("to"));
+        const file = view.file;
+        menu.addItem((item) => item.setTitle("Annotate").setIcon("message-square-plus")
+          .onClick(async () => { if (file) await this.createAnnotationFromSource(source, from, to, file); }));
       })
     );
 
@@ -873,7 +923,47 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
       return;
     }
 
-    const anchor = await createAnnotationExportAnchor(editor.getValue(), editor.posToOffset(editor.getCursor("from")), editor.posToOffset(editor.getCursor("to")));
+    await this.createAnnotationFromSource(editor.getValue(), editor.posToOffset(editor.getCursor("from")), editor.posToOffset(editor.getCursor("to")), chapter);
+  }
+
+  private async createAnnotationFromReading(captured: { file: TFile; selection: ReadingSelection | null }) {
+    if (this.readingComposerOpen) return;
+    if (!captured.selection) {
+      new Notice("This rendered selection cannot be mapped reliably to Markdown. Select ordinary prose, or annotate it in edit mode.");
+      return;
+    }
+    const { file, selection } = captured;
+    const valid = async () => {
+      await validateReadingSelection(file, selection.source, {
+        lookup: path => this.app.vault.getAbstractFileByPath(path), read: note => this.app.vault.read(note)
+      });
+      if (this.unloaded) throw new Error("MWC was unloaded. No annotation was saved.");
+    };
+    this.readingComposerOpen = true;
+    try {
+      await valid();
+      const anchor = await createAnnotationExportAnchor(selection.source, selection.from, selection.to);
+      if (this.unloaded) { this.readingComposerOpen = false; return; }
+      this.readingSession?.clear();
+      const draftId = crypto.randomUUID();
+      this.readingComposer = new ReadingAnnotationComposer(this.app, {
+        id: draftId, anchor, body: "", category: "Editorial", status: "open", created: "", updated: ""
+      }, async (body, category) => {
+        await valid();
+        await this.storeService.addAnnotation(file, anchor, body, category, draftId);
+        this.currentChapter = file;
+        await this.activateView();
+        this.refreshView();
+      }, () => { this.readingComposerOpen = false; this.readingComposer = null; });
+      this.readingComposer.open();
+    } catch (error) {
+      this.readingComposerOpen = false;
+      new Notice(error instanceof Error ? error.message : "Could not capture the selected passage.");
+    }
+  }
+
+  private async createAnnotationFromSource(source: string, from: number, to: number, chapter: TFile) {
+    const anchor = await createAnnotationExportAnchor(source, from, to);
     this.currentChapter = chapter;
 
     const annotationId = await this.storeService.addAnnotation(
@@ -889,11 +979,16 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
   }
 
   async navigateToAnnotation(chapter: TFile, annotation: Annotation) {
+    const generation = ++this.readingNavigationGeneration;
     this.annotationLocator.clear();
-    const leaf = this.findChapterLeaf(chapter)
-      ?? this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)
+    const recentLeaf = this.app.workspace.getMostRecentLeaf();
+    const reading = recentLeaf?.view instanceof MarkdownView && recentLeaf.view.getMode() === "preview";
+    const leaf = this.findChapterLeaf(chapter, reading ? "preview" : undefined, recentLeaf?.view.containerEl.ownerDocument)
+      ?? (reading ? recentLeaf : null)
+      ?? this.findChapterLeaf(chapter)
+      ?? recentLeaf
       ?? this.app.workspace.getLeaf(false);
-    await leaf.openFile(chapter, { active: true });
+    await leaf.openFile(chapter, { active: true, state: { mode: leaf.view instanceof MarkdownView ? leaf.view.getMode() : "preview" } });
     await this.app.workspace.revealLeaf(leaf);
     this.app.workspace.setActiveLeaf(leaf, { focus: true });
 
@@ -902,8 +997,27 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
       return;
     }
 
+    if (leaf.view.getMode() === "preview") {
+      const source = await this.app.vault.read(chapter);
+      const range = await resolveAnnotationSourceRange(source, annotation.anchor);
+      if (!range) { new Notice("Could not locate the annotated passage."); return; }
+      const line = source.slice(0, range.fromOffset).split("\n").length - 1;
+      const view = leaf.view;
+      const delays = [100, 250, 500, 1000];
+      const reveal = (attempt = 0) => {
+        if (this.unloaded || generation !== this.readingNavigationGeneration || view.file !== chapter || view.getMode() !== "preview") return;
+        if (this.readingAnnotationCapture.reveal(view.contentEl, chapter.path, source, range.fromOffset, range.toOffset)) return;
+        // Parsing and virtualised rendering may finish after openFile returns.
+        view.previewMode.applyScroll(line);
+        if (attempt < delays.length) window.setTimeout(() => reveal(attempt + 1), delays[attempt]);
+      };
+      reveal();
+      if (!range.exact) new Notice("The passage has changed; moved to its original line.");
+      return;
+    }
+
     const editor = leaf.view.editor;
-    const range = resolveAnnotationRange(editor.getValue(), annotation.anchor);
+    const range = await resolveAnnotationSourceRange(editor.getValue(), annotation.anchor);
 
     if (!range) {
       new Notice("Could not locate the annotated passage.");
@@ -924,15 +1038,17 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     }
   }
 
-  private findChapterLeaf(chapter: TFile): WorkspaceLeaf | null {
+  private findChapterLeaf(chapter: TFile, mode?: "source" | "preview", document?: Document): WorkspaceLeaf | null {
     let match: WorkspaceLeaf | null = null;
 
-    this.app.workspace.iterateRootLeaves((leaf) => {
+    this.app.workspace.iterateAllLeaves((leaf) => {
       if (match) return;
 
       if (
         leaf.view instanceof MarkdownView
         && leaf.view.file?.path === chapter.path
+        && (!mode || leaf.view.getMode() === mode)
+        && (!document || leaf.view.containerEl.ownerDocument === document)
       ) {
         match = leaf;
       }

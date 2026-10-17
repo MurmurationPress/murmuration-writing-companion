@@ -15,6 +15,15 @@ export class ContinuitySettingsTab extends PluginSettingTab {
     this.containerEl.empty();
     this.containerEl.createEl("h2", { text: "Murmuration Writing Companion" });
     new Setting(this.containerEl)
+      .setName("Notify when filename differs from title")
+      .setDesc("Show filename/title mismatch indicators while browsing this vault. Turning this off does not rename files, change titles, or affect preparation and export.")
+      .addToggle((toggle) => toggle
+        .setValue(this.plugin.filenameTitlePreference.get())
+        .onChange((value) => {
+          this.plugin.filenameTitlePreference.set(value);
+          this.plugin.refreshManuscriptNavigator();
+        }));
+    new Setting(this.containerEl)
       .setName("Show diagnostic information")
       .setDesc("Show support and debugging details in Continuity Review. Editorial evidence remains visible when this is off.")
       .addToggle((toggle) => toggle
