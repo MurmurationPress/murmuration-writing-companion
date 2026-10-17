@@ -256,3 +256,36 @@ The creation dialog reuses the Companion annotation card. Its draft is transient
 The filename/title notification preference follows existing vault-local localStorage UI preferences, keyed by vault resource root with an enabled fallback for missing or malformed values. Only Navigator mismatch indicators and mismatch tooltip rows consult it; explicit alignment actions, preparation/export and unrelated notices retain their existing rules.
 
 Reading selection state belongs to the originating document. A shared session subscribes once per main/popout document, preserves the captured note through tool/palette focus, discards explicit manuscript deselection, and removes subscriptions on window close or plugin unload. Draft dialogs close on unload and block dismissal while Save is in flight. Draft IDs remain stable across retries; failed authoritative saves roll back their in-memory addition, and retry after a derived-count failure reuses the same annotation. Rendered callout paragraphs are mapped only when source paragraphs and native paragraphs agree one-to-one in order. Source line starts are computed once per bounded snapshot, not once per rendered section. Modern anchors with a changed hash may relocate a unique body extract; ambiguous repeated extracts receive an explicitly approximate body-position fallback. Legacy navigation remains unchanged.
+
+## Annotation Board
+
+The Annotation Board answers what annotation work remains within one Book. Its
+read-only `AnnotationBoardProjection` consumes the already settled manuscript
+hierarchy and the authoritative portable editorial store. It traverses the same
+Book/Part/Scene tree as the Navigator, then orders each note's annotations by
+stored source line, offset, creation time and ID. Missing positions sort last;
+stale positions are ordering hints, never new evidence for navigation. Existing
+unknown categories remain visible after the established category columns.
+
+The command resolves actual Book/Part/Scene or Navigator context and otherwise
+opens a Book picker. Opening another scene does not change an existing board's
+scope. Book identity follows its file through renames. Only current manuscript
+members are projected; detached/deleted notes retain their stored editorial
+history, and stale card actions validate membership and identity again.
+
+Cards use the shared annotation renderer, draft editor, store update operation,
+count projection and passage navigator. A remembered manuscript leaf gives the
+existing navigator an appropriate destination without replacing the board or
+changing Reading mode. Exact export anchors and the #272 occurrence checks are
+unchanged. Category/status/body changes never alter anchors or manuscript prose.
+Updates are serialized and roll back in-memory fields if portable persistence
+fails. Derived-count failures retain the successfully saved annotation and expose
+retry even when resolving has removed its card. Conflicting editor saves retain
+the draft and ask the author to reopen the latest annotation.
+
+The board owns no stored editorial data or schema migration. Its keyed cards and
+columns reconcile through existing store-change and settled manuscript callbacks,
+with the existing interaction refresh guard. Modal keystrokes remain draft-only;
+there is no polling, view-triggered vault scan or per-keystroke board rebuild.
+Filters are transient; the Book path uses normal Obsidian view state. Native
+selects and buttons complement category dragging, including in narrow panes.

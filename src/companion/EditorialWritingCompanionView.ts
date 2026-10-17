@@ -142,6 +142,8 @@ export abstract class WritingCompanionView extends BaseWritingCompanionView {
       );
     };
     titleActions.appendChild(openBook);
+    const board = titleActions.createEl("button", { text: "Annotation Board", cls: "mwc-book-review-link" });
+    board.onclick = () => { void this.plugin.annotationBoard.open(book.path); };
     const reviewPresentation = this.plugin.getContinuityReviewActionPresentation(
       book.path,
       "Open Continuity Review"

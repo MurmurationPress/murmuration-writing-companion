@@ -9,3 +9,16 @@
 @import "./ContinuityReview.css";
 @import "./StoryWorldReview.css";
 @import "./StoryWorldGraph.css";
+
+/* Book-scoped annotation work queue. Native controls provide keyboard alternatives. */
+.mwc-annotation-board { padding: var(--size-4-4); }
+.mwc-board-filters { display:flex; flex-wrap:wrap; gap:var(--size-4-3); margin:var(--size-4-3) 0; }
+.mwc-board-filters label { display:flex; align-items:center; gap:var(--size-4-2); min-width:0; }
+.mwc-board-filters select { max-width:16em; }
+.mwc-board-columns { display:flex; align-items:flex-start; gap:var(--size-4-3); overflow-x:auto; padding-bottom:var(--size-4-3); }
+.mwc-board-column { flex:0 0 18rem; max-width:90%; padding:var(--size-4-2); background:var(--background-secondary); border-radius:var(--radius-m); }
+.mwc-board-card { margin-bottom:var(--size-4-3); padding:var(--size-4-2); background:var(--background-primary); border-radius:var(--radius-s); overflow-wrap:anywhere; }
+.mwc-board-card h4 { margin:var(--size-4-1) 0; }
+.mwc-board-card .mwc-annotation-body { min-height:5em; }
+.mwc-board-drag { cursor:grab; color:var(--text-muted); font-size:var(--font-smallest); }
+.mwc-board-column-empty { padding:var(--size-4-2); }

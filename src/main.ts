@@ -1,3 +1,4 @@
+import { AnnotationBoard } from "./companion/AnnotationBoardView";
 import { ReadingAnnotationSession } from "./companion/ReadingAnnotationSession";
 import { ReadingAnnotationCapture, ReadingSelection } from "./companion/ReadingAnnotationCapture";
 import { ReadingAnnotationComposer } from "./companion/ReadingAnnotationComposer";
@@ -122,6 +123,7 @@ export interface EditorialPassViewState {
 export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
   protected readonly interactionRefresh = new InteractionRefresh();
   readonly manuscriptBookSelection: ManuscriptBookSelectionService;
+  annotationBoard!: AnnotationBoard;
   storeService!: EditorialStoreService;
   storyWorldIndex!: ObsidianStoryWorldIndex;
   manuscriptProjection!: ManuscriptProjectionService;
@@ -246,6 +248,7 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
 
     this.storeService = new EditorialStoreService(this);
     this.storeService.onChange = () => {
+      this.annotationBoard?.refresh();
       this.refreshView();
       this.refreshManuscriptNavigator();
     };
@@ -258,12 +261,15 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     await this.storeService.load();
     if (this.unloaded) return;
 
+    this.annotationBoard = new AnnotationBoard(this);
+
     this.manuscriptIntegrityCoordinator = new ManuscriptIntegrityCoordinator(
       this.app,
       this.manuscriptBookSelection,
       {
         activePath: () => this.getActiveChapter()?.path ?? null,
         onSettled: ({ library, affectedPaths, affectedBookPaths, revealPath, clearReveal, missingSelectedBook }) => {
+          this.annotationBoard?.refresh();
           this.manuscriptNumbering?.refresh();
           void this.settleEditorialCreates(library, affectedPaths);
           if (this.currentChapter && !this.app.vault.getAbstractFileByPath(this.currentChapter.path)) {
@@ -978,16 +984,22 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     this.refreshView();
   }
 
-  async navigateToAnnotation(chapter: TFile, annotation: Annotation) {
+  async navigateToAnnotation(chapter: TFile, annotation: Annotation, preferredLeaf?: WorkspaceLeaf) {
     const generation = ++this.readingNavigationGeneration;
     this.annotationLocator.clear();
-    const recentLeaf = this.app.workspace.getMostRecentLeaf();
+    let preferredAvailable = false;
+    this.app.workspace.iterateAllLeaves(leaf => { if (leaf === preferredLeaf) preferredAvailable = true; });
+    const mostRecent = preferredAvailable ? preferredLeaf : this.app.workspace.getMostRecentLeaf();
+    // Editorial tabs must never become the manuscript navigation destination.
+    const recentLeaf = mostRecent?.view instanceof MarkdownView ? mostRecent
+      : this.app.workspace.getLeavesOfType("markdown").find(leaf => leaf.view.containerEl.ownerDocument === mostRecent?.view.containerEl.ownerDocument)
+        ?? this.app.workspace.getLeavesOfType("markdown")[0];
     const reading = recentLeaf?.view instanceof MarkdownView && recentLeaf.view.getMode() === "preview";
     const leaf = this.findChapterLeaf(chapter, reading ? "preview" : undefined, recentLeaf?.view.containerEl.ownerDocument)
       ?? (reading ? recentLeaf : null)
       ?? this.findChapterLeaf(chapter)
       ?? recentLeaf
-      ?? this.app.workspace.getLeaf(false);
+      ?? this.app.workspace.getLeaf("tab");
     await leaf.openFile(chapter, { active: true, state: { mode: leaf.view instanceof MarkdownView ? leaf.view.getMode() : "preview" } });
     await this.app.workspace.revealLeaf(leaf);
     this.app.workspace.setActiveLeaf(leaf, { focus: true });

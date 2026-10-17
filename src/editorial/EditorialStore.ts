@@ -313,21 +313,34 @@ export class EditorialStoreService {
     return id;
   }
 
+  private annotationUpdates: Promise<void> = Promise.resolve();
+
   async updateAnnotation(
     file: TFile,
     annotation: Annotation,
     patch: Partial<Annotation>
   ) {
-    const previousStatus = annotation.status;
-    Object.assign(annotation, patch, { updated: new Date().toISOString() });
-
-    await this.save();
-
-    if (annotation.status !== previousStatus) {
-      await this.syncOpenAnnotationProperty(file, this.getPage(file));
-    }
-
-    this.onChange();
+    const operation = this.annotationUpdates.then(async () => {
+      const page = this.store.pages[file.path];
+      const current = page?.annotations.find(item => item.id === annotation.id);
+      if (!current || page.deletedAt || this.plugin.app.vault.getAbstractFileByPath(file.path) !== file) {
+        throw new Error("The annotated note or annotation is no longer available. Refresh the board and try again.");
+      }
+      const previous = { ...current };
+      Object.assign(current, patch, { updated: new Date().toISOString() });
+      try { await this.save(); }
+      catch (error) {
+        for (const key of Object.keys(current)) if (!(key in previous)) delete current[key];
+        Object.assign(current, previous);
+        throw error;
+      }
+      // Counts are recoverable projections; publish the saved editorial state
+      // even if the subsequent frontmatter update fails. Retrying repairs counts.
+      try { await this.syncOpenAnnotationProperty(file, page); }
+      finally { this.onChange(); }
+    });
+    this.annotationUpdates = operation.catch(() => {});
+    return operation;
   }
 
   async reconcileDeletedEditorialPages() {

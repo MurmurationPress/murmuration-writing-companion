@@ -7,11 +7,11 @@ export class ReadingAnnotationComposer extends Modal {
   private saving = false;
   private closed = false;
   constructor(app: App, private readonly annotation: Annotation,
-    private readonly save: (body: string, category: string) => Promise<void>, private readonly done: () => void) {
+    private readonly save: (body: string, category: string) => Promise<void>, private readonly done: () => void, private readonly heading = "Annotate selected passage") {
     super(app);
   }
   onOpen(): void {
-    this.titleEl.setText("Annotate selected passage");
+    this.titleEl.setText(this.heading);
     const card = renderAnnotationCard(this.contentEl, this.annotation, async (_, patch) => {
       Object.assign(this.annotation, patch);
     }, this.annotation.id, undefined, undefined, undefined, "open", undefined, true);
