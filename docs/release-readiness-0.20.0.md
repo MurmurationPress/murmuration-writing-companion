@@ -39,6 +39,8 @@ Diagnostic attempts initially exposed renderer-import and owned-window-focus ass
 
 Native clean-install qualification exposed a cached-preview defect: count updates changed frontmatter, but Obsidian reused prose sections registered against the previous full source snapshot. Navigation preserved Reading mode but could not reveal the selected occurrence. The repair translates cached offsets only when the **entire Markdown body is identical**, checks the original section and rendered projection, and retains strict rejection of changed bodies and foreign notes. It never searches for an extract. Comparisons are cached per snapshot within a reveal, rather than repeated per paragraph. A regression covers frontmatter insertion, removal and count changes, second duplicate identity and rejection after prose changes. Stored anchors and manuscript files are unchanged by navigation.
 
+Cross-platform asset comparison also found Windows Git checkout converted the verbatim shipped manifest to CRLF (286 bytes versus 277 on Linux). JS/CSS were identical and both CI suites passed, so only downloading/comparing all three archives exposed this packaging gap. A manifest-specific `.gitattributes` LF policy and explicit release-check guard now enforce identical bytes. This changes no plugin behaviour or qualified native assets. Final candidate CI/archive comparison is recorded in the PR; earlier successful CI is not substituted for the final head.
+
 ## Bundle policy
 
 | Asset | Raw bytes | Gzip bytes |

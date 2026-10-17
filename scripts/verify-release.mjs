@@ -24,6 +24,8 @@ const [manifest, packageJson, packageLock, versions] = await Promise.all([
   readJson("versions.json")
 ]);
 
+assert(!(await readFile(path.join(projectRoot, "manifest.json"), "utf8")).includes("\r"),
+  "manifest.json must use LF line endings for reproducible release checksums; check .gitattributes");
 const version = manifest.version;
 assert(version === packageJson.version, "manifest.json and package.json versions differ");
 assert(version === packageLock.version, "manifest.json and package-lock.json versions differ");
