@@ -246,3 +246,11 @@ truth.
 ## Dataset reporting transition
 
 Dataset charts and state tables live in [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). `ReportsCommandBridge` retains old command IDs for one release and resolves a versioned app-scoped capability when invoked. No dataset parser, renderer or fallback writer is shipped in MWC. All manuscript-aware reporting remains here. See [transition contract and removal plan](docs/murmuration-reports-transition.md) and the [completion inventory and residual bridge measurement](docs/reporting-extraction-completion.md).
+
+## Reading-view annotations
+
+Reading selection capture uses native Markdown postprocessor section line ranges to identify the source occurrence. A conservative text projection checks the complete rendered endpoint sections against Markdown, mapping visible UTF-16 boundaries back to source offsets. It never searches for the first matching extract. Opaque snapshot identifiers and offsets survive cached DOM clones; at most 64 source snapshots remain in memory, and unavailable or unsupported evidence fails closed.
+
+The creation dialog reuses the Companion annotation card. Its draft is transient; Save validates the original file identity and unchanged Markdown body before using the existing exact source anchor and editorial-store creation path. Cancel writes nothing. Frontmatter-only updates are permitted, including the existing derived count projection. There is no new store, manuscript syntax or schema migration. Portable records, ordering and resolve/reopen remain authoritative in the existing editorial store. Navigation prefers hash-verified exact offsets, uses native preview scrolling and rendered passage selection in Reading view, and retains editor selection/navigation in edit mode.
+
+The filename/title notification preference follows existing vault-local localStorage UI preferences, keyed by vault resource root with an enabled fallback for missing or malformed values. Only Navigator mismatch indicators and mismatch tooltip rows consult it; explicit alignment actions, preparation/export and unrelated notices retain their existing rules.

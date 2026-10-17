@@ -14,7 +14,8 @@ export function renderAnnotationCard(
   onNavigate?: (annotation: Annotation) => void,
   onResolve?: (annotation: Annotation) => Promise<void>,
   mode: AnnotationCardMode = "open",
-  onReopen?: (annotation: Annotation) => Promise<void>
+  onReopen?: (annotation: Annotation) => Promise<void>,
+  draft = false
 ): HTMLElement {
   const card = container.createDiv("mwc-annotation-card");
   const isResolved = mode === "resolved";
@@ -105,6 +106,8 @@ export function renderAnnotationCard(
     });
   }
 
+  if (draft) return card;
+
   const action = footer.createEl("button", {
     cls: isResolved ? "mwc-annotation-reopen" : "mwc-annotation-resolve",
     text: isResolved ? "Reopen" : "Resolve",
@@ -148,7 +151,9 @@ function scheduleAnnotationFocus(
       body.focus({ preventScroll: true });
       body.setSelectionRange(body.value.length, body.value.length);
 
-      if (document.activeElement === body || index === FOCUS_RETRY_DELAYS_MS.length - 1) {
+      // Keep the request through initial metadata/store refreshes, which may
+      // replace this card while the Companion is opening.
+      if (index === FOCUS_RETRY_DELAYS_MS.length - 1) {
         onFocusComplete?.(noteId);
       }
     }, delay);

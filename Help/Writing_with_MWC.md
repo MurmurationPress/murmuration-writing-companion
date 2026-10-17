@@ -51,3 +51,15 @@ world_context:
 POV, Location, and explicit context remain semantically distinct but are displayed once per resolved entity path. MWC does not infer World Context from prose, folders, tags, backlinks, or filename similarity.
 
 Only explicit `world_context` entries show **Remove** here. POV and Location remain editable through their own Chapter Context fields. Add/remove preserves other entries, aliases, unresolved manual links, custom Scene YAML, and manuscript prose. Equivalent canonical, alias, and path-qualified references are recognised as the same indexed entity rather than duplicated. Manual wikilinks remain supported.
+
+## Annotating in Reading view
+
+Select ordinary prose in native Obsidian Reading view, then choose **Annotate** from the selection context menu, run **Murmuration Writing Companion: Annotate**, or use its assigned hotkey. The annotation body opens ready for typing. Choose **Save annotation** to add it to the Companion, or **Cancel** to discard the draft. The manuscript remains in Reading view.
+
+The selection belongs to the note where it was captured, even if you open another Scene before saving. MWC checks its source again at save time. If the note's prose changed, cancel and select the passage again. Frontmatter-only changes do not invalidate the captured passage.
+
+Ordinary emphasis, Markdown links and selections across paragraphs are supported. Some rendered content—including embeds, code, HTML, mathematics, tables, footnotes, callouts and piped wikilinks—cannot be mapped reliably. MWC explains when a selection cannot be anchored and saves nothing. Select ordinary prose or use the existing edit-mode annotation workflow for that content.
+
+Review, edit, resolve and reopen annotations in the Companion as usual. Choose an annotation's extract to reveal its passage in the manuscript; navigation preserves Reading view. Annotations use the same portable editorial store in both modes. No inline annotation markers are inserted; the established `mwc_open_annotations` property remains a derived count.
+
+Filename/title mismatch indicators can be turned off with **Notify when filename differs from title** in MWC settings. This vault-local preference is enabled by default and persists on this installation. It does not change filenames, titles, preparation or export.

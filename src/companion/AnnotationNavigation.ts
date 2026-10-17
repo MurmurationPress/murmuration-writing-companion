@@ -102,3 +102,17 @@ function getLineEndOffset(content: string, lineStart: number): number {
   const newline = content.indexOf("\n", lineStart);
   return newline === -1 ? content.length : newline;
 }
+
+/** Prefer the exact stored occurrence, including duplicates on the same line. */
+export async function resolveAnnotationSourceRange(content: string, anchor: AnnotationAnchor): Promise<AnnotationTextRange | null> {
+  if (anchor.range?.basis === "markdown-body-v1") {
+    const bodyStart = content.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0].length || 0;
+    const { from, to, sourceSha256 } = anchor.range;
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(content.slice(bodyStart)));
+    const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+    if (hash === sourceSha256 && content.slice(bodyStart + from, bodyStart + to) === anchor.text) {
+      return { fromOffset: bodyStart + from, toOffset: bodyStart + to, exact: true };
+    }
+  }
+  return resolveAnnotationRange(content, anchor);
+}

@@ -1,0 +1,116 @@
+{
+  "fixture": "/tmp/mwc-reading-acceptance-kZWFK5",
+  "bundleSha256": "136a8fcf81ff7f208599b06e61d07c14d0e5dd994183d9bc68efe99bdfb8c4de",
+  "results": {
+    "contextMenu": {
+      "selected": {
+        "from": 219,
+        "to": 236,
+        "text": "Repeated passage."
+      },
+      "savedAnchor": {
+        "text": "Repeated passage.",
+        "line": 13,
+        "range": {
+          "from": 94,
+          "to": 111,
+          "sourceSha256": "21575feaa39d5c349c8f464375984f38085d29bb7f3b2839a5111e68364feaa5",
+          "basis": "markdown-body-v1"
+        }
+      },
+      "singleActivation": true,
+      "bodyFocus": true
+    },
+    "shortcutCancel": {
+      "selected": {
+        "from": 145,
+        "to": 217,
+        "text": "A **bold** word and an *italic* word with a [link](https://example.org)."
+      },
+      "storedCount": 1
+    },
+    "paletteAndAssociation": {
+      "original": [
+        {
+          "body": "Native context-menu annotation.",
+          "text": "Repeated passage."
+        },
+        {
+          "body": "Original-note association.",
+          "text": "First paragraph of a longer selection.\n\nSecond paragraph with **formatting** here."
+        }
+      ],
+      "other": 0,
+      "mode": "preview"
+    },
+    "navigation": {
+      "mode": "preview",
+      "file": "Scene.md",
+      "selection": "Repeated passage.",
+      "scroll": 3.2578125
+    },
+    "competingEditableLeaf": {
+      "readingMode": "preview",
+      "readingFile": "Scene.md",
+      "otherMode": "source"
+    },
+    "lifecycle": {
+      "mode": "preview",
+      "statuses": [
+        "open",
+        "open"
+      ],
+      "bodies": [
+        "Native context-menu annotation.Edited review body.",
+        "Original-note association."
+      ]
+    },
+    "stale": {
+      "count": 2,
+      "modal": true,
+      "notices": [
+        "The selected note has changed. Cancel and select the passage again; no annotation was saved."
+      ],
+      "mode": "preview"
+    },
+    "editMode": {
+      "focus": "mwc-annotation-body",
+      "mode": "source",
+      "modals": 0,
+      "count": 3,
+      "scroll": 0
+    },
+    "scrollRetention": {
+      "before": 70,
+      "afterCancel": 70,
+      "afterSave": 70
+    },
+    "settingControl": {
+      "description": "Show filename/title mismatch indicators while browsing this vault. Turning this off does not rename files, change titles, or affect preparation and export.",
+      "enabled": false
+    },
+    "preferenceRestart": {
+      "defaults": {
+        "enabled": true,
+        "indicators": 2
+      },
+      "restarted": {
+        "enabled": false,
+        "indicators": 0,
+        "count": 4,
+        "mode": "preview"
+      },
+      "restored": true
+    },
+    "manuscriptIntegrity": {
+      "exactExceptDerivedCount": true,
+      "unrelatedNoteUnchanged": true,
+      "beforeSha256": "76051d08d5909131726aafb36604a3ff087371723ce1e97d14de38804a8eb970",
+      "afterSha256": "4b463daadc91989a40f3694ffd2c6313149a5f21b382573da1f455f267fb83f3"
+    }
+  },
+  "environment": {
+    "title": "Scene - vault - Obsidian 1.13.7",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+  }
+}
