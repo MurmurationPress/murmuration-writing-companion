@@ -1,5 +1,5 @@
 import { test } from 'node:test';
-import { doesNotMatch, match } from 'node:assert/strict';
+import { doesNotMatch, match, ok } from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('0.20 removes dataset aliases and runtime coupling while retaining manuscript-aware commands', async () => {
@@ -19,6 +19,6 @@ test('published release notes use versioned URLs instead of repository-relative 
   const notes = await readFile('RELEASE_NOTES.md', 'utf8');
   doesNotMatch(notes, /\]\((?:Help|docs)\//);
   for (const target of ['Help/Writing_with_MWC.md', 'docs/murmuration-reports-transition.md', 'docs/installation-and-upgrade.md', 'docs/release-readiness-0.20.0.md']) {
-    match(notes, new RegExp(`https://github.com/MurmurationPress/murmuration-writing-companion/blob/0\\.20\\.0/${target.replaceAll('.', '\\.').replaceAll('/', '\\/')}`));
+    ok(notes.includes(`https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.20.0/${target}`));
   }
 });
