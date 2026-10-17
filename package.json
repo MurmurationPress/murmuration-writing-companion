@@ -1,6 +1,6 @@
 {
   "name": "murmuration-writing-companion",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "private": true,
   "scripts": {
     "dev": "node scripts/dev-plugin.mjs",
@@ -12,6 +12,7 @@
     "bundle:report": "node scripts/report-bundle.mjs",
     "bundle:analyze": "tsc -noEmit -skipLibCheck && node scripts/build-plugin.mjs --analyze",
     "example:archive": "node scripts/build-example-vault.mjs",
+    "release:checksums": "node scripts/release-assets.mjs",
     "release:check": "node scripts/verify-release.mjs"
   },
   "devDependencies": {

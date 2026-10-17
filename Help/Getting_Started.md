@@ -2,6 +2,8 @@
 
 MWC works with ordinary Markdown notes in an Obsidian vault. Your manuscript and Story World remain readable without the plugin. MWC adds navigation, guided editing, review, and derived views around those notes.
 
+See [installation and upgrading to 0.20.0](../docs/installation-and-upgrade.md) before replacing an existing installation.
+
 ## Begin a manuscript
 
 Open **Project readiness** first. It is read-only and explains what MWC recognises.

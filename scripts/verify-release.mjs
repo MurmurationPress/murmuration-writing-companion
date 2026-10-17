@@ -1,3 +1,6 @@
+import { build } from "esbuild";
+import { productionBuildOptions } from "./production-build.mjs";
+import { releaseChecksums } from "./release-assets.mjs";
 import { access, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +24,8 @@ const [manifest, packageJson, packageLock, versions] = await Promise.all([
   readJson("versions.json")
 ]);
 
+assert(!(await readFile(path.join(projectRoot, "manifest.json"), "utf8")).includes("\r"),
+  "manifest.json must use LF line endings for reproducible release checksums; check .gitattributes");
 const version = manifest.version;
 assert(version === packageJson.version, "manifest.json and package.json versions differ");
 assert(version === packageLock.version, "manifest.json and package-lock.json versions differ");
@@ -44,6 +49,9 @@ const { stylesheetBytes, shippedAssetsReport } = await import("./build-styles.mj
 const css = await readFile(path.join(projectRoot, "styles.css"));
 assert(css.equals(Buffer.from(await stylesheetBytes(projectRoot))), "styles.css is stale; run npm run build");
 const main = await readFile(path.join(projectRoot, "main.js"), "utf8");
+const fresh = await build({ ...productionBuildOptions(), absWorkingDir: projectRoot, write: false, logLevel: "silent" });
+assert(Buffer.from(fresh.outputFiles[0].contents).equals(Buffer.from(main)), "main.js is stale; run npm run build");
+await releaseChecksums(projectRoot); // All three assets must be readable and non-empty.
 const report = bundleReport(Buffer.from(main));
 printBundleReport(report);
 console.log(JSON.stringify(shippedAssetsReport(Buffer.from(main), css, await readFile(path.join(projectRoot, "manifest.json")))));

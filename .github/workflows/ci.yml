@@ -39,3 +39,17 @@ jobs:
 
       - name: Verify release metadata and assets
         run: npm run release:check
+
+      - name: Record candidate asset checksums
+        run: node --input-type=module -e "import {writeFile} from 'node:fs/promises'; import {releaseChecksums} from './scripts/release-assets.mjs'; await writeFile('SHA256SUMS', await releaseChecksums('.'));"
+
+      - name: Upload exact-commit candidate assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: mwc-${{ github.sha }}-${{ matrix.os }}
+          path: |
+            main.js
+            manifest.json
+            styles.css
+            SHA256SUMS
+          if-no-files-found: error

@@ -38,6 +38,10 @@ These deeper contracts and validation records support development. Authors shoul
 - [Example-vault manual validation](docs/v2-onboarding-manual-validation.md) — prepared and migration walkthroughs for #160
 - [V2 release-validation handoff](docs/v2-release-validation-handoff.md) — fixtures, expected states, archive and platform checks
 
+## Stable installation and upgrade
+
+See [installation and 0.20.0 upgrade guidance](docs/installation-and-upgrade.md). Install `main.js`, `manifest.json` and `styles.css` from the same release together; keep the portable editorial store and existing plugin settings. [0.20.0 release notes](RELEASE_NOTES.md) describe the annotation improvements and Reports hotkey change.
+
 ## Development install
 
 1. Copy this folder into `.obsidian/plugins/murmuration-writing-companion/`
@@ -75,6 +79,7 @@ Automate deterministic behaviour such as property normalization, matching, sorti
 - Undo manuscript preparation
 - Generate entity index
 - Annotate
+- Open Annotation Board
 - Back up vault to GitHub (desktop only)
 
 ## About and official links
@@ -217,6 +222,6 @@ reporting interface.
 
 Dataset chart and state-table generation is provided by [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). Install that plugin and use **Open Reports** for creation, editing, saved previews and explicit regeneration. MWC has no dataset-generation implementation or reporting settings to migrate.
 
-The two existing MWC generation commands remain as deprecated aliases for **the 0.19.0 transition release**, preserving current hotkeys. They resolve Reports when invoked, with no hard dependency or fallback writer. Both plugins can coexist in either loading order; absent Reports produces an enable-Reports notice. Rebind shortcuts to Reports before the following MWC release, when the aliases will be removed. [Migration and command mappings](docs/murmuration-reports-transition.md).
+MWC 0.20.0 removes the two deprecated dataset-generation aliases after the promised 0.19.0 transition release. Rebind shortcuts manually to Reports' commands; MWC never edits hotkeys or existing generated files and works independently without Reports. [Exact command mappings and upgrade guidance](docs/murmuration-reports-transition.md).
 
 Existing definitions, assets, links, hotkey files and unrelated settings are untouched. Saved charts and tables display and compile with both plugins disabled. Manuscript numbering, annotation counts, continuity and entity-index reporting stay in MWC.
