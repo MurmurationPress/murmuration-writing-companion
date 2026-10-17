@@ -942,7 +942,8 @@ export class ManuscriptNavigatorView extends ItemView {
   }
 
   private renderNameMismatchIndicator(container: HTMLElement, entry: ManuscriptDocumentRecord) {
-    const mismatch = detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry));
+    const mismatch = this.plugin.filenameTitlePreference.get()
+      ? detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry)) : null;
     if (!mismatch) return;
     container.createSpan({
       cls: "mwc-manuscript-name-mismatch",
@@ -1163,7 +1164,8 @@ export class ManuscriptNavigatorView extends ItemView {
   ) {
     const metadata = book.metadataByPath.get(entry.path);
     const rows = metadata ? metadataRows(metadata) : [];
-    const mismatch = detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry));
+    const mismatch = this.plugin.filenameTitlePreference.get()
+      ? detectManuscriptNameMismatch(snapshotManuscriptNameForDisplay(this.app, entry)) : null;
     if (mismatch) rows.unshift(["Filename", mismatch.filename], ["Title", mismatch.title]);
     if (rows.length === 0) return;
 

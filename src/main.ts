@@ -1,3 +1,4 @@
+import { FilenameTitlePreference, filenameTitlePreferenceKey } from "./companion/FilenameTitlePreference";
 import { createAnnotationExportAnchor } from "./editorial/AnnotationExportAnchor";
 import { ReconciliationQueue } from "./projections/ReconciliationQueue";
 import { ManuscriptNumberingCommands } from "./manuscript/ManuscriptNumberingCommands";
@@ -129,6 +130,7 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
   private readonly annotationLocator = new TransientAnnotationLocator();
   private readonly writingCompanionActivation = new WritingCompanionActivation();
   readonly bookReviewContinuityDisclosure = new BookReviewContinuityDisclosure();
+  readonly filenameTitlePreference: FilenameTitlePreference;
   readonly continuityDiagnosticPreference: ContinuityDiagnosticPreference;
   readonly vaultBackupRemotePreference: VaultBackupRemotePreference;
   private readonly manuscriptMetadataRefresh = new ReconciliationQueue(() => this.refreshManuscriptNavigator());
@@ -150,6 +152,11 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     this.manuscriptBookSelection = new ManuscriptBookSelectionService(
       storage,
       `${manifest.id}:${app.vault.getName()}:manuscript-navigator-book`
+    );
+    let preferenceRoot = app.vault.getName();
+    try { preferenceRoot = app.vault.adapter.getResourcePath(""); } catch { /* Vault-name fallback. */ }
+    this.filenameTitlePreference = new FilenameTitlePreference(
+      storage, filenameTitlePreferenceKey(manifest.id, preferenceRoot)
     );
     this.continuityDiagnosticPreference = new ContinuityDiagnosticPreference(
       storage,
