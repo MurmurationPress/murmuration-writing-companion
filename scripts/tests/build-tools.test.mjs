@@ -99,3 +99,18 @@ test('release checksum inventory is reproducible, complete and rejects missing/e
     await rejects(releaseChecksums(root), /ENOENT/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('publication requires the exact stable tag, current main merge and successful main push CI', async () => {
+  const { assertReleaseSource } = await import('../release-source.mjs');
+  const sha = 'a'.repeat(40);
+  const run = { head_sha: sha, head_branch: 'main', event: 'push', status: 'completed', conclusion: 'success', path: '.github/workflows/ci.yml' };
+  const candidate = { tag: '0.20.0', version: '0.20.0', headSha: sha, tagSha: sha, mainSha: sha, runs: [run] };
+  equal(assertReleaseSource(candidate), run);
+  for (const tag of ['v0.20.0', '0.20.0-rc.1', '0.20.1', '00.20.0']) throws(() => assertReleaseSource({ ...candidate, tag }), /Stable release tag/);
+  for (const key of ['headSha', 'tagSha', 'mainSha']) throws(() => assertReleaseSource({ ...candidate, [key]: 'b'.repeat(40) }), /current main head/);
+  for (const patch of [{ head_sha: 'b'.repeat(40) }, { head_branch: 'release/0.20.0' }, { event: 'pull_request' }, { status: 'in_progress' }, { conclusion: 'failure' }, { conclusion: 'cancelled' }, { path: '.github/workflows/release.yml' }]) {
+    throws(() => assertReleaseSource({ ...candidate, runs: [{ ...run, ...patch }] }), /Successful post-merge main/);
+  }
+  throws(() => assertReleaseSource({ ...candidate, runs: [] }), /Successful post-merge main/);
+  for (const patch of [{ conclusion: 'failure' }, { status: 'in_progress' }]) throws(() => assertReleaseSource({ ...candidate, runs: [{ ...run, ...patch }, run] }), /Successful post-merge main/);
+});

@@ -90,13 +90,14 @@ test("ordinary endpoint paragraphs are scoped separately from unsupported constr
 });
 
 test("cached Reading blocks reveal the exact duplicate after frontmatter-only count changes, never after body changes", () => {
-  for (const [before, after] of [
+  for (const [before, after, body = "\nRepeated.\n\nRepeated.\n"] of [
     ["---\ntitle: Synthetic\n---\n", "---\ntitle: Synthetic\nmwc_open_annotations: 1\n---\n"],
     ["---\nmwc_open_annotations: 1\n---\n", ""],
-    ["", "---\nmwc_open_annotations: 2\n---\n"]
+    ["", "---\nmwc_open_annotations: 2\n---\n"],
+    ["---\r\ntitle: Synthetic\r\n---\r\n", "---\ntitle: Synthetic\nmwc_open_annotations: 1\n---\n"],
+    ["---\r\ntitle: Synthetic\r\n---\r\n", "---\r\ntitle: Synthetic\r\nmwc_open_annotations: 1\r\n---\r\n", "\r\nRepeated.\r\n\r\nRepeated.\r\n"]
   ]) {
     const capture = new ReadingAnnotationCapture();
-    const body = "\nRepeated.\n\nRepeated.\n";
     const source = before + body, current = after + body;
     const root = new ElementFixture("");
     const first = new ElementFixture("Repeated."), second = new ElementFixture("Repeated.");
@@ -123,6 +124,10 @@ test("cached Reading blocks reveal the exact duplicate after frontmatter-only co
       equal(selected, nodes.get(second)); equal(startOffset, 0); equal(endOffset, 9);
       equal(capture.reveal(root as any, "Scene.md", current + "Changed prose.", from, from + 9), false);
       equal(capture.reveal(root as any, "Other.md", current, from, from + 9), false);
+      selected = undefined;
+      const changedEndings = body.includes("\r") ? current.replace(/\r\n/g, "\n") : current.replace(/\r?\n/g, "\r\n");
+      equal(capture.reveal(root as any, "Scene.md", changedEndings, from, from + 9), false);
+      equal(selected, undefined); // No new highlight against a different body snapshot.
     } finally { (globalThis as any).NodeFilter = previous; }
   }
 });

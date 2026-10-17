@@ -17,6 +17,7 @@
 ## Publication — requires separate authorisation
 
 - [ ] Merge approved PR, verify reviewed/merged tree equality, and require post-merge Ubuntu/Windows CI.
+- [ ] Confirm the publication-source guard accepts the current main head and its successful post-merge Ubuntu/Windows CI; it rejects candidate branches and PR-only CI.
 - [ ] Create and push **0.20.0** (no v prefix) at that exact merge commit.
 - [ ] Publish workflow succeeds, uses RELEASE_NOTES.md and creates a stable latest release.
 - [ ] main.js, manifest.json, styles.css and SHA256SUMS attached; three plugin assets are non-empty and from the same build.

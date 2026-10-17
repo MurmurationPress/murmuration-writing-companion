@@ -1,3 +1,4 @@
+import { review020Navigation, reviewPublishedReports } from './review-020-navigation.mjs';
 // Linux native release smoke: only newly allocated synthetic vaults/profiles.
 // node scripts/diagnostics/qualify-020-release.mjs PUBLISHED_MWC_019 PUBLISHED_REPORTS_010 OUTPUT_JSON
 import {spawn,execFileSync} from 'node:child_process';
@@ -89,14 +90,18 @@ for(const mode of (process.env.MWC_RELEASE_SCENARIOS?.split(',')??['clean','upgr
  await run(`document.querySelector('.modal textarea').value='Edited release body';document.querySelector('.modal .mod-cta').click();await wait(700);`);
  check(await run(`return created.body==='Edited release body';`),'Board edit persisted');
  await run(`card().querySelector('.mwc-annotation-resolve').click();await wait(700);`);check(await run(`return !card()&&created.status==='resolved';`),'resolve disappears immediately');
+ check(await run(`const count=p.storeService.getPage(scene).annotations.filter(a=>a.status!=='resolved').length;const text=await app.vault.read(scene);return Number(/^mwc_open_annotations: (\\d+)/m.exec(text)?.[1]??0)===count;`),'resolved derived count matches authoritative store');
  await run(`const el=board.contentEl.querySelector('input[type=checkbox]');el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));await wait(300);card().querySelector('.mwc-annotation-reopen').click();await wait(700);`);check(await run(`return created.status==='open';`),'show resolved and reopen');
+ check(await run(`const count=p.storeService.getPage(scene).annotations.filter(a=>a.status!=='resolved').length;const text=await app.vault.read(scene);return Number(/^mwc_open_annotations: (\\d+)/m.exec(text)?.[1]??0)===count;`),'reopened derived count matches authoritative store');
  await run(`card().querySelector('.mwc-annotation-extract').click();for(let n=0;n<25&&document.getSelection()?.toString()!=='Repeated passage.';n++)await wait(200);`);
  const navigation=await run(`return {mode:md.getMode(),file:md.file?.path,selection:document.getSelection()?.toString(),boards:app.workspace.getLeavesOfType('mwc-annotation-board').length,occurrence:[...md.contentEl.querySelectorAll('.el-p p')].filter(e=>e.textContent==='Repeated passage.').indexOf(document.getSelection()?.anchorNode?.parentElement?.closest('p'))};`);console.log('navigation',navigation);check(navigation.mode==='preview'&&navigation.selection==='Repeated passage.'&&navigation.boards===1&&navigation.occurrence===1,'exact Reading navigation retains Board',{navigation});
  check(JSON.stringify(await run('return created.anchor;'))===JSON.stringify(anchor.anchor),'lifecycle retains exact export-anchor evidence');
+ if(process.env.MWC_RELEASE_REVIEW)await review020Navigation(run,check);
  const reportsBefore=await snapshot();
  await install(reports,rid);await run(`await app.plugins.loadManifests();await app.plugins.enablePluginAndSave('${rid}');await wait(800);`);
  const replacements=await run(`return ['generate-derived-artefact','generate-all-derived-artefacts'].map(id=>({id:'${rid}:'+id,name:app.commands.commands['${rid}:'+id]?.name}));`);
  check(replacements.every(c=>!!c.name),'Reports replacement commands available when enabled',{commands:replacements});
+ if(process.env.MWC_RELEASE_REVIEW)await reviewPublishedReports(run,check);
  await run(`await app.plugins.disablePluginAndSave('${rid}');await wait(500);p.filenameTitlePreference.set(false);`);
  check(JSON.stringify(await snapshot())===JSON.stringify(reportsBefore),'enabling/disabling Reports performs no manuscript/store/generated writes');
  check(await readFile(path.join(vault,'.obsidian/hotkeys.json'),'utf8')===hotkeys,'hotkey file untouched');

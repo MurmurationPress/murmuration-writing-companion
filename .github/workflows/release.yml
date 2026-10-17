@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   publish:
@@ -42,6 +43,11 @@ jobs:
 
       - name: Verify release metadata and assets
         run: npm run release:check
+
+      - name: Require reviewed merge and successful post-merge CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release-source.mjs
 
       - name: Record release asset checksums
         run: npm run --silent release:checksums > SHA256SUMS
