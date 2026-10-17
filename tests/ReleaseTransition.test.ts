@@ -14,3 +14,11 @@ test('0.20 removes dataset aliases and runtime coupling while retaining manuscri
   }
   match(guide, /neither plugin edits/);
 });
+
+test('published release notes use versioned URLs instead of repository-relative guide links', async () => {
+  const notes = await readFile('RELEASE_NOTES.md', 'utf8');
+  doesNotMatch(notes, /\]\((?:Help|docs)\//);
+  for (const target of ['Help/Writing_with_MWC.md', 'docs/murmuration-reports-transition.md', 'docs/installation-and-upgrade.md', 'docs/release-readiness-0.20.0.md']) {
+    match(notes, new RegExp(`https://github.com/MurmurationPress/murmuration-writing-companion/blob/0\\.20\\.0/${target.replaceAll('.', '\\.').replaceAll('/', '\\/')}`));
+  }
+});

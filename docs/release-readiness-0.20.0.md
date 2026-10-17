@@ -25,7 +25,7 @@ Release-specific results, candidate SHA, checksums and exact-head Ubuntu/Windows
 
 ## Qualification results
 
-Local qualification passes **1,025 TypeScript tests + 17 build/tool tests**, both typechecks, production build, release checks, bundle analysis/report and whitespace checks. The independent release review added the publication-source guard test; initial preparation had 16 build/tool tests. Seven obsolete bridge tests were removed with the bridge; release-transition, checksum and cached-Reading regressions replace the applicable coverage. A deliberately modified disposable `main.js` was rejected as stale by `release:check`, then restored; deterministic production checksums are recorded below. Node 24.19.0 / esbuild 0.23.1 locally; CI uses Node 22.
+Local qualification passes **1,026 TypeScript tests + 17 build/tool tests**, both typechecks, production build, release checks, bundle analysis/report and whitespace checks. The independent release review added release-link and publication-source guard tests; initial preparation had 16 build/tool tests. Seven obsolete bridge tests were removed with the bridge; release-transition, checksum and cached-Reading regressions replace the applicable coverage. A deliberately modified disposable `main.js` was rejected as stale by `release:check`, then restored; deterministic production checksums are recorded below. Node 24.19.0 / esbuild 0.23.1 locally; CI uses Node 22.
 
 The checked-in native replay uses only newly allocated synthetic vaults and profiles, installs downloaded 0.19.0/Reports 0.1.0 assets, seeds existing records using 0.19.0 itself, then replaces all three assets with the candidate. Clean install and upgrade are separate scenarios. Native automation is CDP DOM/application commands and Chromium text input, not physical hardware or assistive-technology acceptance.
 
@@ -64,7 +64,7 @@ c29668f7d30c1a7c2cfc2c880b19638fc906b36983468e3ac6f8cb2a01690b94  main.js
 
 ## Independent release review
 
-See [PR #274 review, repairs and qualification](release-review-0.20.0.md). The current release workflow additionally requires the stable tag, checked-out commit and current main head to match, plus successful `ci.yml` push CI on that exact main commit. It rejects another branch, a stale tag/main SHA, prerelease names and candidate/PR/failed/incomplete CI. This review adds no bundled runtime code; the three qualified assets and checksums remain unchanged. Native review adds CRLF-only header navigation, safe rejection of changed bodies/line endings, exact edit-mode navigation, explicit count assertions and actual invocation of both published Reports replacement commands against an unsupported synthetic definition.
+See [PR #274 review, repairs and qualification](release-review-0.20.0.md). Release-note guide links now target the explicit 0.20.0 tag for correct published-page resolution. The current release workflow additionally requires the stable tag, checked-out commit and current main head to match, plus successful `ci.yml` push CI on that exact main commit. It rejects another branch, a stale tag/main SHA, prerelease names and candidate/PR/failed/incomplete CI. This review adds no bundled runtime code; the three qualified assets and checksums remain unchanged. Native review adds CRLF-only header navigation, safe rejection of changed bodies/line endings, exact edit-mode navigation, explicit count assertions and actual invocation of both published Reports replacement commands against an unsupported synthetic definition.
 
 ## Packaging and publication proposal
 
