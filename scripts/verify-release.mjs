@@ -1,3 +1,6 @@
+import { build } from "esbuild";
+import { productionBuildOptions } from "./production-build.mjs";
+import { releaseChecksums } from "./release-assets.mjs";
 import { access, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,6 +47,9 @@ const { stylesheetBytes, shippedAssetsReport } = await import("./build-styles.mj
 const css = await readFile(path.join(projectRoot, "styles.css"));
 assert(css.equals(Buffer.from(await stylesheetBytes(projectRoot))), "styles.css is stale; run npm run build");
 const main = await readFile(path.join(projectRoot, "main.js"), "utf8");
+const fresh = await build({ ...productionBuildOptions(), absWorkingDir: projectRoot, write: false, logLevel: "silent" });
+assert(Buffer.from(fresh.outputFiles[0].contents).equals(Buffer.from(main)), "main.js is stale; run npm run build");
+await releaseChecksums(projectRoot); // All three assets must be readable and non-empty.
 const report = bundleReport(Buffer.from(main));
 printBundleReport(report);
 console.log(JSON.stringify(shippedAssetsReport(Buffer.from(main), css, await readFile(path.join(projectRoot, "manifest.json")))));

@@ -1,4 +1,5 @@
 import { deepEqual, equal, match, ok, rejects, throws } from "node:assert/strict";
+import path from "node:path";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
@@ -78,4 +79,23 @@ test("native stylesheet contains every ordered source, is deterministic and has 
   const assets=shippedAssetsReport(Buffer.from('js'),first.outputFiles[0].contents,Buffer.from('{}'));
   equal(assets.totalRawBytes,first.outputFiles[0].contents.length+4);
   equal(assets.assets['styles.css'].rawBytes,first.outputFiles[0].contents.length);
+});
+
+test('release checksum inventory is reproducible, complete and rejects missing/empty assets', async () => {
+  const { releaseChecksums } = await import('../release-assets.mjs');
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { createHash } = await import('node:crypto');
+  const root = await mkdtemp(path.join(tmpdir(), 'mwc-release-assets-'));
+  try {
+    const names = ['main.js', 'manifest.json', 'styles.css'];
+    for (const name of names) await writeFile(path.join(root, name), `synthetic ${name}`);
+    const expected = names.map(name => `${createHash('sha256').update(`synthetic ${name}`).digest('hex')}  ${name}\n`).join('');
+    equal(await releaseChecksums(root), expected);
+    equal(await releaseChecksums(root), expected);
+    await writeFile(path.join(root, 'styles.css'), '');
+    await rejects(releaseChecksums(root), /styles.css is empty/);
+    await rm(path.join(root, 'styles.css'));
+    await rejects(releaseChecksums(root), /ENOENT/);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

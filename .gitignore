@@ -153,3 +153,5 @@ vite.config.ts.timestamp-*
 
 # Native plugin stylesheet built from src/styles/plugin.css
 /styles.css
+
+/SHA256SUMS

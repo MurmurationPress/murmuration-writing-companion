@@ -1,0 +1,426 @@
+{
+  "method": "Linux native Obsidian via CDP DOM/application commands and Chromium input; no physical hardware/assistive technology claim",
+  "published019": {
+    "main.js": "c9075b64c8072ceece140ceb482ee765a9fee2c376c471c799cc7e5159d22604",
+    "manifest.json": "28655022403fee152e6e0569643d45fbb25e832605d443796b6a50386f83683c",
+    "styles.css": "63166e572eabb771e920e5ca019851a40c39c9880415bf39fbeccb071654609e"
+  },
+  "publishedReports010": {
+    "main.js": "3b427af82300c08de03eb115684b81f80f76c51269f7311206cf13b25effedb2",
+    "manifest.json": "cd1f0c8d95556ba7b75994fa38fe28b268de2f5eacc6e680cc7cbcbaf98796de",
+    "styles.css": "496984d404c275da3f9f44f9afcd0f9c23f8a55c5acfbbefb9d0b3fe6565ab51"
+  },
+  "candidate": {
+    "main.js": "c29668f7d30c1a7c2cfc2c880b19638fc906b36983468e3ac6f8cb2a01690b94",
+    "manifest.json": "4596085c1c8278720d19409966d3c9846061d83f62b9b045430601956d752c32",
+    "styles.css": "0aed98aac8c86dc4be0cef3542a5f8b752b28fbaea9c834987c46c14ec6dc316"
+  },
+  "scenarios": [
+    {
+      "mode": "clean",
+      "fixture": "/tmp/mwc020-clean-SHyLse",
+      "checks": [
+        {
+          "name": "0.20 independent without Reports; old aliases absent",
+          "passed": true
+        },
+        {
+          "name": "Reading command opens one focused annotation editor",
+          "passed": true
+        },
+        {
+          "name": "Reading creation preserves exact anchor and mode",
+          "passed": true,
+          "anchor": {
+            "text": "Repeated passage.",
+            "line": 13,
+            "range": {
+              "from": 38,
+              "to": 55,
+              "sourceSha256": "24afda665dab02fdea270989b88555b97aa9a9ed6009d94792f2357aac04e8b9",
+              "basis": "markdown-body-v1"
+            }
+          }
+        },
+        {
+          "name": "Board Book isolation",
+          "passed": true
+        },
+        {
+          "name": "Board Part filter",
+          "passed": true
+        },
+        {
+          "name": "Board accessible category save",
+          "passed": true
+        },
+        {
+          "name": "existing editor body focus",
+          "passed": true
+        },
+        {
+          "name": "Board edit persisted",
+          "passed": true
+        },
+        {
+          "name": "resolve disappears immediately",
+          "passed": true
+        },
+        {
+          "name": "show resolved and reopen",
+          "passed": true
+        },
+        {
+          "name": "exact Reading navigation retains Board",
+          "passed": true,
+          "navigation": {
+            "mode": "preview",
+            "file": "Direct.md",
+            "selection": "Repeated passage.",
+            "boards": 1,
+            "occurrence": 1
+          }
+        },
+        {
+          "name": "lifecycle retains exact export-anchor evidence",
+          "passed": true
+        },
+        {
+          "name": "Reports replacement commands available when enabled",
+          "passed": true,
+          "commands": [
+            {
+              "id": "murmuration-reports:generate-derived-artefact",
+              "name": "Murmuration Reports: Generate active report definition"
+            },
+            {
+              "id": "murmuration-reports:generate-all-derived-artefacts",
+              "name": "Murmuration Reports: Generate all report definitions"
+            }
+          ]
+        },
+        {
+          "name": "enabling/disabling Reports performs no manuscript/store/generated writes",
+          "passed": true
+        },
+        {
+          "name": "hotkey file untouched",
+          "passed": true
+        },
+        {
+          "name": "notification preference survives application restart",
+          "passed": true
+        },
+        {
+          "name": "editorial records survive application restart intact",
+          "passed": true
+        },
+        {
+          "name": "restart has no automatic manuscript/store/generated migration",
+          "passed": true
+        },
+        {
+          "name": "file integrity: Book.md",
+          "passed": true,
+          "beforeSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe",
+          "afterSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe",
+          "normalizedSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe"
+        },
+        {
+          "name": "file integrity: Other Book.md",
+          "passed": true,
+          "beforeSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81",
+          "afterSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81",
+          "normalizedSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81"
+        },
+        {
+          "name": "file integrity: Part.md",
+          "passed": true,
+          "beforeSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634",
+          "afterSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634",
+          "normalizedSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634"
+        },
+        {
+          "name": "file integrity: Direct.md",
+          "passed": true,
+          "beforeSha256": "a7dc2cd8906d3baa6f40578de9775efdbf9c861c9c4d70d7b5208386640a1b20",
+          "afterSha256": "5812139ee188ab4a70509e0443768ae6738b8491f16b0616cd77245a8ba8ddd2",
+          "normalizedSha256": "a7dc2cd8906d3baa6f40578de9775efdbf9c861c9c4d70d7b5208386640a1b20"
+        },
+        {
+          "name": "file integrity: Child.md",
+          "passed": true,
+          "beforeSha256": "40678c50863c95633a4e8871f1b3d23398929ae3ffd0def996223947b40fc99f",
+          "afterSha256": "1d890a4fb56a990d4ed0707dbb1b502b45f7d9bd95980ba3447de46b4e732ebe",
+          "normalizedSha256": "40678c50863c95633a4e8871f1b3d23398929ae3ffd0def996223947b40fc99f"
+        },
+        {
+          "name": "file integrity: Other.md",
+          "passed": true,
+          "beforeSha256": "225536c6497c6ed3c6779302cdcb53d25bd05f02992a5b19196b9a669725c952",
+          "afterSha256": "2ff26640ce1f51adc353d4175b14affcd62791fc37afe3a166895e6b0f529c1d",
+          "normalizedSha256": "225536c6497c6ed3c6779302cdcb53d25bd05f02992a5b19196b9a669725c952"
+        },
+        {
+          "name": "file integrity: Saved.svg",
+          "passed": true,
+          "beforeSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e",
+          "afterSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e",
+          "normalizedSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e"
+        },
+        {
+          "name": "file integrity: Saved table.md",
+          "passed": true,
+          "beforeSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92",
+          "afterSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92",
+          "normalizedSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92"
+        },
+        {
+          "name": "file integrity: Definition.md",
+          "passed": true,
+          "beforeSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab",
+          "afterSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab",
+          "normalizedSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab"
+        },
+        {
+          "name": "file integrity: Embeds.md",
+          "passed": true,
+          "beforeSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd",
+          "afterSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd",
+          "normalizedSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd"
+        },
+        {
+          "name": "only established portable-store/recovery files created",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "mode": "upgrade",
+      "fixture": "/tmp/mwc020-upgrade-HzVh3k",
+      "checks": [
+        {
+          "name": "actual published 0.19.0 loaded with both aliases",
+          "passed": true
+        },
+        {
+          "name": "upgrade startup preserves all manuscript, generated and existing portable store bytes",
+          "passed": true
+        },
+        {
+          "name": "existing editorial record loads intact",
+          "passed": true
+        },
+        {
+          "name": "existing Chapter Notes, pass history and resolved annotation preserved",
+          "passed": true
+        },
+        {
+          "name": "0.20 independent without Reports; old aliases absent",
+          "passed": true
+        },
+        {
+          "name": "Reading command opens one focused annotation editor",
+          "passed": true
+        },
+        {
+          "name": "Reading creation preserves exact anchor and mode",
+          "passed": true,
+          "anchor": {
+            "text": "Repeated passage.",
+            "line": 14,
+            "range": {
+              "from": 38,
+              "to": 55,
+              "sourceSha256": "24afda665dab02fdea270989b88555b97aa9a9ed6009d94792f2357aac04e8b9",
+              "basis": "markdown-body-v1"
+            }
+          }
+        },
+        {
+          "name": "Board Book isolation",
+          "passed": true
+        },
+        {
+          "name": "Board Part filter",
+          "passed": true
+        },
+        {
+          "name": "Board accessible category save",
+          "passed": true
+        },
+        {
+          "name": "existing editor body focus",
+          "passed": true
+        },
+        {
+          "name": "Board edit persisted",
+          "passed": true
+        },
+        {
+          "name": "resolve disappears immediately",
+          "passed": true
+        },
+        {
+          "name": "show resolved and reopen",
+          "passed": true
+        },
+        {
+          "name": "exact Reading navigation retains Board",
+          "passed": true,
+          "navigation": {
+            "mode": "preview",
+            "file": "Direct.md",
+            "selection": "Repeated passage.",
+            "boards": 1,
+            "occurrence": 1
+          }
+        },
+        {
+          "name": "lifecycle retains exact export-anchor evidence",
+          "passed": true
+        },
+        {
+          "name": "Reports replacement commands available when enabled",
+          "passed": true,
+          "commands": [
+            {
+              "id": "murmuration-reports:generate-derived-artefact",
+              "name": "Murmuration Reports: Generate active report definition"
+            },
+            {
+              "id": "murmuration-reports:generate-all-derived-artefacts",
+              "name": "Murmuration Reports: Generate all report definitions"
+            }
+          ]
+        },
+        {
+          "name": "enabling/disabling Reports performs no manuscript/store/generated writes",
+          "passed": true
+        },
+        {
+          "name": "hotkey file untouched",
+          "passed": true
+        },
+        {
+          "name": "notification preference survives application restart",
+          "passed": true
+        },
+        {
+          "name": "editorial records survive application restart intact",
+          "passed": true
+        },
+        {
+          "name": "restart has no automatic manuscript/store/generated migration",
+          "passed": true
+        },
+        {
+          "name": "file integrity: Book.md",
+          "passed": true,
+          "beforeSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe",
+          "afterSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe",
+          "normalizedSha256": "efcfb76c79f0331d22855bd24f83e0b201ef5c5f5a47f01e03cc428092758bbe"
+        },
+        {
+          "name": "file integrity: Other Book.md",
+          "passed": true,
+          "beforeSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81",
+          "afterSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81",
+          "normalizedSha256": "10cb5974b97fd72b5efbb26b344be9c0cc6b3ebf5988435b9ee128ac96db2c81"
+        },
+        {
+          "name": "file integrity: Part.md",
+          "passed": true,
+          "beforeSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634",
+          "afterSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634",
+          "normalizedSha256": "0130c8b91727a97b0e205db360d1e0c7828b784f34f4624700a7268075969634"
+        },
+        {
+          "name": "file integrity: Direct.md",
+          "passed": true,
+          "beforeSha256": "a7dc2cd8906d3baa6f40578de9775efdbf9c861c9c4d70d7b5208386640a1b20",
+          "afterSha256": "3be44acaf28eb21ac988f38a062a451d7a42f710f6eb11dc2ee18e6252d4fc5e",
+          "normalizedSha256": "a7dc2cd8906d3baa6f40578de9775efdbf9c861c9c4d70d7b5208386640a1b20"
+        },
+        {
+          "name": "file integrity: Child.md",
+          "passed": true,
+          "beforeSha256": "40678c50863c95633a4e8871f1b3d23398929ae3ffd0def996223947b40fc99f",
+          "afterSha256": "1d890a4fb56a990d4ed0707dbb1b502b45f7d9bd95980ba3447de46b4e732ebe",
+          "normalizedSha256": "40678c50863c95633a4e8871f1b3d23398929ae3ffd0def996223947b40fc99f"
+        },
+        {
+          "name": "file integrity: Other.md",
+          "passed": true,
+          "beforeSha256": "225536c6497c6ed3c6779302cdcb53d25bd05f02992a5b19196b9a669725c952",
+          "afterSha256": "2ff26640ce1f51adc353d4175b14affcd62791fc37afe3a166895e6b0f529c1d",
+          "normalizedSha256": "225536c6497c6ed3c6779302cdcb53d25bd05f02992a5b19196b9a669725c952"
+        },
+        {
+          "name": "file integrity: Saved.svg",
+          "passed": true,
+          "beforeSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e",
+          "afterSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e",
+          "normalizedSha256": "6e3387199d27edebce3a8d08274af414122d2733d2b6bd4c92bd477dadfea28e"
+        },
+        {
+          "name": "file integrity: Saved table.md",
+          "passed": true,
+          "beforeSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92",
+          "afterSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92",
+          "normalizedSha256": "68887e43a3ba4a898315e819b8aff8f375e82b799e7444e0b0844e52517bdf92"
+        },
+        {
+          "name": "file integrity: Definition.md",
+          "passed": true,
+          "beforeSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab",
+          "afterSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab",
+          "normalizedSha256": "cadc090efd2bcf40dd65ecaef8a166bb4d29b9cbf6bc55aaa22127a272af86ab"
+        },
+        {
+          "name": "file integrity: Embeds.md",
+          "passed": true,
+          "beforeSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd",
+          "afterSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd",
+          "normalizedSha256": "3c913b1939dea5e25b52dcd3edc29976abc4dbf3afd4d08d8b1bfc3582daf1cd"
+        },
+        {
+          "name": "only established portable-store/recovery files created",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "launches": [
+    {
+      "vault": "/tmp/mwc020-clean-SHyLse/vault",
+      "version": "0.20.0",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+    },
+    {
+      "vault": "/tmp/mwc020-clean-SHyLse/vault",
+      "version": "0.20.0",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+    },
+    {
+      "vault": "/tmp/mwc020-upgrade-HzVh3k/vault",
+      "version": "0.19.0",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+    },
+    {
+      "vault": "/tmp/mwc020-upgrade-HzVh3k/vault",
+      "version": "0.20.0",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+    },
+    {
+      "vault": "/tmp/mwc020-upgrade-HzVh3k/vault",
+      "version": "0.20.0",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36"
+    }
+  ],
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+    "electron": "43.3.0",
+    "platform": "linux"
+  }
+}

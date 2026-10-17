@@ -15,6 +15,10 @@ Use Obsidian's Command Palette unless a context action is noted.
 | **Open Story World Graph** | Open the derived relationship/provenance graph; its in-view Temporal mode provides change-point, perspective and display controls. |
 | **Open Continuity Review** | Review the active Book. A recognised Book or Scene context is required. |
 | **Generate entity index** | Preview and optionally save a selected-Book or vault-wide Markdown entity index. |
+| **Annotate** | Annotate selected manuscript text in edit or supported Reading view; the body receives focus. |
+| **Open Annotation Board** | Review one Book’s annotations; Book/Part/Scene context selects its Book, otherwise use the picker. |
 | **About Murmuration Writing Companion** | Show installed version and official documentation/support links. |
 
 The current implementation has no **Generate references report** command. Reference entities, citation import, `world_sources`, and documented Bases/Dataview projections are available, but a standalone generated or printable references-report command must not be documented as present.
+
+Dataset generation commands belong to Reports in 0.20.0. See [exact replacement command and hotkey mappings](murmuration-reports-transition.md).

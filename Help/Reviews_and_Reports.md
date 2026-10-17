@@ -33,3 +33,11 @@ Numbers never update automatically during writing, structural edits, preparation
 `book_scene_number` starts at 1 for each Book. `manuscript_sequence` is now a book-local Text key, such as `0000000005.0000000007` (root 5, Scene 7); a direct Scene ends in `0000000000`. Filter Bases to the Book's manuscript membership before sorting this key or the numeric scene count. The old three-segment key's first segment no longer identifies a Book; do not use it for Book filtering or series ordering. Detached notes can retain old values, so filter membership explicitly.
 
 The command removes obsolete MWC series fields only within the selected Book. Untouched Books retain their old snapshots. Disposable `mwc_scene_numbering_token` and `mwc_scene_numbering_snapshot` properties let the status survive restarts and neutral renames; they are not manuscript authority. See [reporting details](../docs/manuscript-reporting-sequence.md) for format migration, safety and Bases guidance.
+
+## Annotation Board
+
+Run **Open Annotation Board** or use **Annotation Board** in the Companion’s Book Progress section. A Book, Part or Scene selects its current Book; otherwise choose a Book. The Board shows open annotations by their existing category, ordered by manuscript order and source position. Filter by Part, chapter or category; **Show resolved** reveals completed work.
+
+Click an extract to navigate in the existing Reading/edit mode. Use **Edit annotation**, **Resolve** or **Reopen** on a card. Change category by dragging to another column or using **Annotation category** with the keyboard. If a save fails, read the error and use the offered retry; a stale card cannot overwrite a newer edit. Missing/ambiguous identities are shown with guidance instead of unsafe updates.
+
+The Board shares the portable editorial store and editor with chapter annotations. It creates no annotation Markdown files and requires no Bases/Kanban plugin. Source changes can make an anchor stale; navigation explains approximation rather than guessing a repeated passage. For unsupported rendered selections, see [Reading-view annotations](Writing_with_MWC.md#annotating-in-reading-view). Scroll to another column or use the category selector when a drag target is offscreen.
