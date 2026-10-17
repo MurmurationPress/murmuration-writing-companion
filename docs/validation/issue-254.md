@@ -1,5 +1,10 @@
 # Issue #254: Book-scoped Annotation Board
 
+**Historical implementation evidence for `54fe76f6797900e9921750e66c49af0dc8c4f8ac`.**
+The independent review found and repaired additional defects. See the
+[current review, final validation and limitations](issue-254-review.md).
+Figures and results below describe the original implementation head.
+
 Implemented from main `67c3f8fcc915bca964b98e35c2e515f813bd490e` in an isolated
 worktree. No version/dependency changes, release, private manuscript or live-vault
 installation. PR remains subject to independent review and Ted's local acceptance.

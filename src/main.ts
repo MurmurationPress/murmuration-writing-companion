@@ -261,7 +261,7 @@ export default abstract class MurmurationWritingCompanionPlugin extends Plugin {
     await this.storeService.load();
     if (this.unloaded) return;
 
-    this.annotationBoard = new AnnotationBoard(this);
+    this.annotationBoard = new AnnotationBoard(this, () => this.manuscriptIntegrityCoordinator.whenSettled());
 
     this.manuscriptIntegrityCoordinator = new ManuscriptIntegrityCoordinator(
       this.app,

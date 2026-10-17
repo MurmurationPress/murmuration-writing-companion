@@ -274,14 +274,22 @@ members are projected; detached/deleted notes retain their stored editorial
 history, and stale card actions validate membership and identity again.
 
 Cards use the shared annotation renderer, draft editor, store update operation,
-count projection and passage navigator. A remembered manuscript leaf gives the
+count projection and passage navigator. A remembered manuscript leaf in the board’s own window gives the
 existing navigator an appropriate destination without replacing the board or
 changing Reading mode. Exact export anchors and the #272 occurrence checks are
 unchanged. Category/status/body changes never alter anchors or manuscript prose.
-Updates are serialized and roll back in-memory fields if portable persistence
-fails. Derived-count failures retain the successfully saved annotation and expose
-retry even when resolving has removed its card. Conflicting editor saves retain
-the draft and ask the author to reopen the latest annotation.
+Annotation candidates are validated at the serialized write boundary and published
+only after portable persistence succeeds. Other queued saves cannot capture failed
+candidates. Existing chapter cards address the actual record object, including
+legacy records with duplicate IDs. Derived-count failures retain the successfully saved annotation and expose
+count-only retry even when resolving has removed its card; it never replays the old
+lifecycle action. Conflicting editor saves retain
+the draft and ask the author to reopen the latest annotation. Immutable revisions
+protect card actions and drag payloads, including retries after intervening edits.
+Missing/duplicate IDs retain distinct read-only board cards with explicit feedback;
+their records are never merged or silently dropped. Empty categories remain
+filterable as Uncategorised. Closed windows release navigation hints, and queued
+editor saves recheck view availability before writing.
 
 The board owns no stored editorial data or schema migration. Its keyed cards and
 columns reconcile through existing store-change and settled manuscript callbacks,
