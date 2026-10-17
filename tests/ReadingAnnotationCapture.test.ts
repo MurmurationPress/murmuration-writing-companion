@@ -56,3 +56,35 @@ test("captures paragraph-spanning selections against one source snapshot, reject
     equal(capture.capture(root as any, "Scene.md", selection), null);
   } finally { (globalThis as any).HTMLElement = previous; }
 });
+
+test("ordinary paragraphs in a callout use checked source order, including duplicate paragraphs", () => {
+  const previous = globalThis.HTMLElement; (globalThis as any).HTMLElement = ElementFixture;
+  try {
+    const capture = new ReadingAnnotationCapture();
+    const source = "> [!note] Heading\n> Repeated.\n>\n> Repeated.";
+    const root = new ElementFixture("");
+    const callout = new ElementFixture("HeadingRepeated.Repeated."); callout.parentElement = root;
+    const paragraphs = [new ElementFixture("Repeated."), new ElementFixture("Repeated.")];
+    for (const paragraph of paragraphs) paragraph.parentElement = callout;
+    (callout as any).querySelectorAll = () => paragraphs;
+    capture.register(callout as any, { sourcePath: "Scene.md", getSectionInfo: () => ({ text: source, lineStart: 0, lineEnd: 3 }) } as unknown as MarkdownPostProcessorContext);
+    const node = { parentElement: paragraphs[1] };
+    const selection = { isCollapsed: false, rangeCount: 1, getRangeAt: () => ({ startContainer: node, startOffset: 0, endContainer: node, endOffset: 9 }) } as unknown as Selection;
+    const result = capture.capture(root as any, "Scene.md", selection)!;
+    equal(result.from, source.lastIndexOf("Repeated.")); equal(result.to, source.length);
+  } finally { (globalThis as any).HTMLElement = previous; }
+});
+
+test("ordinary endpoint paragraphs are scoped separately from unsupported constructs elsewhere in a note", () => {
+  const previous = globalThis.HTMLElement; (globalThis as any).HTMLElement = ElementFixture;
+  try {
+    const capture = new ReadingAnnotationCapture();
+    const source = "---\ntitle: Synthetic\n---\n\n```\ncode\n```\n\nOrdinary prose.\n\n![[embed]]\n\n$math$";
+    const root = new ElementFixture(""); const paragraph = new ElementFixture("Ordinary prose."); paragraph.parentElement = root;
+    capture.register(paragraph as any, { sourcePath: "Scene.md", getSectionInfo: () => ({ text: source, lineStart: 8, lineEnd: 8 }) } as unknown as MarkdownPostProcessorContext);
+    const node = { parentElement: paragraph };
+    const selection = { isCollapsed: false, rangeCount: 1, getRangeAt: () => ({ startContainer: node, startOffset: 0, endContainer: node, endOffset: 15 }) } as unknown as Selection;
+    const result = capture.capture(root as any, "Scene.md", selection)!;
+    equal(result.source.slice(result.from, result.to), "Ordinary prose.");
+  } finally { (globalThis as any).HTMLElement = previous; }
+});

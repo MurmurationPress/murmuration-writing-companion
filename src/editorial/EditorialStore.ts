@@ -286,23 +286,26 @@ export class EditorialStoreService {
     file: TFile,
     anchor: AnnotationAnchor,
     body: string,
-    category: string
+    category: string,
+    id: string = crypto.randomUUID()
   ): Promise<string> {
     const now = new Date().toISOString();
-    const id = crypto.randomUUID();
     const page = this.getPage(file);
+    const existing = page.annotations.find(annotation => annotation.id === id);
+    const previous = existing ? { body: existing.body, category: existing.category, updated: existing.updated } : null;
+    const annotation = existing ?? { id, body, category, status: "open" as const, created: now, updated: now, anchor };
+    if (existing) Object.assign(existing, { body, category, updated: now });
+    else page.annotations.push(annotation);
 
-    page.annotations.push({
-      id,
-      body,
-      category,
-      status: "open",
-      created: now,
-      updated: now,
-      anchor
-    });
-
-    await this.save();
+    try { await this.save(); }
+    catch (error) {
+      if (previous) Object.assign(annotation, previous);
+      else {
+        const index = page.annotations.indexOf(annotation);
+        if (index >= 0) page.annotations.splice(index, 1);
+      }
+      throw error;
+    }
     await this.syncOpenAnnotationProperty(file, page);
     this.onChange();
     new Notice("Annotation added.");

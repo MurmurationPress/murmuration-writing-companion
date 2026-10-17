@@ -44,7 +44,7 @@ test("paragraph-spanning source slices retain formatting and paragraph separator
 });
 
 test("unverifiable renderings and invalid boundaries fail closed", () => {
-  for (const [source, rendered] of [["Text", "Changed"], ["`code`", "code"], ["![[embed]]", "embed"], ["<b>HTML</b>", "HTML"], ["$math$", "math"], ["[a|b]", "b"]]) {
+  for (const [source, rendered] of [["Text", "Changed"], ["![[embed]]", "embed"], ["<b>HTML</b>", "HTML"], ["$math$", "math"], ["[a|b]", "b"]]) {
     equal(mapReadingBoundary(source, rendered, 0, false), null);
   }
   equal(mapReadingBoundary("Text", "Text", -1, false), null);
@@ -74,4 +74,35 @@ test("validation retains original note across focus changes and renames, rejecti
   await rejects(validateReadingSelection(original, "Captured prose.", vault), /selected note has changed/);
   present = null;
   await rejects(validateReadingSelection(original, "Captured prose.", vault), /selected note has changed/);
+});
+
+test("ordinary literal punctuation, inline code and piped link labels map without whole-paragraph exclusions", () => {
+  for (const [source, rendered] of [
+    ["The price is $5 and a < b | c.", "The price is $5 and a < b | c."],
+    ["Text with `*literal*` and **bold**.", "Text with *literal* and bold."],
+    ["Text around [[Other#Heading|alias]] here.", "Text around alias here."],
+    ["An under_score and **bold**.", "An under_score and bold."],
+    ["A literal * in prose.", "A literal * in prose."]
+  ]) {
+    const from = mapReadingBoundary(source, rendered, 0, false)!;
+    const to = mapReadingBoundary(source, rendered, rendered.length, true)!;
+    equal(source.slice(from, to), source);
+  }
+});
+
+test("changed modern anchors never label a guessed duplicate occurrence exact", async () => {
+  const source = "same same\n\nTail.";
+  const anchor = await createAnnotationExportAnchor(source, 5, 9);
+  const range = await resolveAnnotationSourceRange(source + "\nEdited elsewhere.", anchor);
+  equal(range?.exact, false);
+  deepEqual(range, { fromOffset: 0, toOffset: 9, exact: false });
+  const unique = await createAnnotationExportAnchor("Unique passage.\nTail.", 0, 15);
+  equal((await resolveAnnotationSourceRange("---\ntitle: Unique passage.\n---\nUnique passage.\nChanged tail.", unique))?.exact, true);
+});
+
+test("ambiguous fallback stays in the body when derived frontmatter was added after capture", async () => {
+  const anchor = await createAnnotationExportAnchor("same same\nTail.", 5, 9);
+  const content = "---\nmwc_open_annotations: 1\n---\nsame same\nChanged tail.";
+  const range = await resolveAnnotationSourceRange(content, anchor);
+  deepEqual(range, { fromOffset: content.indexOf("same same"), toOffset: content.indexOf("same same") + 9, exact: false });
 });

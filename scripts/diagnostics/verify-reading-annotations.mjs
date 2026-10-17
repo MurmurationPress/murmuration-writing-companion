@@ -1,3 +1,4 @@
+import { reviewReadingAnnotations } from "./reading-annotation-review-cases.mjs";
 // Native Obsidian acceptance replay. Uses only a new /tmp synthetic vault/profile.
 // Run: node scripts/diagnostics/verify-reading-annotations.mjs [evidence.json]
 import { spawn } from 'node:child_process';
@@ -157,6 +158,7 @@ try {
   assert.equal(after.replace(/^mwc_open_annotations:.*\n/m, ''), before);
   assert.equal(await readFile(path.join(vault, 'Other.md'), 'utf8'), otherBefore);
   evidence.results.manuscriptIntegrity = { exactExceptDerivedCount: true, unrelatedNoteUnchanged: true, beforeSha256: createHash('sha256').update(before).digest('hex'), afterSha256: createHash('sha256').update(after).digest('hex') };
+  evidence.results.review = await reviewReadingAnnotations({ evaluate, send, click, pause, pluginId });
   console.log(JSON.stringify(evidence, null, 2));
   if (process.argv[2]) await writeFile(process.argv[2], JSON.stringify(evidence, null, 2) + '\n');
 } finally { await stop(); }
