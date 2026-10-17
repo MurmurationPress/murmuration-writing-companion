@@ -1,0 +1,306 @@
+{
+  "date": "2026-10-17",
+  "baselineCommit": "67c3f8fcc915bca964b98e35c2e515f813bd490e",
+  "environment": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+  "fixture": "Disposable synthetic vault: two Books, one Part, four Scenes; no private manuscript",
+  "method": "Native Obsidian with CDP DOM controls/commands and explicit pointer/keyboard input as separately recorded. External file changes and storage faults were injected deliberately, then membership/order restored.",
+  "assets": {
+    "main.js": {
+      "sha256": "ebdf02a5750b63f79dcd23fbbbeb10396c06f4bc850bbb16b00f90cb19aeb8f3",
+      "installedBytesMatch": true
+    },
+    "styles.css": {
+      "sha256": "0aed98aac8c86dc4be0cef3542a5f8b752b28fbaea9c834987c46c14ec6dc316",
+      "installedBytesMatch": true
+    },
+    "manifest.json": {
+      "sha256": "28655022403fee152e6e0569643d45fbb25e832605d443796b6a50386f83683c",
+      "installedBytesMatch": true
+    }
+  },
+  "checks": [
+    {
+      "name": "Book isolation, mixed order and unknown category",
+      "passed": true,
+      "ids": [
+        "early",
+        "late",
+        "part",
+        "legacy"
+      ]
+    },
+    {
+      "name": "single activation",
+      "passed": true
+    },
+    {
+      "name": "Part filter",
+      "passed": true
+    },
+    {
+      "name": "Chapter filter",
+      "passed": true
+    },
+    {
+      "name": "category empty state",
+      "passed": true
+    },
+    {
+      "name": "accessible category update",
+      "passed": true
+    },
+    {
+      "name": "native DOM drag between categories",
+      "passed": true
+    },
+    {
+      "name": "resolve removes open card immediately",
+      "passed": true
+    },
+    {
+      "name": "derived resolve count",
+      "passed": true
+    },
+    {
+      "name": "Show resolved",
+      "passed": true
+    },
+    {
+      "name": "reopen lifecycle",
+      "passed": true
+    },
+    {
+      "name": "derived reopen count",
+      "passed": true
+    },
+    {
+      "name": "editor body focus",
+      "passed": true
+    },
+    {
+      "name": "existing editor saves to original note after active Book changes",
+      "passed": true
+    },
+    {
+      "name": "editor cancellation",
+      "passed": true
+    },
+    {
+      "name": "failed persistence rollback",
+      "passed": true
+    },
+    {
+      "name": "failure feedback and retry",
+      "passed": true
+    },
+    {
+      "name": "retry update",
+      "passed": true
+    },
+    {
+      "name": "Reading-view navigation preserved",
+      "passed": true
+    },
+    {
+      "name": "navigation keeps Board tab",
+      "passed": true
+    },
+    {
+      "name": "Reading passage reveals exact second duplicate",
+      "passed": true,
+      "occurrence": 1
+    },
+    {
+      "name": "edit-mode navigation retains exact selection",
+      "passed": true
+    },
+    {
+      "name": "external annotation update",
+      "passed": true
+    },
+    {
+      "name": "unrelated refresh retains scroll and filter focus",
+      "passed": true
+    },
+    {
+      "name": "external manuscript order refresh",
+      "passed": true,
+      "ids": [
+        "legacy",
+        "late",
+        "early",
+        "part"
+      ]
+    },
+    {
+      "name": "external Book membership refresh",
+      "passed": true
+    },
+    {
+      "name": "Book membership restored",
+      "passed": true
+    },
+    {
+      "name": "note rename retains annotation identity",
+      "passed": true
+    },
+    {
+      "name": "second Book isolation",
+      "passed": true
+    },
+    {
+      "name": "Part context resolves Book",
+      "passed": true
+    },
+    {
+      "name": "Scene context resolves Book",
+      "passed": true
+    },
+    {
+      "name": "Book picker without context",
+      "passed": true
+    },
+    {
+      "name": "deleted note retains stored record without navigation card",
+      "passed": true
+    },
+    {
+      "name": "restored note reappears",
+      "passed": true
+    },
+    {
+      "name": "missing anchor gives explicit feedback",
+      "passed": true
+    },
+    {
+      "name": "narrow pane horizontal board",
+      "passed": true
+    },
+    {
+      "name": "concurrent editor update rejected without losing draft or overwriting current body",
+      "passed": true
+    },
+    {
+      "name": "concurrent edit conflict gives explicit feedback",
+      "passed": true
+    },
+    {
+      "name": "saved lifecycle with count failure retains visible retry after card disappears",
+      "passed": true
+    },
+    {
+      "name": "retry repairs derived count after saved lifecycle",
+      "passed": true
+    },
+    {
+      "name": "reopen after count retry restores derived count",
+      "passed": true
+    }
+  ],
+  "nativeInput": {
+    "points": {
+      "from": {
+        "x": 87.65625,
+        "y": 368.875
+      },
+      "to": {
+        "x": 500,
+        "y": 301.75
+      }
+    },
+    "dragged": "Canon",
+    "keyboardBefore": "Canon",
+    "after": {
+      "category": "Continuity",
+      "anchorUnchanged": true
+    },
+    "dragPassed": true,
+    "keyboardPassed": true,
+    "activation": "CDP native pointer/keyboard input in actual Obsidian Linux window"
+  },
+  "nativeTyping": {
+    "value": "Synthetic edited body native keyboard input",
+    "stored": "Synthetic edited body native keyboard input",
+    "editActivations": 1,
+    "markdownMode": "source",
+    "bodyFocused": true,
+    "passed": true
+  },
+  "refreshScans": {
+    "boardRefreshes": 10,
+    "vaultScans": 0
+  },
+  "manuscriptIntegrity": [
+    {
+      "path": "Book.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "239f21a8dc81e371664e2bbffb2ff5709cead7ac07abc54530342d58384f360b",
+      "afterSha256": "239f21a8dc81e371664e2bbffb2ff5709cead7ac07abc54530342d58384f360b"
+    },
+    {
+      "path": "Other Book.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "119a4f6fa0e35c6237a3528b2d98ecdcd55384c232daf8b3c8ac72082722f6cc",
+      "afterSha256": "119a4f6fa0e35c6237a3528b2d98ecdcd55384c232daf8b3c8ac72082722f6cc"
+    },
+    {
+      "path": "Part.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "ba3a4b317f88693cf94b7567678234ffd740c2d50186286b193987ac6ba817c7",
+      "afterSha256": "ba3a4b317f88693cf94b7567678234ffd740c2d50186286b193987ac6ba817c7"
+    },
+    {
+      "path": "Direct.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "6630b67b758d1e2a2c881ea9b5ad969d8fdb4c0f094790342155308f33896742",
+      "afterSha256": "5161edde4f01099454a038c6c874857f48cf88d151eae8566863d2c0ca488c5f"
+    },
+    {
+      "path": "Child.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "b2ce27ae6c4282071eb1de1f314bbe43d019ce4747c30513d7e57441346df5bf",
+      "afterSha256": "a4d0e045e21497392396986946ecdad2a47ea854630fe8ad2b97d9ef7a24fc36"
+    },
+    {
+      "path": "Last.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "2ad9548ec6d13a17db71fbfe68247c0ebc5e76163c7d0dc0da9c77e1f761cbb7",
+      "afterSha256": "2fc120fc88ec2c590944c92ab2e02aecbaf5543bae0f65df3f9d4fe6b0cc7b5a"
+    },
+    {
+      "path": "Other.md",
+      "equalExceptDerivedCount": true,
+      "beforeSha256": "c9db531db4e6e7ebba5ec640ead8342c210254212b5833b6e4f45e499993085d",
+      "afterSha256": "6a8d4f6c3c8305d8510edb7b589fe571a182f7e1d23c811627ef6b220d5864bf"
+    }
+  ],
+  "bundle": {
+    "baselineCommit": "67c3f8fcc915bca964b98e35c2e515f813bd490e",
+    "baseline": {
+      "rawBytes": 683057,
+      "gzipBytes": 193765,
+      "warningThreshold": 669696,
+      "hardLimit": 720896,
+      "remainingHeadroom": 37839,
+      "status": "warning"
+    },
+    "final": {
+      "rawBytes": 696894,
+      "gzipBytes": 197773,
+      "warningThreshold": 669696,
+      "hardLimit": 720896,
+      "remainingHeadroom": 24002,
+      "status": "warning"
+    },
+    "delta": {
+      "raw": 13837,
+      "gzip": 4008
+    }
+  },
+  "unverified": [
+    "Native Windows/macOS/mobile",
+    "Popout windows",
+    "Screen reader testing",
+    "Touch drag and dragging to offscreen columns; use horizontal scrolling or the category control in narrow panes"
+  ]
+}

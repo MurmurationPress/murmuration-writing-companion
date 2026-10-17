@@ -12,9 +12,14 @@ test("failed creation rolls back, and retry after count-projection failure does 
   runInNewContext(result.outputFiles[0].text, { module, exports: module.exports, require: () => obsidian, crypto: globalThis.crypto });
   const annotations: Annotation[] = [];
   let failSave = true, failProjection = false;
-  const host = { getPage: () => ({ annotations }), save: async () => { if (failSave) throw new Error("disk unavailable"); },
-    syncOpenAnnotationProperty: async () => { if (failProjection) throw new Error("count unavailable"); }, onChange: () => {} };
-  const add = (id: string, body = "Draft") => module.exports.EditorialStoreService.prototype.addAnnotation.call(host, { path: "Scene.md" }, { text: "passage" }, body, "Editorial", id);
+  const file = { path: "Scene.md" };
+  const host = Object.assign(Object.create(module.exports.EditorialStoreService.prototype), {
+    ready: true, saves: Promise.resolve(), store: { pages: { [file.path]: { annotations } } },
+    plugin: { app: { vault: { getAbstractFileByPath: () => file } } },
+    portableStorage: { save: async () => { if (failSave) throw new Error("disk unavailable"); } },
+    syncOpenAnnotationProperty: async () => { if (failProjection) throw new Error("count unavailable"); }, onChange: () => {}
+  });
+  const add = (id: string, body = "Draft") => module.exports.EditorialStoreService.prototype.addAnnotation.call(host, file, { text: "passage" }, body, "Editorial", id);
   await rejects(add("first"), /disk unavailable/); equal(annotations.length, 0);
   failSave = false; await add("first"); equal(annotations.length, 1);
   failProjection = true; await rejects(add("second"), /count unavailable/); equal(annotations.length, 2);

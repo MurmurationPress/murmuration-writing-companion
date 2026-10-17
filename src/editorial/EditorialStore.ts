@@ -1,3 +1,4 @@
+import { AnnotationCountError } from "./AnnotationRevision";
 import { Notice, Plugin, TFile } from "obsidian";
 import {
   Annotation,
@@ -85,9 +86,18 @@ export class EditorialStoreService {
     }
   }
 
-  async save() {
-    if (!this.ready) return;
-    await this.portableStorage.save(this.store);
+  private saves: Promise<void> = Promise.resolve();
+
+  async save(prepare?: () => EditorialStore, commit?: () => void) {
+    const operation = this.saves.then(async () => {
+      if (!this.ready) return;
+      // Build at the write boundary, then publish before a later queued save
+      // snapshots authority. Failed candidates never enter the shared store.
+      await this.portableStorage.save(prepare ? prepare() : this.store);
+      commit?.();
+    });
+    this.saves = operation.catch(() => {});
+    return operation;
   }
 
   getContinuityDispositionRecords(): ContinuityDispositionRecord[] {
@@ -289,45 +299,75 @@ export class EditorialStoreService {
     category: string,
     id: string = crypto.randomUUID()
   ): Promise<string> {
-    const now = new Date().toISOString();
-    const page = this.getPage(file);
-    const existing = page.annotations.find(annotation => annotation.id === id);
-    const previous = existing ? { body: existing.body, category: existing.category, updated: existing.updated } : null;
-    const annotation = existing ?? { id, body, category, status: "open" as const, created: now, updated: now, anchor };
-    if (existing) Object.assign(existing, { body, category, updated: now });
-    else page.annotations.push(annotation);
-
-    try { await this.save(); }
-    catch (error) {
-      if (previous) Object.assign(annotation, previous);
-      else {
-        const index = page.annotations.indexOf(annotation);
-        if (index >= 0) page.annotations.splice(index, 1);
+    let publish: () => void = () => {};
+    let page = this.getPage(file);
+    await this.save(() => {
+      page = this.store.pages[file.path];
+      if (!page || page.deletedAt || this.plugin.app.vault.getAbstractFileByPath(file.path) !== file) {
+        throw new Error("The annotated note is no longer available.");
       }
-      throw error;
-    }
-    await this.syncOpenAnnotationProperty(file, page);
-    this.onChange();
+      const existing = page.annotations.filter(annotation => annotation.id === id);
+      if (existing.length > 1) throw new Error("Annotation identity is duplicated; the stored records were retained.");
+      const now = new Date().toISOString();
+      const current = existing[0];
+      const next: Annotation = current ? { ...current, body, category, updated: now }
+        : { id, body, category, status: "open", created: now, updated: now, anchor };
+      publish = () => { if (current) Object.assign(current, next); else page.annotations.push(next); };
+      return this.annotationCandidate(file, page, current, next);
+    }, () => publish());
+    try { await this.syncOpenAnnotationProperty(file, page); }
+    finally { this.onChange(); }
     new Notice("Annotation added.");
-
     return id;
   }
+
+  private annotationCandidate(file: TFile, page: PageEditorialNotes, current: Annotation | undefined, next: Annotation): EditorialStore {
+    return { ...this.store, pages: { ...this.store.pages, [file.path]: { ...page,
+      annotations: current ? page.annotations.map(item => item === current ? next : item) : [...page.annotations, next]
+    } } };
+  }
+
+  private annotationUpdates: Promise<void> = Promise.resolve();
 
   async updateAnnotation(
     file: TFile,
     annotation: Annotation,
-    patch: Partial<Annotation>
+    patch: Partial<Annotation>,
+    validate?: () => void
   ) {
-    const previousStatus = annotation.status;
-    Object.assign(annotation, patch, { updated: new Date().toISOString() });
+    const operation = this.annotationUpdates.then(async () => {
+      let page!: PageEditorialNotes;
+      let next!: Annotation;
+      await this.save(() => {
+        page = this.store.pages[file.path];
+        // Never substitute a different record merely because its ID matches.
+        if (!page || page.deletedAt || !page.annotations.includes(annotation)
+          || this.plugin.app.vault.getAbstractFileByPath(file.path) !== file) {
+          throw new Error("The annotated note or annotation is no longer available. Refresh and try again.");
+        }
+        validate?.();
+        next = { ...annotation, ...patch, updated: new Date().toISOString() };
+        return this.annotationCandidate(file, page, annotation, next);
+      }, () => Object.assign(annotation, next));
+      try { await this.syncOpenAnnotationProperty(file, page); }
+      catch { throw new AnnotationCountError(); }
+      finally { this.onChange(); }
+    });
+    this.annotationUpdates = operation.catch(() => {});
+    return operation;
+  }
 
-    await this.save();
-
-    if (annotation.status !== previousStatus) {
-      await this.syncOpenAnnotationProperty(file, this.getPage(file));
-    }
-
-    this.onChange();
+  async retryAnnotationCount(file: TFile): Promise<void> {
+    const operation = this.annotationUpdates.then(async () => {
+      const page = this.store.pages[file.path];
+      if (!page || page.deletedAt || this.plugin.app.vault.getAbstractFileByPath(file.path) !== file) {
+        throw new Error("The annotated note is no longer available.");
+      }
+      await this.syncOpenAnnotationProperty(file, page);
+      this.onChange();
+    });
+    this.annotationUpdates = operation.catch(() => {});
+    return operation;
   }
 
   async reconcileDeletedEditorialPages() {

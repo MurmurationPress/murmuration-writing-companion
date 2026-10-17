@@ -79,7 +79,7 @@ export function renderAnnotationCard(
       attr: { "aria-label": "Annotation category" }
     });
 
-    for (const categoryName of DEFAULT_CATEGORIES) {
+    for (const categoryName of [...new Set([...DEFAULT_CATEGORIES, annotation.category])]) {
       const option = category.createEl("option", {
         text: categoryName,
         value: categoryName
