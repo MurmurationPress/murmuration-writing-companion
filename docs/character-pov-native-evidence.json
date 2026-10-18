@@ -1,0 +1,36 @@
+{
+  "vault": "/tmp/mwc276-cxtpXa/vault",
+  "method": "Linux native Obsidian, DOM/application activation through CDP; no physical input or accessibility claim",
+  "checks": [
+    "Inspector controls fit the native sidebar",
+    "character without profile is optional",
+    "retrospective association persists",
+    "remove preserves profile note",
+    "profile creation retains character context",
+    "explicit confirmation returns to original character",
+    "Book extension creation is accessible from character",
+    "base and Book-specific guidance remain distinct",
+    "editing extension guidance through its editor preserves the base profile",
+    "Chapter Context resolves character guidance",
+    "manuscript is byte-identical",
+    "character prose and unrelated property preserved",
+    "changing association leaves both profiles intact",
+    "cancel creates no profile",
+    "failed persistence retains the authoritative association and clear retry feedback",
+    "renamed profile remains selectable through the index",
+    "deleted profile is visible and repairable"
+  ],
+  "assets": {
+    "main.js": "9134826347040b13611a3f31e1a7a4a0bda71b620740d35bc14ddce4c108b0f4",
+    "manifest.json": "4596085c1c8278720d19409966d3c9846061d83f62b9b045430601956d752c32",
+    "styles.css": "25b595fd66f9ebc7a789ec496d7fa302d8ba051ace859add06d91d3f3609e9b5"
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.212 Electron/43.3.0 Safari/537.36",
+    "electron": "43.3.0",
+    "platform": "linux"
+  },
+  "afterCreate": [
+    "Profile created for Mira\n\nAssociate this profile with the originating character? This changes only the character’s optional profile link.\n\nConfirm association and return to characterReturn without changing association"
+  ]
+}

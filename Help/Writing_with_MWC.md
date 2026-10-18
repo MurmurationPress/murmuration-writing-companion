@@ -63,3 +63,28 @@ Ordinary emphasis, Markdown links, piped wikilink labels, inline code, plain cal
 Review, edit, resolve and reopen annotations in the Companion as usual. Choose an annotation's extract to reveal its passage in the manuscript; navigation preserves Reading view, including popout windows. If a changed source contains ambiguous repeated extracts, MWC reports that it is moving to the original body position rather than guessing an occurrence. Annotations use the same portable editorial store in both modes. No inline annotation markers are inserted; the established `mwc_open_annotations` property remains a derived count.
 
 Filename/title mismatch indicators can be turned off with **Notify when filename differs from title** in MWC settings. This vault-local preference is enabled by default and persists on this installation. It does not change filenames, titles, preparation or export.
+
+
+### Develop a character’s POV over time
+
+Characters do not require POV Profiles. Create and develop a character first, then
+use **POV Profile** in its Entity Inspector to select, create, change or remove
+optional guidance. Creating a profile offers an explicit association confirmation
+and a return to the originating character; no profile is generated automatically.
+Removing the association keeps the profile note.
+
+Expand **Develop POV for a Book** to preview inherited guidance and create a
+Book-specific extension. Keep the reusable profile associated with the character;
+the existing Book scope selects its extension in Chapter Context. Edit the
+extension’s own note to change Book-specific guidance without editing the base.
+Guidance is shown base-first, with additions rather than automatic field overrides.
+
+For example, Mira’s character note records that she is a navigator. Her base POV
+says she notices distances before faces. A Book Two extension can emphasise noticing
+who is missing from a room after she learns to trust her crew. Character facts and
+authorial presentation choices remain distinct. Book One retains the base guidance.
+
+See the [character-first guide and two-Book example](../docs/character-first-pov.md)
+for retrospective association, inheritance, missing links and the workaround in
+published 0.20.0. Scene POVs remain valid without a profile; association changes do
+not rewrite manuscript content.

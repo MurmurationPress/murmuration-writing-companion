@@ -1,3 +1,4 @@
+import { renderCharacterPovWorkspace } from "./CharacterPovWorkspace";
 import { TFile } from "obsidian";
 import type MurmurationWritingCompanionPlugin from "../main";
 import { parseStoryWorldBuilderItem, StoryWorldBuilderItem } from "../story-world/WorldBuilder";
@@ -197,7 +198,10 @@ export function renderStoryWorldEntityInspector(container: Element, plugin: Murm
   addValues(container, "First appearance", item.firstAppearance ? [item.firstAppearance] : [], plugin, file);
   addValues(container, "Sources", item.sources, plugin, file);
   addValues(container, "Subject", item.modelSubject, plugin, file);
-  if (item.kind === "entity") renderTypedProperties(container, plugin, file, item);
+  if (item.kind === "entity") {
+    renderTypedProperties(container, plugin, file, item);
+    renderCharacterPovWorkspace(container, plugin, file, item);
+  }
   renderManuscriptImpactDisclosure(container, plugin, file);
   if (item.kind === "entity") renderRelationshipsDisclosure(container, plugin, file, item);
 }
