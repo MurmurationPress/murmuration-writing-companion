@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.20.0 — release candidate
+
+- Preserve exact annotation source occurrences and editorial PDF/export evidence (#271).
+- Annotate supported native Reading-view selections, retaining original-note association, focused annotation typing and safe save-time validation; preserve Reading view during lifecycle and navigation (#272).
+- Add the persistent vault-local **Notify when filename differs from title** setting, enabled by default (#272).
+- Add the Book-scoped **Annotation Board**, ordered category cards, filters, category drag/select, editing and resolve/reopen using the existing portable store (#273).
+- Remove both deprecated MWC dataset-generation aliases after the promised 0.19.0 transition. Rebind shortcuts manually to Reports; existing generated files and manuscript-aware reports are unchanged. No Reports dependency is added.
+- Fix exact Reading-view passage reveal when native prose sections remain cached after annotation-count/frontmatter-only changes.
+- Qualify release asset consistency and deterministic SHA-256 inventories. Install all three assets together.
+
+See [release notes](RELEASE_NOTES.md), [upgrade instructions](docs/installation-and-upgrade.md) and [qualification](docs/release-readiness-0.20.0.md). #252 remains ongoing maintenance with an unmet headroom target; #241 remains backlog.
+
 ## 0.19.0 — 2026-10-12
 
 Dataset charts and state tables have moved to [Murmuration Reports v0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0). Use its **Open Reports** manager for creation, editing, saved previews and explicit regeneration. Existing MWC command IDs remain as deprecated aliases for this transition release and delegate at invocation, with no hard dependency or fallback writer. They will be removed in the immediately following MWC release; rebind hotkeys through Obsidian before then. No vault files, generated assets or unrelated settings are migrated or deleted. Manuscript numbering, annotation counts, continuity and entity-index reporting remain in MWC. See [migration, command mappings and release order](docs/murmuration-reports-transition.md).

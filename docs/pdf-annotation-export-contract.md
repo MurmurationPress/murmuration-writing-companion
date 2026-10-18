@@ -20,9 +20,9 @@ file at `.murmuration/writing-companion/editorial-data.json` without calling MWC
 It must validate hash, offsets and selected text, and report stale anchors rather
 than reanchor them. Legacy text/line anchors remain available but cannot identify
 two identical selections on the same line. This change supplies that missing
-evidence for future selections. It does not implement PDF import or read-mode
-selection capture; that work is tracked separately in MWC #259 and should reuse
-this contract when reliable source offsets are available.
+evidence for future selections. Reading-view capture delivered in #272 reuses
+this contract when reliable source offsets are available. PDF import is not
+implemented. No existing records are rewritten to manufacture export evidence.
 
 Annotation model: one body/category/status per annotation; open/resolved statuses,
 created/updated ISO timestamps, no defined author field or reply thread. Export

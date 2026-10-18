@@ -88,3 +88,46 @@ test("ordinary endpoint paragraphs are scoped separately from unsupported constr
     equal(result.source.slice(result.from, result.to), "Ordinary prose.");
   } finally { (globalThis as any).HTMLElement = previous; }
 });
+
+test("cached Reading blocks reveal the exact duplicate after frontmatter-only count changes, never after body changes", () => {
+  for (const [before, after, body = "\nRepeated.\n\nRepeated.\n"] of [
+    ["---\ntitle: Synthetic\n---\n", "---\ntitle: Synthetic\nmwc_open_annotations: 1\n---\n"],
+    ["---\nmwc_open_annotations: 1\n---\n", ""],
+    ["", "---\nmwc_open_annotations: 2\n---\n"],
+    ["---\r\ntitle: Synthetic\r\n---\r\n", "---\ntitle: Synthetic\nmwc_open_annotations: 1\n---\n"],
+    ["---\r\ntitle: Synthetic\r\n---\r\n", "---\r\ntitle: Synthetic\r\nmwc_open_annotations: 1\r\n---\r\n", "\r\nRepeated.\r\n\r\nRepeated.\r\n"]
+  ]) {
+    const capture = new ReadingAnnotationCapture();
+    const source = before + body, current = after + body;
+    const root = new ElementFixture("");
+    const first = new ElementFixture("Repeated."), second = new ElementFixture("Repeated.");
+    const nodes = new Map([[first, { textContent: "Repeated." }], [second, { textContent: "Repeated." }]]);
+    let selected: unknown, startOffset = -1, endOffset = -1;
+    const document = {
+      createTreeWalker: (el: ElementFixture) => { let visited = false; return { nextNode: () => visited ? null : (visited = true, nodes.get(el)) }; },
+      createRange: () => ({ setStart: (node: unknown, offset: number) => { selected = node; startOffset = offset; }, setEnd: (_node: unknown, offset: number) => { endOffset = offset; } }),
+      getSelection: () => ({ removeAllRanges() {}, addRange() {} })
+    };
+    const previous = (globalThis as any).NodeFilter;
+    (globalThis as any).NodeFilter = { SHOW_TEXT: 4 };
+    try {
+      for (const [el, offset] of [[first, source.indexOf("Repeated.")], [second, source.lastIndexOf("Repeated.")]] as const) {
+        const line = source.slice(0, offset).split("\n").length - 1;
+        capture.register(el as any, { sourcePath: "Scene.md", getSectionInfo: () => ({ text: source, lineStart: line, lineEnd: line }) } as unknown as MarkdownPostProcessorContext);
+        (el as any).ownerDocument = document;
+        (el as any).getBoundingClientRect = () => ({ top: 0, bottom: 1 });
+      }
+      (root as any).querySelectorAll = () => [first, second];
+      (root as any).getBoundingClientRect = () => ({ top: 0, bottom: 2 });
+      const from = current.lastIndexOf("Repeated.");
+      equal(capture.reveal(root as any, "Scene.md", current, from, from + 9), true);
+      equal(selected, nodes.get(second)); equal(startOffset, 0); equal(endOffset, 9);
+      equal(capture.reveal(root as any, "Scene.md", current + "Changed prose.", from, from + 9), false);
+      equal(capture.reveal(root as any, "Other.md", current, from, from + 9), false);
+      selected = undefined;
+      const changedEndings = body.includes("\r") ? current.replace(/\r\n/g, "\n") : current.replace(/\r?\n/g, "\r\n");
+      equal(capture.reveal(root as any, "Scene.md", changedEndings, from, from + 9), false);
+      equal(selected, undefined); // No new highlight against a different body snapshot.
+    } finally { (globalThis as any).NodeFilter = previous; }
+  }
+});

@@ -1,4 +1,5 @@
 import { deepEqual, equal, match, ok, rejects, throws } from "node:assert/strict";
+import path from "node:path";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
@@ -78,4 +79,38 @@ test("native stylesheet contains every ordered source, is deterministic and has 
   const assets=shippedAssetsReport(Buffer.from('js'),first.outputFiles[0].contents,Buffer.from('{}'));
   equal(assets.totalRawBytes,first.outputFiles[0].contents.length+4);
   equal(assets.assets['styles.css'].rawBytes,first.outputFiles[0].contents.length);
+});
+
+test('release checksum inventory is reproducible, complete and rejects missing/empty assets', async () => {
+  const { releaseChecksums } = await import('../release-assets.mjs');
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { createHash } = await import('node:crypto');
+  const root = await mkdtemp(path.join(tmpdir(), 'mwc-release-assets-'));
+  try {
+    const names = ['main.js', 'manifest.json', 'styles.css'];
+    for (const name of names) await writeFile(path.join(root, name), `synthetic ${name}`);
+    const expected = names.map(name => `${createHash('sha256').update(`synthetic ${name}`).digest('hex')}  ${name}\n`).join('');
+    equal(await releaseChecksums(root), expected);
+    equal(await releaseChecksums(root), expected);
+    await writeFile(path.join(root, 'styles.css'), '');
+    await rejects(releaseChecksums(root), /styles.css is empty/);
+    await rm(path.join(root, 'styles.css'));
+    await rejects(releaseChecksums(root), /ENOENT/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('publication requires the exact stable tag, current main merge and successful main push CI', async () => {
+  const { assertReleaseSource } = await import('../release-source.mjs');
+  const sha = 'a'.repeat(40);
+  const run = { head_sha: sha, head_branch: 'main', event: 'push', status: 'completed', conclusion: 'success', path: '.github/workflows/ci.yml' };
+  const candidate = { tag: '0.20.0', version: '0.20.0', headSha: sha, tagSha: sha, mainSha: sha, runs: [run] };
+  equal(assertReleaseSource(candidate), run);
+  for (const tag of ['v0.20.0', '0.20.0-rc.1', '0.20.1', '00.20.0']) throws(() => assertReleaseSource({ ...candidate, tag }), /Stable release tag/);
+  for (const key of ['headSha', 'tagSha', 'mainSha']) throws(() => assertReleaseSource({ ...candidate, [key]: 'b'.repeat(40) }), /current main head/);
+  for (const patch of [{ head_sha: 'b'.repeat(40) }, { head_branch: 'release/0.20.0' }, { event: 'pull_request' }, { status: 'in_progress' }, { conclusion: 'failure' }, { conclusion: 'cancelled' }, { path: '.github/workflows/release.yml' }]) {
+    throws(() => assertReleaseSource({ ...candidate, runs: [{ ...run, ...patch }] }), /Successful post-merge main/);
+  }
+  throws(() => assertReleaseSource({ ...candidate, runs: [] }), /Successful post-merge main/);
+  for (const patch of [{ conclusion: 'failure' }, { status: 'in_progress' }]) throws(() => assertReleaseSource({ ...candidate, runs: [{ ...run, ...patch }, run] }), /Successful post-merge main/);
 });

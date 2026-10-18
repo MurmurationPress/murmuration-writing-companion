@@ -1,35 +1,38 @@
-# Murmuration Writing Companion 0.19.0
+# Murmuration Writing Companion 0.20.0
 
-This release improves performance and interaction stability and completes the handoff of dataset reports to Murmuration Reports.
+An editorial release for working through annotations without leaving the manuscript's Reading view, and seeing the remaining work across a whole Book.
 
-## Performance and stability
+## Annotations where you read
 
-- Pending manuscript-numbering requests coalesce to the latest state; queued work cancels on unload (#256).
-- Companion and Navigator preserve first clicks, keyboard focus and unsaved drafts through pane activation, metadata changes and blur saves (#258).
-- Cold Navigator updates are batched, and warmed views reuse display projections and date formatting while mutations still read fresh authority (#266).
-- The production JavaScript bundle meets the existing 50 KiB headroom target. This does not resolve all remaining startup, layout and platform acceptance work under #252.
+Select ordinary prose in native Obsidian Reading view and choose **Annotate**, its Command Palette command or your assigned shortcut. The annotation body receives focus; saving, cancelling, reviewing, editing and resolving keep the manuscript in Reading view. The annotation stays attached to its originating note when focus changes. Repeated passages, supported inline formatting and paragraph-spanning selections map to their exact source occurrence; changed or unsupported selections are rejected with guidance instead of being attached to the wrong text (#272).
 
-The accumulated release also includes manuscript preparation for untyped projects, explicit Book-scoped scene numbering, stale-numbering status and subsequent review/index convergence fixes. Read the task guides before using preparation or numbering; neither runs silently during ordinary edits.
+Reading navigation also handles native prose blocks cached across frontmatter-only annotation-count updates. Exact source evidence also supports editorial PDF export and the shared export-anchor contract (#271). Existing records remain usable; no inline markers or automatic store migration are introduced. Ambiguous stale navigation clearly explains when it uses the original body position rather than guessing an occurrence. Complex rendered content such as embeds, tables, mathematics and HTML may require an ordinary-prose selection or edit mode; see [Reading-view guidance](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.20.0/Help/Writing_with_MWC.md#annotating-in-reading-view).
 
-## Dataset reporting transition
+## Review a Book's remaining work
 
-Install [Murmuration Reports 0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0) for dataset charts and state tables. Its **Open Reports** manager provides creation, source-preserving editing, saved previews and explicit generation. Reports supports desktop Obsidian only; MWC has no hard dependency on it. Manuscript-aware continuity, entity indexes and annotation reporting remain in MWC.
+**Open Annotation Board** from a Book, Part or Scene, or choose a Book when context is unavailable. Cards group by category and follow manuscript/anchor order. Filter by Part, chapter or category; edit, resolve, reopen and show resolved work. Drag cards between categories or use the accessible category selector. Extract navigation reuses the exact-occurrence safeguards and preserves Reading/edit mode. The Board uses the existing portable store, not separate notes or a Kanban dependency (#273).
 
-MWC **0.19.0 retains both deprecated command aliases**, preserving existing hotkeys. They delegate only when invoked and explain how to enable Reports when unavailable. Removal is proposed for **0.20.0**, the immediately following MWC release. Before upgrading to that release, rebind shortcuts in **Obsidian Settings → Hotkeys**:
+## Quieter filename/title checks
 
-| Existing MWC command | Reports replacement |
+**Notify when filename differs from title** in MWC settings is enabled by default. Turn it off to suppress mismatch indicators for this vault on this installation; the preference survives restart. It never renames files, synchronises titles or changes preparation/export. Other notifications remain active (#272).
+
+## Action required: dataset-report hotkeys
+
+As announced in 0.19.0, **0.20.0 removes both deprecated MWC dataset-generation aliases**. For dataset charts and state tables, install and enable [Murmuration Reports 0.1.0](https://github.com/MurmurationPress/murmuration-reports/releases/tag/0.1.0), then rebind shortcuts in **Obsidian Settings → Hotkeys**:
+
+| Removed MWC command | Reports replacement |
 | --- | --- |
 | Generate derived artefact (`murmuration-writing-companion:generate-derived-artefact`) | Generate active report definition (`murmuration-reports:generate-derived-artefact`) |
 | Generate all derived artefacts (`murmuration-writing-companion:generate-all-derived-artefacts`) | Generate all report definitions (`murmuration-reports:generate-all-derived-artefacts`) |
 
-Neither plugin edits hotkey files or automatically moves, deletes or regenerates existing definitions/assets. Saved SVG and Markdown outputs remain displayable and compilable with both plugins disabled. Legacy SVG adoption and ownership repair after definition moves require explicit validated consent in Reports. Avoid using older MWC dataset writers on Reports-managed assets.
+Neither plugin edits your hotkey file. Existing definitions, generated SVG/Markdown, embeds and ownership files remain untouched and displayable without either plugin. MWC works independently without Reports; manuscript-aware reporting remains in MWC. Reports is desktop-only and requires Obsidian 1.13.7. See [migration details](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.20.0/docs/murmuration-reports-transition.md).
 
-## Installation and requirements
+## Install or upgrade
 
-Install `main.js`, `manifest.json` and `styles.css` together in `.obsidian/plugins/murmuration-writing-companion/`, then enable MWC. Obsidian 1.5.0 remains the declared minimum; the qualification report names versions actually exercised. Back up the vault and its editorial store before upgrading. Install Reports separately if dataset generation is needed; existing outputs require neither plugin.
+Back up the vault, including `.murmuration/writing-companion/` and plugin settings. With MWC disabled, replace **all three** release assets (`main.js`, `manifest.json`, `styles.css`) together in `.obsidian/plugins/murmuration-writing-companion/`, then enable it. Do not delete `data.json` or the editorial store. Check the supplied `SHA256SUMS` when downloading manually. See [clean installation, upgrade and recovery](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.20.0/docs/installation-and-upgrade.md).
 
-## Known limitations and release qualification
+## Qualification and known limitations
 
-Large-vault cold startup, full-book projections and DOM/layout costs still need work. Native Windows acceptance and wider Linux theme/plugin, physical-focus, multi-window and IME acceptance are distinct from automated CI. See [the release-readiness report](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.19.0/docs/release-readiness-0.19.0.md) for passed checks and follow-up qualification. #252 remains open.
+Ted has locally accepted the annotation features and Board. [Release qualification](https://github.com/MurmurationPress/murmuration-writing-companion/blob/0.20.0/docs/release-readiness-0.20.0.md) separates release-specific automated/native checks from reviewed feature evidence and untested platforms. Native Windows/macOS/mobile, older Obsidian versions, assistive technology and physical multi-window/IME coverage are not established by CI. The declared minimum remains 1.5.0; no support expansion is claimed. Board offscreen drag edge-scrolling is unavailable; scroll horizontally or use the category selector.
 
-Reports ownership receipts are safety metadata, not display dependencies. Obsidian's SDK does not provide crash-atomic multi-file transactions; conditional checks, verification and recovery reduce write risk but cannot guarantee atomic output/receipt updates or revoke an already-committed host write. The existing [Reports ownership policy](https://github.com/MurmurationPress/murmuration-reports/blob/0.1.0/docs/ownership.md) remains authoritative.
+The JavaScript budget warning remains active. Sustainable 50 KiB headroom and broader large-vault startup/layout work remain open under #252; this release does not complete that maintenance issue. #241 remains backlog. No new feature is included beyond the audited annotation work and promised Reports alias removal. Obsidian still provides no crash-atomic multi-file transaction guarantee.

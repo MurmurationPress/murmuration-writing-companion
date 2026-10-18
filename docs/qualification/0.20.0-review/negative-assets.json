@@ -1,0 +1,17 @@
+[
+  {
+    "asset": "main.js",
+    "rejected": true,
+    "message": "main.js is stale"
+  },
+  {
+    "asset": "styles.css",
+    "rejected": true,
+    "message": "styles.css is stale"
+  },
+  {
+    "asset": "manifest.json",
+    "rejected": true,
+    "message": "manifest.json must use LF"
+  }
+]

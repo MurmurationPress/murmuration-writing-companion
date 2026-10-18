@@ -1,5 +1,5 @@
 import type { MarkdownPostProcessorContext } from "obsidian";
-import { mapReadingBoundary, matchingReadingProjection, normalizeProjection } from "./ReadingAnnotationSelection";
+import { mapReadingBoundary, matchingReadingProjection, normalizeProjection, markdownBody } from "./ReadingAnnotationSelection";
 
 export interface ReadingSelection {
   path: string;
@@ -85,15 +85,34 @@ export class ReadingAnnotationCapture {
   }
 
   reveal(root: HTMLElement, path: string, source: string, offset: number, toOffset: number): boolean {
+    const body = markdownBody(source);
+    const bodyStart = source.length - body.length;
+    const shifts = new Map<string, number | null>();
     for (const element of Array.from(root.querySelectorAll<HTMLElement>("[data-mwc-reading-section]")).reverse()) {
       const section = this.section(element);
-      if (section?.path !== path || section.source !== source || offset < section.from || offset >= section.to) continue;
+      if (section?.path !== path) continue;
+      let shift = 0;
+      if (section.source !== source) {
+        // Native preview caches prose blocks across frontmatter-only changes.
+        // Translate positions only when the entire body is byte-for-byte equal.
+        // Cache by snapshot so long notes do not compare the body per paragraph.
+        if (!shifts.has(section.source)) {
+          const previousBody = markdownBody(section.source);
+          shifts.set(section.source, previousBody === body
+            ? section.source.length - previousBody.length - bodyStart : null);
+        }
+        const translated = shifts.get(section.source);
+        if (translated == null || section.from < bodyStart + translated) continue;
+        shift = translated;
+      }
+      const from = offset + shift, to = toOffset + shift;
+      if (from < section.from || from >= section.to) continue;
       const rendered = normalizeProjection(element.textContent ?? "");
-      const projection = matchingReadingProjection(source.slice(section.from, section.to), rendered.text);
+      const projection = matchingReadingProjection(section.source.slice(section.from, section.to), rendered.text);
       if (projection) {
-        const first = projection.starts.findIndex(start => section.from + start >= offset);
+        const first = projection.starts.findIndex(start => section.from + start >= from);
         let last = projection.ends.length - 1;
-        while (last >= 0 && section.from + projection.ends[last] > toOffset) last--;
+        while (last >= 0 && section.from + projection.ends[last] > to) last--;
         if (first >= 0 && last >= first) {
           const locate = (position: number): { node: Node; offset: number } | null => {
             const walker = element.ownerDocument.createTreeWalker(element, NodeFilter.SHOW_TEXT);
