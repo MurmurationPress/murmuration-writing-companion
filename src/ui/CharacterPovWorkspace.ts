@@ -22,7 +22,7 @@ export function renderCharacterPovWorkspace(container: Element, plugin: Murmurat
     control.onclick = action;
     return control;
   };
-  if (item.type === "pov-profile") {
+  if (item.type.trim().toLowerCase() === "pov-profile") {
     section.createEl("h3", { text: "Profile connections" });
     const parent = index.resolveWikilink(item.properties.pov_extends, file.path);
     if (parent) button(section, `Base profile: ${parent.name}`, () => open(parent.path));
@@ -36,7 +36,7 @@ export function renderCharacterPovWorkspace(container: Element, plugin: Murmurat
     }
     return;
   }
-  if (item.type !== "character" && !isPovEligible(record)) { section.remove(); return; }
+  if (item.type.trim().toLowerCase() !== "character" && !isPovEligible(record)) { section.remove(); return; }
   section.createEl("h3", { text: "POV Profile" });
   section.createEl("p", { cls: "mwc-muted", text: "Optional authorial guidance about how this character is presented to the reader. Character facts belong in the character note." });
   const expected = item.properties.pov_profile;

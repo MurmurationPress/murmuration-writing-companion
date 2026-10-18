@@ -53,14 +53,14 @@ The sibling Docs repository is not modified by this PR.
 
 | Asset | Raw bytes | Gzip bytes |
 | --- | ---: | ---: |
-| main.js | 706,815 | 200,591 |
+| main.js | 706,857 | 200,607 |
 | styles.css | 64,687 | 10,424 |
 | manifest.json | 277 | 185 |
-| Total | 771,779 | 211,200 |
+| Total | 771,821 | 211,216 |
 
-JavaScript adds 6,457 raw / 2,023 gzip bytes over merged 0.20.0. CSS adds 215 raw / 43 gzip bytes for narrow-pane wrapping and readable guidance.
+JavaScript adds 6,499 raw / 2,039 gzip bytes over merged 0.20.0. CSS adds 215 raw / 43 gzip bytes for narrow-pane wrapping and readable guidance.
 The 720,896-byte hard ceiling and 669,696-byte warning remain unchanged; raw JS
-headroom is 14,081 bytes. The existing 50-KiB headroom target remains unmet (#252).
+headroom is 14,039 bytes. The existing 50-KiB headroom target remains unmet (#252).
 
 ## Native evidence and limits
 

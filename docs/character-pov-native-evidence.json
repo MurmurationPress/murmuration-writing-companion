@@ -1,10 +1,11 @@
 {
-  "vault": "/tmp/mwc276-Gjc6se/vault",
+  "vault": "/tmp/mwc276-hd4Zig/vault",
   "method": "Linux native Obsidian, DOM/application activation through CDP; no physical input or accessibility claim",
   "checks": [
     "Inspector controls fit the native sidebar",
     "character without profile is optional",
     "retrospective association persists",
+    "legacy mixed-case profile supports character/profile round-trip navigation",
     "remove preserves profile note",
     "profile creation retains character context",
     "explicit confirmation returns to original character",
@@ -21,7 +22,7 @@
     "deleted profile is visible and repairable"
   ],
   "assets": {
-    "main.js": "0415db1a5035502270c8beb9a496642c9b8b9c9075b9e7528a99e664fdda5665",
+    "main.js": "c958e4dbecc76361e6d77b4879ed5d9f653d75519a79e193e9289724f3a8509e",
     "manifest.json": "4596085c1c8278720d19409966d3c9846061d83f62b9b045430601956d752c32",
     "styles.css": "25b595fd66f9ebc7a789ec496d7fa302d8ba051ace859add06d91d3f3609e9b5"
   },

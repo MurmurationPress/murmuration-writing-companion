@@ -13,7 +13,7 @@ await mkdir(profile);
 for (const name of ['main.js', 'manifest.json', 'styles.css']) await copyFile(name, path.join(vault, '.obsidian/plugins', id, name));
 const notes = {
   'Mira.md': '---\nworld_entity: character\nworld_name: Mira\ncustom: preserved\n---\n\nMira is a navigator.\n',
-  'Base.md': '---\nworld_entity: pov-profile\nworld_name: Mira Base\n---\n\nNotices distances before faces.\n',
+  'Base.md': '---\nworld_entity: POV-Profile\nworld_name: Mira Base\n---\n\nNotices distances before faces.\n',
   'One.md': '---\ntype: book\ntitle: One\n---\n',
   'Two.md': '---\ntype: book\ntitle: Two\n---\n',
   'Scene.md': '---\ntype: scene\nparent: "[[Two]]"\npov: "[[Mira]]"\nmanuscript_order_key: "a0"\n---\n\nSynthetic manuscript stays intact.\n'
@@ -45,6 +45,7 @@ try {
   check(await run(`const host=document.querySelector('.mwc-character-pov');return host&&host.scrollWidth<=host.clientWidth+2;`), 'Inspector controls fit the native sidebar');
   check(await run(`return document.querySelector('.mwc-character-pov')?.textContent.includes('No profile yet');`), 'character without profile is optional');
   check(await run(`const host=document.querySelector('.mwc-character-pov');host.querySelector('select').value='Base.md';clickText(host,'Associate selected profile');await wait(1200);return (await app.vault.read(app.vault.getAbstractFileByPath('Mira.md'))).includes('[[Base]]');`), 'retrospective association persists');
+  check(await run(`clickText(document.querySelector('.mwc-character-pov'),'Open associated profile');await wait(600);const host=document.querySelector('.mwc-character-pov');const connected=host.textContent.includes('Profile connections')&&host.textContent.includes('Character: Mira');clickText(host,'Character: Mira');await wait(600);return connected&&document.querySelector('.mwc-character-pov')?.textContent.includes('Associated profile: Mira Base');`), 'legacy mixed-case profile supports character/profile round-trip navigation');
   check(await run(`clickText(document.querySelector('.mwc-character-pov'),'Remove association');await wait(1200);return !(await app.vault.read(app.vault.getAbstractFileByPath('Mira.md'))).includes('pov_profile');`), 'remove preserves profile note');
   check(await run(`clickText(document.querySelector('.mwc-character-pov'),'Create a profile for this character');await wait(500);return document.querySelector('.modal')?.textContent.includes('Mira POV');`), 'profile creation retains character context');
   await run(`clickText(document.querySelector('.modal'),'Create');await wait(1800);`);
