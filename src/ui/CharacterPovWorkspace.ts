@@ -44,10 +44,11 @@ export function renderCharacterPovWorkspace(container: Element, plugin: Murmurat
   const valid = associated?.entityType.trim().toLowerCase() === "pov-profile" ? associated : null;
   section.createEl("p", { text: valid ? `Associated profile: ${valid.name}` : expected ? `Unavailable profile: ${String(expected)}. You can replace or remove this link.` : "No profile yet. Develop your character first; add guidance whenever useful." });
   if (valid) button(section, "Open associated profile", () => open(valid.path));
+  if (valid?.scope.length) section.createEl("p", { cls: "mwc-muted", text: "This scoped profile is linked directly and applies wherever this character is selected. Associate its reusable parent instead to let Book scope select extensions." });
   const select = section.createEl("select", { attr: { "aria-label": "POV Profile" } });
   select.createEl("option", { text: "Choose a profile…", value: "" });
   for (const profile of index.index.getAll().filter((entity) => entity.entityType.trim().toLowerCase() === "pov-profile")) {
-    select.createEl("option", { text: `${profile.name} — ${profile.path}`, value: profile.path });
+    select.createEl("option", { text: `${profile.name}${profile.scope.length ? " — scoped profile" : ""} — ${profile.path}`, value: profile.path });
   }
   select.value = valid?.path ?? "";
   const feedback = section.createEl("p", { attr: { role: "status", "aria-live": "polite" } });
@@ -110,7 +111,7 @@ export function renderCharacterPovWorkspace(container: Element, plugin: Murmurat
     if (issue) guidance.createEl("p", { text: issue });
     for (const profile of chain.profiles) {
       const row = guidance.createEl("details");
-      row.createEl("summary", { text: `${profile.name} · ${chain.profiles.indexOf(profile) > chain.profiles.findIndex((entry) => entry.path === valid.path) ? "Book-specific guidance" : "Inherited base guidance"}` });
+      row.createEl("summary", { text: `${profile.name} · ${profile.path === valid.path ? "Associated guidance (applies directly)" : chain.profiles.indexOf(profile) > chain.profiles.findIndex((entry) => entry.path === valid.path) ? "Book-specific guidance" : "Inherited guidance"}` });
       button(row, "Edit this profile’s guidance", () => open(profile.path));
       const body = row.createEl("p", { cls: "mwc-story-world-inspector-prose" });
       const target = plugin.app.vault.getAbstractFileByPath(profile.path);

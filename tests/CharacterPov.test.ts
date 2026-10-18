@@ -75,3 +75,15 @@ test("creating a reusable profile does not associate it until explicitly confirm
   changeCharacterPov(properties, undefined, record(plan.path, "pov-profile"));
   equal(properties.pov_profile, `[[${plan.path.replace(/\.md$/, "")}]]`);
 });
+
+test("legacy direct scoped associations retain direct guidance outside automatic Book matching", () => {
+  const scoped = record("Scoped.md", "pov-profile", { world_scope: "[[Two]]" });
+  const properties: Record<string, unknown> = { world_entity: "character" };
+  changeCharacterPov(properties, undefined, scoped);
+  const character = record("Mira.md", "character", properties);
+  const chain = resolvePovProfileChain({ pov: "[[Mira]]" }, "Scene.md", (reference) => reference === "[[Mira]]" ? character : scoped, {
+    activeBookPath: "One.md", indexedEntities: [character, scoped], resolveScope: () => "Two.md"
+  });
+  deepEqual(chain.profiles.map((profile) => profile.path), ["Scoped.md"]);
+  equal(properties.pov_profile, "[[Scoped]]");
+});

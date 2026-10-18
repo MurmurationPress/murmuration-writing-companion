@@ -12,6 +12,8 @@ profile navigation and contextual profile creation. The existing entity creation
 modal accepts initial typed properties/template, locks the requested kind for this
 entry point, and retains its normal preview, collision checks and explicit Create.
 A separate confirmation retains the original character even after navigation.
+Directly associated scoped profiles are labelled explicitly: their established
+behaviour is to apply directly, independently of automatic Book matching.
 Book development is disclosed separately, with an authoritative manuscript Book
 picker and base-first guidance preview. Editing opens the exact layer’s Markdown
 note. Profile connections expose parent, extensions and directly associated
@@ -35,11 +37,11 @@ The sibling Docs repository is not modified by this PR.
 
 ## Automated qualification
 
-- `npm ci`; `npm test`: **1,031 TypeScript tests + 17 tooling tests**, all pass.
+- `npm ci`; `npm test`: **1,032 TypeScript tests + 17 tooling tests**, all pass.
 - Test and production TypeScript checks pass (test/build scripts respectively).
 - `npm run build`, `npm run release:check`, `npm run bundle:analyze`,
   `npm run bundle:report`, `git diff --check`: pass.
-- Five new focused tests cover independent character creation, optional profile
+- Six new focused tests cover independent character creation, optional profile
   creation before confirmation, retrospective association/change/removal,
   optimistic stale guards and invalid targets, preserved unrelated properties,
   existing/deleted/renamed legacy links, existing Book-extension templates and
@@ -51,14 +53,14 @@ The sibling Docs repository is not modified by this PR.
 
 | Asset | Raw bytes | Gzip bytes |
 | --- | ---: | ---: |
-| main.js | 706,489 | 200,480 |
+| main.js | 706,815 | 200,591 |
 | styles.css | 64,687 | 10,424 |
 | manifest.json | 277 | 185 |
-| Total | 771,453 | 211,089 |
+| Total | 771,779 | 211,200 |
 
-JavaScript adds 6,131 raw / 1,912 gzip bytes over merged 0.20.0. CSS adds 215 raw / 43 gzip bytes for narrow-pane wrapping and readable guidance.
+JavaScript adds 6,457 raw / 2,023 gzip bytes over merged 0.20.0. CSS adds 215 raw / 43 gzip bytes for narrow-pane wrapping and readable guidance.
 The 720,896-byte hard ceiling and 669,696-byte warning remain unchanged; raw JS
-headroom is 14,407 bytes. The existing 50-KiB headroom target remains unmet (#252).
+headroom is 14,081 bytes. The existing 50-KiB headroom target remains unmet (#252).
 
 ## Native evidence and limits
 

@@ -49,7 +49,10 @@ in the Inspector preview. A unique matching extension is appended after the base
 Guidance is additive authored Markdown, not a field-by-field override or automatic
 voice analysis. Duplicate matching extensions are reported and not chosen
 arbitrarily. Existing multi-level inheritance and directly associated extension
-profiles keep their established behaviour.
+profiles keep their established behaviour: a directly linked profile applies
+wherever the character is selected, regardless of its scope. The Inspector explains
+this when a scoped profile is linked directly; choose its reusable parent for
+automatic Book-specific selection.
 
 ## Safety and older vaults
 
