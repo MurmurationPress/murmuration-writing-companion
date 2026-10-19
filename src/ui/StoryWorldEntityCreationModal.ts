@@ -33,8 +33,11 @@ export interface StoryWorldEntityCreationHost extends MurmurationWritingCompanio
 
 export interface StoryWorldEntityCreationModalOptions {
   readonly initialKind?: StoryWorldEntityKind;
+  readonly fixedKind?: boolean;
   readonly initialName?: string;
   readonly initialScope?: string;
+  readonly initialTypedProperties?: Readonly<Record<string, unknown>>;
+  readonly initialPovProfileTemplate?: PovProfileTemplateKind;
   readonly sourceReference?: string;
   readonly sourceLabel?: string;
   readonly targetPath?: string;
@@ -84,6 +87,8 @@ export class StoryWorldEntityCreationModal extends Modal {
     this.name = options.initialName ?? "";
     this.canonicalNameExplicitlyEdited = Boolean(options.initialName?.trim());
     this.scopeInput = options.initialScope ?? "";
+    Object.assign(this.typedProperties, options.initialTypedProperties);
+    this.povProfileTemplate = options.initialPovProfileTemplate ?? "base";
   }
 
   onOpen(): void {
@@ -97,6 +102,7 @@ export class StoryWorldEntityCreationModal extends Modal {
           dropdown.addOption(kind, kind === "pov-profile" ? "POV Profile" : kind[0].toUpperCase() + kind.slice(1));
         }
         dropdown.setValue(this.kind);
+        dropdown.setDisabled(this.options.fixedKind ?? false);
         dropdown.onChange((value) => {
           this.kind = value as StoryWorldEntityKind;
           this.renderReferenceSection();

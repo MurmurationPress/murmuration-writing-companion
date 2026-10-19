@@ -209,3 +209,7 @@
   .mwc-story-world-item-primary { gap: 1px 5px; }
   .mwc-story-world-item-status:not(.is-default) { grid-row: 2; grid-column: 1 / -1; }
 }
+
+.mwc-character-pov select { max-width: 100%; }
+.mwc-character-pov button { white-space: normal; height: auto; margin: 3px 4px 3px 0; }
+.mwc-character-pov .mwc-story-world-inspector-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
